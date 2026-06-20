@@ -1,0 +1,99 @@
+<div style="max-width: 700px; margin: 40px auto; font-family: 'Inter', 'Segoe UI', sans-serif;">
+  
+  <%= link_to maintenance_records_path, style: "text-decoration: none; color: #64748b; display: flex; align-items: center; gap: 8px; margin-bottom: 25px; font-weight: 600;" do %>
+    ← Volver al Taller
+  <% end %>
+
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);">
+    
+    <%# Encabezado %>
+    <div style="background: #0f172a; padding: 30px; color: white;">
+      <span style="background: #2563eb; padding: 5px 12px; border-radius: 8px; font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+        Editar Ticket #<%= @maintenance_record.id %>
+      </span>
+      <h1 style="margin: 12px 0 0 0; font-size: 1.8em; font-weight: 800;"><%= @maintenance_record.item.name %></h1>
+      <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9em; font-weight: 500;">
+        Categoría: <%= @maintenance_record.item.category %> | Reportado desde: 
+        <%= @maintenance_record.gig.present? ? "Show con #{@maintenance_record.gig.client.name}" : "Depósito (Manual)" %>
+      </p>
+    </div>
+
+    <div style="padding: 40px;">
+      <%= form_with model: @maintenance_record, local: true do |f| %>
+        
+        <% if @maintenance_record.errors.any? %>
+          <div style="background: #fff1f2; border: 1px solid #fca5a5; color: #be123c; padding: 15px; border-radius: 12px; margin-bottom: 25px; font-weight: 600;">
+            <p style="margin: 0 0 8px 0;">Error al guardar el ticket:</p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <% @maintenance_record.errors.full_messages.each do |msg| %>
+                <li><%= msg %></li>
+              <% end %>
+            </ul>
+          </div>
+        <% end %>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+          
+          <%# Selector de Estado %>
+          <div>
+            <%= f.label :status, "⚙️ Estado de Reparación", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #475569; font-size: 0.9em;" %>
+            <%= f.select :status, 
+                [
+                  ["⏳ Pendiente (Por Revisar)", "pending"], 
+                  ["🔧 En Taller / Servicio Técnico", "in_repair"], 
+                  ["✅ Listo (Reparado e Incorporado)", "fixed"], 
+                  ["🗑️ Desincorporar (Pérdida / Sin Reparación)", "discarded"]
+                ], 
+                {}, 
+                { style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; outline: none; font-size: 0.95em; font-weight: 600; color: #1e293b; cursor: pointer; box-sizing: border-box;" } %>
+          </div>
+
+          <%# Input de Costo %>
+          <div>
+            <%= f.label :cost, "💰 Costo del Servicio ($)", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #475569; font-size: 0.9em;" %>
+            <%= f.number_field :cost, step: 0.01, min: 0, 
+                style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 0.95em; font-weight: bold; color: #10b981; box-sizing: border-box;" %>
+          </div>
+
+        </div>
+
+        <%# Fechas %>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 25px;">
+          <div>
+            <%= f.label :started_at, "Fecha de Envío", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #475569; font-size: 0.9em;" %>
+            <%= f.date_field :started_at, value: @maintenance_record.started_at || Date.today,
+                style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 0.95em; color: #1e293b; box-sizing: border-box;" %>
+          </div>
+          <div>
+            <%= f.label :completed_at, "Fecha de Entrega", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #475569; font-size: 0.9em;" %>
+            <%= f.date_field :completed_at, value: @maintenance_record.completed_at,
+                style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 0.95em; color: #1e293b; box-sizing: border-box;" %>
+          </div>
+        </div>
+
+        <%# Descripción del Daño / Trabajo %>
+        <div style="margin-bottom: 30px;">
+          <%= f.label :description, "📝 Descripción o Notas del Trabajo", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #475569; font-size: 0.9em;" %>
+          <%= f.text_area :description, rows: 4, placeholder: "Ej. Se resoldó el pin central, se reemplazó el conector defectuoso...", 
+              style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95em; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; transition: 0.2s;" %>
+        </div>
+
+        <%# Botón Enviar %>
+        <div style="display: flex; gap: 15px;">
+          <%= link_to "Cancelar", maintenance_records_path, 
+              style: "flex: 1; text-align: center; text-decoration: none; background: #f1f5f9; color: #475569; padding: 15px; border-radius: 12px; font-weight: bold; transition: 0.2s; border: 1px solid #cbd5e1;",
+              onmouseover: "this.style.background='#e2e8f0'",
+              onmouseout: "this.style.background='#f1f5f9'" %>
+          
+          <%= f.submit "💾 Guardar Registro", 
+              style: "flex: 2; background: #2563eb; color: white; border: none; padding: 15px; border-radius: 12px; font-weight: bold; cursor: pointer; font-size: 1em; transition: 0.2s; box-shadow: 0 4px 10px rgba(37,99,235,0.2);",
+              onmouseover: "this.style.backgroundColor='#1d4ed8'",
+              onmouseout: "this.style.backgroundColor='#2563eb'" %>
+        </div>
+
+      <% end %>
+    </div>
+
+  </div>
+
+</div>

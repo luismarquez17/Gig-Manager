@@ -1,0 +1,254 @@
+// Sassy configuration for GigManager
+// 1. Definir colores corporativos y variables de Bootstrap antes de importar
+$primary: #2563eb; // Azul moderno (sidebar / principal)
+$success: #10b981; // Verde para prioridad alta (excelente)
+$warning: #f59e0b; // Amarillo para prioridad media (operativo)
+$danger: #ef4444;  // Rojo para prioridad baja (dañado)
+$dark: #0f172a;    // Gris oscuro/azul pizarra (sidebar bg)
+
+// 2. Importar Bootstrap 5
+@import "bootstrap";
+
+// 3. Crear clases reutilizables (Tu diseño estándar)
+:root {
+  --font-main: 'Inter', 'Segoe UI', system-ui, sans-serif;
+  --bg-app: #f8fafc;
+}
+
+body {
+  background-color: var(--bg-app);
+  font-family: var(--font-main);
+  color: #1e293b;
+  margin: 0;
+  padding: 0;
+}
+
+/* ==========================================================================
+   COMPONENTES PRINCIPALES (TARJETAS, CONTENEDORES, GRID)
+   ========================================================================== */
+
+// Tarjeta blanca premium
+.custom-card {
+  background: white;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01);
+  padding: 24px;
+  margin-bottom: 25px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+  }
+}
+
+// Grid adaptable para información y métricas
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+}
+
+/* ==========================================================================
+   BOTONES PERSONALIZADOS
+   ========================================================================== */
+
+.btn-main {
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  &:active {
+    transform: translateY(0);
+  }
+
+  // Variantes personalizadas
+  &.btn-primary-custom {
+    background-color: $primary;
+    color: white;
+    box-shadow: 0 8px 15px rgba($primary, 0.15);
+    &:hover { background-color: darken($primary, 8%); }
+  }
+
+  &.btn-success-custom {
+    background-color: $success;
+    color: white;
+    box-shadow: 0 8px 15px rgba($success, 0.15);
+    &:hover { background-color: darken($success, 8%); }
+  }
+
+  &.btn-danger-custom {
+    background-color: $danger;
+    color: white;
+    box-shadow: 0 8px 15px rgba($danger, 0.15);
+    &:hover { background-color: darken($danger, 8%); }
+  }
+
+  &.btn-gray-custom {
+    background-color: #f1f5f9;
+    border-color: #e2e8f0;
+    color: #475569;
+    &:hover { background-color: #e2e8f0; color: #1e293b; }
+  }
+}
+
+/* ==========================================================================
+   TABLAS PERSONALIZADAS
+   ========================================================================== */
+
+.table-custom-wrapper {
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.table-custom {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  margin-bottom: 0;
+
+  thead {
+    tr {
+      background-color: #f8fafc;
+      color: #475569;
+      font-weight: 700;
+      border-bottom: 2px solid #e2e8f0;
+    }
+  }
+
+  th, td {
+    padding: 16px 20px;
+    vertical-align: middle;
+  }
+
+  tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background-color 0.2s ease;
+    
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &:hover {
+      background-color: #f8fafc;
+    }
+  }
+}
+
+/* ==========================================================================
+   FORMULARIOS Y CAMPOS DE TEXTO
+   ========================================================================== */
+
+.form-group-custom {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    font-weight: 700;
+    color: #475569;
+    margin-bottom: 8px;
+    font-size: 0.9em;
+  }
+}
+
+.form-input-custom {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #f1f5f9;
+  border-radius: 12px;
+  font-size: 1em;
+  outline: none;
+  background-color: white;
+  box-sizing: border-box;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+
+  &:focus {
+    border-color: $primary;
+    box-shadow: 0 0 0 4px rgba($primary, 0.1);
+  }
+
+  &::placeholder {
+    color: #94a3b8;
+  }
+}
+
+/* ==========================================================================
+   PLACAS, ETIQUETAS E INDICADORES (STATUS Y PRIORIDAD)
+   ========================================================================== */
+
+// Puntos de prioridad para listas
+.priority-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+
+  &.priority-alta, &.priority-green { background-color: $success; }
+  &.priority-media, &.priority-orange { background-color: $warning; }
+  &.priority-baja, &.priority-red { background-color: $danger; }
+}
+
+// Placas completas de prioridad
+.priority-badge {
+  color: white;
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-weight: 700;
+  font-size: 0.8em;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  display: inline-block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  &.priority-alta, &.priority-green { background-color: $success; }
+  &.priority-media, &.priority-orange { background-color: $warning; }
+  &.priority-baja, &.priority-red { background-color: $danger; }
+}
+
+// Placas de estado de inventario
+.status-badge {
+  padding: 6px 12px;
+  border-radius: 10px;
+  font-size: 0.85em;
+  font-weight: 800;
+  display: inline-block;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  letter-spacing: 0.3px;
+
+  &.status-excelente {
+    background-color: #ecfdf5;
+    color: #10b981;
+    border-color: rgba(#10b981, 0.2);
+  }
+  
+  &.status-operativo {
+    background-color: #fffbeb;
+    color: #f59e0b;
+    border-color: rgba(#f59e0b, 0.2);
+  }
+  
+  &.status-danado {
+    background-color: #fef2f2;
+    color: #ef4444;
+    border-color: rgba(#ef4444, 0.2);
+    border-style: dashed;
+  }
+}

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Checklist: <%= @gig.client.name %> - <%= @gig.date %></title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /* Estilos base de la página (para visualización en pantalla) */
+    body {
+      font-family: 'Arial', sans-serif;
+      color: #333;
+      margin: 40px;
+    }
+    
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #333;
+      padding-bottom: 20px;
+    }
+
+    .header h1 {
+      margin: 0 0 10px 0;
+      font-size: 28px;
+    }
+
+    .header p {
+      margin: 5px 0;
+      font-size: 16px;
+      color: #555;
+    }
+
+    .checklist-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+
+    .checklist-table th, .checklist-table td {
+      border: 1px solid #ccc;
+      padding: 15px;
+      text-align: left;
+    }
+
+    .checklist-table th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+
+    .check-column {
+      width: 80px;
+      text-align: center;
+    }
+
+    /* Caja para marcar física */
+    .checkbox-box {
+      width: 30px;
+      height: 30px;
+      border: 2px solid #555;
+      display: inline-block;
+      border-radius: 4px;
+    }
+
+    .item-column {
+      font-size: 18px;
+    }
+
+    .quantity-badge {
+      font-weight: bold;
+      margin-right: 15px;
+      display: inline-block;
+      width: 30px;
+    }
+
+    .btn-print {
+      display: block;
+      width: 200px;
+      margin: 30px auto;
+      padding: 15px;
+      background-color: #4CAF50;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      border: none;
+      font-size: 16px;
+    }
+
+    .btn-print:hover {
+      background-color: #45a049;
+    }
+
+    .notes-section {
+      margin-top: 50px;
+      border-top: 1px dashed #ccc;
+      padding-top: 20px;
+      min-height: 150px;
+    }
+
+    /* Reglas específicas para IMPRIMIR en papel */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+
+      /* Ocultar botones e interfaces no deseadas en el papel */
+      .no-print, .btn-print {
+        display: none !important;
+      }
+
+      /* Asegurar que las líneas y colores de la tabla se impriman bien */
+      .checklist-table th, .checklist-table td {
+        border: 1px solid #000 !important;
+      }
+      
+      .checklist-table th {
+        background-color: #eee !important;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+      }
+
+      .checkbox-box {
+        border-color: #000 !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="btn-print no-print" onclick="window.print()">🖨️ Imprimir Checklist</button>
+
+  <div class="header">
+    <h1>📋 Checklist de Carga y Descarga</h1>
+    <p><strong>Cliente:</strong> <%= @gig.client.name %></p>
+    <p><strong>Fecha del Evento:</strong> <%= @gig.date %></p>
+    <% if @gig.location.present? %>
+      <p><strong>Ubicación:</strong> <%= @gig.location %></p>
+    <% end %>
+  </div>
+
+  <% if @gig_items.any? %>
+    <table class="checklist-table">
+      <thead>
+        <tr>
+          <th class="check-column">Carga</th>
+          <th class="check-column">Descarga</th>
+          <th>Equipos Asignados</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @gig_items.each do |gig_item| %>
+          <tr>
+            <td class="check-column"><div class="checkbox-box"></div></td>
+            <td class="check-column"><div class="checkbox-box"></div></td>
+            <td class="item-column">
+              <span class="quantity-badge"><%= gig_item.quantity %>x </span> 
+              <%= gig_item.item.name %>
+              <% if gig_item.item.category.present? %>
+                <small style="color: #666; font-size: 14px;">(<%= gig_item.item.category %>)</small>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  <% else %>
+    <p style="text-align: center; margin-top: 50px; font-style: italic; color: #666;">
+      No hay equipos asignados a este evento todavía.
+    </p>
+  <% end %>
+
+  <div class="notes-section">
+    <strong>Notas del Responsable:</strong>
+    <p style="color: #999; font-style: italic; margin-top: 10px;">(Espacio para anotar eventualidades físicas)</p>
+  </div>
+
+</body>
+</html>

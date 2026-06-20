@@ -1,0 +1,106 @@
+<div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;">
+  <%= form_with(model: gig, local: true) do |f| %>
+    
+    <%# --- BUSCADOR INTELIGENTE DE CLIENTE --- %>
+    <div style="margin-bottom: 25px; background: #fff7ed; padding: 20px; border-radius: 15px; border: 1px solid #ffedd5;">
+      <%= f.label :client_id, "🤝 Buscar o Escribir Cliente", style: "display: block; font-weight: bold; color: #9a3412; margin-bottom: 10px;" %>
+      
+      <div style="position: relative;">
+        <input list="clients-list" 
+               id="client-search" 
+               placeholder="🔍 Escribe el nombre del cliente..." 
+               style="width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #f97316; font-size: 1.1em; outline: none; box-sizing: border-box; transition: all 0.3s;"
+               oninput="validateClient(this)"
+               autocomplete="off">
+      </div>
+
+      <%# Mensaje de advertencia dinámico %>
+      <div id="client-warning" style="display: none; margin-top: 12px; padding: 10px; background: #fff; border-radius: 8px; border-left: 4px solid #ea580c; color: #ea580c; font-weight: bold; font-size: 0.9em; align-items: center; gap: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        <span>⚠️ Este cliente no está registrado.</span>
+        <%= link_to "Añadir nuevo cliente", new_client_path, style: "color: #c2410c; text-decoration: underline; margin-left: auto;" %>
+      </div>
+
+      <datalist id="clients-list">
+        <% Client.order(:name).each do |client| %>
+          <option value="<%= client.name %>" data-id="<%= client.id %>"></option>
+        <% end %>
+      </datalist>
+
+      <%# Campo oculto que recibe el ID %>
+      <%= f.hidden_field :client_id, id: "real-client-id" %>
+    </div>
+
+    <%# --- MONTO Y MONEDA --- %>
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px; align-items: end;">
+      <div>
+        <%= f.label :amount, "💰 Monto acordado", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.number_field :amount, step: 0.01, placeholder: "0.00", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      </div>
+      <div>
+        <%= f.label :currency, "Moneda", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.select :currency, [["USD ($)", "USD"], ["BS (Bs)", "BS"]], {}, { style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e0; background: #f8fafc; font-weight: bold; width: 100%; height: 46px;" } %>
+      </div>
+    </div>
+
+    <%# --- UBICACIÓN Y FECHA --- %>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+      <div>
+        <%= f.label :location, "📍 Ubicación", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.text_field :location, placeholder: "Ej: Hotel Trinitarias", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      </div>
+      <div>
+        <%= f.label :date, "📅 Fecha", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.date_field :date, value: gig.date || Date.today, style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      </div>
+    </div>
+
+    <%# --- PAQUETE O DETALLES --- %>
+    <div style="margin-bottom: 25px;">
+      <%= f.label :details, "📝 Detalles o Paquete del Evento", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.text_area :details, rows: 4, placeholder: "Ejemplo: Pantallas y dos estructuras, o Grupo y sonido (2 bajos de 18 y 16)...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; resize: vertical; font-family: inherit;" %>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <%= f.submit gig.new_record? ? "✅ Confirmar Registro" : "💾 Guardar Cambios", 
+          style: "width: 100%; background: #10b981; color: white; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);" %>
+      <%= link_to "🚫 Cancelar", gigs_path, style: "text-align: center; text-decoration: none; color: #64748b; font-weight: 600; font-size: 0.9em; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px;" %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function validateClient(input) {
+    const list = document.getElementById('clients-list');
+    const hiddenInput = document.getElementById('real-client-id');
+    const warning = document.getElementById('client-warning');
+    const options = list.options;
+    
+    let found = false;
+    hiddenInput.value = ""; 
+
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].value === input.value) {
+        hiddenInput.value = options[i].getAttribute('data-id');
+        found = true;
+        break;
+      }
+    }
+
+    // Lógica visual de validación
+    if (input.value.length > 0) {
+      if (!found) {
+        warning.style.display = "flex";
+        input.style.borderColor = "#ea580c";
+        input.style.boxShadow = "0 0 0 3px rgba(234, 88, 12, 0.1)";
+      } else {
+        warning.style.display = "none";
+        input.style.borderColor = "#22c55e"; // Verde si lo encontró
+        input.style.boxShadow = "0 0 0 3px rgba(34, 197, 94, 0.1)";
+      }
+    } else {
+      warning.style.display = "none";
+      input.style.borderColor = "#f97316";
+      input.style.boxShadow = "none";
+    }
+  }
+</script>

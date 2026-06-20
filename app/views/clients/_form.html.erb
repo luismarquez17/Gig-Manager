@@ -1,0 +1,25 @@
+<div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;">
+  <%= form_with(model: client, local: true) do |f| %>
+    
+    <div style="margin-bottom: 20px;">
+      <%= f.label :name, "👤 Nombre o Razón Social", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.text_field :name, placeholder: "Ej: Juan Pérez / Eventos C.A.", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+      <%= f.label :phone, "📞 Teléfono", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.text_field :phone, placeholder: "0414-0000000", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+    </div>
+
+    <div style="margin-bottom: 25px;">
+      <%= f.label :notes, "📝 Notas Adicionales", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.text_area :notes, rows: 3, placeholder: "Detalles del cliente...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px;">
+      <%= f.submit client.new_record? ? "➕ Guardar Cliente" : "🔄 Actualizar Datos", 
+          style: "width: 100%; background: #6366f1; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; font-size: 1.1em; cursor: pointer;" %>
+      <%= link_to "⬅️ Volver a la lista", clients_path, style: "text-align: center; color: #94a3b8; text-decoration: none; font-size: 0.9em; padding: 5px;" %>
+    </div>
+  <% end %>
+</div>

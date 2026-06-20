@@ -1,0 +1,8 @@
+<div class="container py-4" style="max-width: 600px;">
+  <div class="mb-4">
+    <%= link_to '← Volver a las Plantillas', kits_path, class: 'text-muted text-decoration-none fw-bold' %>
+    <h1 class="fw-extrabold m-0 mt-2">➕ Nueva Plantilla de Equipos</h1>
+  </div>
+
+  <%= render 'form', kit: @kit %>
+</div>

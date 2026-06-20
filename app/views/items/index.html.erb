@@ -1,0 +1,155 @@
+<div style="max-width: 1100px; margin: 40px auto; font-family: 'Inter', 'Segoe UI', sans-serif; padding: 0 20px;">
+  
+  <%# --- ENCABEZADO --- %>
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 40px; border-bottom: 2px solid #f1f5f9; padding-bottom: 20px;">
+    <div>
+      <h1 style="color: #0f172a; margin: 0; font-size: 2.2em; font-weight: 800;">📦 Inventario</h1>
+      <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1.1em;">Control de stock y estados de mantenimiento.</p>
+    </div>
+    <%= link_to new_item_path, style: "text-decoration: none;" do %>
+      <div style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);">
+        <span style="font-size: 1.2em;">+</span> Nuevo Equipo
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- PANEL DE BÚSQUEDA AVANZADA --- %>
+  <div style="background: #ffffff; padding: 30px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); margin-bottom: 50px;">
+    <%= form_with url: items_path, method: :get, local: true do |f| %>
+      
+      <%# Fila 1: Texto y Categoría %>
+      <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 25px;">
+        <div style="flex: 2; min-width: 300px; position: relative;">
+          <%= f.text_field :query, value: params[:query], placeholder: "Buscar por nombre o tipo (ej: RCA, Yamaha...)", 
+              style: "width: 100%; padding: 16px 16px 16px 48px; border: 2px solid #f1f5f9; border-radius: 16px; font-size: 1em; outline: none; transition: border-color 0.2s; box-sizing: border-box;" %>
+          <span style="position: absolute; left: 18px; top: 18px; font-size: 1.2em; opacity: 0.5;">🔍</span>
+        </div>
+
+        <div style="flex: 1; min-width: 200px;">
+          <%= f.select :category, 
+              Item::CATEGORIES, 
+              { include_blank: "📂 Todas las Categorías", selected: params[:category] }, 
+              { onchange: "this.form.submit()", style: "width: 100%; padding: 16px; border: 2px solid #f1f5f9; border-radius: 16px; background: white; cursor: pointer; font-weight: 500; color: #475569;" } %>
+        </div>
+      </div>
+
+      <%# Fila 2: Segmentación por Estado (Píldoras) %>
+      <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <span style="font-size: 0.85em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Estado:</span>
+        
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <% [["Excelente", "#10b981"], ["Operativo", "#f59e0b"], ["Dañado", "#ef4444"]].each do |status, color| %>
+            <label style="cursor: pointer;">
+              <%= f.radio_button :status, status, checked: params[:status] == status, onchange: "this.form.submit()", style: "display: none;" %>
+              <div style="padding: 10px 20px; border-radius: 14px; font-size: 0.9em; font-weight: bold; 
+                          border: 2px solid <%= params[:status] == status ? color : '#f1f5f9' %>; 
+                          background: <%= params[:status] == status ? color : 'transparent' %>; 
+                          color: <%= params[:status] == status ? 'white' : '#64748b' %>; 
+                          transition: all 0.2s ease;">
+                <%= status %>
+              </div>
+            </label>
+          <% end %>
+
+          <% if params[:status].present? || params[:query].present? || params[:category].present? %>
+            <%= link_to "Limpiar filtros", items_path, style: "padding: 10px; color: #64748b; font-size: 0.85em; text-decoration: none; font-weight: 600;" %>
+          <% end %>
+        </div>
+
+        <div style="margin-left: auto;">
+          <%= f.submit "Aplicar", style: "background: #0f172a; color: white; padding: 12px 30px; border-radius: 14px; border: none; font-weight: bold; cursor: pointer;" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- GRID DE TARJETAS --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px;">
+    <% @items.each do |item| %>
+      <% 
+        status_color = case item.status
+                       when 'Excelente' then '#10b981'
+                       when 'Operativo' then '#f59e0b'
+                       when 'Dañado' then '#ef4444'
+                       else '#64748b' 
+                       end
+        
+        status_bg = case item.status
+                    when 'Excelente' then '#ecfdf5' 
+                    when 'Operativo' then '#fffbeb' 
+                    when 'Dañado' then '#fef2f2'
+                    else '#f8fafc'
+                    end
+      %>
+      <div style="background: white; border-radius: 20px; border: 1px solid #f1f5f9; padding: 25px; position: relative; transition: all 0.3s ease; box-shadow: 0 4px 6px rgba(0,0,0,0.02);" 
+           onmouseover="this.style.transform='translateY(-5px)'; this.style.boxShadow='0 12px 20px rgba(0,0,0,0.08)';" 
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 6px rgba(0,0,0,0.02)';" >
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <span style="background: #eff6ff; color: #2563eb; padding: 5px 12px; border-radius: 10px; font-size: 0.75em; font-weight: 800; text-transform: uppercase;">
+            <%= item.category %>
+          </span>
+          <div style="width: 12px; height: 12px; border-radius: 50%; background: <%= status_color %>; box-shadow: 0 0 8px <%= status_color %>66;"></div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+          <h3 style="color: #0f172a; margin: 0; font-size: 1.3em; font-weight: 700;">🏷️ <%= item.name %></h3>
+          <div style="display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px;">
+            
+            <% if item.sub_category.present? %>
+              <span style="color: #6366f1; background: #eef2ff; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600; border: 1px solid #e0e7ff;">
+                🔌 <%= item.sub_category %>
+              </span>
+            <% else %>
+              <span style="color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 600; border: 1px solid #e2e8f0;">
+                📦 <%= item.category %>
+              </span>
+            <% end %>
+            
+            <% if item.status == 'Dañado' %>
+              <span style="color: #b91c1c; background: #fee2e2; padding: 2px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 800; border: 1px dashed #ef4444;">
+                ⚠️ MARCADO CON TIRRO
+              </span>
+            <% end %>
+          </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; background: <%= status_bg %>; padding: 15px; border-radius: 15px; margin-bottom: 20px; border: 1px solid <%= status_color %>33;">
+          <div>
+            <span style="display: block; font-size: 0.75em; color: #64748b; font-weight: bold; text-transform: uppercase;">Cantidad</span>
+            <span style="font-weight: 800; color: #1e293b; font-size: 1.2em;">✖️ <%= item.quantity %></span>
+          </div>
+          
+          <div style="text-align: right;">
+            <span style="display: block; font-size: 0.75em; color: #64748b; font-weight: bold; text-transform: uppercase;">Estado</span>
+            <span style="font-weight: 800; color: <%= status_color %>;">
+              <%= item.status %>
+            </span>
+          </div>
+        </div>
+
+        <%# --- ACCIONES ACTUALIZADAS: VER, EDITAR Y BORRAR CON TEXTO --- %>
+        <div style="display: flex; gap: 8px;">
+          <%= link_to item_path(item), style: "flex: 1.5; text-align: center; padding: 12px; background: #2563eb; border-radius: 12px; text-decoration: none; color: white; font-size: 0.85em; font-weight: bold; transition: all 0.2s; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.15);" do %>
+            👁️ Ver
+          <% end %>
+          
+          <%= link_to edit_item_path(item), style: "flex: 1.2; text-align: center; padding: 12px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 12px; text-decoration: none; color: #475569; font-size: 0.85em; font-weight: bold; transition: all 0.2s;" do %>
+            📝 Editar
+          <% end %>
+          
+          <%= link_to item_path(item), data: { turbo_method: :delete, turbo_confirm: "¿Eliminar este equipo?" }, style: "flex: 1.2; text-align: center; padding: 12px; background: #fff1f2; border: 1px solid #ffe4e6; border-radius: 12px; text-decoration: none; color: #e11d48; font-size: 0.85em; font-weight: bold; transition: all 0.2s;" do %>
+            🗑️ Borrar
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @items.empty? %>
+    <div style="text-align: center; padding: 80px 20px; color: #94a3b8; border: 2px dashed #e2e8f0; border-radius: 30px; margin-top: 20px;">
+      <p style="font-size: 1.2em; font-weight: 500;">No hay equipos que coincidan con la búsqueda. 🔍</p>
+    </div>
+  <% end %>
+
+</div>

@@ -1,0 +1,9 @@
+<div style="max-width: 600px; margin: 40px auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 0 20px;">
+  <div style="margin-bottom: 30px;">
+    <%= link_to "⬅️ Volver al Inventario", items_path, style: "text-decoration: none; color: #64748b; font-size: 0.9em; font-weight: bold;" %>
+    <h1 style="color: #1e293b; margin: 10px 0 0 0; font-size: 2em;">➕ Registrar Nuevo Equipo</h1>
+    <p style="color: #64748b; margin: 5px 0 0 0;">Ingresa los detalles técnicos del equipo de sonido.</p>
+  </div>
+
+  <%= render 'form', item: @item %>
+</div>

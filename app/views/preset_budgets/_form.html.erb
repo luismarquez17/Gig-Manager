@@ -1,0 +1,54 @@
+<%= form_with(model: preset_budget, local: true, style: "display: flex; flex-direction: column; gap: 20px; max-width: 600px; margin: 0 auto; background: white; padding: 35px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border: 1px solid #e2e8f0;") do |form| %>
+
+  <% if preset_budget.errors.any? %>
+    <div style="background: #fff1f2; border: 1px solid #fca5a5; color: #be123c; padding: 15px; border-radius: 10px; font-size: 0.9em;">
+      <h4 style="margin: 0 0 8px 0; font-weight: 800;">⚠️ Por favor corrige los siguientes errores:</h4>
+      <ul style="margin: 0; padding-left: 20px; line-height: 1.6;">
+        <% preset_budget.errors.full_messages.each do |message| %>
+          <li><%= message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form_label = form.label :title, "🏷️ Nombre del Presupuesto / Combo", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>
+    <%= form.text_field :title, placeholder: "Ej. Combo Básico Sonido", style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; box-sizing: border-box;", onfocus: "this.style.borderColor='#2563eb'", onblur: "this.style.borderColor='#e2e8f0'" %>
+  </div>
+
+  <div>
+    <%= form.label :description, "📝 Descripción Detallada (Equipos, servicios y condiciones)", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>
+    <%= form.text_area :description, rows: 6, placeholder: "Ej. Incluye:\n- 2 Cornetas activas 15\"\n- Consola de 6 canales\n- 2 Micrófonos inalámbricos\n- Transporte e instalación incluidos en zona metropolitana.", style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; box-sizing: border-box; font-family: inherit;", onfocus: "this.style.borderColor='#2563eb'", onblur: "this.style.borderColor='#e2e8f0'" %>
+  </div>
+
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+    <div>
+      <%= form.label :price, "💰 Precio Base", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>
+      <%= form.number_field :price, step: 0.01, placeholder: "150.00", style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; box-sizing: border-box;", onfocus: "this.style.borderColor='#2563eb'", onblur: "this.style.borderColor='#e2e8f0'" %>
+    </div>
+    <div>
+      <%= form.label :currency, "Moneda", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>
+      <%= form.select :currency, [["USD ($)", "USD"], ["BS (Bs.)", "BS"]], {}, { style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; outline: none; background: white; transition: 0.2s; box-sizing: border-box; height: 50px;", onfocus: "this.style.borderColor='#2563eb'", onblur: "this.style.borderColor='#e2e8f0'" } %>
+    </div>
+  </div>
+
+  <div>
+    <%= form.label :image, "🖼️ Imagen / Flyer del Presupuesto (Opcional)", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>
+    <div style="border: 2px dashed #cbd5e1; padding: 20px; border-radius: 8px; text-align: center; background: #f8fafc; transition: 0.2s;" onmouseover="this.style.borderColor='#2563eb'" onmouseout="this.style.borderColor='#cbd5e1'">
+      <%= form.file_field :image, accept: 'image/*', style: "font-size: 0.9em; margin-bottom: 10px;" %>
+      <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #64748b;">Sube una imagen o diseño publicitario del paquete para poder compartirla fácilmente.</p>
+    </div>
+    <% if preset_budget.image.attached? %>
+      <div style="margin-top: 15px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 0.85em; color: #64748b;">Imagen actual:</span>
+        <%= image_tag preset_budget.image.variant(resize_to_limit: [100, 100]), style: "border-radius: 6px; border: 1px solid #cbd5e1;" rescue image_tag preset_budget.image, style: "width: 80px; border-radius: 6px; border: 1px solid #cbd5e1;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div style="margin-top: 15px; display: flex; gap: 15px;">
+    <%= link_to "Cancelar", preset_budgets_path, style: "flex: 1; text-align: center; background: #f1f5f9; color: #475569; padding: 14px; text-decoration: none; border-radius: 10px; font-weight: bold; transition: 0.2s;", onmouseover: "this.style.background='#e2e8f0'", onmouseout: "this.style.background='#f1f5f9'" %>
+    <%= form.submit "Guardar Presupuesto Base", style: "flex: 2; background: #2563eb; color: white; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1em; transition: 0.2s; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);", onmouseover: "this.style.background='#1d4ed8'", onmouseout: "this.style.background='#2563eb'" %>
+  </div>
+
+<% end %>

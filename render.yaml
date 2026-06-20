@@ -1,0 +1,38 @@
+databases:
+  - name: gig-manager-db
+    plan: starter
+    version: 15
+
+services:
+  # Servicio Web
+  - type: web
+    name: gig-manager-web
+    env: docker
+    plan: standard
+    healthCheckPath: "/"
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "1"
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gig-manager-db
+          property: connectionString
+    # Render detectará el Dockerfile automáticamente si está en la raíz
+
+  # Servicio Worker (Sidekiq)
+  - type: worker
+    name: gig-manager-worker
+    env: docker
+    plan: starter
+    startCommand: "bundle exec sidekiq"
+    envVars:
+      - key: RAILS_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: gig-manager-db
+          property: connectionString

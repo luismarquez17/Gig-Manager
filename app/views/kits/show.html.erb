@@ -1,0 +1,131 @@
+<div class="container py-4">
+  
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <div>
+      <%= link_to '← Volver a las Plantillas', kits_path, class: 'text-muted text-decoration-none fw-bold' %>
+      <h1 class="fw-extrabold m-0 mt-1">📋 Plantilla: <%= @kit.name %></h1>
+      <% if @kit.description.present? %>
+        <p class="text-muted m-0 mt-1"><%= @kit.description %></p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Formulario para agregar items al kit -->
+    <div class="col-lg-4">
+      <div class="custom-card">
+        <h3 class="fw-bold mb-3 fs-5">➕ Agregar Equipo a la Plantilla</h3>
+        
+        <%= form_with(model: [@kit, @new_kit_item], url: add_item_kit_path(@kit), method: :post, local: true) do |f| %>
+          
+          <div class="form-group-custom position-relative">
+            <label for="inventory-search">🔍 Buscar Equipo en Inventario</label>
+            <input list="inventory-list" 
+                   id="inventory-search" 
+                   placeholder="Escribe para buscar..." 
+                   class="form-input-custom"
+                   oninput="validateItem(this)" autocomplete="off">
+                   
+            <datalist id="inventory-list">
+              <% Item.order(:name).each do |item| %>
+                <option value="<%= item.name %>" data-id="<%= item.id %>"></option>
+              <% end %>
+            </datalist>
+            
+            <%= f.hidden_field :item_id, id: "real-item-id" %>
+          </div>
+
+          <div class="form-group-custom">
+            <%= f.label :quantity, "🔢 Cantidad" %>
+            <%= f.number_field :quantity, value: 1, min: 1, class: "form-input-custom text-center fw-bold" %>
+          </div>
+
+          <div class="mt-4">
+            <%= f.submit "Añadir a la Plantilla", id: "add-item-btn", disabled: true, class: "btn-main btn-primary-custom w-100 justify-content-center opacity-50", style: "cursor: not-allowed;" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Lista de items en la plantilla -->
+    <div class="col-lg-8">
+      <div class="table-custom-wrapper">
+        <div class="bg-light p-3 border-bottom d-flex justify-content-between align-items-center">
+          <h3 class="fw-bold m-0 fs-5">📦 Equipos Configurados</h3>
+          <span class="badge bg-primary fs-7"><%= @kit_items.sum(:quantity) %> unidades en total</span>
+        </div>
+        
+        <% if @kit_items.any? %>
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Equipo</th>
+                <th>Categoría</th>
+                <th class="text-center">Cantidad</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @kit_items.each do |ki| %>
+                <tr>
+                  <td>
+                    <div class="fw-bold text-dark"><%= ki.item.name %></div>
+                  </td>
+                  <td>
+                    <span class="badge bg-light text-secondary border"><%= ki.item.category %></span>
+                  </td>
+                  <td class="text-center fw-bold text-primary fs-5">
+                    x <%= ki.quantity %>
+                  </td>
+                  <td class="text-center">
+                    <%= link_to '❌ Remover', remove_item_kit_path(@kit, item_id: ki.id), data: { turbo_method: :delete, turbo_confirm: "¿Remover este equipo de la plantilla?" }, class: 'btn-main btn-danger-custom py-1 px-3 fs-7' %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <div class="p-5 text-center text-muted">
+            <span class="fs-1 d-block mb-2">🎒</span>
+            <p class="m-0 fw-semibold">Esta plantilla está vacía.</p>
+            <small>Usa el buscador de la izquierda para agregar los equipos que conformarán este Kit.</small>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  function validateItem(input) {
+    const list = document.getElementById('inventory-list');
+    const hiddenInput = document.getElementById('real-item-id');
+    const btn = document.getElementById('add-item-btn');
+    const options = list.options;
+    
+    let found = false;
+    hiddenInput.value = ""; 
+
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].value.toLowerCase() === input.value.toLowerCase()) {
+        hiddenInput.value = options[i].getAttribute('data-id');
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      input.style.borderColor = "#10b981";
+      input.style.backgroundColor = "#ecfdf5";
+      btn.disabled = false;
+      btn.classList.remove('opacity-50');
+      btn.style.cursor = "pointer";
+    } else {
+      input.style.borderColor = "#f1f5f9";
+      input.style.backgroundColor = "white";
+      btn.disabled = true;
+      btn.classList.add('opacity-50');
+      btn.style.cursor = "not-allowed";
+    }
+  }
+</script>

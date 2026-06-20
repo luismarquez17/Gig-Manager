@@ -1,0 +1,29 @@
+<div class="custom-card">
+  <%= form_with(model: kit, local: true) do |f| %>
+    <% if kit.errors.any? %>
+      <div class="alert alert-danger mb-4 rounded-3">
+        <h5 class="fw-bold mb-2">Por favor corrige los siguientes errores:</h5>
+        <ul class="mb-0">
+          <% kit.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <div class="form-group-custom">
+      <%= f.label :name, "🏷️ Nombre de la Plantilla" %>
+      <%= f.text_field :name, placeholder: "Ej: Sonido Básico / Kit Luces Par", class: "form-input-custom" %>
+    </div>
+
+    <div class="form-group-custom">
+      <%= f.label :description, "📝 Descripción (Opcional)" %>
+      <%= f.text_area :description, rows: 3, placeholder: "Especifica qué incluye esta configuración general...", class: "form-input-custom" %>
+    </div>
+
+    <div class="d-flex gap-3 mt-4">
+      <%= link_to "Cancelar", kits_path, class: "btn-main btn-gray-custom flex-grow-1 text-center justify-content-center" %>
+      <%= f.submit kit.new_record? ? "🚀 Crear y Continuar" : "💾 Guardar Cambios", class: "btn-main btn-primary-custom flex-grow-2 text-center justify-content-center" %>
+    </div>
+  <% end %>
+</div>

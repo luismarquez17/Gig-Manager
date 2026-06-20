@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>GigManager</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+  </head>
+
+  <body style="margin: 0; padding: 0; background-color: #f8fafc;">
+    <div style="display: flex; min-height: 100vh; font-family: 'Inter', sans-serif;">
+      
+      <%# --- MOSTRAR SIDEBAR SOLO SI HAY USUARIO --- %>
+      <% if user_signed_in? %>
+        <aside style="width: 280px; background: #0f172a; color: white; position: fixed; height: 100vh; display: flex; flex-direction: column; padding: 25px 20px; box-sizing: border-box; z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);">
+          
+          <%# Logo %>
+          <div style="padding: 10px 0 30px 10px; border-bottom: 1px solid #1e293b; margin-bottom: 25px;">
+            <h2 style="margin: 0; font-size: 1.5em; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;">
+              <span style="background: #2563eb; color: white; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.8em;">G</span>
+              Gig Manager
+            </h2>
+          </div>
+
+          <%# Navegación %>
+          <nav style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
+            <%= link_to root_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'pages' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'pages' ? '#2563eb' : 'transparent'}; 
+                box-shadow: #{controller_name == 'pages' ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none'};" do %>
+              <span style="font-size: 1.2em;">🏠</span> <span style="font-weight: 600;">Inicio</span>
+            <% end %>
+
+            <%= link_to items_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'items' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'items' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">📦</span> <span style="font-weight: 600;">Inventario</span>
+            <% end %>
+
+            <%= link_to clients_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'clients' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'clients' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">👥</span> <span style="font-weight: 600;">Clientes</span>
+            <% end %>
+
+            <%= link_to preset_budgets_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'preset_budgets' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'preset_budgets' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">📄</span> <span style="font-weight: 600;">Presupuestos Base</span>
+            <% end %>
+
+            <%= link_to gigs_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'gigs' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'gigs' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">🎸</span> <span style="font-weight: 600;">Gigs / Eventos</span>
+            <% end %>
+
+            <%= link_to kits_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'kits' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'kits' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">🛠️</span> <span style="font-weight: 600;">Plantillas (Kits)</span>
+            <% end %>
+
+            <%= link_to maintenance_records_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'maintenance_records' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'maintenance_records' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">🔧</span> <span style="font-weight: 600;">Taller (Reparos)</span>
+            <% end %>
+
+            <%= link_to availability_dashboard_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{action_name == 'availability' ? 'white' : '#94a3b8'}; 
+                background: #{action_name == 'availability' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">⚡</span> <span style="font-weight: 600;">Conflictos</span>
+            <% end %>
+
+            <%= link_to financials_dashboard_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{action_name == 'financials' ? 'white' : '#94a3b8'}; 
+                background: #{action_name == 'financials' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">📊</span> <span style="font-weight: 600;">Métricas / Finanzas</span>
+            <% end %>
+
+            <%= link_to investments_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
+                color: #{controller_name == 'investments' ? 'white' : '#94a3b8'}; 
+                background: #{controller_name == 'investments' ? '#2563eb' : 'transparent'};" do %>
+              <span style="font-size: 1.2em;">💸</span> <span style="font-weight: 600;">Inversiones</span>
+            <% end %>
+          </nav>
+
+          <%# Pie del Sidebar: Usuario y Logout %>
+          <div style="margin-top: auto; padding: 15px; background: #1e293b; border-radius: 16px;">
+            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+              <div style="width: 32px; height: 32px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #38bdf8; border: 2px solid #0f172a; font-size: 0.8em;">
+                <%= current_user.email[0].upcase %>
+              </div>
+              <div style="overflow: hidden;">
+                <p style="margin: 0; font-size: 0.75em; font-weight: 700; color: white; white-space: nowrap; text-overflow: ellipsis;"><%= current_user.email %></p>
+                <p style="margin: 0; font-size: 0.65em; color: #64748b; font-weight: 600; text-transform: uppercase;">En línea</p>
+              </div>
+            </div>
+            <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, 
+                style: "width: 100%; background: #ef444420; color: #f87171; border: 1px solid #ef444440; padding: 8px; border-radius: 8px; font-size: 0.75em; font-weight: 700; cursor: pointer; transition: 0.3s;",
+                onmouseover: "this.style.background='#ef4444'; this.style.color='white';",
+                onmouseout: "this.style.background='#ef444420'; this.style.color='#f87171';" %>
+          </div>
+        </aside>
+      <% end %>
+
+      <%# --- CONTENIDO PRINCIPAL --- %>
+      <main style="<%= user_signed_in? ? 'margin-left: 280px;' : 'margin-left: 0;' %> flex-grow: 1; min-height: 100vh; padding: 40px; box-sizing: border-box;">
+        <div style="max-width: 1200px; margin: 0 auto;">
+          <%= yield %>
+        </div>
+      </main>
+
+    </div>
+  </body>
+</html>

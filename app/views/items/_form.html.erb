@@ -1,0 +1,112 @@
+<div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif; position: relative;">
+  
+  <%= link_to items_path, style: "position: absolute; top: 15px; right: 20px; text-decoration: none; color: #94a3b8; font-size: 1.2em;" do %> ✕ <% end %>
+
+  <%= form_with(model: item, local: true) do |f| %>
+    
+    <%# 1. CATEGORÍA PRINCIPAL %>
+    <div style="margin-bottom: 20px;">
+      <%= f.label :category, "📂 Categoría del Equipo", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.select :category, 
+          Item::CATEGORIES, 
+          { prompt: "--- Selecciona el tipo de equipo ---" }, 
+          { id: "category-select", onchange: "updateFormLogic()", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; background: white; cursor: pointer;" } 
+      %>
+    </div>
+
+    <%# 2. SUB-CATEGORÍA DINÁMICA %>
+    <%# Este contenedor cambiará de color y contenido según la categoría %>
+    <div id="sub-category-wrapper" style="display: none; margin-bottom: 20px; padding: 15px; border-radius: 12px; border-width: 1px; border-style: solid;">
+      <label id="sub-category-label" style="display: block; font-weight: bold; margin-bottom: 8px;"></label>
+      
+      <%# Select para Cables %>
+      <div id="cables-dropdown" style="display: none;">
+        <%= f.select :sub_category_cable, 
+            Item::CABLE_TYPES, 
+            { selected: (item.category == "Cables" ? item.sub_category : nil), prompt: "Selecciona tipo de cable..." }, 
+            { class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3498db; background: white;" } 
+        %>
+      </div>
+
+      <%# Select para Luces %>
+      <div id="lights-dropdown" style="display: none;">
+        <%= f.select :sub_category_light, 
+            ["Cabezal Móvil", "Par Led", "Estrobo", "Láser", "Máquina de Humo"], 
+            { selected: (item.category == "Luces" ? item.sub_category : nil), prompt: "Selecciona tipo de luz..." }, 
+            { class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #a855f7; background: white;" } 
+        %>
+      </div>
+    </div>
+
+    <%# 3. NOMBRE DEL EQUIPO %>
+    <div style="margin-bottom: 20px;">
+      <%= f.label :name, "🏷️ Nombre del Equipo", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.text_field :name, placeholder: "Ej: Yamaha F310", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 10px;">
+      <div>
+        <%= f.label :status, "✨ Estado", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.select :status, ["Excelente", "Operativo", "Dañado"], {}, { id: "status-select", onchange: "updateFormLogic()", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; background: white;" } %>
+      </div>
+      <div>
+        <%= f.label :quantity, "🔢 Cantidad", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.number_field :quantity, style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      </div>
+    </div>
+
+    <%# AVISO DE TIRRO %>
+    <div id="damage-notice" style="display: none; margin-bottom: 25px; background: #fef2f2; border: 2px dashed #ef4444; padding: 15px; border-radius: 12px; text-align: center;">
+      <p style="margin: 0; color: #b91c1c; font-weight: 800; text-transform: uppercase; font-size: 0.85em;">
+        ⚠️ MARCADO CON TIRRO OBLIGATORIO
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <%= link_to "Cancelar", items_path, style: "flex: 1; text-align: center; background: #f1f5f9; color: #64748b; padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold;" %>
+      <%= f.submit item.new_record? ? "🚀 Registrar" : "💾 Guardar Cambios", 
+          style: "flex: 2; background: #2563eb; color: white; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer;" %>
+    </div>
+  <% end %>
+</div>
+
+<script>
+  function updateFormLogic() {
+    const category = document.getElementById('category-select').value;
+    const status = document.getElementById('status-select').value;
+    
+    const wrapper = document.getElementById('sub-category-wrapper');
+    const label = document.getElementById('sub-category-label');
+    const cableDiv = document.getElementById('cables-dropdown');
+    const lightDiv = document.getElementById('lights-dropdown');
+    const damageNotice = document.getElementById('damage-notice');
+
+    // Reset de la sección dinámica
+    wrapper.style.display = "none";
+    cableDiv.style.display = "none";
+    lightDiv.style.display = "none";
+
+    if (category === "Cables") {
+      wrapper.style.display = "block";
+      wrapper.style.backgroundColor = "#f0f9ff";
+      wrapper.style.borderColor = "#bae6fd";
+      label.innerText = "🔌 Tipo de Cable";
+      label.style.color = "#0369a1";
+      cableDiv.style.display = "block";
+    } else if (category === "Luces") {
+      wrapper.style.display = "block";
+      wrapper.style.backgroundColor = "#faf5ff";
+      wrapper.style.borderColor = "#e9d5ff";
+      label.innerText = "💡 Tipo de Iluminación";
+      label.style.color = "#6b21a8";
+      lightDiv.style.display = "block";
+    }
+
+    // Aviso de Tirro
+    damageNotice.style.display = (status === "Dañado") ? "block" : "none";
+  }
+
+  // EJECUCIÓN INMEDIATA (Para Editar)
+  document.addEventListener("turbo:load", updateFormLogic);
+  document.addEventListener("DOMContentLoaded", updateFormLogic);
+</script>

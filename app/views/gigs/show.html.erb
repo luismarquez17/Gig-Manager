@@ -1,0 +1,674 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', 'Segoe UI', sans-serif;">
+  
+  <%# --- FLASH MESSAGES --- %>
+  <% if notice %>
+    <div style="background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+      ✅ <%= notice %>
+    </div>
+  <% end %>
+  <% if alert %>
+    <div style="background: #fff1f2; border: 1px solid #fca5a5; color: #be123c; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+      ⚠️ <%= alert %>
+    </div>
+  <% end %>
+
+  <%# --- HEADER Y ACCIONES BASICAS --- %>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div>
+      <%= link_to '⬅ Volver al Historial', gigs_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; margin-bottom: 10px; display: inline-block;" %>
+      <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
+    </div>
+    
+    <div style="text-align: right;">
+      <%
+        priority_color = case @gig.client.priority
+                         when 'alta' then '#10b981'
+                         when 'media' then '#f59e0b'
+                         when 'baja' then '#ef4444'
+                         else '#64748b'
+                         end
+      %>
+      <span style="background: <%= priority_color %>; padding: 8px 18px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85em; box-shadow: 0 4px 6px <%= priority_color %>33;">
+        Prioridad: <%= @gig.client.priority.capitalize %>
+      </span>
+    </div>
+  </div>
+
+  <%# --- DETALLES PRINCIPALES DEL EVENTO --- %>
+  <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+    
+    <div>
+      <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Cliente</p>
+      <p style="margin: 5px 0 0 0; font-size: 1.2em; font-weight: bold; color: #1e293b;"><%= link_to @gig.client.name, client_path(@gig.client), style: "color: #0ea5e9; text-decoration: none;" %></p>
+      <small style="color: #94a3b8;"><%= @gig.client.phone %></small>
+    </div>
+
+    <div>
+      <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Fecha &amp; Ubicación</p>
+      <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #1e293b;">📅 <%= @gig.date&.strftime("%d/%m/%Y") || "---" %></p>
+      <p style="margin: 2px 0 0 0; color: #475569;">📍 <%= @gig.location.presence || "No especificada" %></p>
+    </div>
+
+    <div>
+      <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Monto Acordado</p>
+      <p style="margin: 5px 0 0 0; font-size: 1.4em; font-weight: bold; color: #10b981;">
+        <%= number_with_precision(@gig.amount, precision: 2) %> 
+        <span style="font-size: 0.6em; color: #94a3b8; vertical-align: middle;"><%= @gig.currency %></span>
+      </p>
+    </div>
+
+    <% if @gig.details.present? %>
+      <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #3b82f6;">
+        <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Detalles o Paquete Contratado</p>
+        <p style="margin: 5px 0 0 0; color: #334155; line-height: 1.5; font-size: 0.95em;"><%= @gig.details %></p>
+      </div>
+    <% end %>
+
+  </div>
+
+  <%# --- CHECKLIST DE INVENTARIO --- %>
+  <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">
+    
+    <%# CABECERA CHECKLIST %>
+    <div style="background: #f8fafc; padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <h2 style="margin: 0; color: #1e293b; font-size: 1.3em; font-weight: 800;">✅ Checklist de Equipos</h2>
+        <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9em;">Despacha tus equipos y verifica el retorno digitalmente para evitar pérdidas.</p>
+      </div>
+      <div>
+        <%= link_to "🖨️ Imprimir", load_in_checklist_gig_path(@gig), target: "_blank", style: "background: #f1f5f9; color: #475569; padding: 10px 18px; border-radius: 10px; text-decoration: none; font-weight: bold; border: 1px solid #cbd5e1; display: inline-block; transition: 0.2s; font-size: 0.9em;", onmouseover: "this.style.background='#e2e8f0'", onmouseout: "this.style.background='#f1f5f9'" %>
+      </div>
+    </div>
+
+    <%# PESTAÑAS LOGÍSTICAS DE CARGA / RETORNO %>
+    <div style="display: flex; background: #f1f5f9; padding: 6px; border-radius: 14px; margin: 20px 25px; gap: 5px;">
+      <button onclick="switchLogisticsMode('general')" id="btn-tab-general" class="logistics-tab" style="flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; transition: all 0.2s; background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+        📋 Checklist General
+      </button>
+      <button onclick="switchLogisticsMode('carga')" id="btn-tab-carga" class="logistics-tab" style="flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
+        🚚 Modo Carga (Depósito)
+      </button>
+      <button onclick="switchLogisticsMode('retorno')" id="btn-tab-retorno" class="logistics-tab" style="flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; transition: all 0.2s; background: transparent; color: #64748b;">
+        ↩️ Modo Retorno (Devolución)
+      </button>
+    </div>
+
+    <%# APLICAR PLANTILLA (KITS) %>
+    <% @available_kits = Kit.all %>
+    <% if @available_kits.any? %>
+      <div style="padding: 16px 25px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+        <span style="font-size: 0.85em; font-weight: 800; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🛠️ Aplicar Plantilla:</span>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+          <% @available_kits.each do |kit| %>
+            <%= button_to add_kit_gig_path(@gig), 
+                params: { kit_id: kit.id },
+                method: :post,
+                style: "background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;",
+                onmouseover: "this.style.backgroundColor='#1d4ed8'",
+                onmouseout: "this.style.backgroundColor='#2563eb'",
+                title: "Aplicar #{kit.name} al checklist" do %>
+              📦 <%= kit.name %>
+            <% end %>
+          <% end %>
+        </div>
+        <span style="font-size: 0.75em; color: #3b82f6; margin-left: auto;">Las cantidades se acumulan si el equipo ya está en la lista.</span>
+      </div>
+    <% end %>
+
+    <%# FORMULARIO PARA AÑADIR ITEM INDIVIDUAL %>
+    <div style="padding: 20px 25px; border-bottom: 2px solid #f1f5f9; background: #ffffff;">
+      <%= form_with(model: [@gig, @new_gig_item], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
+        
+        <div style="flex-grow: 1; min-width: 250px; position: relative;">
+          <%= f.label :item_id, "🔍 Buscar Equipo en Inventario", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #475569;" %>
+          
+          <input list="inventory-list" 
+                 id="inventory-search" 
+                 placeholder="Escribe para buscar..." 
+                 style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; outline: none; transition: 0.2s; box-sizing: border-box;"
+                 oninput="validateItem(this)" autocomplete="off">
+                 
+          <datalist id="inventory-list">
+            <% Item.order(:name).each do |item| %>
+              <option value="<%= item.name %>" data-id="<%= item.id %>"></option>
+            <% end %>
+          </datalist>
+          
+          <%= f.hidden_field :item_id, id: "real-item-id" %>
+        </div>
+
+        <div style="width: 100px;">
+          <%= f.label :quantity, "Cantidad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #475569;" %>
+          <%= f.number_field :quantity, value: 1, min: 1, style: "width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; text-align: center; font-weight: bold; box-sizing: border-box;" %>
+        </div>
+
+        <div>
+          <%= f.submit "➕ Añadir", id: "add-item-btn", disabled: true, style: "background: #cbd5e1; color: white; border: none; padding: 13px 25px; border-radius: 8px; font-weight: bold; cursor: not-allowed; transition: 0.3s;" %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# LISTA DE ITEMS (TODO LIST CON SOPORTE LOGÍSTICO) %>
+    <div style="padding: 0;">
+      <% if @gig_items.any? %>
+        <ul style="list-style: none; padding: 0; margin: 0;">
+          <% @gig_items.each do |gi| %>
+            <%
+              committed_elsewhere = 0
+              if @gig.date.present?
+                committed_elsewhere = GigItem
+                  .joins(:gig)
+                  .where(item_id: gi.item_id)
+                  .where.not(gig_id: @gig.id)
+                  .where(gigs: { date: @gig.date })
+                  .sum(:quantity)
+              end
+              total_committed = committed_elsewhere + gi.quantity
+              stock_conflict = total_committed > gi.item.quantity.to_i
+
+              item_damaged = gi.item.status == "Dañado"
+            %>
+            <li id="gig-item-<%= gi.id %>" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; <%= gi.checked ? 'background-color: #f8fafc; opacity: 0.8;' : 'background-color: #ffffff;' %>">
+              
+              <div style="display: flex; align-items: center; gap: 20px; flex-grow: 1;">
+                
+                <%# 1. Columna modo General %>
+                <div class="col-mode col-general" style="padding: 5px;">
+                  <input type="checkbox" <%= "checked" if gi.checked %> 
+                         data-toggle-url="<%= toggle_gig_item_path(gi) %>"
+                         onchange="toggleChecklist(this, <%= gi.id %>)"
+                         style="width: 26px; height: 26px; cursor: pointer; accent-color: #10b981;">
+                </div>
+
+                <%# 2. Columna modo Carga %>
+                <div class="col-mode col-carga" style="display: none; padding: 5px;">
+                  <% if gi.loaded_quantity == gi.quantity %>
+                    <span style="font-size: 1.4em; color: #10b981; cursor: default;" title="Cargado totalmente">🟢</span>
+                  <% elsif gi.loaded_quantity > 0 %>
+                    <span style="font-size: 1.4em; color: #f59e0b; cursor: default;" title="Carga incompleta">🟡</span>
+                  <% else %>
+                    <span style="font-size: 1.4em; color: #cbd5e1; cursor: default;" title="Pendiente de carga">⚪</span>
+                  <% end %>
+                </div>
+
+                <%# 3. Columna modo Retorno %>
+                <div class="col-mode col-retorno" style="display: none; padding: 5px;">
+                  <% if gi.discrepancy? %>
+                    <span style="font-size: 1.4em; color: #ef4444; cursor: default;" title="Discrepancia detectada">🔴</span>
+                  <% elsif gi.returned_all? %>
+                    <span style="font-size: 1.4em; color: #10b981; cursor: default;" title="Todo retornado">🟢</span>
+                  <% else %>
+                    <span style="font-size: 1.4em; color: #cbd5e1; cursor: default;" title="Pendiente de retorno">⚪</span>
+                  <% end %>
+                </div>
+                
+                <%# INFORMACIÓN DEL ITEM %>
+                <div style="display: flex; flex-direction: column; flex-grow: 1;">
+                  <span id="text-item-<%= gi.id %>" style="font-size: 1.1em; font-weight: bold; transition: color 0.2s; <%= gi.checked ? 'text-decoration: line-through; color: #94a3b8;' : 'color: #1e293b;' %>">
+                    <%= gi.item.name %>
+                  </span>
+                  
+                  <div style="display: flex; gap: 8px; font-size: 0.82em; margin-top: 5px; flex-wrap: wrap; align-items: center;">
+                    <span style="color: #64748b; background: #e2e8f0; padding: 2px 8px; border-radius: 4px;"><%= gi.item.category %></span>
+                    
+                    <%# Alertas %>
+                    <% if item_damaged %>
+                      <span style="color: #b91c1c; background: #fef2f2; border: 1px dashed #ef4444; padding: 2px 8px; border-radius: 4px; font-weight: 800;">
+                        ⚠️ AVERIADO — Taller activo
+                      </span>
+                    <% end %>
+                    
+                    <% if stock_conflict && !item_damaged %>
+                      <span style="color: #c2410c; background: #fff7ed; border: 1px solid #fed7aa; padding: 2px 8px; border-radius: 4px; font-weight: 800;">
+                        ⚡ Conflicto stock — <%= committed_elsewhere %> reservada(s) esta fecha
+                      </span>
+                    <% end %>
+
+                    <%# Cantidad cargada y retornada en modo general %>
+                    <span class="col-general" style="color: #475569; background: #f1f5f9; padding: 2px 8px; border-radius: 4px;">
+                      Cargado: <strong><%= gi.loaded_quantity %></strong>/<%= gi.quantity %> | Retornado: <strong><%= gi.returned_quantity %></strong>/<%= gi.loaded_quantity %>
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <%# CONTROLES GENERALES %>
+              <div class="col-mode col-general" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;">
+                <span style="font-size: 1.2em; font-weight: bold; color: <%= gi.checked ? '#cbd5e1' : '#3b82f6' %>; text-align: center; min-width: 40px; background: <%= gi.checked ? 'transparent' : '#eff6ff' %>; padding: 6px 12px; border-radius: 8px;">
+                  x <%= gi.quantity %>
+                </span>
+
+                <%# Si hay conflicto de stock: mostrar botón para ir al panel de conflictos %>
+                <% if stock_conflict %>
+                  <%= link_to availability_dashboard_path,
+                      style: "background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; font-size: 0.75em; font-weight: 800; cursor: pointer; padding: 7px 12px; border-radius: 8px; transition: 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap;",
+                      onmouseover: "this.style.backgroundColor='#ffedd5'",
+                      onmouseout:  "this.style.backgroundColor='#fff7ed'",
+                      title: "Ver todos los conflictos de disponibilidad" do %>
+                    ⚡ Resolver Conflicto
+                  <% end %>
+                <% end %>
+
+                <%# Botón de Reparación solo si el equipo NO está ya dañado %>
+                <% unless gi.item.status == "Dañado" %>
+                  <button onclick="openReportModal(<%= gi.id %>, '<%= j gi.item.name %>')"
+                          style="background: #f8fafc; border: 1px solid #cbd5e1; color: #475569; font-size: 0.75em; font-weight: 800; cursor: pointer; padding: 7px 12px; border-radius: 8px; transition: 0.2s;"
+                          onmouseover="this.style.backgroundColor='#f1f5f9'; this.style.borderColor='#94a3b8';"
+                          onmouseout="this.style.backgroundColor='#f8fafc'; this.style.borderColor='#cbd5e1';">
+                    🔧 Reportar Daño
+                  </button>
+                <% end %>
+                
+                <%= button_to gig_gig_item_path(@gig, gi), method: :delete, data: { turbo_confirm: "¿Remover de la lista?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 1.1em; cursor: pointer; padding: 8px 12px; border-radius: 8px; opacity: 0.8; transition: 0.2s;", onmouseover: "this.style.opacity='1'; this.style.backgroundColor='#fee2e2'", onmouseout: "this.style.opacity='0.8'; this.style.backgroundColor='#fff0f0'", title: "Remover" do %>
+                  ❌
+                <% end %>
+              </div>
+
+              <%# CONTROLES MODO CARGA (DEPÓSITO) %>
+              <div class="col-mode col-carga" style="display: none; align-items: center; gap: 12px; flex-shrink: 0;">
+                <button onclick="adjustQuantity(<%= gi.id %>, 'loaded', -1, <%= gi.quantity %>)" style="background: #f1f5f9; border: 1px solid #cbd5e1; font-weight: bold; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.1em;">-</button>
+                <span id="loaded-display-<%= gi.id %>" style="font-weight: 800; font-size: 1.1em; min-width: 90px; text-align: center; color: #1e293b;">
+                  <%= gi.loaded_quantity %> / <%= gi.quantity %>
+                </span>
+                <button onclick="adjustQuantity(<%= gi.id %>, 'loaded', 1, <%= gi.quantity %>)" style="background: #f1f5f9; border: 1px solid #cbd5e1; font-weight: bold; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.1em;">+</button>
+                <button onclick="setQuantityToMax(<%= gi.id %>, 'loaded', <%= gi.quantity %>)" style="background: #e0f2fe; border: 1px solid #bae6fd; color: #0369a1; font-size: 0.8em; font-weight: 800; padding: 9px 14px; border-radius: 8px; cursor: pointer; border: none;">Cargar Todo</button>
+              </div>
+
+              <%# CONTROLES MODO RETORNO (DEVOLUCIÓN) %>
+              <div class="col-mode col-retorno" style="display: none; align-items: center; gap: 10px; flex-shrink: 0;">
+                <% if gi.loaded_quantity > 0 %>
+                  <button onclick="adjustQuantity(<%= gi.id %>, 'returned', -1, <%= gi.loaded_quantity %>)" style="background: #f1f5f9; border: 1px solid #cbd5e1; font-weight: bold; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.1em;">-</button>
+                  <span id="returned-display-<%= gi.id %>" style="font-weight: 800; font-size: 1.1em; min-width: 90px; text-align: center; color: #1e293b;">
+                    <%= gi.returned_quantity %> / <%= gi.loaded_quantity %>
+                  </span>
+                  <button onclick="adjustQuantity(<%= gi.id %>, 'returned', 1, <%= gi.loaded_quantity %>)" style="background: #f1f5f9; border: 1px solid #cbd5e1; font-weight: bold; padding: 8px 15px; border-radius: 8px; cursor: pointer; font-size: 1.1em;">+</button>
+                  <button onclick="setQuantityToMax(<%= gi.id %>, 'returned', <%= gi.loaded_quantity %>)" style="background: #dcfce7; border: 1px solid #bbf7d0; color: #15803d; font-size: 0.8em; font-weight: 800; padding: 9px 14px; border-radius: 8px; cursor: pointer; border: none;">Retornar Todo</button>
+                  
+                  <%# Alerta de discrepancia y opciones de reporte %>
+                  <div id="discrepancy-actions-<%= gi.id %>" style="display: <%= gi.discrepancy? ? 'flex' : 'none' %>; gap: 6px; align-items: center;">
+                    <span style="color: #ef4444; font-size: 0.75em; font-weight: 800; background: #fef2f2; border: 1px solid #fee2e2; padding: 8px 10px; border-radius: 6px; white-space: nowrap;">
+                      Faltan: <span id="discrepancy-qty-<%= gi.id %>"><%= gi.loaded_quantity - gi.returned_quantity %></span>
+                    </span>
+                    
+                    <button onclick="openReportModal(<%= gi.id %>, '<%= j gi.item.name %>')" style="background: #fff7ed; border: 1px solid #fed7aa; color: #c2410c; font-size: 0.75em; font-weight: 800; cursor: pointer; padding: 8px 10px; border-radius: 6px;" title="Reportar como dañado en retorno">🔧 Daño</button>
+                    <button onclick="openLostModal(<%= gi.id %>, '<%= j gi.item.name %>', <%= gi.loaded_quantity - gi.returned_quantity %>)" style="background: #fef2f2; border: 1px solid #fee2e2; color: #b91c1c; font-size: 0.75em; font-weight: 800; cursor: pointer; padding: 8px 10px; border-radius: 6px;" title="Reportar como perdido definitivamente">⚠️ Perdido</button>
+                  </div>
+                <% else %>
+                  <span style="color: #94a3b8; font-size: 0.85em; font-style: italic; padding-right: 15px;">No se cargó equipo</span>
+                <% end %>
+              </div>
+
+            </li>
+          <% end %>
+        </ul>
+      <% else %>
+        <div style="padding: 40px; text-align: center; color: #94a3b8;">
+          <div style="font-size: 40px; margin-bottom: 10px;">🎒</div>
+          <h3 style="margin: 0; color: #64748b;">La lista está vacía</h3>
+          <p style="margin: 5px 0 0 0;">Aplica una plantilla o busca equipos arriba para armar el checklist del evento.</p>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+</div>
+
+<%# ====================================================== %>
+<%# MODAL DE REPORTE DE INCIDENCIA DE DAÑO %>
+<%# ====================================================== %>
+<div id="report-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 20px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 5px 0; color: #1e293b;">🔧 Enviar Equipo a Reparación / Taller</h3>
+    <p id="modal-item-name" style="margin: 0 0 20px 0; color: #94a3b8; font-size: 0.9em;"></p>
+    
+    <label style="display: block; font-weight: 700; color: #475569; margin-bottom: 8px; font-size: 0.9em;">
+      📝 Diagnóstico / Descripción del Daño
+    </label>
+    <textarea id="damage-notes" rows="4" placeholder="Ej: Falso contacto en el conector, cable roto en el show..." 
+              style="width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 0.95em; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; transition: 0.2s;"
+              onfocus="this.style.borderColor='#ea580c'"
+              onblur="this.style.borderColor='#f1f5f9'"></textarea>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button onclick="closeReportModal()" 
+              style="flex: 1; background: #f1f5f9; color: #64748b; border: none; padding: 13px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+        Cancelar
+      </button>
+      <button id="confirm-report-btn" onclick="submitDamageReport()"
+              style="flex: 2; background: #ea580c; color: white; border: none; padding: 13px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s;">
+        ⚠️ Confirmar Daño
+      </button>
+    </div>
+  </div>
+</div>
+
+<%# ====================================================== %>
+<%# MODAL DE REPORTE DE INCIDENCIA DE PÉRDIDA %>
+<%# ====================================================== %>
+<div id="lost-modal" style="display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
+  <div style="background: white; border-radius: 20px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 25px 50px rgba(0,0,0,0.2);">
+    <h3 style="margin: 0 0 5px 0; color: #1e293b;">⚠️ Reportar Pérdida Definitiva</h3>
+    <p id="lost-modal-item-name" style="margin: 0 0 20px 0; color: #94a3b8; font-size: 0.9em;"></p>
+    
+    <div style="margin-bottom: 15px;">
+      <label style="display: block; font-weight: 700; color: #475569; margin-bottom: 8px; font-size: 0.9em;">
+        🔢 Cantidad Perdida
+      </label>
+      <input type="number" id="lost-quantity" min="1" step="1" 
+             style="width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 0.95em; outline: none; font-weight: bold;">
+    </div>
+
+    <label style="display: block; font-weight: 700; color: #475569; margin-bottom: 8px; font-size: 0.9em;">
+      📝 Notas / Detalles de la Pérdida
+    </label>
+    <textarea id="lost-notes" rows="3" placeholder="Ej: Se extravió en el salón de eventos, no se encontró al recoger..." 
+              style="width: 100%; padding: 12px; border: 2px solid #f1f5f9; border-radius: 12px; font-size: 0.95em; font-family: inherit; resize: vertical; box-sizing: border-box; outline: none; transition: 0.2s;"
+              onfocus="this.style.borderColor='#be123c'"
+              onblur="this.style.borderColor='#f1f5f9'"></textarea>
+
+    <div style="display: flex; gap: 10px; margin-top: 20px;">
+      <button onclick="closeLostModal()" 
+              style="flex: 1; background: #f1f5f9; color: #64748b; border: none; padding: 13px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+        Cancelar
+      </button>
+      <button id="confirm-lost-btn" onclick="submitLostReport()"
+              style="flex: 2; background: #be123c; color: white; border: none; padding: 13px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s;">
+        ⚠️ Reportar Pérdida
+      </button>
+    </div>
+  </div>
+</div>
+
+<%# JAVASCRIPT %>
+<script>
+  let currentGigItemId = null;
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+  // --- Cambio de pestaña de logística ---
+  function switchLogisticsMode(mode) {
+    // 1. Alternar clases activas de pestañas
+    document.querySelectorAll('.logistics-tab').forEach(btn => {
+      btn.style.background = 'transparent';
+      btn.style.color = '#64748b';
+      btn.style.boxShadow = 'none';
+    });
+
+    const activeBtn = document.getElementById('btn-tab-' + mode);
+    activeBtn.style.background = 'white';
+    activeBtn.style.color = '#1e293b';
+    activeBtn.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
+
+    // 2. Alternar visibilidad de las columnas
+    document.querySelectorAll('.col-mode').forEach(col => {
+      col.style.display = 'none';
+    });
+    
+    document.querySelectorAll('.col-' + mode).forEach(col => {
+      if (col.tagName === 'DIV' && col.style.display !== 'none') {
+        col.style.display = 'flex';
+      } else {
+        col.style.display = col.classList.contains('col-general') && col.tagName === 'SPAN' ? 'inline' : 'flex';
+      }
+    });
+  }
+
+  // --- Ajuste de cantidad por AJAX (Carga y Retorno) ---
+  function adjustQuantity(gigItemId, field, amount, maxVal) {
+    const isLoaded = (field === 'loaded');
+    const displayElement = document.getElementById(isLoaded ? `loaded-display-${gigItemId}` : `returned-display-${gigItemId}`);
+    
+    // Parsear el valor actual del DOM
+    let currentValue = parseInt(displayElement.textContent.split('/')[0].trim());
+    let newValue = currentValue + amount;
+
+    if (newValue < 0 || newValue > maxVal) return;
+
+    let loadedVal = isLoaded ? newValue : parseInt(document.getElementById(`loaded-display-${gigItemId}`).textContent.split('/')[0].trim());
+    let returnedVal = isLoaded ? parseInt(displayElement.textContent.split('/')[0].trim()) : newValue;
+
+    // Si ajustamos carga, asegurar que retorno no quede mayor a carga
+    if (isLoaded && returnedVal > loadedVal) {
+      returnedVal = loadedVal;
+    }
+
+    sendQuantityUpdate(gigItemId, loadedVal, returnedVal);
+  }
+
+  function setQuantityToMax(gigItemId, field, maxVal) {
+    const isLoaded = (field === 'loaded');
+    let loadedVal = isLoaded ? maxVal : parseInt(document.getElementById(`loaded-display-${gigItemId}`).textContent.split('/')[0].trim());
+    let returnedVal = isLoaded ? 0 : maxVal; // Si es retorno, va al maximo cargado
+
+    sendQuantityUpdate(gigItemId, loadedVal, returnedVal);
+  }
+
+  function sendQuantityUpdate(gigItemId, loadedVal, returnedVal) {
+    fetch(`/gig_items/${gigItemId}/update_quantities`, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ loaded_quantity: loadedVal, returned_quantity: returnedVal })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        // Actualizar displays
+        const loadedDisplay = document.getElementById(`loaded-display-${gigItemId}`);
+        const returnedDisplay = document.getElementById(`returned-display-${gigItemId}`);
+        
+        if (loadedDisplay) {
+          const reqMax = loadedDisplay.textContent.split('/')[1].trim();
+          loadedDisplay.textContent = `${data.loaded_quantity} / ${reqMax}`;
+        }
+        
+        if (returnedDisplay) {
+          returnedDisplay.textContent = `${data.returned_quantity} / ${data.loaded_quantity}`;
+        }
+
+        // Actualizar discrepancy badge si existe
+        const discrepancyActions = document.getElementById(`discrepancy-actions-${gigItemId}`);
+        if (discrepancyActions) {
+          const diff = data.loaded_quantity - data.returned_quantity;
+          if (diff > 0) {
+            discrepancyActions.style.display = 'flex';
+            document.getElementById(`discrepancy-qty-${gigItemId}`).textContent = diff;
+          } else {
+            discrepancyActions.style.display = 'none';
+          }
+        }
+      } else {
+        alert("Error al actualizar cantidades: " + data.error);
+      }
+    })
+    .catch(() => alert("Error de red. Intenta nuevamente."));
+  }
+
+  // --- Validación de búsqueda de inventario ---
+  function validateItem(input) {
+    const list = document.getElementById('inventory-list');
+    const hiddenInput = document.getElementById('real-item-id');
+    const btn = document.getElementById('add-item-btn');
+    const options = list.options;
+    
+    let found = false;
+    hiddenInput.value = ""; 
+
+    for (let i = 0; i < options.length; i++) {
+      if (options[i].value.toLowerCase() === input.value.toLowerCase()) {
+        hiddenInput.value = options[i].getAttribute('data-id');
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      input.style.borderColor = "#10b981";
+      input.style.backgroundColor = "#ecfdf5";
+      btn.disabled = false;
+      btn.style.background = "#10b981";
+      btn.style.cursor = "pointer";
+    } else {
+      input.style.borderColor = "#e2e8f0";
+      input.style.backgroundColor = "white";
+      btn.disabled = true;
+      btn.style.background = "#cbd5e1";
+      btn.style.cursor = "not-allowed";
+    }
+  }
+
+  // --- Toggle checklist con AJAX ---
+  function toggleChecklist(checkbox, gigItemId) {
+    const url = checkbox.getAttribute('data-toggle-url');
+    const li = document.getElementById('gig-item-' + gigItemId);
+    const text = document.getElementById('text-item-' + gigItemId);
+    
+    if (checkbox.checked) {
+      li.style.backgroundColor = "#f8fafc";
+      li.style.opacity = "0.7";
+      text.style.textDecoration = "line-through";
+      text.style.color = "#94a3b8";
+    } else {
+      li.style.backgroundColor = "#ffffff";
+      li.style.opacity = "1";
+      text.style.textDecoration = "none";
+      text.style.color = "#1e293b";
+    }
+
+    fetch(url, {
+      method: 'PATCH',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    }).then(response => {
+      if (!response.ok) {
+        checkbox.checked = !checkbox.checked;
+        toggleChecklist(checkbox, gigItemId);
+      }
+    });
+  }
+
+  // --- Modal de Reporte de Daño ---
+  function openReportModal(gigItemId, itemName) {
+    currentGigItemId = gigItemId;
+    document.getElementById('modal-item-name').textContent = 'Equipo: ' + itemName;
+    document.getElementById('damage-notes').value = '';
+    const modal = document.getElementById('report-modal');
+    modal.style.display = 'flex';
+  }
+
+  function closeReportModal() {
+    document.getElementById('report-modal').style.display = 'none';
+    currentGigItemId = null;
+  }
+
+  function submitDamageReport() {
+    const notes = document.getElementById('damage-notes').value.trim();
+    if (!notes) {
+      document.getElementById('damage-notes').style.borderColor = '#ef4444';
+      document.getElementById('damage-notes').placeholder = '⚠️ Describe qué pasó antes de confirmar...';
+      return;
+    }
+
+    const btn = document.getElementById('confirm-report-btn');
+    btn.disabled = true;
+    btn.textContent = 'Enviando a taller...';
+
+    fetch(`/gig_items/${currentGigItemId}/report_damage`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ notes: notes })
+    }).then(res => res.json()).then(data => {
+      if (data.success) {
+        closeReportModal();
+        window.location.reload();
+      } else {
+        alert('Error al reportar el daño. Intenta nuevamente.');
+        btn.disabled = false;
+        btn.textContent = '⚠️ Confirmar Daño';
+      }
+    }).catch(() => {
+      alert('Error de conexión. Intenta nuevamente.');
+      btn.disabled = false;
+      btn.textContent = '⚠️ Confirmar Daño';
+    });
+  }
+
+  // --- Modal de Reporte de Pérdida ---
+  function openLostModal(gigItemId, itemName, maxLost) {
+    currentGigItemId = gigItemId;
+    document.getElementById('lost-modal-item-name').textContent = 'Equipo: ' + itemName;
+    document.getElementById('lost-notes').value = '';
+    
+    const qtyInput = document.getElementById('lost-quantity');
+    qtyInput.value = maxLost;
+    qtyInput.max = maxLost;
+
+    const modal = document.getElementById('lost-modal');
+    modal.style.display = 'flex';
+  }
+
+  function closeLostModal() {
+    document.getElementById('lost-modal').style.display = 'none';
+    currentGigItemId = null;
+  }
+
+  function submitLostReport() {
+    const notes = document.getElementById('lost-notes').value.trim();
+    const qty = parseInt(document.getElementById('lost-quantity').value);
+
+    if (isNaN(qty) || qty <= 0) {
+      alert("Introduce una cantidad perdida válida.");
+      return;
+    }
+
+    if (!notes) {
+      document.getElementById('lost-notes').style.borderColor = '#ef4444';
+      document.getElementById('lost-notes').placeholder = '⚠️ Describe los detalles de la pérdida...';
+      return;
+    }
+
+    const btn = document.getElementById('confirm-lost-btn');
+    btn.disabled = true;
+    btn.textContent = 'Procesando pérdida...';
+
+    fetch(`/gig_items/${currentGigItemId}/report_lost`, {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ quantity: qty, notes: notes })
+    }).then(res => res.json()).then(data => {
+      if (data.success) {
+        closeLostModal();
+        window.location.reload();
+      } else {
+        alert('Error: ' + data.error);
+        btn.disabled = false;
+        btn.textContent = '⚠️ Reportar Pérdida';
+      }
+    }).catch(() => {
+      alert('Error de conexión. Intenta nuevamente.');
+      btn.disabled = false;
+      btn.textContent = '⚠️ Reportar Pérdida';
+    });
+  }
+
+  // Cerrar modals al hacer click fuera
+  document.getElementById('report-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeReportModal();
+  });
+  document.getElementById('lost-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeLostModal();
+  });
+</script>

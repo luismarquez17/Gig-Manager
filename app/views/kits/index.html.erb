@@ -1,0 +1,53 @@
+<div class="container py-4">
+  <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+    <div>
+      <h1 class="fw-extrabold m-0">🛠️ Plantillas de Equipos (Kits)</h1>
+      <p class="text-muted m-0 mt-1">Crea grupos de equipos predefinidos para cargarlos rápidamente a tus shows.</p>
+    </div>
+    <%= link_to '➕ Nueva Plantilla', new_kit_path, class: 'btn-main btn-success-custom' %>
+  </div>
+
+  <% if @kits.any? %>
+    <div class="table-custom-wrapper">
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Nombre de la Plantilla</th>
+            <th>Descripción</th>
+            <th class="text-center">Equipos incluidos</th>
+            <th class="text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @kits.each do |kit| %>
+            <tr>
+              <td>
+                <div class="fw-bold text-dark fs-5"><%= kit.name %></div>
+              </td>
+              <td>
+                <span class="text-muted"><%= kit.description.presence || "Sin descripción" %></span>
+              </td>
+              <td class="text-center fw-bold text-primary">
+                <%= kit.kit_items.sum(:quantity) %> uds
+              </td>
+              <td class="text-center">
+                <div class="d-flex justify-content-center gap-2">
+                  <%= link_to '👁️ Ver / Editar Equipos', kit_path(kit), class: 'btn-main btn-primary-custom py-2 px-3 fs-7' %>
+                  <%= link_to '✏️ Nombre', edit_kit_path(kit), class: 'btn-main btn-gray-custom py-2 px-3 fs-7' %>
+                  <%= link_to '🗑️', kit_path(kit), data: { turbo_method: :delete, turbo_confirm: "¿Estás seguro de eliminar esta plantilla?" }, class: 'btn-main btn-danger-custom py-2 px-3 fs-7' %>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="custom-card text-center py-5">
+      <span class="fs-1 d-block mb-3">📦</span>
+      <h3 class="text-muted">No tienes plantillas de equipos creadas</h3>
+      <p class="text-muted mb-4">Crea una plantilla para automatizar el armado del checklist en tus eventos.</p>
+      <%= link_to 'Crear Primera Plantilla', new_kit_path, class: 'btn-main btn-primary-custom' %>
+    </div>
+  <% end %>
+</div>

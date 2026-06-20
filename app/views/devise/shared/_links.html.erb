@@ -1,0 +1,37 @@
+<div style="display: flex; flex-direction: column; gap: 12px; font-family: 'Inter', sans-serif;">
+  
+  <%- if controller_name != 'sessions' %>
+    <%= link_to new_session_path(resource_name), style: "text-decoration: none; color: #475569; font-size: 0.85em; font-weight: 600; transition: 0.3s;" do %>
+      ¿Ya tienes cuenta? <span style="color: #2563eb; font-weight: 700;">Inicia sesión</span>
+    <% end %>
+  <% end %>
+
+  <%- if devise_mapping.registerable? && controller_name != 'registrations' %>
+    <%= link_to new_registration_path(resource_name), style: "text-decoration: none; color: #475569; font-size: 0.85em; font-weight: 600; transition: 0.3s;" do %>
+      ¿Eres nuevo? <span style="color: #2563eb; font-weight: 700;">Regístrate aquí</span>
+    <% end %>
+  <% end %>
+
+  <%- if devise_mapping.recoverable? && controller_name != 'passwords' && controller_name != 'registrations' %>
+    <%= link_to "Olvidé mi contraseña", new_password_path(resource_name), 
+        style: "text-decoration: none; color: #94a3b8; font-size: 0.8em; font-weight: 500; transition: 0.3s;" %>
+  <% end %>
+
+  <%- if devise_mapping.confirmable? && controller_name != 'confirmations' %>
+    <%= link_to "Reenviar instrucciones de confirmación", new_confirmation_path(resource_name), 
+        style: "text-decoration: none; color: #94a3b8; font-size: 0.8em;" %>
+  <% end %>
+
+  <%- if devise_mapping.lockable? && resource_class.unlock_strategy_enabled?(:email) && controller_name != 'unlocks' %>
+    <%= link_to "Desbloquear cuenta", new_unlock_path(resource_name), 
+        style: "text-decoration: none; color: #94a3b8; font-size: 0.8em;" %>
+  <% end %>
+
+  <%- if devise_mapping.omniauthable? %>
+    <%- resource_class.omniauth_providers.each do |provider| %>
+      <%= button_to "Entrar con #{OmniAuth::Utils.camelize(provider)}", omniauth_authorize_path(resource_name, provider), 
+          data: { turbo: false }, 
+          style: "background: #f1f5f9; border: 1px solid #e2e8f0; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-weight: 600;" %>
+    <% end %>
+  <% end %>
+</div>

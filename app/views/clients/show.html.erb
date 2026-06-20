@@ -1,0 +1,259 @@
+<div style="max-width: 800px; margin: 0 auto; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color: #333;">
+  
+  <%# ENCABEZADO Y PRIORIDAD %>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+      <h1 style="margin: 0; color: #2c3e50;">👤 <%= @client.name %></h1>
+      <% if @client.phone.present? && @client.formatted_phone_for_whatsapp.present? %>
+        <%= link_to @client.whatsapp_url, target: "_blank", title: "Abrir chat de WhatsApp", style: "background: #25d366; color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2); transition: 0.2s;", onmouseover: "this.style.background='#20ba5a'", onmouseout: "this.style.background='#25d366'" do %>
+          <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white; vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+            <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+          </svg>
+          Chat WhatsApp
+        <% end %>
+      <% end %>
+    </div>
+    <div style="background: <%= color_prioridad(@client.priority) %>; color: white; padding: 8px 20px; border-radius: 50px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      PRIORIDAD: <%= @client.priority.upcase %>
+    </div>
+  </div>
+
+  <%# TARJETA DE RESUMEN %>
+  <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 8px solid <%= color_prioridad(@client.priority) %>; margin-bottom: 20px;">
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+      <div>
+        <p style="margin: 0; color: #7f8c8d; font-size: 0.85em; text-transform: uppercase;">Promedio por Show</p>
+        <h2 style="margin: 5px 0; color: #27ae60;">$<%= number_with_precision(@client.average_budget, precision: 2) %></h2>
+      </div>
+      <div>
+        <p style="margin: 0; color: #7f8c8d; font-size: 0.85em; text-transform: uppercase;">Zona de Trabajo</p>
+        <p style="margin: 5px 0; font-weight: bold; color: #34495e;">📍 <%= @client.resumen_ubicacion %></p>
+      </div>
+    </div>
+  </div>
+
+  <%# CINTA DE NOTAS (VISUALIZACIÓN RÁPIDA) %>
+  <% if @client.notes.present? %>
+    <div style="background: #fff9db; border: 1px solid #fab005; padding: 15px; border-radius: 12px; margin-bottom: 30px; display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 1.2em;">📌</span>
+      <p style="margin: 0; color: #856404; font-size: 0.95em;"><strong>Nota:</strong> <%= @client.notes %></p>
+    </div>
+  <% end %>
+
+  <%# --- COMPARTIR PRESUPUESTO POR WHATSAPP --- %>
+  <% if @preset_budgets.any? %>
+    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+      <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+        <span>💬</span> Compartir Presupuesto Base por WhatsApp
+      </h3>
+      
+      <% if @client.phone.blank? %>
+        <div style="background: #fff5f5; border: 1px solid #fca5a5; color: #c53030; padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 15px;">
+          ⚠️ Para poder enviar un presupuesto por WhatsApp, primero debes asignarle un teléfono/WhatsApp a este cliente en el formulario de abajo.
+        </div>
+      <% else %>
+        <div style="margin-top: 15px;">
+          <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;">Selecciona un Presupuesto Base:</label>
+          <select id="preset-budget-select" onchange="onPresetBudgetChange()" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; background: white; outline: none; margin-bottom: 20px;">
+            <option value="">-- Selecciona un paquete --</option>
+            <% @preset_budgets.each do |pb| %>
+              <option value="<%= pb.id %>"><%= pb.title %> - <%= number_to_currency(pb.price, unit: pb.currency == "USD" ? "$" : "Bs. ", precision: 2) %></option>
+            <% end %>
+          </select>
+        </div>
+
+        <div id="sharing-preview-area" style="display: none; grid-template-columns: 1.2fr 1fr; gap: 20px; border-top: 1px dashed #e2e8f0; padding-top: 20px; flex-wrap: wrap;">
+          <%# Preview Text / Message Box %>
+          <div>
+            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;">📝 Mensaje a enviar (Puedes editarlo antes de mandar):</label>
+            <textarea id="whatsapp-message-text" rows="10" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.95em; line-height: 1.5; outline: none; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
+            
+            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+              <button onclick="sendWhatsAppMessage()" style="background: #25d366; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95em; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); transition: 0.2s;" onmouseover="this.style.background='#20ba5a'" onmouseout="this.style.background='#25d366'">
+                <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white; vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+                </svg>
+                Enviar por WhatsApp
+              </button>
+              
+              <a id="print-budget-btn" href="#" target="_blank" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                🖨️ Imprimir / Guardar PDF
+              </a>
+            </div>
+          </div>
+
+          <%# Flyer / Image Preview %>
+          <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 200px; text-align: center; width: 100%; box-sizing: border-box;">
+            <div id="flyer-preview-placeholder">
+              <span style="font-size: 40px;">🖼️</span>
+              <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #64748b;">El paquete seleccionado no tiene flyer de imagen adjunto.</p>
+            </div>
+            <img id="flyer-preview-image" src="" style="display: none; max-width: 100%; max-height: 220px; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 12px;">
+            <div id="flyer-actions" style="display: none; gap: 8px; justify-content: center; flex-wrap: wrap; width: 100%;">
+              <button onclick="copyFlyerToClipboard()" style="background: #3b82f6; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+                📋 Copiar Foto
+              </button>
+              <a id="download-flyer-btn" href="#" download style="background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#475569'">
+                📥 Descargar Foto
+              </a>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Script to control interactivity %>
+    <script>
+      const PRESET_BUDGETS = <%= raw @preset_budgets.map { |pb| 
+        { 
+          id: pb.id, 
+          title: pb.title, 
+          description: pb.description, 
+          price: pb.price.to_f, 
+          currency: pb.currency,
+          print_url: print_preset_budget_url(pb),
+          image_url: pb.image.attached? ? url_for(pb.image) : nil
+        } 
+      }.to_json %>;
+
+      function onPresetBudgetChange() {
+        const select = document.getElementById('preset-budget-select');
+        const previewArea = document.getElementById('sharing-preview-area');
+        const selectedId = select.value;
+
+        if (!selectedId) {
+          previewArea.style.display = 'none';
+          return;
+        }
+
+        const budget = PRESET_BUDGETS.find(b => b.id == selectedId);
+        if (!budget) return;
+
+        // Formatear mensaje
+        const clientName = "<%= j @client.name %>";
+        const currencySymbol = budget.currency === "USD" ? "$" : "Bs. ";
+        const message = `¡Hola *${clientName}*! Aquí tienes la información de nuestra propuesta para *${budget.title}*:\n\n*Detalles:*\n${budget.description}\n\n*Inversión:* ${currencySymbol}${budget.price.toFixed(2)}\n\nPuedes ver e imprimir el presupuesto completo en PDF aquí: ${budget.print_url}`;
+
+        // Asignar al textarea
+        document.getElementById('whatsapp-message-text').value = message;
+
+        // Asignar links de PDF
+        document.getElementById('print-budget-btn').href = budget.print_url;
+
+        // Configurar previsualización de imagen y acciones
+        const img = document.getElementById('flyer-preview-image');
+        const placeholder = document.getElementById('flyer-preview-placeholder');
+        const actions = document.getElementById('flyer-actions');
+        const downloadBtn = document.getElementById('download-flyer-btn');
+
+        if (budget.image_url) {
+          img.src = budget.image_url;
+          img.style.display = 'block';
+          placeholder.style.display = 'none';
+          actions.style.display = 'flex';
+          downloadBtn.href = budget.image_url;
+        } else {
+          img.src = "";
+          img.style.display = 'none';
+          placeholder.style.display = 'block';
+          actions.style.display = 'none';
+          downloadBtn.href = "#";
+        }
+
+        previewArea.style.display = 'grid';
+      }
+
+      async function copyFlyerToClipboard() {
+        const img = document.getElementById('flyer-preview-image');
+        if (!img || !img.src) return;
+
+        try {
+          const response = await fetch(img.src);
+          const blob = await response.blob();
+          
+          // Creamos el item para el portapapeles
+          const data = [new ClipboardItem({ [blob.type]: blob })];
+          await navigator.clipboard.write(data);
+          alert("📋 ¡Flyer de imagen copiado al portapapeles! Ya puedes ir a WhatsApp y pegarla directamente con Ctrl+V / Cmd+V.");
+        } catch (err) {
+          console.warn("Failed to copy image directly. Fallback to browser action...", err);
+          alert("Para compartir la foto en WhatsApp:\n1. Haz clic derecho sobre la imagen de arriba.\n2. Selecciona 'Copiar imagen'.\n3. Pégala directamente en WhatsApp.\n\n(O haz clic en 'Descargar Foto' para guardarla y enviarla).");
+        }
+      }
+
+      function sendWhatsAppMessage() {
+        const text = document.getElementById('whatsapp-message-text').value;
+        const phone = "<%= @client.formatted_phone_for_whatsapp %>";
+        
+        if (!phone) {
+          alert("El cliente no tiene un teléfono configurado.");
+          return;
+        }
+
+        const encoded = encodeURIComponent(text);
+        const url = `https://wa.me/${phone}?text=${encoded}`;
+        window.open(url, '_blank');
+      }
+    </script>
+  <% else %>
+    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; text-align: center; color: #64748b; font-size: 0.95em;">
+      💡 Tienes la opción de compartir presupuestos base aquí. Crea tu primer presupuesto base en el menú <strong><%= link_to "Presupuestos Base", preset_budgets_path, style: "color: #2563eb; text-decoration: none; font-weight: bold;" %></strong> para activarla.
+    </div>
+  <% end %>
+
+  <%# SECCIÓN DE EDICIÓN (TARJETA TIPO FORMULARIO) %>
+  <div style="background: #fdfdfd; padding: 30px; border-radius: 15px; border: 1px solid #eee;">
+    <h3 style="margin-top: 0; border-bottom: 2px solid #eee; padding-bottom: 10px; color: #2c3e50;">⚙️ Gestionar Información</h3>
+    
+    <%= form_with model: @client do |f| %>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+        <div>
+          <%= f.label :name, "Nombre del Cliente", style: "display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;" %>
+          <%= f.text_field :name, style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" %>
+        </div>
+        <div>
+          <%= f.label :phone, "WhatsApp / Teléfono", style: "display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;" %>
+          <%= f.text_field :phone, style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px;" %>
+        </div>
+      </div>
+
+      <%# CAMPO DE NOTAS PARA EDITAR %>
+      <div style="margin-top: 20px;">
+        <%= f.label :notes, "Nota Rápida / Referencia", style: "display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;" %>
+        <%= f.text_field :notes, placeholder: "Ej. Paga puntual, prefiere transferencias...", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;" %>
+      </div>
+
+      <% if @ultimo_gig %>
+        <div style="margin-top: 30px; padding: 20px; background: #fff; border: 1px solid #eef2f3; border-radius: 10px;">
+          <h4 style="margin: 0 0 15px 0; color: #3498db;">🎸 Ajustar Último Show</h4>
+          
+          <%= f.fields_for :gigs, @ultimo_gig do |g_form| %>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+              <div>
+                <%= g_form.label :amount, "Monto Cobrado", style: "display: block; font-size: 0.85em; font-weight: bold;" %>
+                <div style="display: flex; gap: 5px;">
+                  <%= g_form.number_field :amount, step: 0.01, style: "flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" %>
+                  <%= g_form.select :currency, [["USD", "USD"], ["BS", "BS"]], {}, { style: "padding: 8px; border-radius: 5px; background: #f8f9fa;" } %>
+                </div>
+              </div>
+              <div>
+                <%= g_form.label :location, "Lugar (Específico)", style: "display: block; font-size: 0.85em; font-weight: bold;" %>
+                <%= g_form.text_field :location, placeholder: "Ej. Salón de Eventos", style: "width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box;" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <div style="margin-top: 30px;">
+        <%= f.submit "🚀 Actualizar y Recalcular Prioridad", 
+            style: "width: 100%; background: #007bff; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1em; transition: 0.3s;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# BOTÓN VOLVER %>
+  <div style="text-align: center; margin-top: 30px; padding-bottom: 50px;">
+    <%= link_to "⬅️ Volver a la lista de clientes", clients_path, style: "color: #95a5a6; text-decoration: none; font-size: 0.9em;" %>
+  </div>
+</div>

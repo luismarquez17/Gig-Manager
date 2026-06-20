@@ -1,0 +1,19 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  item: one
+  gig: one
+  description: MyText
+  status: 1
+  cost: 9.99
+  started_at: 2026-06-20
+  completed_at: 2026-06-20
+
+two:
+  item: two
+  gig: two
+  description: MyText
+  status: 1
+  cost: 9.99
+  started_at: 2026-06-20
+  completed_at: 2026-06-20

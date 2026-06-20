@@ -1,0 +1,13 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  gig: one
+  item: one
+  quantity: 1
+  checked: false
+
+two:
+  gig: two
+  item: two
+  quantity: 1
+  checked: false

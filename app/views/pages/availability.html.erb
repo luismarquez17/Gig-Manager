@@ -1,0 +1,90 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', 'Segoe UI', sans-serif;">
+  
+  <%# --- HEADER --- %>
+  <header style="margin-bottom: 35px;">
+    <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0; letter-spacing: -0.5px;">⚡ Alertas de Disponibilidad Global</h1>
+    <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Evita sorpresas. El sistema revisa si la suma de equipos pedidos en shows simultáneos supera tu stock disponible para esa fecha.</p>
+  </header>
+
+  <%# --- LISTADO DE CONFLICTOS --- %>
+  <% if @conflicts.any? %>
+    
+    <%# Alerta general %>
+    <div style="background: #fff7ed; border: 1px solid #ffedd5; padding: 18px 25px; border-radius: 16px; margin-bottom: 35px; display: flex; align-items: center; gap: 15px; border-left: 5px solid #f97316;">
+      <span style="font-size: 1.8em;">⚠️</span>
+      <div>
+        <h4 style="margin: 0; color: #c2410c; font-weight: 800; font-size: 1.05em;">Conflictos detectados en el calendario</h4>
+        <p style="margin: 3px 0 0 0; color: #ea580c; font-size: 0.9em;">Tienes fechas donde has asignado más equipos de los que posees físicamente. Revisa y reajusta las listas.</p>
+      </div>
+    </div>
+
+    <div style="display: grid; gap: 25px;">
+      <% @conflicts.each do |conflict| %>
+        <%
+          missing_qty = conflict[:requested] - conflict[:available]
+        %>
+        <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01); overflow: hidden;">
+          
+          <%# Franja superior del conflicto %>
+          <div style="background: #fef2f2; padding: 20px 25px; border-bottom: 1px solid #fee2e2; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <span style="background: #ef4444; color: white; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 0.85em;">
+                📅 <%= conflict[:date].strftime("%d/%m/%Y") %>
+              </span>
+              <h3 style="margin: 0; color: #9f1239; font-size: 1.15em; font-weight: 800;">
+                <%= conflict[:item].name %> — <span style="font-weight: 500; font-size: 0.9em; color: #b91c1c;">Faltan <%= missing_qty %> unidades</span>
+              </h3>
+            </div>
+            
+            <div style="font-size: 0.9em; color: #475569; font-weight: 600;">
+              En inventario: <strong><%= conflict[:available] %></strong> | Reservado total: <strong style="color: #ef4444;"><%= conflict[:requested] %></strong>
+            </div>
+          </div>
+
+          <%# Contenido de shows en conflicto %>
+          <div style="padding: 25px;">
+            <h4 style="margin: 0 0 15px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold;">Gigs / Eventos que compiten por este equipo:</h4>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+              <% conflict[:gigs].each do |gig| %>
+                <%
+                  gig_item = gig.gig_items.find_by(item_id: conflict[:item].id)
+                  requested_here = gig_item&.quantity.to_i
+                %>
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 18px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s;"
+                     onmouseover="this.style.borderColor='#cbd5e1'; this.style.background='#f1f5f9';"
+                     onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';">
+                  <div>
+                    <h5 style="margin: 0; font-size: 1em; color: #1e293b; font-weight: bold;">
+                      <%= link_to gig.client.name, gig_path(gig), style: "color: #2563eb; text-decoration: none;" %>
+                    </h5>
+                    <small style="color: #64748b; display: block; margin-top: 4px;">📍 <%= gig.location.presence || "Locación no especificada" %></small>
+                  </div>
+                  <div style="text-align: right;">
+                    <span style="background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.9em; border: 1px solid #bfdbfe;">
+                      x <%= requested_here %> ud(s)
+                    </span>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+        </div>
+      <% end %>
+    </div>
+
+  <% else %>
+    
+    <%# Estado vacío: Todo operativo %>
+    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 80px 40px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="font-size: 3.5em; display: block; margin-bottom: 20px;">🎉</span>
+      <h2 style="color: #0f172a; font-weight: 800; font-size: 1.5em; margin: 0;">¡Disponibilidad garantizada!</h2>
+      <p style="color: #64748b; font-size: 1.1em; margin-top: 8px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+        No hay colisiones en tus próximos eventos simultáneos. Tienes stock suficiente de cada equipo asignado en tu inventario maestro.
+      </p>
+    </div>
+
+  <% end %>
+
+</div>

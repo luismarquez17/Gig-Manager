@@ -1,0 +1,163 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', 'Segoe UI', sans-serif;">
+  
+  <%# --- FLASH MESSAGES --- %>
+  <% if notice %>
+    <div style="background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600; display: flex; align-items: center; gap: 10px;">
+      ✅ <%= notice %>
+    </div>
+  <% end %>
+
+  <%# --- HEADER --- %>
+  <header style="margin-bottom: 35px;">
+    <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0; letter-spacing: -0.5px;">🔧 Taller de Mantenimiento</h1>
+    <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Control de reparaciones, desincorporación de equipos dañados y costos de servicio técnico.</p>
+  </header>
+
+  <%# --- TARJETAS DE ESTADÍSTICAS --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 40px;">
+    
+    <%# Card Pendientes %>
+    <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Por Revisar (Pendiente)</span>
+        <h2 style="font-size: 2.2em; margin: 0; color: #f59e0b;"><%= @pending_count %></h2>
+      </div>
+      <span style="background: #fffbeb; padding: 12px; border-radius: 12px; font-size: 1.5em; border: 1px solid #fde68a;">⏳</span>
+    </div>
+
+    <%# Card En reparación %>
+    <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">En Servicio Técnico</span>
+        <h2 style="font-size: 2.2em; margin: 0; color: #2563eb;"><%= @in_repair_count %></h2>
+      </div>
+      <span style="background: #eff6ff; padding: 12px; border-radius: 12px; font-size: 1.5em; border: 1px solid #bfdbfe;">⚙️</span>
+    </div>
+
+    <%# Card Costo total %>
+    <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Inversión en Reparaciones</span>
+        <h2 style="font-size: 2.2em; margin: 0; color: #10b981;">$ <%= number_with_precision(@total_cost, precision: 2) %></h2>
+      </div>
+      <span style="background: #ecfdf5; padding: 12px; border-radius: 12px; font-size: 1.5em; border: 1px solid #a7f3d0;">💰</span>
+    </div>
+
+  </div>
+
+  <%# --- TABLA DE REGISTROS ACTIVOS --- %>
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 40px;">
+    <h3 style="margin: 0 0 25px 0; font-size: 1.25em; color: #1e293b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+      🛠️ Equipos en Taller Activo (<%= @active_records.count %>)
+    </h3>
+    
+    <% if @active_records.any? %>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="text-align: left; border-bottom: 2px solid #f8fafc; color: #64748b; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px;">
+            <th style="padding: 12px 0;">Equipo</th>
+            <th style="padding: 12px 0;">Reportado En</th>
+            <th style="padding: 12px 0;">Descripción del Daño</th>
+            <th style="padding: 12px 0;">Estado</th>
+            <th style="padding: 12px 0; text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @active_records.each do |record| %>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 18px 0; font-weight: 700; color: #1e293b; font-size: 0.95em;">
+                <%= link_to record.item.name, item_path(record.item), style: "color: #2563eb; text-decoration: none;" %>
+                <br>
+                <small style="font-weight: normal; color: #94a3b8;"><%= record.item.category %></small>
+              </td>
+              <td style="padding: 18px 0; color: #475569; font-size: 0.9em;">
+                <% if record.gig.present? %>
+                  Show: <%= link_to record.gig.client.name, gig_path(record.gig), style: "color: #0ea5e9; text-decoration: none; font-weight: 600;" %>
+                  <br>
+                  <small style="color: #94a3b8;"><%= record.gig.date&.strftime("%d/%m/%Y") %></small>
+                <% else %>
+                  Reporte Manual
+                  <br>
+                  <small style="color: #94a3b8;"><%= record.created_at.strftime("%d/%m/%Y") %></small>
+                <% end %>
+              </td>
+              <td style="padding: 18px 0; color: #475569; font-size: 0.9em; max-width: 300px; line-height: 1.4;"><%= record.description %></td>
+              <td style="padding: 18px 0;">
+                <%
+                  badge_bg = record.status == 'pending' ? '#fffbeb' : '#eff6ff'
+                  badge_color = record.status == 'pending' ? '#d97706' : '#2563eb'
+                  badge_text = record.status == 'pending' ? '⏳ Pendiente' : '⚙️ En Reparación'
+                %>
+                <span style="background: <%= badge_bg %>; color: <%= badge_color %>; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8em;">
+                  <%= badge_text %>
+                </span>
+              </td>
+              <td style="padding: 18px 0; text-align: right;">
+                <%= link_to "Resolver / Editar", edit_maintenance_record_path(record), style: "background: #f1f5f9; color: #1e293b; padding: 8px 16px; border-radius: 8px; font-size: 0.85em; font-weight: 700; text-decoration: none; border: 1px solid #cbd5e1; display: inline-block; transition: 0.2s;", onmouseover: "this.style.background='#e2e8f0'", onmouseout: "this.style.background='#f1f5f9'" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div style="text-align: center; padding: 40px; color: #94a3b8;">
+        <span style="font-size: 2.5em; display: block; margin-bottom: 12px;">✨</span>
+        No hay equipos en taller actualmente. ¡Todo el inventario está operativo!
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- TABLA DE REGISTROS RESUELTOS --- %>
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+    <h3 style="margin: 0 0 25px 0; font-size: 1.25em; color: #64748b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+      ✓ Historial de Reparaciones Resueltas (<%= @resolved_records.count %>)
+    </h3>
+    
+    <% if @resolved_records.any? %>
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="text-align: left; border-bottom: 2px solid #f8fafc; color: #94a3b8; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px;">
+            <th style="padding: 12px 0;">Equipo</th>
+            <th style="padding: 12px 0;">Notas del Trabajo</th>
+            <th style="padding: 12px 0;">Resolución</th>
+            <th style="padding: 12px 0;">Costo</th>
+            <th style="padding: 12px 0; text-align: right;">Fecha Fin</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @resolved_records.each do |record| %>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 18px 0; font-weight: 600; color: #475569; font-size: 0.95em;">
+                <%= record.item.name %>
+                <br>
+                <small style="color: #94a3b8;"><%= record.item.category %></small>
+              </td>
+              <td style="padding: 18px 0; color: #64748b; font-size: 0.9em; max-width: 300px; line-height: 1.4;"><%= record.description %></td>
+              <td style="padding: 18px 0;">
+                <%
+                  badge_bg = record.status == 'fixed' ? '#ecfdf5' : '#fef2f2'
+                  badge_color = record.status == 'fixed' ? '#10b981' : '#b91c1c'
+                  badge_text = record.status == 'fixed' ? '✅ Reparado' : '🗑️ Desincorporado'
+                %>
+                <span style="background: <%= badge_bg %>; color: <%= badge_color %>; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 0.8em;">
+                  <%= badge_text %>
+                </span>
+              </td>
+              <td style="padding: 18px 0; font-weight: 700; color: #1e293b;">
+                $ <%= number_with_precision(record.cost, precision: 2) %>
+              </td>
+              <td style="padding: 18px 0; text-align: right; color: #94a3b8; font-size: 0.9em;">
+                <%= record.completed_at&.strftime("%d/%m/%Y") || record.updated_at.strftime("%d/%m/%Y") %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div style="text-align: center; padding: 35px; color: #cbd5e1; font-style: italic;">
+        No hay registros en el historial todavía.
+      </div>
+    <% end %>
+  </div>
+
+</div>

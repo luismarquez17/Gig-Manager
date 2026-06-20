@@ -1,0 +1,105 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Segoe UI', sans-serif;">
+  
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <h1 style="color: #2c3e50; margin: 0;">👥 Directorio de Clientes</h1>
+    <%= link_to '➕ Añadir Nuevo Cliente', new_client_path, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
+  </div>
+
+  <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN --- %>
+  <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
+    <%= form_with url: clients_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
+      
+      <%# Buscador %>
+      <div style="flex-grow: 2; min-width: 200px; margin-bottom: 20px;">
+        <%= f.label :query, "🔍 Buscar Cliente o Teléfono", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+        <%= f.text_field :query, value: params[:query], placeholder: "Nombre o 0414...", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" %>
+      </div>
+
+      <%# Filtro de Prioridad %>
+      <div style="flex-grow: 1; min-width: 150px; margin-bottom: 20px;">
+        <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+        <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+      </div>
+
+      <%# Selector de Ordenamiento por Dinero %>
+      <div style="flex-grow: 1; min-width: 180px; margin-bottom: 20px;">
+        <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+        <%= f.select :sort, 
+            [["🆕 Más Recientes", "fecha_desc"], 
+             ["💰 Presupuesto (Mayor)", "presupuesto_desc"], 
+             ["💸 Presupuesto (Menor)", "presupuesto_asc"],
+             ["📅 Más Antiguos", "antiguedad_asc"]], 
+            { selected: params[:sort] }, 
+            { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+      </div>
+
+      <%# Botones de Acción %>
+      <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
+        <%= f.submit "Aplicar", style: "background: #007bff; color: white; border: none; padding: 0 25px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px;" %>
+        <%= link_to "Limpiar", clients_path, style: "background: #4a5568; color: white; border: none; padding: 0 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 40px; font-weight: bold;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- TABLA DE RESULTADOS --- %>
+  <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee;">
+    <% if @clients.any? %>
+      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead>
+          <tr style="background-color: #f8f9fa; color: #333;">
+            <th style="padding: 15px; border-bottom: 2px solid #eee;">Nombre del Cliente</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee;">Prioridad</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee;">Presupuesto Prom.</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; text-align: center;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @clients.each do |client| %>
+            <tr style="border-bottom: 1px solid #f1f1f1;" onmouseover="this.style.backgroundColor='#fdfdfd'" onmouseout="this.style.backgroundColor='transparent'">
+              <td style="padding: 15px;">
+                <div style="font-weight: bold; color: #2c3e50;"><%= client.name %></div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                  <small style="color: #94a3b8;"><%= client.phone.presence || "Sin teléfono" %></small>
+                  <% if client.phone.present? && client.formatted_phone_for_whatsapp.present? %>
+                    <%= link_to client.whatsapp_url, target: "_blank", title: "Contactar por WhatsApp", style: "display: inline-flex; align-items: center; text-decoration: none;" do %>
+                      <svg viewBox="0 0 24 24" width="16" height="16" style="fill: #25d366; vertical-align: middle; transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.25)';" onmouseout="this.style.transform='scale(1)';" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+                      </svg>
+                    <% end %>
+                  <% end %>
+                </div>
+              </td>
+              <td style="padding: 15px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <div style="width: 12px; height: 12px; border-radius: 50%; background: <%= color_prioridad(client.priority) %>;"></div>
+                  <span style="font-size: 0.9em; font-weight: bold; color: #4a5568; text-transform: uppercase;"><%= client.priority %></span>
+                </div>
+              </td>
+              <td style="padding: 15px; font-weight: bold; color: #2d3748;">
+                $ <%= number_with_precision(client.average_budget, precision: 2) %>
+              </td>
+              <td style="padding: 15px; text-align: center;">
+                <%= link_to client, style: "text-decoration: none;" do %>
+                  <div style="background: #ebf8ff; border: 1px solid #bee3f8; padding: 8px 15px; border-radius: 6px; display: inline-block; transition: 0.2s;" onmouseover="this.style.backgroundColor='#bee3f8'" onmouseout="this.style.backgroundColor='#ebf8ff'">
+                    <span style="color: #2b6cb0; font-size: 0.85em; font-weight: bold;">Ver Detalles 🔍</span>
+                  </div>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    <% else %>
+      <div style="padding: 60px 20px; text-align: center; color: #94a3b8;">
+        <div style="font-size: 50px; margin-bottom: 10px;">🤷‍♂️</div>
+        <h3 style="margin: 0; color: #64748b;">No se encontraron clientes registrados</h3>
+        <%= link_to "Ver todos los clientes", clients_path, style: "display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <div style="margin-top: 25px; color: #94a3b8; font-size: 0.85em; text-align: right;">
+    Total en directorio: <strong><%= @clients.count %></strong> clientes
+  </div>
+
+</div>

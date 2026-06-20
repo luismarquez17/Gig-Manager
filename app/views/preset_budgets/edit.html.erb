@@ -1,0 +1,9 @@
+<div style="max-width: 800px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+  <div style="margin-bottom: 25px;">
+    <%= link_to '⬅ Volver al listado', preset_budgets_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; margin-bottom: 10px; display: inline-block;" %>
+    <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">✏️ Editar Presupuesto Base</h1>
+    <p style="color: #64748b; margin: 5px 0 0 0;">Modifica los detalles, descripción o el precio de este presupuesto base.</p>
+  </div>
+
+  <%= render 'form', preset_budget: @preset_budget %>
+</div>
