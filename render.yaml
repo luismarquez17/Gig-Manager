@@ -1,5 +1,6 @@
 databases:
   - name: gig-manager-db
+    plan: free
 
 services:
   # Servicio Web
