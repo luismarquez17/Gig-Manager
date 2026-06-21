@@ -1,6 +1,5 @@
 databases:
   - name: gig-manager-db
-    plan: basic
 
 services:
   # Servicio Web
@@ -16,22 +15,6 @@ services:
         value: "1"
       - key: SECRET_KEY_BASE
         generateValue: true
-      - key: DATABASE_URL
-        fromDatabase:
-          name: gig-manager-db
-          property: connectionString
-
-  # Servicio Worker (Sidekiq)
-  - type: worker
-    name: gig-manager-worker
-    env: docker
-    plan: starter
-    # Al usar 'env: docker', el comando de inicio debe estar dentro de tu Dockerfile
-    # Si tu Dockerfile no inicia Sidekiq por defecto, deberás ajustar tu Dockerfile
-    # para tener un ENTRYPOINT o CMD distinto para el worker.
-    envVars:
-      - key: RAILS_ENV
-        value: production
       - key: DATABASE_URL
         fromDatabase:
           name: gig-manager-db
