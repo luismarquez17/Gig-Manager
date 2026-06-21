@@ -1,7 +1,6 @@
 databases:
   - name: gig-manager-db
     plan: starter
-    version: 15
 
 services:
   # Servicio Web
