@@ -1,13 +1,13 @@
 databases:
   - name: gig-manager-db
-    plan: free
+    plan: starter  # Esto debería costar alrededor de $7-$8 al mes
 
 services:
   # Servicio Web
   - type: web
     name: gig-manager-web
     env: docker
-    plan: standard
+    plan: free   # Cambia a 'free' para que no tenga costo mensual
     healthCheckPath: "/"
     envVars:
       - key: RAILS_ENV
