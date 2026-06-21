@@ -1,6 +1,6 @@
 databases:
   - name: gig-manager-db
-    plan: starter
+    plan: basic
 
 services:
   # Servicio Web
@@ -20,13 +20,15 @@ services:
         fromDatabase:
           name: gig-manager-db
           property: connectionString
-    # Render detectará el Dockerfile automáticamente si está en la raíz
 
   # Servicio Worker (Sidekiq)
   - type: worker
     name: gig-manager-worker
     env: docker
     plan: starter
+    # Al usar 'env: docker', el comando de inicio debe estar dentro de tu Dockerfile
+    # Si tu Dockerfile no inicia Sidekiq por defecto, deberás ajustar tu Dockerfile
+    # para tener un ENTRYPOINT o CMD distinto para el worker.
     envVars:
       - key: RAILS_ENV
         value: production
