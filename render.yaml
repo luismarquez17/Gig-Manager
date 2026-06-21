@@ -27,7 +27,6 @@ services:
     name: gig-manager-worker
     env: docker
     plan: starter
-    startCommand: "bundle exec sidekiq"
     envVars:
       - key: RAILS_ENV
         value: production
