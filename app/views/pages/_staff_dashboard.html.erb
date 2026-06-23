@@ -1,0 +1,88 @@
+<div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+  <header style="margin-bottom: 20px;">
+    <h1 style="color: #0f172a; font-size: 2em; font-weight: 800; margin: 0;">Hola, <%= current_user.email.split('@').first.capitalize %> — Panel Staff</h1>
+    <p style="color: #64748b; margin-top: 6px;">Aquí están tus próximos eventos asignados. Puedes acceder al checklist para preparar la carga.</p>
+  </header>
+
+  <div style="display: grid; grid-template-columns: 1fr 360px; gap: 18px;">
+    <div>
+      <%# Sección: Eventos Asignados (Lista) %>
+      <section style="margin-bottom: 18px;">
+        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Eventos asignados</h2>
+
+        <% if @proximos_gigs.present? %>
+          <div style="display: grid; gap: 12px;">
+            <% @proximos_gigs.each do |gig| %>
+              <div style="background: white; padding: 14px; border-radius: 10px; border: 1px solid #eef2ff; display:flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <div style="font-weight: 700; color: #0f172a;"><%= gig.client&.name || 'Cliente desconocido' %> — <span style="font-weight: 600; color: #64748b;"><%= gig.date&.strftime('%d %b %Y') %></span></div>
+                  <div style="color: #94a3b8; font-size: 0.9em; margin-top: 6px;"><%= truncate(gig.details || '', length: 120) %></div>
+                  <div style="margin-top: 8px; color: #475569; font-size: 0.85em;">
+                    Items: <%= gig.gig_items.map(&:quantity).sum %> • Cargados: <%= gig.gig_items.map(&:loaded_quantity).sum %>
+                  </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #0f172a; font-weight: 700;' %>
+                  <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background: #2563eb; color: white; padding: 8px 10px; border-radius: 8px; text-decoration: none; font-weight: 700;' %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div style="background: white; padding: 18px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No tienes eventos asignados por ahora.</div>
+        <% end %>
+      </section>
+
+      <%# Sección: Pendientes de carga %>
+      <section style="margin-bottom: 18px;">
+        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Pendientes de carga</h2>
+        <% if @pending_gig_items.present? %>
+          <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff;">
+            <p style="margin: 0 0 8px 0; color: #475569; font-weight: 700;"><%= @items_to_load_count %> unidades por cargar en tus próximos eventos</p>
+            <ul style="margin: 6px 0 0 16px; color: #64748b;">
+              <% @pending_gig_items.limit(6).each do |gi| %>
+                <li><strong><%= gi.item.name %></strong> — <%= gi.quantity %> (Evento: <%= link_to gi.gig.client&.name || 'cliente', gig_path(gi.gig) %>)</li>
+              <% end %>
+            </ul>
+          </div>
+        <% else %>
+          <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No hay ítems pendientes de carga en tus próximos eventos.</div>
+        <% end %>
+      </section>
+
+      <%# Sección: Discrepancias %>
+      <section>
+        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Discrepancias</h2>
+        <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #fff1f2; color: #64748b;">
+          <% if @discrepant_count.to_i > 0 %>
+            Tienes <strong><%= @discrepant_count %></strong> líneas con diferencias entre cargado y devuelto. Revisa los checklists.
+          <% else %>
+            No se han detectado discrepancias en los próximos eventos.
+          <% end %>
+        </div>
+      </section>
+    </div>
+
+    <aside>
+      <%# Panel derecho: Resumen rápido %>
+      <div style="background: white; padding: 18px; border-radius: 12px; border: 1px solid #e6eef8; margin-bottom: 12px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 1em; font-weight: 800;">Resumen rápido</h3>
+        <p style="margin: 6px 0; color: #475569;">Próximos eventos: <strong><%= @proximos_gigs.count %></strong></p>
+        <p style="margin: 6px 0; color: #475569;">Unidades por cargar: <strong><%= @items_to_load_count || 0 %></strong></p>
+        <p style="margin: 6px 0; color: #475569;">Discrepancias: <strong><%= @discrepant_count || 0 %></strong></p>
+        <% if @proximos_gigs.first %>
+          <p style="margin: 6px 0; color: #475569;">Siguiente evento: <strong><%= @proximos_gigs.first.date&.strftime('%d %b %Y') %></strong></p>
+        <% end %>
+      </div>
+
+      <%# Acciones rápidas específicas para staff %>
+      <div style="background: white; padding: 14px; border-radius: 12px; border: 1px solid #e6eef8;">
+        <h4 style="margin: 0 0 8px 0; font-size: 0.95em; font-weight: 800;">Acciones rápidas</h4>
+        <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
+          <%= link_to 'Ver mis eventos', root_path, style: 'text-decoration: none; padding: 8px; background: #f8fafc; border-radius: 8px; color: #0f172a; font-weight:700; text-align:center;' %>
+          <%= link_to 'Checklist próximo', (@proximos_gigs.first ? load_in_checklist_gig_path(@proximos_gigs.first) : '#'), style: 'text-decoration: none; padding: 8px; background: #fff7ed; border-radius: 8px; color: #b45309; font-weight:700; text-align:center;' %>
+        </div>
+      </div>
+    </aside>
+  </div>
+</div>

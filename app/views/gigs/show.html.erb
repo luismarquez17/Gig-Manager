@@ -49,13 +49,19 @@
       <p style="margin: 2px 0 0 0; color: #475569;">📍 <%= @gig.location.presence || "No especificada" %></p>
     </div>
 
-    <div>
-      <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Monto Acordado</p>
-      <p style="margin: 5px 0 0 0; font-size: 1.4em; font-weight: bold; color: #10b981;">
-        <%= number_with_precision(@gig.amount, precision: 2) %> 
-        <span style="font-size: 0.6em; color: #94a3b8; vertical-align: middle;"><%= @gig.currency %></span>
-      </p>
-    </div>
+    <% if current_user.leader? %>
+      <div>
+        <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Monto Acordado</p>
+        <p style="margin: 5px 0 0 0; font-size: 1.4em; font-weight: bold; color: #10b981;">
+          <%= number_with_precision(@gig.amount, precision: 2) %> 
+          <span style="font-size: 0.6em; color: #94a3b8; vertical-align: middle;"><%= @gig.currency %></span>
+        </p>
+        <div style="margin-top: 8px; display:flex; gap:8px;">
+          <%= link_to 'Ver pagos', gig_gig_payments_path(@gig), style: 'background: #eef2ff; color: #3730a3; padding: 8px 12px; border-radius: 8px; font-weight: 700; text-decoration: none;' %>
+          <%= link_to 'Registrar pago', new_gig_gig_payment_path(@gig), style: 'background: #dcfce7; color: #065f46; padding: 8px 12px; border-radius: 8px; font-weight: 700; text-decoration: none;' %>
+        </div>
+      </div>
+    <% end %>
 
     <% if @gig.details.present? %>
       <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #3b82f6;">
@@ -65,6 +71,132 @@
     <% end %>
 
   </div>
+  <% if current_user.leader? %>
+    <%# --- BALANCE FINANCIERO DEL SHOW --- %>
+    <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(2,6,23,0.04); border: 1px solid #e6eef8; margin-bottom: 24px;">
+      <h3 style="margin: 0 0 12px 0; font-size: 1.05em; font-weight: 800; color: #1e293b;">💰 Balance Financiero del Show</h3>
+      <div style="display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: start;">
+        <div>
+          <p style="margin: 6px 0 0 0; color: #64748b; font-weight: 700;">Monto Acordado</p>
+          <p style="margin: 6px 0 12px 0; font-size: 1.2em; font-weight: 800; color: #10b981;"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size:0.7em; color:#94a3b8;"><%= @gig.currency %></span></p>
+
+          <div style="margin: 8px 0 12px 0;">
+            <div style="display:flex; justify-content:space-between; align-items:center; font-weight:700; color:#475569; margin-bottom:6px;">
+              <span>Pagos recibidos</span>
+              <span><%= number_with_precision(@gig.total_received || 0, precision: 2) %> <%= @gig.currency %></span>
+            </div>
+            <% pct = (@gig.total_received.to_f / (@gig.amount.to_f.nonzero? || 1) * 100).to_f %>
+            <div style="background:#f1f5f9; height:10px; border-radius:999px; overflow:hidden;">
+              <div style="width:<%= [pct,100].min %>%; height:10px; background: linear-gradient(90deg,#06b6d4,#06b6d4);"></div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:12px; margin-top: 8px;">
+            <div style="flex:1; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e6eef8;">
+              <div style="font-size:0.85em; color:#64748b; font-weight:700;">Pagos a Staff</div>
+              <div style="font-size:1.1em; font-weight:800; color:#ef4444;"><%= number_with_precision(@gig.total_employee_payouts || 0, precision: 2) %> <%= @gig.currency %></div>
+            </div>
+            <div style="flex:1; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e6eef8;">
+              <div style="font-size:0.85em; color:#64748b; font-weight:700;">Asignado a Fondos</div>
+              <div style="font-size:1.1em; font-weight:800; color:#0ea5e9;"><%= number_with_precision(@gig.total_allocated || 0, precision: 2) %> <%= @gig.currency %></div>
+            </div>
+          </div>
+
+          <div style="margin-top:12px; border-top:1px dashed #eef2ff; padding-top:12px; display:flex; justify-content:space-between; align-items:center;">
+            <div style="font-weight:800; color:#1e293b;">💵 Disponible</div>
+            <div style="font-weight:900; color:#065f46; font-size:1.15em;"><%= number_with_precision(@gig.remaining_balance || 0, precision: 2) %> <%= @gig.currency %></div>
+          </div>
+
+          <%# Inline asignación de sobrante %>
+          <div style="margin-top:14px;">
+            <%= form_with model: [@gig, FundAllocation.new], local: true do |f| %>
+              <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                <div>
+                  <%= f.label :amount, 'Monto', style: 'display:block; font-weight:700; color:#475569; font-size:0.85em; margin-bottom:6px;' %>
+                  <%= f.number_field :amount, step: 0.01, min: 0.01, style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8;' %>
+                </div>
+                <div>
+                  <%= f.label :fund_type, 'Fondo', style: 'display:block; font-weight:700; color:#475569; font-size:0.85em; margin-bottom:6px;' %>
+                  <%= f.select :fund_type, FundAllocation::FUND_TYPES.map { |t| [t.humanize.capitalize, t] }, {}, style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8;' %>
+                </div>
+                <div style="flex:1; min-width:220px;">
+                  <%= f.label :notes, 'Notas', style: 'display:block; font-weight:700; color:#475569; font-size:0.85em; margin-bottom:6px;' %>
+                  <%= f.text_field :notes, placeholder: 'Opcional', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; width:100%;' %>
+                </div>
+                <div style="align-self:end;">
+                  <%= f.submit 'Asignar', style: 'background:#10b981; color:white; padding:10px 14px; border-radius:10px; font-weight:800; border:none; cursor:pointer;' %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+          <%# Formulario para registrar gasto por cada asignación (colapsado por simplicidad) %>
+          <% @gig.fund_allocations.each do |fa| %>
+            <div style="margin-top:10px;">
+              <%= form_with url: gig_fund_allocation_fund_expenses_path(@gig, fa), local: true do |ff| %>
+                <div style="display:flex; gap:8px; align-items:center;">
+                  <%= ff.number_field :amount, step: 0.01, placeholder: '0.00', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; width:120px;' %>
+                  <%= ff.text_field :notes, placeholder: '¿En qué se gastó?', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; flex:1;' %>
+                  <%= ff.submit 'Registrar gasto', style: 'background:#ef4444; color:white; padding:8px 12px; border-radius:8px; font-weight:700; border:none;' %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <div>
+          <div style="background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e6eef8;">
+            <div style="font-weight:800; color:#64748b; font-size:0.85em; margin-bottom:8px;">Historial de Asignaciones</div>
+            <% @gig.fund_allocations.order(created_at: :desc).each do |fa| %>
+              <div style="display:flex; justify-content:space-between; gap:8px; padding:8px 0; border-bottom:1px dashed #eef2ff;">
+                <div>
+                  <div style="font-weight:800;"><%= fa.fund_label %></div>
+                  <div style="font-size:0.85em; color:#64748b;"><%= fa.notes.presence || '-' %></div>
+                </div>
+                <div style="text-align:right;">
+                  <div style="font-weight:900; color:#0ea5e9;"><%= number_with_precision(fa.amount, precision: 2) %> <%= fa.currency %></div>
+                  <div style="font-size:0.8em; color:#94a3b8;"><%= fa.created_at.strftime('%d/%m/%Y') %></div>
+                </div>
+              </div>
+            <% end %>
+            <%# Mostrar gastos asociados si existen %>
+            <% @gig.fund_allocations.each do |fa| %>
+              <% if fa.fund_expenses.any? %>
+                <div style="margin-top:10px; padding:10px; background:#ffffff; border-radius:8px; border:1px solid #eef2ff;">
+                  <div style="font-weight:800; color:#475569; margin-bottom:8px;">Gastos para: <%= fa.fund_label %> (Saldo: $ <%= number_with_precision(fa.remaining, precision: 2) %>)</div>
+                  <% fa.fund_expenses.order(created_at: :desc).each do |exp| %>
+                    <div style="display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid #f8fafc;">
+                      <div style="color:#334155;"><%= exp.notes.presence || 'Sin nota' %></div>
+                      <div style="text-align:right; color:#ef4444; font-weight:800;">$ <%= number_with_precision(exp.amount, precision: 2) %> <div style="font-size:0.8em; color:#94a3b8;"><%= exp.spent_at&.strftime('%d/%m/%Y') %></div></div>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+    <%# --- ASIGNACIÓN DE STAFF --- %>
+    <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+      <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.1em;">👷 Equipo Asignado (Staff)</h3>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+        <% @gig.staff_members.each do |staff| %>
+          <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px;">
+            <%= staff.email %>
+          </div>
+        <% end %>
+        <% if @gig.staff_members.empty? %>
+          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic;">No hay trabajadores asignados.</p>
+        <% end %>
+      </div>
+      
+      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 10px; align-items: center;" do |f| %>
+        <%= f.select :staff_id, User.staff.pluck(:email, :id), { prompt: "Seleccionar trabajador..." }, style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: #f8fafc;" %>
+        <%= f.submit "Asignar", style: "background: #2563eb; color: white; border: none; padding: 9px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
+      <% end %>
+      <small style="color: #64748b; margin-top: 5px; display: block;">* La asignación de staff se implementará en el controlador en el siguiente paso.</small>
+    </div>
+  <% end %>
 
   <%# --- CHECKLIST DE INVENTARIO --- %>
   <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">
@@ -93,60 +225,62 @@
       </button>
     </div>
 
-    <%# APLICAR PLANTILLA (KITS) %>
-    <% @available_kits = Kit.all %>
-    <% if @available_kits.any? %>
-      <div style="padding: 16px 25px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
-        <span style="font-size: 0.85em; font-weight: 800; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🛠️ Aplicar Plantilla:</span>
-        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-          <% @available_kits.each do |kit| %>
-            <%= button_to add_kit_gig_path(@gig), 
-                params: { kit_id: kit.id },
-                method: :post,
-                style: "background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;",
-                onmouseover: "this.style.backgroundColor='#1d4ed8'",
-                onmouseout: "this.style.backgroundColor='#2563eb'",
-                title: "Aplicar #{kit.name} al checklist" do %>
-              📦 <%= kit.name %>
+    <% if current_user.leader? %>
+      <%# APLICAR PLANTILLA (KITS) %>
+      <% @available_kits = Kit.all %>
+      <% if @available_kits.any? %>
+        <div style="padding: 16px 25px; background: #eff6ff; border-bottom: 1px solid #bfdbfe; display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+          <span style="font-size: 0.85em; font-weight: 800; color: #1d4ed8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🛠️ Aplicar Plantilla:</span>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <% @available_kits.each do |kit| %>
+              <%= button_to add_kit_gig_path(@gig), 
+                  params: { kit_id: kit.id },
+                  method: :post,
+                  style: "background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;",
+                  onmouseover: "this.style.backgroundColor='#1d4ed8'",
+                  onmouseout: "this.style.backgroundColor='#2563eb'",
+                  title: "Aplicar #{kit.name} al checklist" do %>
+                📦 <%= kit.name %>
+              <% end %>
             <% end %>
-          <% end %>
-        </div>
-        <span style="font-size: 0.75em; color: #3b82f6; margin-left: auto;">Las cantidades se acumulan si el equipo ya está en la lista.</span>
-      </div>
-    <% end %>
-
-    <%# FORMULARIO PARA AÑADIR ITEM INDIVIDUAL %>
-    <div style="padding: 20px 25px; border-bottom: 2px solid #f1f5f9; background: #ffffff;">
-      <%= form_with(model: [@gig, @new_gig_item], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
-        
-        <div style="flex-grow: 1; min-width: 250px; position: relative;">
-          <%= f.label :item_id, "🔍 Buscar Equipo en Inventario", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #475569;" %>
-          
-          <input list="inventory-list" 
-                 id="inventory-search" 
-                 placeholder="Escribe para buscar..." 
-                 style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; outline: none; transition: 0.2s; box-sizing: border-box;"
-                 oninput="validateItem(this)" autocomplete="off">
-                 
-          <datalist id="inventory-list">
-            <% Item.order(:name).each do |item| %>
-              <option value="<%= item.name %>" data-id="<%= item.id %>"></option>
-            <% end %>
-          </datalist>
-          
-          <%= f.hidden_field :item_id, id: "real-item-id" %>
-        </div>
-
-        <div style="width: 100px;">
-          <%= f.label :quantity, "Cantidad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #475569;" %>
-          <%= f.number_field :quantity, value: 1, min: 1, style: "width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; text-align: center; font-weight: bold; box-sizing: border-box;" %>
-        </div>
-
-        <div>
-          <%= f.submit "➕ Añadir", id: "add-item-btn", disabled: true, style: "background: #cbd5e1; color: white; border: none; padding: 13px 25px; border-radius: 8px; font-weight: bold; cursor: not-allowed; transition: 0.3s;" %>
+          </div>
+          <span style="font-size: 0.75em; color: #3b82f6; margin-left: auto;">Las cantidades se acumulan si el equipo ya está en la lista.</span>
         </div>
       <% end %>
-    </div>
+
+      <%# FORMULARIO PARA AÑADIR ITEM INDIVIDUAL %>
+      <div style="padding: 20px 25px; border-bottom: 2px solid #f1f5f9; background: #ffffff;">
+        <%= form_with(model: [@gig, @new_gig_item], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
+          
+          <div style="flex-grow: 1; min-width: 250px; position: relative;">
+            <%= f.label :item_id, "🔍 Buscar Equipo en Inventario", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #475569;" %>
+            
+            <input list="inventory-list" 
+                   id="inventory-search" 
+                   placeholder="Escribe para buscar..." 
+                   style="width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; outline: none; transition: 0.2s; box-sizing: border-box;"
+                   oninput="validateItem(this)" autocomplete="off">
+                   
+            <datalist id="inventory-list">
+              <% Item.order(:name).each do |item| %>
+                <option value="<%= item.name %>" data-id="<%= item.id %>"></option>
+              <% end %>
+            </datalist>
+            
+            <%= f.hidden_field :item_id, id: "real-item-id" %>
+          </div>
+
+          <div style="width: 100px;">
+            <%= f.label :quantity, "Cantidad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #475569;" %>
+            <%= f.number_field :quantity, value: 1, min: 1, style: "width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #e2e8f0; text-align: center; font-weight: bold; box-sizing: border-box;" %>
+          </div>
+
+          <div>
+            <%= f.submit "➕ Añadir", id: "add-item-btn", disabled: true, style: "background: #cbd5e1; color: white; border: none; padding: 13px 25px; border-radius: 8px; font-weight: bold; cursor: not-allowed; transition: 0.3s;" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
 
     <%# LISTA DE ITEMS (TODO LIST CON SOPORTE LOGÍSTICO) %>
     <div style="padding: 0;">
@@ -164,7 +298,7 @@
                   .sum(:quantity)
               end
               total_committed = committed_elsewhere + gi.quantity
-              stock_conflict = total_committed > gi.item.quantity.to_i
+              stock_conflict = total_committed > gi.item.available_count
 
               item_damaged = gi.item.status == "Dañado"
             %>
@@ -259,8 +393,10 @@
                   </button>
                 <% end %>
                 
-                <%= button_to gig_gig_item_path(@gig, gi), method: :delete, data: { turbo_confirm: "¿Remover de la lista?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 1.1em; cursor: pointer; padding: 8px 12px; border-radius: 8px; opacity: 0.8; transition: 0.2s;", onmouseover: "this.style.opacity='1'; this.style.backgroundColor='#fee2e2'", onmouseout: "this.style.opacity='0.8'; this.style.backgroundColor='#fff0f0'", title: "Remover" do %>
-                  ❌
+                <% if current_user.leader? %>
+                  <%= button_to gig_gig_item_path(@gig, gi), method: :delete, data: { turbo_confirm: "¿Remover de la lista?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 1.1em; cursor: pointer; padding: 8px 12px; border-radius: 8px; opacity: 0.8; transition: 0.2s;", onmouseover: "this.style.opacity='1'; this.style.backgroundColor='#fee2e2'", onmouseout: "this.style.opacity='0.8'; this.style.backgroundColor='#fff0f0'", title: "Remover" do %>
+                    ❌
+                  <% end %>
                 <% end %>
               </div>
 
@@ -382,7 +518,7 @@
 <%# JAVASCRIPT %>
 <script>
   let currentGigItemId = null;
-  const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+  const getCsrfToken = () => document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
   // --- Cambio de pestaña de logística ---
   function switchLogisticsMode(mode) {
@@ -446,7 +582,7 @@
     fetch(`/gig_items/${gigItemId}/update_quantities`, {
       method: 'PATCH',
       headers: {
-        'X-CSRF-Token': csrfToken,
+        'X-CSRF-Token': getCsrfToken(),
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -540,7 +676,7 @@
     fetch(url, {
       method: 'PATCH',
       headers: {
-        'X-CSRF-Token': csrfToken,
+        'X-CSRF-Token': getCsrfToken(),
         'Accept': 'application/json',
         'Content-Type': 'application/json'
       }
@@ -581,7 +717,7 @@
     fetch(`/gig_items/${currentGigItemId}/report_damage`, {
       method: 'POST',
       headers: {
-        'X-CSRF-Token': csrfToken,
+        'X-CSRF-Token': getCsrfToken(),
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },
@@ -591,7 +727,7 @@
         closeReportModal();
         window.location.reload();
       } else {
-        alert('Error al reportar el daño. Intenta nuevamente.');
+        alert('Error al reportar el daño: ' + (data.error || 'Intenta nuevamente.'));
         btn.disabled = false;
         btn.textContent = '⚠️ Confirmar Daño';
       }
@@ -643,7 +779,7 @@
     fetch(`/gig_items/${currentGigItemId}/report_lost`, {
       method: 'POST',
       headers: {
-        'X-CSRF-Token': csrfToken,
+        'X-CSRF-Token': getCsrfToken(),
         'Content-Type': 'application/json',
         'Accept': 'application/json'
       },

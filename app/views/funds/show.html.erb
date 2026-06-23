@@ -1,0 +1,45 @@
+<div style="max-width: 1000px; margin: 0 auto;">
+  <h1 style="font-size:1.6em; font-weight:800; color:#1e293b;">Fondos: <%= @fund_type.humanize.capitalize %></h1>
+  <p style="color:#64748b; margin-top:6px;">Total asignado: $ <%= number_with_precision(@total_allocated, precision: 2) %> — Gastado: $ <%= number_with_precision(@total_spent, precision: 2) %> — Saldo: $ <%= number_with_precision(@remaining, precision: 2) %></p>
+
+  <div style="margin-top:20px;">
+    <% if @allocations.any? %>
+      <% @allocations.each do |fa| %>
+        <div style="background:white; padding:12px; border-radius:8px; border:1px solid #eef2ff; margin-bottom:12px;">
+          <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
+            <div>
+              <div style="font-weight:800; color:#0f172a;"><%= fa.gig.client.name %> — <%= fa.gig.date&.strftime('%d/%m/%Y') %></div>
+              <div style="color:#64748b; font-size:0.9em;">Notas: <%= fa.notes.presence || '-' %></div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:900; color:#0ea5e9;">$ <%= number_with_precision(fa.amount, precision: 2) %></div>
+              <div style="font-size:0.8em; color:#94a3b8;"><%= fa.created_at.strftime('%d/%m/%Y') %></div>
+            </div>
+          </div>
+
+          <% if fa.fund_expenses.any? %>
+            <div style="margin-top:10px; padding-top:10px; border-top:1px dashed #f1f5f9;">
+              <div style="font-weight:700; color:#475569; margin-bottom:8px;">Gastos:</div>
+              <% fa.fund_expenses.order(created_at: :desc).each do |exp| %>
+                <div style="display:flex; justify-content:space-between; gap:8px; padding:6px 0; border-bottom:1px solid #f8fafc;">
+                  <div style="color:#334155;"><%= exp.notes.presence || 'Sin nota' %></div>
+                  <div style="text-align:right; color:#ef4444; font-weight:800;">$ <%= number_with_precision(exp.amount, precision: 2) %> <div style="font-size:0.8em; color:#94a3b8;"><%= exp.spent_at&.strftime('%d/%m/%Y') %></div></div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
+          <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
+            <%= form_with url: gig_fund_allocation_fund_expenses_path(fa.gig, fa), local: true do |ff| %>
+              <%= ff.number_field :amount, step: 0.01, placeholder: '0.00', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; width:120px;' %>
+              <%= ff.text_field :notes, placeholder: '¿En qué se gastó?', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; flex:1;' %>
+              <%= ff.submit 'Registrar gasto', style: 'background:#ef4444; color:white; padding:8px 12px; border-radius:8px; font-weight:700; border:none;' %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <p style="color:#94a3b8;">No hay asignaciones para este tipo de fondo.</p>
+    <% end %>
+  </div>
+</div>

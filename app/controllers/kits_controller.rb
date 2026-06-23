@@ -1,4 +1,5 @@
 class KitsController < ApplicationController
+  before_action :require_leader!
   before_action :set_kit, only: [:show, :edit, :update, :destroy, :add_item, :remove_item]
 
   def index

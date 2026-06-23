@@ -45,7 +45,7 @@
 
           <div style="margin-bottom: 20px;">
             <p style="margin: 0; color: #64748b; font-size: 0.9em;">Stock Disponible</p>
-            <p style="margin: 5px 0 0 0; color: #1e293b; font-weight: 700; font-size: 1.2em;">✖️ <%= @item.quantity %> unidades</p>
+            <p style="margin: 5px 0 0 0; color: #1e293b; font-weight: 700; font-size: 1.2em;">✖️ <%= @item.available_count %> de <%= @item.total_count %> unidades</p>
           </div>
         </div>
 
@@ -76,6 +76,39 @@
           <p style="margin: 0; color: #1e293b; line-height: 1.6; font-size: 1em;"><%= @item.notes %></p>
         </div>
       <% end %>
+
+      <%# --- COPIAS INDIVIDUALES --- %>
+      <div style="margin-top: 30px; padding: 25px; background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 10px rgba(0,0,0,0.02);">
+        <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.2em; font-weight: 800;">📋 Unidades en Inventario</h3>
+        
+        <div style="display: grid; gap: 12px;">
+          <% @item.inventory_items.order(id: :asc).each_with_index do |ii, index| %>
+            <%= form_with model: [ @item, ii ], local: true, style: "margin: 0;" do |f| %>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding: 15px; background: #f8fafc; border-radius: 12px; border: 1px solid #f1f5f9; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <span style="font-weight: 800; color: #64748b; font-size: 1.1em;">#<%= index + 1 %></span>
+                  <div>
+                    <%= f.label :serial_number, "Nº de Serie", style: "display: block; font-size: 0.75em; color: #64748b; font-weight: bold; text-transform: uppercase; margin-bottom: 4px;" %>
+                    <%= f.text_field :serial_number, placeholder: "Sin serial", style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e0; font-size: 0.9em; width: 140px; box-sizing: border-box;" %>
+                  </div>
+                </div>
+
+                <div>
+                  <%= f.label :status, "Estado", style: "display: block; font-size: 0.75em; color: #64748b; font-weight: bold; text-transform: uppercase; margin-bottom: 4px;" %>
+                  <%= f.select :status, 
+                      [["Disponible", "available"], ["Dañado", "damaged"], ["Mantenimiento", "maintenance"]], 
+                      {}, 
+                      { style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e0; font-size: 0.9em; background: white; cursor: pointer;" } %>
+                </div>
+
+                <div style="align-self: flex-end;">
+                  <%= f.submit "Actualizar", style: "background: #2563eb; color: white; padding: 9px 18px; border-radius: 8px; border: none; font-weight: bold; font-size: 0.9em; cursor: pointer; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.1);" %>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
 
       <%# --- BOTONES DE ACCIÓN --- %>
       <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #f1f5f9; display: flex; gap: 15px;">

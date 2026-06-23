@@ -1,0 +1,129 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+  <% if defined?(@gig) && @gig.present? %>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+      <div>
+        <%= link_to '← Volver al Show', gig_path(@gig), style: "text-decoration: none; color: #64748b; font-weight: 700; font-size: 0.9em;" %>
+        <h1 style="color: #0f172a; margin: 5px 0 0 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">
+          💳 Pagos para el show: <%= @gig.client.name %>
+        </h1>
+        <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1em;">Fecha del evento: <strong><%= @gig.date&.strftime('%d/%m/%Y') %></strong></p>
+      </div>
+      <%= link_to 'Registrar nuevo pago', new_gig_gig_payment_path(@gig), class: 'btn-main btn-primary-custom' %>
+    </div>
+
+    <div class="custom-card">
+      <div class="table-custom-wrapper">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Monto</th>
+              <th>Moneda</th>
+              <th>Fecha Pago</th>
+              <th>Adelanto</th>
+              <th>Payer</th>
+              <th>Categoría</th>
+              <th>Notas</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @payments.each do |p| %>
+              <tr>
+                <td style="font-weight: 800; color: #0f172a;">$ <%= number_with_precision(p.amount, precision: 2) %></td>
+                <td>
+                  <span style="background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; color: #475569;">
+                    <%= p.currency %>
+                  </span>
+                </td>
+                <td><%= p.date_paid&.strftime('%d/%m/%Y') || '---' %></td>
+                <td>
+                  <span class="badge <%= p.is_advance ? 'bg-success' : 'bg-secondary' %>">
+                    <%= p.is_advance ? 'Sí' : 'No' %>
+                  </span>
+                </td>
+                <td><%= p.payer_name.presence || '---' %></td>
+                <td>
+                  <% if p.category.present? %>
+                    <span style="background: #eff6ff; color: #2563eb; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 700; border: 1px solid rgba(37,99,235,0.1);">
+                      <%= p.category.humanize %>
+                    </span>
+                  <% else %>
+                    <span style="color: #94a3b8; font-style: italic; font-size: 0.85em;">General</span>
+                  <% end %>
+                </td>
+                <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<%= p.notes %>">
+                  <%= p.notes.presence || '---' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+      <div>
+        <h1 style="color: #0f172a; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">
+          💳 Pagos Eventos / Shows
+        </h1>
+        <p style="color: #64748b; margin: 5px 0 0 0;">Historial completo de pagos recibidos por los eventos.</p>
+      </div>
+    </div>
+
+    <% if defined?(@unpaid_gigs) && @unpaid_gigs.present? %>
+      <div class="custom-card" style="margin-bottom: 20px; padding: 16px;">
+        <h3 style="margin: 0 0 10px 0; font-size: 1.05em; color: #0f172a;">Shows pendientes de pago</h3>
+        <div style="color: #475569;">
+          <ul style="margin: 8px 0 0 16px;">
+            <% @unpaid_gigs.each do |g| %>
+              <% remaining = g.amount.to_f - g.gig_payments.sum(:amount).to_f %>
+              <li style="margin-bottom: 6px;">
+                <%= link_to gig_path(g), style: 'text-decoration: none; color: #2563eb; font-weight: 700;' do %>
+                  <%= g.client.name %> — <span style="font-weight: 600; color: #64748b;"><%= g.date&.strftime('%d/%m/%Y') %></span>
+                  <span style="margin-left:8px; font-weight:800; color:#0f172a;">Falta: $ <%= number_with_precision(remaining, precision: 2) %></span>
+                <% end %>
+              </li>
+            <% end %>
+          </ul>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="custom-card">
+      <div class="table-custom-wrapper">
+        <table class="table-custom">
+          <thead>
+            <tr>
+              <th>Show / Evento</th>
+              <th>Monto</th>
+              <th>Moneda</th>
+              <th>Fecha Pago</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @payments.each do |p| %>
+              <tr>
+                <td>
+                  <%= link_to gig_path(p.gig), style: "text-decoration: none; color: #2563eb; font-weight: 700;" do %>
+                    <%= p.gig.client.name %> — <span style="font-weight: 600; color: #64748b;"><%= p.gig.date&.strftime('%d/%m/%Y') %></span>
+                  <% end %>
+                </td>
+                <td style="font-weight: 800; color: #0f172a;">$ <%= number_with_precision(p.amount, precision: 2) %></td>
+                <td>
+                  <span style="background: #f1f5f9; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; color: #475569;">
+                    <%= p.currency %>
+                  </span>
+                </td>
+                <td><%= p.date_paid&.strftime('%d/%m/%Y') || '---' %></td>
+                <td class="text-center">
+                  <%= link_to 'Ver pagos del show', gig_gig_payments_path(p.gig), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+                  <%= link_to 'Registrar pago', new_gig_gig_payment_path(p.gig), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+</div>

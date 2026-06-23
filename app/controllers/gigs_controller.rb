@@ -1,4 +1,15 @@
 class GigsController < ApplicationController
+  before_action :require_leader!, except: [:show, :load_in_checklist, :my]
+  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist]
+  before_action :check_gig_assignment, only: [:show, :load_in_checklist]
+
+  def check_gig_assignment
+    @gig = Gig.find(params[:id])
+    unless current_user.leader? || current_user.assigned_gigs.include?(@gig)
+      redirect_to root_path, alert: "No tienes asignado este evento."
+    end
+  end
+
   def index
     # 1. Unimos la tabla de clientes para poder buscar y filtrar
     @gigs = Gig.includes(:client).all
@@ -31,13 +42,13 @@ class GigsController < ApplicationController
   end
 
   def show
-    @gig = Gig.find(params[:id])
+    @gig ||= Gig.find(params[:id])
     @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
     @new_gig_item = GigItem.new
   end
 
   def load_in_checklist
-    @gig = Gig.find(params[:id])
+    @gig ||= Gig.find(params[:id])
     @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
     # Use a layout specifically without navbar, or render false and build full html
     render layout: false
@@ -64,6 +75,31 @@ class GigsController < ApplicationController
     redirect_to gig_path(@gig), notice: "Plantilla '#{kit.name}' aplicada con éxito al evento."
   rescue ActiveRecord::RecordNotFound
     redirect_to gig_path(@gig), alert: "Plantilla no encontrada."
+  end
+
+  def assign_staff
+    @gig = Gig.find(params[:id])
+    user = User.find_by(id: params[:staff_id])
+
+    if user && user.staff?
+      if @gig.staff_members.include?(user)
+        redirect_to gig_path(@gig), alert: "Este trabajador ya está asignado."
+      else
+        @gig.staff_members << user
+        redirect_to gig_path(@gig), notice: "Trabajador asignado con éxito."
+      end
+    else
+      redirect_to gig_path(@gig), alert: "Usuario no válido."
+    end
+  end
+
+  # Show gigs assigned to current staff member
+  def my
+    @gigs = current_user.assigned_gigs.order(date: :asc)
+
+    gig_ids = @gigs.pluck(:id)
+    @pending_gig_items = GigItem.where(gig_id: gig_ids).where(loaded_quantity: 0)
+    @items_to_load_count = @pending_gig_items.sum(:quantity)
   end
 
   def new

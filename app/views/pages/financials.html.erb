@@ -165,4 +165,26 @@
 
   </div>
 
+  <%# --- RESUMEN GLOBAL DE FONDOS --- %>
+  <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+    <h3 style="margin: 0 0 12px 0; font-size: 1.1em; color: #1e293b; font-weight: 800;">💼 Fondos por Tipo</h3>
+    <% if @total_funds_by_type.any? %>
+      <div style="display:flex; gap:12px; flex-wrap:wrap;">
+        <% @total_funds_by_type.each do |type, total| %>
+          <% spent = (@spent_by_type[type] || 0).to_f %>
+          <% remaining = total.to_f - spent %>
+          <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #eef2ff; min-width:220px;">
+            <div style="font-weight:800; color:#1e293b;"><%= type.humanize.capitalize %></div>
+            <div style="margin-top:6px; font-weight:900; color:#0ea5e9;">Asignado: $ <%= number_with_precision(total, precision: 2) %></div>
+            <div style="margin-top:4px; color:#ef4444; font-weight:800;">Gastado: $ <%= number_with_precision(spent, precision: 2) %></div>
+            <div style="margin-top:6px; font-weight:900; color:#065f46;">Saldo: $ <%= number_with_precision(remaining, precision: 2) %></div>
+            <div style="margin-top:8px;"><%= link_to 'Ver detalle', fund_path(type), style: 'text-decoration:none; font-weight:700; color:#2563eb;' %></div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p style="color:#94a3b8;">No hay fondos asignados aún.</p>
+    <% end %>
+  </div>
+
 </div>

@@ -9,6 +9,39 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+    <style>
+      /* Hide native scrollbar but keep scroll functionality */
+      aside {
+        /* allow flex children to shrink/overflow correctly */
+        min-height: 0;
+      }
+      aside nav {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* IE 10+ */
+        position: relative; /* container for custom indicator */
+        /* ensure nav can scroll inside the flex layout */
+        min-height: 0;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      aside nav::-webkit-scrollbar { display: none; }
+
+      /* Custom scroll indicator (a subtle background bar acting as thumb) */
+      #sidebar-scroll-indicator {
+        position: absolute;
+        right: 6px;
+        top: 0;
+        width: 6px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 6px;
+        transition: transform 0.12s linear, height 0.12s linear, opacity 0.12s linear;
+        will-change: transform, height;
+        opacity: 0.9;
+      }
+
+      /* Prevent long labels from wrapping awkwardly */
+      aside nav a { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    </style>
   </head>
 
   <body style="margin: 0; padding: 0; background-color: #f8fafc;">
@@ -16,106 +49,138 @@
       
       <%# --- MOSTRAR SIDEBAR SOLO SI HAY USUARIO --- %>
       <% if user_signed_in? %>
-        <aside style="width: 280px; background: #0f172a; color: white; position: fixed; height: 100vh; display: flex; flex-direction: column; padding: 25px 20px; box-sizing: border-box; z-index: 100; box-shadow: 4px 0 15px rgba(0,0,0,0.1);">
+        <aside class="app-sidebar">
           
           <%# Logo %>
-          <div style="padding: 10px 0 30px 10px; border-bottom: 1px solid #1e293b; margin-bottom: 25px;">
-            <h2 style="margin: 0; font-size: 1.5em; font-weight: 800; letter-spacing: -1px; display: flex; align-items: center; gap: 10px;">
-              <span style="background: #2563eb; color: white; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 0.8em;">G</span>
+          <div class="sidebar-brand">
+            <h2>
+              <span class="brand-logo">G</span>
               Gig Manager
             </h2>
           </div>
 
           <%# Navegación %>
-          <nav style="display: flex; flex-direction: column; gap: 8px; flex-grow: 1;">
-            <%= link_to root_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'pages' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'pages' ? '#2563eb' : 'transparent'}; 
-                box-shadow: #{controller_name == 'pages' ? '0 4px 12px rgba(37, 99, 235, 0.3)' : 'none'};" do %>
-              <span style="font-size: 1.2em;">🏠</span> <span style="font-weight: 600;">Inicio</span>
+          <nav class="sidebar-nav">
+            <%= link_to root_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'dashboard'}" do %>
+              <span class="icon">🏠</span> <span>Inicio</span>
             <% end %>
 
-            <%= link_to items_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'items' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'items' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">📦</span> <span style="font-weight: 600;">Inventario</span>
-            <% end %>
+            <% if current_user.leader? %>
+              <%= link_to items_path, class: "sidebar-link #{'active' if controller_name == 'items'}" do %>
+                <span class="icon">📦</span> <span>Inventario</span>
+              <% end %>
 
-            <%= link_to clients_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'clients' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'clients' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">👥</span> <span style="font-weight: 600;">Clientes</span>
-            <% end %>
+              <%= link_to clients_path, class: "sidebar-link #{'active' if controller_name == 'clients'}" do %>
+                <span class="icon">👥</span> <span>Clientes</span>
+              <% end %>
 
-            <%= link_to preset_budgets_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'preset_budgets' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'preset_budgets' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">📄</span> <span style="font-weight: 600;">Presupuestos Base</span>
-            <% end %>
+              <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
+                <span class="icon">📄</span> <span>Presupuestos Base</span>
+              <% end %>
 
-            <%= link_to gigs_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'gigs' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'gigs' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">🎸</span> <span style="font-weight: 600;">Gigs / Eventos</span>
-            <% end %>
+              <%= link_to gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name != 'my'}" do %>
+                <span class="icon">🎸</span> <span>Gigs / Eventos</span>
+              <% end %>
 
-            <%= link_to kits_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'kits' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'kits' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">🛠️</span> <span style="font-weight: 600;">Plantillas (Kits)</span>
-            <% end %>
+              <%= link_to gig_payments_path, class: "sidebar-link #{'active' if controller_name == 'gig_payments'}" do %>
+                <span class="icon">💳</span> <span>Pagos Eventos / Shows</span>
+              <% end %>
 
-            <%= link_to maintenance_records_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'maintenance_records' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'maintenance_records' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">🔧</span> <span style="font-weight: 600;">Taller (Reparos)</span>
-            <% end %>
+              <%= link_to kits_path, class: "sidebar-link #{'active' if controller_name == 'kits'}" do %>
+                <span class="icon">🛠️</span> <span>Plantillas (Kits)</span>
+              <% end %>
 
-            <%= link_to availability_dashboard_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{action_name == 'availability' ? 'white' : '#94a3b8'}; 
-                background: #{action_name == 'availability' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">⚡</span> <span style="font-weight: 600;">Conflictos</span>
-            <% end %>
+              <%= link_to maintenance_records_path, class: "sidebar-link #{'active' if controller_name == 'maintenance_records'}" do %>
+                <span class="icon">🔧</span> <span>Taller (Reparos)</span>
+              <% end %>
 
-            <%= link_to financials_dashboard_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{action_name == 'financials' ? 'white' : '#94a3b8'}; 
-                background: #{action_name == 'financials' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">📊</span> <span style="font-weight: 600;">Métricas / Finanzas</span>
-            <% end %>
+              <%= link_to availability_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'availability'}" do %>
+                <span class="icon">⚡</span> <span>Conflictos</span>
+              <% end %>
 
-            <%= link_to investments_path, style: "text-decoration: none; display: flex; align-items: center; gap: 12px; padding: 14px 18px; border-radius: 12px; transition: all 0.3s ease; 
-                color: #{controller_name == 'investments' ? 'white' : '#94a3b8'}; 
-                background: #{controller_name == 'investments' ? '#2563eb' : 'transparent'};" do %>
-              <span style="font-size: 1.2em;">💸</span> <span style="font-weight: 600;">Inversiones</span>
+              <%= link_to financials_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'financials'}" do %>
+                <span class="icon">📊</span> <span>Métricas / Finanzas</span>
+              <% end %>
+
+              <%= link_to investments_path, class: "sidebar-link #{'active' if controller_name == 'investments'}" do %>
+                <span class="icon">💸</span> <span>Inversiones</span>
+              <% end %>
+
+              <%= link_to employee_payments_path, class: "sidebar-link #{'active' if controller_name == 'employee_payments'}" do %>
+                <span class="icon">💰</span> <span>Pagos a empleados</span>
+              <% end %>
+
+              <%= link_to users_path, class: "sidebar-link #{'active' if controller_name == 'users'}" do %>
+                <span class="icon">⚙️</span> <span>Roles / Accesos</span>
+              <% end %>
+
+            <% elsif current_user.staff? %>
+              <div class="nav-header">Staff</div>
+              <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
+                <span class="icon">🎫</span> <span>Mis eventos</span>
+              <% end %>
+
+              <%= link_to edit_user_registration_path, class: "sidebar-link #{'active' if current_page?(edit_user_registration_path)}" do %>
+                <span class="icon">👤</span> <span>Perfil</span>
+              <% end %>
+
+              <%= link_to help_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'help'}" do %>
+                <span class="icon">❓</span> <span>Ayuda</span>
+              <% end %>
             <% end %>
+            <div id="sidebar-scroll-indicator" aria-hidden="true"></div>
           </nav>
 
           <%# Pie del Sidebar: Usuario y Logout %>
-          <div style="margin-top: auto; padding: 15px; background: #1e293b; border-radius: 16px;">
-            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-              <div style="width: 32px; height: 32px; background: #334155; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #38bdf8; border: 2px solid #0f172a; font-size: 0.8em;">
+          <div class="sidebar-footer">
+            <div class="user-info">
+              <div class="avatar">
                 <%= current_user.email[0].upcase %>
               </div>
-              <div style="overflow: hidden;">
-                <p style="margin: 0; font-size: 0.75em; font-weight: 700; color: white; white-space: nowrap; text-overflow: ellipsis;"><%= current_user.email %></p>
-                <p style="margin: 0; font-size: 0.65em; color: #64748b; font-weight: 600; text-transform: uppercase;">En línea</p>
+              <div class="user-details">
+                <p class="email"><%= current_user.email %></p>
+                <p class="status">En línea</p>
               </div>
             </div>
-            <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, 
-                style: "width: 100%; background: #ef444420; color: #f87171; border: 1px solid #ef444440; padding: 8px; border-radius: 8px; font-size: 0.75em; font-weight: 700; cursor: pointer; transition: 0.3s;",
-                onmouseover: "this.style.background='#ef4444'; this.style.color='white';",
-                onmouseout: "this.style.background='#ef444420'; this.style.color='#f87171';" %>
+            <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, class: "btn-logout" %>
           </div>
         </aside>
       <% end %>
 
       <%# --- CONTENIDO PRINCIPAL --- %>
-      <main style="<%= user_signed_in? ? 'margin-left: 280px;' : 'margin-left: 0;' %> flex-grow: 1; min-height: 100vh; padding: 40px; box-sizing: border-box;">
+      <main style="<%= user_signed_in? ? 'margin-left: 280px;' : 'margin-left: 0;' %> flex-grow: 1; min-height: 100vh; padding: 40px; box-sizing: border-box; overflow-x: auto;">
         <div style="max-width: 1200px; margin: 0 auto;">
           <%= yield %>
         </div>
       </main>
 
     </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', function(){
+        var nav = document.querySelector('aside nav');
+        var indicator = document.getElementById('sidebar-scroll-indicator');
+        if(!nav || !indicator) return;
+
+        function refresh(){
+          var scrollHeight = nav.scrollHeight;
+          var client = nav.clientHeight;
+          if(scrollHeight <= client){
+            indicator.style.opacity = '0';
+            return;
+          }
+          indicator.style.opacity = '0.9';
+          var thumbPct = (client / scrollHeight) * 100; // percent height
+          var ratio = nav.scrollTop / (scrollHeight - client);
+          var translatePct = ratio * (100 - thumbPct);
+          indicator.style.height = thumbPct + '%';
+          indicator.style.top = translatePct + '%';
+        }
+
+        nav.addEventListener('scroll', refresh, { passive: true });
+        window.addEventListener('resize', refresh);
+        // init
+        refresh();
+      });
+    </script>
   </body>
 </html>

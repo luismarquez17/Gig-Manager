@@ -1,0 +1,42 @@
+<div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+  <header style="margin-bottom: 18px;">
+    <h1 style="font-size: 1.6em; margin: 0;">Mis eventos asignados</h1>
+    <p style="color: #64748b; margin-top: 6px;">Lista de eventos a los que te han asignado. Accede al checklist para preparar la carga.</p>
+  </header>
+
+  <% if @gigs.present? %>
+    <div style="display: grid; gap: 12px;">
+      <% @gigs.each do |gig| %>
+        <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; display:flex; justify-content: space-between; align-items: center;">
+          <div>
+            <div style="font-weight: 700;"><%= gig.client&.name || 'Cliente desconocido' %> — <span style="color:#64748b; font-weight:600;"><%= gig.date&.strftime('%d %b %Y') %></span></div>
+            <div style="color:#94a3b8; margin-top:6px; font-size:0.95em;"><%= truncate(gig.details || '', length: 140) %></div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background:#f8fafc; border:1px solid #e2e8f0; padding:8px 10px; border-radius:8px; font-weight:700; text-decoration:none; color:#0f172a;' %>
+            <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background:#2563eb; color:white; padding:8px 10px; border-radius:8px; font-weight:700; text-decoration:none;' %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div style="background: white; padding: 18px; border-radius: 10px; border: 1px solid #eef2ff; color:#64748b;">No tienes eventos asignados.</div>
+  <% end %>
+
+  <%# -- Sección Pendientes (anclable) -- %>
+  <section id="pendientes" style="margin-top: 22px;">
+    <h2 style="font-size: 1.1em; margin-bottom: 8px; color: #0f172a; font-weight: 800;">Pendientes de carga</h2>
+    <% if @pending_gig_items.present? %>
+      <div style="background: white; padding: 14px; border-radius: 10px; border: 1px solid #eef2ff;">
+        <p style="margin: 0 0 8px 0; color: #475569; font-weight: 700;"><%= @items_to_load_count %> unidades por cargar en tus eventos asignados</p>
+        <ul style="margin: 8px 0 0 16px; color: #64748b;">
+          <% @pending_gig_items.includes(:item, :gig).limit(10).each do |gi| %>
+            <li style="margin-bottom:6px;"><strong><%= gi.item&.name || 'Ítem' %></strong> — <%= gi.quantity %> (Evento: <%= link_to (gi.gig.client&.name || 'cliente'), gig_path(gi.gig) %>)</li>
+          <% end %>
+        </ul>
+      </div>
+    <% else %>
+      <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No hay ítems pendientes de carga.</div>
+    <% end %>
+  </section>
+</div>

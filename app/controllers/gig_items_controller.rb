@@ -1,4 +1,18 @@
 class GigItemsController < ApplicationController
+  before_action :require_leader!, only: [:create, :destroy]
+  before_action :require_staff_or_leader!, only: [:toggle, :update_quantities, :report_damage, :report_lost]
+  before_action :check_gig_item_assignment, only: [:toggle, :update_quantities, :report_damage, :report_lost]
+
+  def check_gig_item_assignment
+    @gig_item = GigItem.find(params[:id])
+    unless current_user.leader? || current_user.assigned_gigs.include?(@gig_item.gig)
+      respond_to do |format|
+        format.html { redirect_to root_path, alert: "No tienes permiso." }
+        format.json { render json: { success: false, error: "No tienes permiso." }, status: :forbidden }
+      end
+    end
+  end
+
   def create
     @gig = Gig.find(params[:gig_id])
     item_id = params[:gig_item][:item_id]
@@ -25,7 +39,7 @@ class GigItemsController < ApplicationController
   end
 
   def toggle
-    @gig_item = GigItem.find(params[:id])
+    @gig_item ||= GigItem.find(params[:id])
     @gig_item.update(checked: !@gig_item.checked)
     
     respond_to do |format|
@@ -35,7 +49,7 @@ class GigItemsController < ApplicationController
   end
 
   def update_quantities
-    @gig_item = GigItem.find(params[:id])
+    @gig_item ||= GigItem.find(params[:id])
     loaded = params[:loaded_quantity].to_i
     returned = params[:returned_quantity].to_i
 
@@ -56,7 +70,7 @@ class GigItemsController < ApplicationController
   end
 
   def report_damage
-    @gig_item = GigItem.find(params[:id])
+    @gig_item ||= GigItem.find(params[:id])
     @item = @gig_item.item
     @gig = @gig_item.gig
 
@@ -77,7 +91,9 @@ class GigItemsController < ApplicationController
 
     ActiveRecord::Base.transaction do
       @item.update!(notes: new_notes)
-      # Se crea el registro de taller. El callback de MaintenanceRecord pondrá al Item como "Dañado" automáticamente.
+      # El callback de MaintenanceRecord asignará automáticamente un InventoryItem disponible
+      # y lo pondrá en estado 'maintenance'. El Item se marcará como 'Operativo' o 'Dañado'
+      # según cuántas copias queden disponibles.
       MaintenanceRecord.create!(
         item: @item,
         gig: @gig,
@@ -94,7 +110,7 @@ class GigItemsController < ApplicationController
   end
 
   def report_lost
-    @gig_item = GigItem.find(params[:id])
+    @gig_item ||= GigItem.find(params[:id])
     @item = @gig_item.item
     @gig = @gig_item.gig
     lost_qty = params[:quantity].to_i
@@ -111,17 +127,9 @@ class GigItemsController < ApplicationController
     end
 
     ActiveRecord::Base.transaction do
-      # Ajustamos la cantidad retornada en el gig para cuadrar la carga (el item se perdió)
+      # Ajustamos la cantidad retornada en el gig para cuadrar la carga
       new_returned = [[@gig_item.returned_quantity + lost_qty, 0].max, @gig_item.loaded_quantity].min
       @gig_item.update!(returned_quantity: new_returned)
-
-      # Restamos del stock maestro de Items. 
-      # Como el callback de MaintenanceRecord con status: :discarded resta 1,
-      # restamos (lost_qty - 1) en el Item directamente, y el callback restará la otra unidad.
-      if lost_qty > 1
-        qty_to_deduct_now = lost_qty - 1
-        @item.update!(quantity: [@item.quantity - qty_to_deduct_now, 0].max)
-      end
 
       # Registramos la pérdida en las notas del ítem
       lost_entry = "[#{Date.today.strftime('%d/%m/%Y')}][PÉRDIDA] #{lost_qty} ud(s) en Show con #{@gig.client.name} (#{@gig.date&.strftime('%d/%m/%Y')}): #{lost_notes}"
@@ -129,16 +137,20 @@ class GigItemsController < ApplicationController
       new_notes = existing_notes.empty? ? lost_entry : "#{existing_notes}\n#{lost_entry}"
       @item.update!(notes: new_notes)
 
-      # Creamos el registro en taller con estado desincorporado (para mantener historial)
-      MaintenanceRecord.create!(
-        item: @item,
-        gig: @gig,
-        description: "PÉRDIDA EN EVENTO: #{lost_notes} (#{lost_qty} unidad/es)",
-        status: :discarded,
-        cost: 0.00,
-        started_at: Date.today,
-        completed_at: Date.today
-      )
+      # Por cada unidad perdida creamos un MaintenanceRecord en estado :discarded.
+      # El callback de MaintenanceRecord eliminará el InventoryItem asociado y
+      # decrementará automáticamente item.quantity.
+      lost_qty.times do
+        MaintenanceRecord.create!(
+          item: @item,
+          gig: @gig,
+          description: "PÉRDIDA EN EVENTO: #{lost_notes}",
+          status: :discarded,
+          cost: 0.00,
+          started_at: Date.today,
+          completed_at: Date.today
+        )
+      end
     end
 
     render json: { success: true }

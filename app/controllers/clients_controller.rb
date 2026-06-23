@@ -1,7 +1,9 @@
 class ClientsController < ApplicationController
+  before_action :require_leader!
+
   def index
-    # Iniciamos con todos los clientes
-    @clients = Client.all
+    # Iniciamos con todos los clientes (cargamos de manera anticipada los gigs para evitar N+1 en average_budget)
+    @clients = Client.includes(:gigs).all
 
     # 1. Buscador por nombre o teléfono
     if params[:query].present?

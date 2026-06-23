@@ -1,0 +1,38 @@
+<h2 style="margin-bottom: 18px;">Pagos a empleados</h2>
+
+<div class="custom-card">
+  <div class="table-custom-wrapper">
+    <div style="overflow-x: auto;">
+      <table class="table-custom">
+        <thead>
+          <tr>
+            <th>Empleado</th>
+            <th>Monto</th>
+            <th>Moneda</th>
+            <th>Fecha</th>
+            <th>Show</th>
+            <th>Método</th>
+            <th>Notas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @payments.each do |p| %>
+            <tr>
+              <td><%= p.user.email %></td>
+              <td><%= number_to_currency(p.amount, unit: p.currency) rescue p.amount %></td>
+              <td><%= p.currency %></td>
+              <td><%= l(p.date_paid) rescue p.date_paid %></td>
+              <td><%= p.gig&.client&.name %> - <%= p.gig&.date %></td>
+              <td><%= p.payment_method %></td>
+              <td><%= p.notes %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div style="margin-top: 12px;">
+    <%= link_to 'Registrar nuevo pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
+  </div>
+</div>

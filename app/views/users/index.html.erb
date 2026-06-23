@@ -1,0 +1,54 @@
+<div style="max-width: 1000px; margin: 0 auto;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+    <div>
+      <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👥 Gestión de Usuarios</h1>
+      <p style="color: #64748b; margin: 5px 0 0 0;">Asigna roles de Staff o Líder a los usuarios registrados.</p>
+    </div>
+  </div>
+
+  <% if notice %>
+    <div style="background: #ecfdf5; border: 1px solid #6ee7b7; color: #065f46; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+      ✅ <%= notice %>
+    </div>
+  <% end %>
+  <% if alert %>
+    <div style="background: #fff1f2; border: 1px solid #fca5a5; color: #be123c; padding: 14px 20px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+      ⚠️ <%= alert %>
+    </div>
+  <% end %>
+
+  <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden;">
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Email</th>
+          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Rol Actual</th>
+          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% @users.each do |user| %>
+          <tr style="border-bottom: 1px solid #f1f5f9;">
+            <td style="padding: 15px 20px; font-weight: 600; color: #1e293b;"><%= user.email %></td>
+            <td style="padding: 15px 20px;">
+              <span style="padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 800; text-transform: uppercase;
+                <%= user.leader? ? 'background: #eff6ff; color: #2563eb;' : (user.staff? ? 'background: #ecfdf5; color: #10b981;' : 'background: #f1f5f9; color: #64748b;') %>">
+                <%= user.role %>
+              </span>
+            </td>
+            <td style="padding: 15px 20px;">
+              <% if current_user == user %>
+                <span style="color: #94a3b8; font-size: 0.85em; font-style: italic;">(Tú)</span>
+              <% else %>
+                <%= form_with url: update_role_user_path(user), method: :patch, local: true, style: "display: flex; gap: 10px; align-items: center;" do |f| %>
+                  <%= f.select :role, User.roles.keys.map { |r| [r.capitalize, r] }, { selected: user.role }, style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;" %>
+                  <%= f.submit "Actualizar", style: "background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85em;" %>
+                <% end %>
+              <% end %>
+            </td>
+          </tr>
+        <% end %>
+      </tbody>
+    </table>
+  </div>
+</div>

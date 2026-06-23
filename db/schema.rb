@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
+ActiveRecord::Schema[7.1].define(version: 2026_06_23_000100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -52,6 +52,50 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
     t.string "notes"
   end
 
+  create_table "employee_payments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "gig_id"
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD"
+    t.date "date_paid"
+    t.string "payment_method"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id"], name: "index_employee_payments_on_gig_id"
+    t.index ["user_id"], name: "index_employee_payments_on_user_id"
+  end
+
+  create_table "finance_settings", force: :cascade do |t|
+    t.decimal "reinvest_rate", precision: 5, scale: 2, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "fund_allocations", force: :cascade do |t|
+    t.bigint "gig_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD"
+    t.string "fund_type"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id"], name: "index_fund_allocations_on_gig_id"
+  end
+
+  create_table "fund_expenses", force: :cascade do |t|
+    t.bigint "fund_allocation_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD"
+    t.text "notes"
+    t.datetime "spent_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "maintenance_record_id"
+    t.index ["fund_allocation_id"], name: "index_fund_expenses_on_fund_allocation_id"
+    t.index ["maintenance_record_id"], name: "index_fund_expenses_on_maintenance_record_id"
+  end
+
   create_table "gig_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.bigint "item_id", null: false
@@ -65,6 +109,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
     t.index ["item_id"], name: "index_gig_items_on_item_id"
   end
 
+  create_table "gig_payments", force: :cascade do |t|
+    t.bigint "gig_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD"
+    t.date "date_paid"
+    t.boolean "is_advance", default: false
+    t.string "payer_name"
+    t.date "for_date"
+    t.string "category"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
+  end
+
   create_table "gigs", force: :cascade do |t|
     t.date "date"
     t.decimal "amount"
@@ -75,6 +134,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
     t.string "currency"
     t.text "details"
     t.index ["client_id"], name: "index_gigs_on_client_id"
+  end
+
+  create_table "inventory_items", force: :cascade do |t|
+    t.bigint "item_id", null: false
+    t.string "status", default: "available", null: false
+    t.string "serial_number"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["item_id"], name: "index_inventory_items_on_item_id"
   end
 
   create_table "investments", force: :cascade do |t|
@@ -127,7 +195,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
     t.date "completed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "inventory_item_id"
     t.index ["gig_id"], name: "index_maintenance_records_on_gig_id"
+    t.index ["inventory_item_id"], name: "index_maintenance_records_on_inventory_item_id"
     t.index ["item_id"], name: "index_maintenance_records_on_item_id"
   end
 
@@ -140,6 +210,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
     t.datetime "updated_at", null: false
   end
 
+  create_table "staff_assignments", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "gig_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id"], name: "index_staff_assignments_on_gig_id"
+    t.index ["user_id"], name: "index_staff_assignments_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -148,17 +227,28 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_20_170856) do
     t.datetime "remember_created_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "role", default: 0
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "employee_payments", "gigs"
+  add_foreign_key "employee_payments", "users"
+  add_foreign_key "fund_allocations", "gigs"
+  add_foreign_key "fund_expenses", "fund_allocations"
+  add_foreign_key "fund_expenses", "maintenance_records"
   add_foreign_key "gig_items", "gigs"
   add_foreign_key "gig_items", "items"
+  add_foreign_key "gig_payments", "gigs"
   add_foreign_key "gigs", "clients"
+  add_foreign_key "inventory_items", "items"
   add_foreign_key "kit_items", "items"
   add_foreign_key "kit_items", "kits"
   add_foreign_key "maintenance_records", "gigs"
+  add_foreign_key "maintenance_records", "inventory_items"
   add_foreign_key "maintenance_records", "items"
+  add_foreign_key "staff_assignments", "gigs"
+  add_foreign_key "staff_assignments", "users"
 end

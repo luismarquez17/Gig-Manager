@@ -20,10 +20,16 @@ class Client < ApplicationRecord
 
   # 2. Método para calcular el presupuesto promedio de los últimos 3 shows
   def average_budget
-    last_three = gigs.order(date: :desc).limit(3)
-    return 0.0 if last_three.empty?
+    sorted_gigs = if gigs.loaded?
+                    gigs.sort_by { |g| g.date || Date.new(0) }.reverse.take(3)
+                  else
+                    gigs.order(date: :desc).limit(3).to_a
+                  end
+
+    return 0.0 if sorted_gigs.empty?
     
-    last_three.average(:amount).to_f
+    amounts = sorted_gigs.map { |g| g.amount.to_f }
+    amounts.sum / amounts.size
   end
 
   # 3. Lógica de prioridad automática

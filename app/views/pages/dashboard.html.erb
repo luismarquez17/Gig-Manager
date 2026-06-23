@@ -1,133 +1,151 @@
-<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-  
-  <%# --- BIENVENIDA --- %>
-  <header style="margin-bottom: 35px;">
-    <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, Admin! 👋</h1>
-    <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Este es el estado actual de tu operación en Gig Manager.</p>
-  </header>
+<% if current_user.leader? %>
+  <div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif;">
 
-  <%# --- 1. TARJETAS DE ESTADÍSTICAS (Métricas rápidas) --- %>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
-    <%# Card Inventario %>
-    <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Equipos en Stock</span>
-        <span style="background: #eff6ff; padding: 8px; border-radius: 10px; font-size: 1.2em;">📦</span>
+    <%# --- BIENVENIDA --- %>
+    <header style="margin-bottom: 35px;">
+      <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, Admin! 👋</h1>
+      <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Este es el estado actual de tu operación en Gig Manager.</p>
+    </header>
+
+    <%# --- 1. TARJETAS DE ESTÁDÍSTICAS (Métricas rápidas) --- %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-bottom: 40px;">
+      <%# Card Inventario %>
+      <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Equipos en Stock</span>
+          <span style="background: #eff6ff; padding: 8px; border-radius: 10px; font-size: 1.2em;">📦</span>
+        </div>
+        <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= @total_items %></h2>
+        <div style="color: #10b981; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
+          ✓ <%= @items_excelente %> unidades disponibles
+        </div>
       </div>
-      <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= Item.sum(:quantity) %></h2>
-      <div style="color: #10b981; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
-        ✓ <%= Item.where(status: "Excelente").count %> en estado óptimo
+
+      <%# Card Eventos %>
+      <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Próximos Eventos</span>
+          <span style="background: #fef3c7; padding: 8px; border-radius: 10px; font-size: 1.2em;">🎸</span>
+        </div>
+        <%# Aquí asumo que tienes el modelo Gig, si no, deja el número manual por ahora %>
+        <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= defined?(Gig) ? Gig.count : "4" %></h2>
+        <div style="color: #f59e0b; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
+          🗓️ Agenda actualizada
+        </div>
+      </div>
+
+      <%# Card Alerta Dañados %>
+      <div style="background: #fff1f2; padding: 20px; border-radius: 20px; border: 1px solid #ffe4e6;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <span style="color: #e11d48; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Requiere Atención</span>
+          <span style="background: #ffe4e6; padding: 8px; border-radius: 10px; font-size: 1.2em;">⚠️</span>
+        </div>
+        <h2 style="font-size: 2em; margin: 0; color: #9f1239;"><%= @items_danados %></h2>
+        <p style="color: #e11d48; font-size: 0.85em; margin: 8px 0 0 0; font-weight: 600;">Unidades dañadas o en mantenimiento</p>
       </div>
     </div>
 
-    <%# Card Eventos %>
-    <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Próximos Eventos</span>
-        <span style="background: #fef3c7; padding: 8px; border-radius: 10px; font-size: 1.2em;">🎸</span>
-      </div>
-      <%# Aquí asumo que tienes el modelo Gig, si no, deja el número manual por ahora %>
-      <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= defined?(Gig) ? Gig.count : "4" %></h2>
-      <div style="color: #f59e0b; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
-        🗓️ Agenda actualizada
-      </div>
-    </div>
-
-    <%# Card Alerta Dañados %>
-    <div style="background: #fff1f2; padding: 20px; border-radius: 20px; border: 1px solid #ffe4e6;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <span style="color: #e11d48; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Requiere Atención</span>
-        <span style="background: #ffe4e6; padding: 8px; border-radius: 10px; font-size: 1.2em;">⚠️</span>
-      </div>
-      <h2 style="font-size: 2em; margin: 0; color: #9f1239;"><%= Item.where(status: "Dañado").count %></h2>
-      <p style="color: #e11d48; font-size: 0.85em; margin: 8px 0 0 0; font-weight: 600;">Equipos para reparar</p>
-    </div>
-  </div>
-
-  <%# --- 2. ACCIONES RÁPIDAS (Botones Reales y Útiles) --- %>
-  <div style="margin-bottom: 45px;">
-    <h3 style="color: #0f172a; font-size: 1.1em; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-      <span style="color: #2563eb;">⚡</span> Acceso Directo
-    </h3>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
-      
-      <%# Nuevo Equipo %>
-      <%= link_to new_item_path, style: "text-decoration: none;" do %>
-        <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#2563eb';"
-             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
-          <span style="font-size: 1.5em;">📦</span>
-          <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Nuevo Equipo</span>
-        </div>
-      <% end %>
-
-      <%# Nuevo Cliente %>
-      <%= link_to new_client_path, style: "text-decoration: none;" do %>
-        <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#6366f1';"
-             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
-          <span style="font-size: 1.5em;">👥</span>
-          <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Nuevo Cliente</span>
-        </div>
-      <% end %>
-
-      <%# Agendar Gig (Corregido) %>
-      <%= link_to new_gig_path, style: "text-decoration: none;" do %>
-        <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#f59e0b';"
-             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
-          <span style="font-size: 1.5em;">🎸</span>
-          <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Agendar Gig</span>
-        </div>
-      <% end %>
-
-      <%# Directorio de Clientes (Sustituye a Cerrar Caja) %>
-      <%= link_to clients_path, style: "text-decoration: none;" do %>
-        <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-             onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#10b981';"
-             onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
-          <span style="font-size: 1.5em;">📇</span>
-          <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Directorio</span>
-        </div>
-      <% end %>
-
-    </div>
-  </div>
-
-  <%# --- 3. SECCIÓN INFERIOR: DETALLES DE MANTENIMIENTO --- %>
-  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-      <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px;">
-        🛠️ Equipos en Mantenimiento
+    <%# --- 2. ACCIONES RÁPIDAS (Botones Reales y Útiles) --- %>
+    <div style="margin-bottom: 45px;">
+      <h3 style="color: #0f172a; font-size: 1.1em; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="color: #2563eb;">⚡</span> Acceso Directo
       </h3>
-      <%= link_to "Ver inventario completo", items_path, style: "color: #2563eb; font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
-    </div>
-    
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr style="text-align: left; border-bottom: 2px solid #f8fafc;">
-          <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase;">Equipo</th>
-          <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase;">Categoría</th>
-          <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; text-align: right;">Acción</th>
-        </tr>
-      </thead>
-      <tbody>
-        <% Item.where(status: "Dañado").limit(5).each do |item| %>
-          <tr style="border-bottom: 1px solid #f8fafc;">
-            <td style="padding: 15px 0; font-weight: 600; color: #334155; font-size: 0.95em;"><%= item.name %></td>
-            <td style="padding: 15px 0; color: #64748b; font-size: 0.9em;"><%= item.category %></td>
-            <td style="padding: 15px 0; text-align: right;">
-              <%= link_to "Reparar", edit_item_path(item), style: "background: #fff1f2; color: #e11d48; padding: 6px 12px; border-radius: 8px; font-size: 0.75em; font-weight: 800; text-decoration: none;" %>
-            </td>
-          </tr>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
+        
+        <%# Nuevo Equipo %>
+        <%= link_to new_item_path, style: "text-decoration: none;" do %>
+          <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+               onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#2563eb';"
+               onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <span style="font-size: 1.5em;">📦</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Nuevo Equipo</span>
+          </div>
         <% end %>
-      </tbody>
-    </table>
-    <% if Item.where(status: "Dañado").empty? %>
-      <div style="text-align: center; padding: 30px; color: #94a3b8;">
-        <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
-        Todo el equipo está operativo.
+
+        <%# Nuevo Cliente %>
+        <%= link_to new_client_path, style: "text-decoration: none;" do %>
+          <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+               onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#6366f1';"
+               onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <span style="font-size: 1.5em;">👥</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Nuevo Cliente</span>
+          </div>
+        <% end %>
+
+        <%# Agendar Gig (Corregido) %>
+        <%= link_to new_gig_path, style: "text-decoration: none;" do %>
+          <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+               onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#f59e0b';"
+               onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <span style="font-size: 1.5em;">🎸</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Agendar Gig</span>
+          </div>
+        <% end %>
+
+        <%# Directorio de Clientes (Sustituye a Cerrar Caja) %>
+        <%= link_to clients_path, style: "text-decoration: none;" do %>
+          <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+               onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#10b981';"
+               onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <span style="font-size: 1.5em;">📇</span>
+            <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Directorio</span>
+          </div>
+        <% end %>
+
       </div>
-    <% end %>
+    </div>
+
+    <%# --- 3. SECCIÓN INFERIOR: DETALLES DE MANTENIMIENTO --- %>
+    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+          🛠️ Equipos en Mantenimiento
+        </h3>
+        <%= link_to "Ver inventario completo", items_path, style: "color: #2563eb; font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
+      </div>
+      
+      <table style="width: 100%; border-collapse: collapse;">
+        <thead>
+          <tr style="text-align: left; border-bottom: 2px solid #f8fafc;">
+            <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase;">Equipo</th>
+            <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase;">Categoría</th>
+            <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; text-align: right;">Acción</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% Item.includes(:inventory_items).joins(:inventory_items).where(inventory_items: { status: ['damaged', 'maintenance'] }).distinct.limit(5).each do |item| %>
+            <tr style="border-bottom: 1px solid #f8fafc;">
+              <td style="padding: 15px 0; font-weight: 600; color: #334155; font-size: 0.95em;">
+                <%= item.name %>
+                <% dmg = item.damaged_count; mnt = item.maintenance_count %>
+                <% if dmg > 0 || mnt > 0 %>
+                  <span style="font-size: 0.75em; color: #e11d48; font-weight: normal;">(<%= dmg %> dañadas, <%= mnt %> en taller)</span>
+                <% end %>
+              </td>
+              <td style="padding: 15px 0; color: #64748b; font-size: 0.9em;"><%= item.category %></td>
+              <td style="padding: 15px 0; text-align: right;">
+                <%= link_to "Ver unidades", item_path(item), style: "background: #fff1f2; color: #e11d48; padding: 6px 12px; border-radius: 8px; font-size: 0.75em; font-weight: 800; text-decoration: none;" %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+      <% if Item.joins(:inventory_items).where(inventory_items: { status: ['damaged', 'maintenance'] }).empty? %>
+        <div style="text-align: center; padding: 30px; color: #94a3b8;">
+          <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
+          Todo el equipo está operativo.
+        </div>
+      <% end %>
+    </div>
+
   </div>
-</div>
+<% elsif current_user.staff? %>
+  <%= render 'staff_dashboard' %>
+<% else %>
+  <div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+    <header style="margin-bottom: 20px;">
+      <h1 style="color: #0f172a; font-size: 2em; font-weight: 800; margin: 0;">Hola, <%= current_user.email.split('@').first.capitalize %></h1>
+      <p style="color: #64748b; margin-top: 6px;">Por ahora no hay información disponible para clientes.</p>
+    </header>
+  </div>
+<% end %>
