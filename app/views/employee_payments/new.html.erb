@@ -1,20 +1,43 @@
-<h2 style="margin-bottom:18px;">Registrar pago a empleado</h2>
+<h2 style="margin-bottom:18px;">Registrar pago a trabajador</h2>
 
 <div class="custom-card">
   <%= form_with model: @payment, local: true do |f| %>
     <div class="form-group-custom">
-      <%= f.label :user_id, 'Empleado' %>
+      <%= f.label :user_id, 'Trabajador' %>
       <%= f.collection_select :user_id, User.staff.order(:email), :id, :email, { include_blank: true }, { class: 'form-input-custom' } %>
     </div>
 
     <div class="form-group-custom">
       <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
       <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client.name} - #{g.date}" }, { include_blank: true }, { class: 'form-input-custom' } %>
+      <small style="color: #64748b; font-size: 0.85em;">Si seleccionas show, el pago se tomará del fondo de Nómina / Staff asignado a ese show.</small>
+      <% if @gig.present? %>
+        <div style="margin-top: 8px; padding: 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; color: #0f172a;">
+          <strong>Saldo disponible en el fondo de Nómina / Staff:</strong>
+          <span style="font-weight: 800;"><%= number_to_currency(@payroll_balance, unit: @gig.currency) %></span>
+          <% if @payroll_balance <= 0 %>
+            <div style="margin-top:4px; color:#b45309; font-size:0.9em;">No hay saldo disponible en nómina para este show. Asigna primero un fondo de Nómina / Staff.</div>
+          <% end %>
+        </div>
+      <% end %>
     </div>
 
     <div class="form-group-custom">
-      <%= f.label :amount %>
-      <%= f.number_field :amount, step: 0.01, class: 'form-input-custom' %>
+      <%= f.label :amount, 'Monto pagado' %>
+      <%= f.text_field :amount,
+        inputmode: 'decimal',
+        data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+        class: 'form-input-custom',
+        placeholder: '0.00' %>
+    </div>
+
+    <div class="form-group-custom">
+      <%= f.label :expected_amount, 'Monto esperado (opcional)' %>
+      <%= f.text_field :expected_amount,
+        inputmode: 'decimal',
+        data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+        class: 'form-input-custom',
+        placeholder: '0.00' %>
     </div>
 
     <div class="form-group-custom">

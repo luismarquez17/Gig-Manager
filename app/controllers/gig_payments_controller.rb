@@ -5,12 +5,23 @@ class GigPaymentsController < ApplicationController
   def index
     if defined?(@gig) && @gig.present?
       @payments = @gig.gig_payments.order(date_paid: :desc)
+      @payment_status = @gig.payment_status
+      @remaining_amount = @gig.remaining_amount
     else
       @payments = GigPayment.includes(:gig).order(date_paid: :desc)
-      # Shows (gigs) that still have outstanding amount to be paid
-      @unpaid_gigs = Gig.all.select do |g|
-        received = g.gig_payments.sum(:amount).to_f
-        g.amount.to_f > received
+      received_by_gig = GigPayment.group(:gig_id).sum(:amount)
+      @unpaid_gigs = Gig.all.select { |g| (received_by_gig[g.id] || 0).to_f < g.amount.to_f }
+
+      @payment_status_counts = { paid: 0, partial: 0, unpaid: 0 }
+      Gig.find_each do |gig|
+        status = if (received_by_gig[gig.id] || 0).to_f.zero?
+                   :unpaid
+                 elsif (gig.amount.to_f - (received_by_gig[gig.id] || 0).to_f).positive?
+                   :partial
+                 else
+                   :paid
+                 end
+        @payment_status_counts[status] += 1
       end
     end
   end

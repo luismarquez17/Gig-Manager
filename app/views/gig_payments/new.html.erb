@@ -25,7 +25,12 @@
       <div class="row">
         <div class="col-md-6 form-group-custom">
           <%= f.label :amount, "Monto *" %>
-          <%= f.number_field :amount, step: 0.01, placeholder: "0.00", class: "form-input-custom", required: true %>
+          <%= f.text_field :amount,
+            inputmode: 'decimal',
+            data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+            placeholder: "0.00",
+            class: "form-input-custom",
+            required: true %>
         </div>
 
         <div class="col-md-6 form-group-custom">

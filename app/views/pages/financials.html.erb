@@ -9,21 +9,21 @@
   <%# --- TARJETAS DE MÉTRICAS CLAVE --- %>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 40px;">
     
-    <%# Ingresos Históricos USD %>
+    <%# Dinero REALMENTE COBRADO USD %>
     <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
-      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Facturación Total USD</span>
-      <h2 style="font-size: 1.9em; margin: 0; color: #10b981; font-weight: 800;">$ <%= number_with_precision(@total_usd, precision: 2) %></h2>
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Cobrado Real USD</span>
+      <h2 style="font-size: 1.9em; margin: 0; color: #10b981; font-weight: 800;">$ <%= number_with_precision(@total_received_usd, precision: 2) %></h2>
       <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">
-        🗓️ Proyección futura: +$<%= number_with_precision(@upcoming_usd, precision: 2) %>
+        🗓️ Presupuesto acordado: $<%= number_with_precision(@budgeted_usd, precision: 2) %> | Proyección: +$<%= number_with_precision(@upcoming_usd, precision: 2) %>
       </div>
     </div>
 
-    <%# Ingresos Históricos BS %>
+    <%# Dinero REALMENTE COBRADO BS %>
     <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
-      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Facturación Total BS</span>
-      <h2 style="font-size: 1.9em; margin: 0; color: #3b82f6; font-weight: 800;">Bs <%= number_with_precision(@total_bs, precision: 2) %></h2>
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Cobrado Real BS</span>
+      <h2 style="font-size: 1.9em; margin: 0; color: #3b82f6; font-weight: 800;">Bs <%= number_with_precision(@total_received_bs, precision: 2) %></h2>
       <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">
-        🗓️ Proyección futura: +Bs <%= number_with_precision(@upcoming_bs, precision: 2) %>
+        🗓️ Presupuesto acordado: Bs<%= number_with_precision(@budgeted_bs, precision: 2) %> | Proyección: +Bs <%= number_with_precision(@upcoming_bs, precision: 2) %>
       </div>
     </div>
 
@@ -32,7 +32,7 @@
       <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Inversión en Reparaciones</span>
       <h2 style="font-size: 1.9em; margin: 0; color: #e11d48; font-weight: 800;">$ <%= number_with_precision(@total_maintenance_cost, precision: 2) %></h2>
       <div style="font-size: 0.82em; color: #f43f5e; margin-top: 8px; font-weight: 600;">
-        ⚠️ Representa el <%= @total_usd > 0 ? number_to_percentage((@total_maintenance_cost / @total_usd) * 100, precision: 1) : "0%" %> de los ingresos USD
+        ⚠️ Representa el <%= @total_received_usd > 0 ? number_to_percentage((@total_maintenance_cost / @total_received_usd) * 100, precision: 1) : "0%" %> de los ingresos USD cobrados
       </div>
     </div>
 
@@ -45,21 +45,91 @@
       </div>
     </div>
 
-    <%# ROI / Rentabilidad Neta %>
+    <%# ROI / Rentabilidad Neta (USD) %>
     <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
-      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Ganancia Neta (ROI)</span>
-      <% net = @total_usd - @total_invested_usd %>
-      <h2 style="font-size: 1.9em; margin: 0; color: <%= net >= 0 ? '#10b981' : '#e11d48' %>; font-weight: 800;">
-        <%= net >= 0 ? '+ ' : '- ' %>$ <%= number_with_precision(net.abs, precision: 2) %>
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Ganancia Neta (ROI USD)</span>
+      <h2 style="font-size: 1.9em; margin: 0; color: <%= @net_gain_usd >= 0 ? '#10b981' : '#e11d48' %>; font-weight: 800;">
+        <%= @net_gain_usd >= 0 ? '+ ' : '- ' %>$ <%= number_with_precision(@net_gain_usd.abs, precision: 2) %>
       </h2>
       <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">
-        📈 <%= @total_invested_usd > 0 ? number_to_percentage((net / @total_invested_usd) * 100, precision: 1) : "—" %> retorno sobre inversión
+        📈 <%= @total_invested_usd > 0 ? number_to_percentage((@net_gain_usd / @total_invested_usd) * 100, precision: 1) : "—" %> retorno sobre inversión USD
+      </div>
+    </div>
+
+    <%# ROI / Rentabilidad Neta (BS) %>
+    <div style="background: white; padding: 25px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Ganancia Neta (ROI BS)</span>
+      <h2 style="font-size: 1.9em; margin: 0; color: <%= @net_gain_bs >= 0 ? '#10b981' : '#e11d48' %>; font-weight: 800;">
+        <%= @net_gain_bs >= 0 ? '+ ' : '- ' %>Bs <%= number_with_precision(@net_gain_bs.abs, precision: 2) %>
+      </h2>
+      <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">
+        📈 <%= @total_invested_bs > 0 ? number_to_percentage((@net_gain_bs / @total_invested_bs) * 100, precision: 1) : "—" %> retorno sobre inversión BS
       </div>
     </div>
 
   </div>
 
-  <%# --- GRÁFICO DE FACTURACIÓN MENSUAL (DISEÑO CSS PREMIUM) --- %>
+  <%# --- ESTADO DE FACTURACIÓN E INVOICE STATUS --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 20px; margin-bottom: 40px;">
+    <div style="background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Shows pagados</span>
+      <h2 style="font-size: 1.75em; margin: 0; color: #10b981; font-weight: 800;"><%= @gig_payment_status_counts[:paid] %></h2>
+      <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">Total de eventos cuyo cobro está completo.</div>
+    </div>
+    <div style="background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Shows parciales</span>
+      <h2 style="font-size: 1.75em; margin: 0; color: #f59e0b; font-weight: 800;"><%= @gig_payment_status_counts[:partial] %></h2>
+      <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">Eventos con parte del cobro registrado.</div>
+    </div>
+    <div style="background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Shows pendientes</span>
+      <h2 style="font-size: 1.75em; margin: 0; color: #ef4444; font-weight: 800;"><%= @gig_payment_status_counts[:unpaid] %></h2>
+      <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">Eventos sin cobros registrados.</div>
+    </div>
+    <div style="background: white; padding: 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 8px;">Total pendiente</span>
+      <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;">
+        <h2 style="font-size: 1.75em; margin: 0; color: #0f172a; font-weight: 800;"><%= number_with_precision(@total_unpaid_amount_by_currency['USD'] || 0, precision: 2) %></h2>
+        <span style="color: #64748b; font-weight: 700;">USD</span>
+      </div>
+      <div style="font-size: 0.82em; color: #94a3b8; margin-top: 8px; font-weight: 600;">Facturas abiertas en USD.</div>
+      <div style="margin-top: 8px; font-size: 0.9em; color: #475569; font-weight: 700;">Bs <%= number_with_precision(@total_unpaid_amount_by_currency['BS'] || 0, precision: 2) %> pendiente</div>
+    </div>
+  </div>
+
+  <% if @top_unpaid_gigs.any? %>
+    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 40px;">
+      <h3 style="margin: 0 0 22px 0; font-size: 1.25em; color: #1e293b; font-weight: 800;">🧾 Top Shows con facturas abiertas</h3>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+        <% @top_unpaid_gigs.each do |gig| %>
+          <% remaining = gig.amount.to_f - gig.total_received.to_f %>
+          <div style="background: #f8fafc; padding: 18px; border-radius: 20px; border: 1px solid #e2e8f0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 10px;">
+              <div>
+                <div style="font-size: 0.9em; font-weight: 800; color: #0f172a;"><%= gig.client.name %></div>
+                <div style="font-size: 0.8em; color: #64748b;">Fecha: <%= gig.date&.strftime('%d/%m/%Y') %></div>
+              </div>
+              <span style="background: #fde68a; color: #92400e; padding: 6px 10px; border-radius: 999px; font-weight: 700; font-size: 0.75em;">Pendiente</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <div style="font-size: 0.75em; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Monto acordado</div>
+                <div style="font-size: 1.1em; font-weight: 800; color: #0f172a;">$ <%= number_with_precision(gig.amount, precision: 2) %></div>
+              </div>
+              <div style="text-align: right;">
+                <div style="font-size: 0.75em; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px;">Saldo</div>
+                <div style="font-size: 1.1em; font-weight: 800; color: #ef4444;">$ <%= number_with_precision(remaining, precision: 2) %></div>
+              </div>
+            </div>
+            <div style="margin-top: 12px;">
+              <%= link_to 'Ver evento', gig_path(gig), style: 'text-decoration:none; color:#2563eb; font-weight:700;' %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 40px;">
     <h3 style="margin: 0 0 25px 0; font-size: 1.25em; color: #1e293b; font-weight: 800;">📈 Historial de Facturación Mensual</h3>
     
@@ -174,7 +244,7 @@
           <% spent = (@spent_by_type[type] || 0).to_f %>
           <% remaining = total.to_f - spent %>
           <div style="background:#f8fafc; padding:12px; border-radius:10px; border:1px solid #eef2ff; min-width:220px;">
-            <div style="font-weight:800; color:#1e293b;"><%= type.humanize.capitalize %></div>
+            <div style="font-weight:800; color:#1e293b;"><%= FundAllocation.fund_label_for(type) %></div>
             <div style="margin-top:6px; font-weight:900; color:#0ea5e9;">Asignado: $ <%= number_with_precision(total, precision: 2) %></div>
             <div style="margin-top:4px; color:#ef4444; font-weight:800;">Gastado: $ <%= number_with_precision(spent, precision: 2) %></div>
             <div style="margin-top:6px; font-weight:900; color:#065f46;">Saldo: $ <%= number_with_precision(remaining, precision: 2) %></div>

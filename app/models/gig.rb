@@ -22,8 +22,52 @@ class Gig < ApplicationRecord
     fund_allocations.sum(:amount)
   end
 
+  def payroll_allocations
+    fund_allocations.where(fund_type: 'payroll')
+  end
+
+  def total_payroll_remaining
+    payroll_allocations.sum { |allocation| allocation.remaining.to_f }
+  end
+
+  def remaining_amount
+    amount.to_f - total_received.to_f
+  end
+
+  def payment_status
+    if total_received.to_f.zero?
+      :unpaid
+    elsif remaining_amount.positive?
+      :partial
+    else
+      :paid
+    end
+  end
+
+  def payment_status_label
+    case payment_status
+    when :paid
+      'Pagado'
+    when :partial
+      'Parcial'
+    else
+      'Pendiente'
+    end
+  end
+
+  def payment_status_badge_class
+    case payment_status
+    when :paid
+      'bg-success'
+    when :partial
+      'bg-warning'
+    else
+      'bg-danger'
+    end
+  end
+
   def remaining_balance
-    (total_received || 0) - (total_employee_payouts || 0) - (total_allocated || 0)
+    (total_received || 0) - (total_allocated || 0)
   end
 
   # Se ejecuta al crear, editar o borrar un show

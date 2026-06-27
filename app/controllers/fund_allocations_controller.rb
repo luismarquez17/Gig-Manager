@@ -3,7 +3,7 @@ class FundAllocationsController < ApplicationController
   before_action :set_gig
 
   def create
-    amount = params.dig(:fund_allocation, :amount).to_f
+    amount = params.dig(:fund_allocation, :amount).to_s.tr(',', '.').to_f
     fund_type = params.dig(:fund_allocation, :fund_type)
     notes = params.dig(:fund_allocation, :notes)
 

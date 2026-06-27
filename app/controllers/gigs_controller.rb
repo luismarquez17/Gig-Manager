@@ -37,8 +37,10 @@ class GigsController < ApplicationController
     end
     
     # 5. Cálculos para el resumen (basados en la lista ya filtrada)
-    @total_usd = @gigs.where(currency: 'USD').sum(:amount)
-    @total_bs = @gigs.where(currency: 'BS').sum(:amount)
+    # Mostramos dinero REALMENTE COBRADO (gig_payments), no el presupuesto acordado
+    gig_ids = @gigs.pluck(:id)
+    @total_usd = GigPayment.where(gig_id: gig_ids, currency: 'USD').sum(:amount).to_f
+    @total_bs = GigPayment.where(gig_id: gig_ids, currency: 'BS').sum(:amount).to_f
   end
 
   def show

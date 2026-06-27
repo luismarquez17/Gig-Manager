@@ -24,7 +24,12 @@
   <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
     <div>
       <%= form.label :price, "💰 Precio Base", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>
-      <%= form.number_field :price, step: 0.01, placeholder: "150.00", style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; box-sizing: border-box;", onfocus: "this.style.borderColor='#2563eb'", onblur: "this.style.borderColor='#e2e8f0'" %>
+      <%= form.text_field :price,
+          inputmode: 'decimal',
+          data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+          placeholder: "150.00",
+          style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; outline: none; transition: 0.2s; box-sizing: border-box;",
+          onfocus: "this.style.borderColor='#2563eb'", onblur: "this.style.borderColor='#e2e8f0'" %>
     </div>
     <div>
       <%= form.label :currency, "Moneda", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;" %>

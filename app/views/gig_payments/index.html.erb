@@ -11,6 +11,27 @@
       <%= link_to 'Registrar nuevo pago', new_gig_gig_payment_path(@gig), class: 'btn-main btn-primary-custom' %>
     </div>
 
+    <div style="display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 22px;">
+      <div style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 180px;">
+        <div style="font-size: 0.8em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Estado de factura</div>
+        <div style="display: inline-flex; align-items: center; gap: 8px;">
+          <span class="badge <%= @gig.payment_status_badge_class %>" style="padding: 6px 10px; font-weight: 700; border-radius: 999px;"><%= @gig.payment_status_label %></span>
+        </div>
+      </div>
+      <div style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 220px;">
+        <div style="font-size: 0.8em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Monto acordado</div>
+        <div style="font-size: 1.25em; font-weight: 800; color: #0f172a;">$ <%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size: 0.8em; color: #64748b;"><%= @gig.currency %></span></div>
+      </div>
+      <div style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 220px;">
+        <div style="font-size: 0.8em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Recibido</div>
+        <div style="font-size: 1.25em; font-weight: 800; color: #10b981;">$ <%= number_with_precision(@gig.total_received, precision: 2) %></div>
+      </div>
+      <div style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 220px;">
+        <div style="font-size: 0.8em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">Saldo restante</div>
+        <div style="font-size: 1.25em; font-weight: 800; color: #ef4444;">$ <%= number_with_precision(@gig.remaining_amount, precision: 2) %></div>
+      </div>
+    </div>
+
     <div class="custom-card">
       <div class="table-custom-wrapper">
         <table class="table-custom">
@@ -60,12 +81,26 @@
       </div>
     </div>
   <% else %>
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 18px;">
       <div>
         <h1 style="color: #0f172a; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">
           💳 Pagos Eventos / Shows
         </h1>
         <p style="color: #64748b; margin: 5px 0 0 0;">Historial completo de pagos recibidos por los eventos.</p>
+      </div>
+      <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+        <div style="background: #f8fafc; padding: 14px 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 170px;">
+          <div style="font-size: 0.78em; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">Shows pagos</div>
+          <div style="font-size: 1.2em; font-weight: 800; color: #10b981;"><%= @payment_status_counts[:paid] %></div>
+        </div>
+        <div style="background: #f8fafc; padding: 14px 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 170px;">
+          <div style="font-size: 0.78em; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">Shows parciales</div>
+          <div style="font-size: 1.2em; font-weight: 800; color: #f59e0b;"><%= @payment_status_counts[:partial] %></div>
+        </div>
+        <div style="background: #f8fafc; padding: 14px 18px; border-radius: 16px; border: 1px solid #e2e8f0; min-width: 170px;">
+          <div style="font-size: 0.78em; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px;">Shows pendientes</div>
+          <div style="font-size: 1.2em; font-weight: 800; color: #ef4444;"><%= @payment_status_counts[:unpaid] %></div>
+        </div>
       </div>
     </div>
 
