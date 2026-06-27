@@ -8,4 +8,5 @@ class User < ApplicationRecord
 
   has_many :staff_assignments, dependent: :destroy
   has_many :assigned_gigs, through: :staff_assignments, source: :gig
+  has_many :employee_payments, dependent: :nullify
 end

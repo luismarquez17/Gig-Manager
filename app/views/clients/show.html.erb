@@ -232,7 +232,11 @@
               <div>
                 <%= g_form.label :amount, "Monto Cobrado", style: "display: block; font-size: 0.85em; font-weight: bold;" %>
                 <div style="display: flex; gap: 5px;">
-                  <%= g_form.number_field :amount, step: 0.01, style: "flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" %>
+                  <%= g_form.text_field :amount,
+                  inputmode: 'decimal',
+                  data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+                  placeholder: '0.00',
+                  style: "flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" %>
                   <%= g_form.select :currency, [["USD", "USD"], ["BS", "BS"]], {}, { style: "padding: 8px; border-radius: 5px; background: #f8f9fa;" } %>
                 </div>
               </div>

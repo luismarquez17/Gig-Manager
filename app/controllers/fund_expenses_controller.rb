@@ -4,7 +4,7 @@ class FundExpensesController < ApplicationController
   before_action :set_fund_allocation
 
   def create
-    amount = params.dig(:fund_expense, :amount).to_f
+    amount = params.dig(:fund_expense, :amount).to_s.tr(',', '.').to_f
     notes = params.dig(:fund_expense, :notes)
 
     if amount <= 0

@@ -34,7 +34,11 @@
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px; align-items: end;">
       <div>
         <%= f.label :amount, "💰 Monto acordado", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
-        <%= f.number_field :amount, step: 0.01, placeholder: "0.00", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+        <%= f.text_field :amount,
+          inputmode: 'decimal',
+          data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+          placeholder: "0.00",
+          style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
       </div>
       <div>
         <%= f.label :currency, "Moneda", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>

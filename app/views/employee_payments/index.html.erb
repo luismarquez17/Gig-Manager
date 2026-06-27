@@ -1,38 +1,103 @@
-<h2 style="margin-bottom: 18px;">Pagos a empleados</h2>
+<h2 style="margin-bottom: 18px;">Pagos a trabajadores</h2>
+
+<div class="custom-card" style="margin-bottom: 20px;">
+  <h3 style="margin: 0 0 12px 0;">Métricas de pagos a trabajadores</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Total pagado</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto esperado</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #1d4ed8; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:expected_amount] }, unit: 'USD') %></div>
+    </div>
+    <% total_balance_due = @worker_metrics.sum { |m| m[:balance_due] } %>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;"><%= total_balance_due >= 0 ? 'Pendiente por pagar' : 'A favor de la empresa' %></div>
+      <div style="font-size: 1.15em; font-weight: 800; color: <%= total_balance_due >= 0 ? '#b45309' : '#059669' %>; margin-top: 4px;"><%= number_to_currency(total_balance_due.abs, unit: 'USD') %></div>
+    </div>
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Trabajadores</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #334155; margin-top: 4px;"><%= @worker_metrics.size %></div>
+    </div>
+  </div>
+</div>
+
+<div class="custom-card" style="margin-bottom: 20px;">
+  <h3 style="margin-top: 0;">Detalle por trabajador</h3>
+  <div style="display: grid; gap: 10px;">
+    <% @worker_metrics.each do |metric| %>
+      <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fff;">
+        <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 800; color: #1e293b;"><%= metric[:worker].email %></div>
+            <div style="font-size: 0.9em; color: #64748b;">Pagos registrados: <%= metric[:payment_count] %></div>
+          </div>
+          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <span style="background: #ecfdf5; color: #065f46; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pagado: <%= number_to_currency(metric[:total_paid], unit: 'USD') %></span>
+            <span style="background: #eff6ff; color: #1d4ed8; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Esperado: <%= number_to_currency(metric[:expected_amount], unit: 'USD') %></span>
+            <span style="background: #fff7ed; color: #b45309; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pendiente: <%= number_to_currency(metric[:balance_due], unit: 'USD') %></span>
+            <%= link_to 'Ver historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+</div>
 
 <div class="custom-card">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+    <h3 style="margin: 0;">Historial de pagos</h3>
+    <% if @selected_worker.present? %>
+      <span style="background: #f1f5f9; color: #475569; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Mostrando: <%= @selected_worker.email %></span>
+    <% end %>
+  </div>
+
   <div class="table-custom-wrapper">
     <div style="overflow-x: auto;">
-      <table class="table-custom">
-        <thead>
-          <tr>
-            <th>Empleado</th>
-            <th>Monto</th>
-            <th>Moneda</th>
-            <th>Fecha</th>
-            <th>Show</th>
-            <th>Método</th>
-            <th>Notas</th>
-          </tr>
-        </thead>
-        <tbody>
-          <% @payments.each do |p| %>
+      <% if @payments.any? %>
+        <table class="table-custom">
+          <thead>
             <tr>
-              <td><%= p.user.email %></td>
-              <td><%= number_to_currency(p.amount, unit: p.currency) rescue p.amount %></td>
-              <td><%= p.currency %></td>
-              <td><%= l(p.date_paid) rescue p.date_paid %></td>
-              <td><%= p.gig&.client&.name %> - <%= p.gig&.date %></td>
-              <td><%= p.payment_method %></td>
-              <td><%= p.notes %></td>
+              <th>Trabajador</th>
+              <th>Monto pagado</th>
+              <th>Esperado</th>
+              <th>Pendiente</th>
+              <th>Fecha</th>
+              <th>Show</th>
+              <th>Método</th>
+              <th>Notas</th>
             </tr>
-          <% end %>
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            <% @payments.each do |p| %>
+              <% payment_state = p.expected_amount.to_f - p.amount.to_f %>
+              <tr>
+                <td><%= p.user.email %></td>
+                <td><%= number_to_currency(p.amount, unit: p.currency) rescue p.amount %></td>
+                <td><%= number_to_currency(p.expected_amount, unit: p.currency) rescue p.expected_amount %></td>
+                <td style="font-weight: 700; color: <%= payment_state >= 0 ? '#b45309' : '#059669' %>;">
+                  <%= payment_state >= 0 ? 'Pendiente' : 'Pago extra' %>
+                  <%= number_to_currency(payment_state.abs, unit: p.currency) %>
+                </td>
+                <td><%= l(p.date_paid) rescue p.date_paid %></td>
+                <td><%= p.gig&.client&.name %> - <%= p.gig&.date %></td>
+                <td><%= p.payment_method %></td>
+                <td><%= p.notes %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p style="margin: 0; color: #64748b;">No hay pagos registrados para este trabajador todavía.</p>
+      <% end %>
     </div>
   </div>
 
-  <div style="margin-top: 12px;">
+  <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
     <%= link_to 'Registrar nuevo pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
+    <% if @selected_worker.present? %>
+      <%= link_to 'Ver vista general', employee_payments_path, class: 'btn-main btn-gray-custom' %>
+    <% end %>
   </div>
 </div>
