@@ -6,6 +6,23 @@ class Client < ApplicationRecord
 
   # Validaciones básicas para evitar errores en la base de datos
   validates :name, :phone, presence: true
+  validate :validate_phone_format
+
+  def validate_phone_format
+    return if phone.blank?
+    return if phone == "0000000000" # Bypass para clientes creados automáticamente
+    
+    # Limpiamos todo lo que no sea dígito
+    digits = phone.gsub(/\D/, '')
+    
+    if digits.length < 10 || digits.length > 15
+      errors.add(:phone, "debe tener entre 10 y 15 dígitos numéricos")
+    end
+    
+    if phone =~ /[a-zA-Z]/
+      errors.add(:phone, "no puede contener letras")
+    end
+  end
 
   # Definimos los niveles de prioridad
   enum priority: { baja: 0, media: 1, alta: 2 }

@@ -10,9 +10,10 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_06_26_235814) do
+ActiveRecord::Schema[7.1].define(version: 2026_07_03_215538) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+  enable_extension "unaccent"
 
   create_table "active_storage_attachments", force: :cascade do |t|
     t.string "name", null: false
@@ -125,16 +126,37 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_26_235814) do
     t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
   end
 
+  create_table "gig_timeline_items", force: :cascade do |t|
+    t.bigint "gig_id", null: false
+    t.string "time"
+    t.string "title"
+    t.text "description"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id"], name: "index_gig_timeline_items_on_gig_id"
+  end
+
   create_table "gigs", force: :cascade do |t|
     t.date "date"
     t.decimal "amount"
-    t.bigint "client_id", null: false
+    t.bigint "client_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "location"
     t.string "currency"
     t.text "details"
+    t.string "client_email"
+    t.string "portal_token"
+    t.boolean "contract_signed", default: false, null: false
+    t.datetime "contract_signed_at"
+    t.string "contract_signed_ip"
+    t.string "contract_signed_name"
+    t.time "start_time"
+    t.time "end_time"
+    t.index ["client_email"], name: "index_gigs_on_client_email"
     t.index ["client_id"], name: "index_gigs_on_client_id"
+    t.index ["portal_token"], name: "index_gigs_on_portal_token", unique: true
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -231,6 +253,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_26_235814) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "role", default: 0
+    t.bigint "client_id"
+    t.string "name"
+    t.string "specialty"
+    t.text "bio"
+    t.index ["client_id"], name: "index_users_on_client_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
@@ -245,6 +272,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_26_235814) do
   add_foreign_key "gig_items", "gigs"
   add_foreign_key "gig_items", "items"
   add_foreign_key "gig_payments", "gigs"
+  add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
   add_foreign_key "gigs", "clients"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "kit_items", "items"
@@ -254,4 +282,5 @@ ActiveRecord::Schema[7.1].define(version: 2026_06_26_235814) do
   add_foreign_key "maintenance_records", "items"
   add_foreign_key "staff_assignments", "gigs"
   add_foreign_key "staff_assignments", "users"
+  add_foreign_key "users", "clients"
 end

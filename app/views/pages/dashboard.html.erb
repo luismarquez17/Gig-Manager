@@ -182,9 +182,52 @@
   <%= render 'staff_dashboard' %>
 <% else %>
   <div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-    <header style="margin-bottom: 20px;">
-      <h1 style="color: #0f172a; font-size: 2em; font-weight: 800; margin: 0;">Hola, <%= current_user.email.split('@').first.capitalize %></h1>
-      <p style="color: #64748b; margin-top: 6px;">Por ahora no hay información disponible para clientes.</p>
+    
+    <%# --- BIENVENIDA --- %>
+    <header style="margin-bottom: 35px;">
+      <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.email.split('@').first.capitalize %>! 👋</h1>
+      <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Bienvenido a tu portal de cliente. Aquí puedes hacer seguimiento de tus eventos programados.</p>
     </header>
+
+    <%# --- PRÓXIMOS EVENTOS --- %>
+    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+          🗓️ Tus Próximos Eventos
+        </h3>
+        <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: #2563eb; font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
+      </div>
+
+      <% if @proximos_gigs.any? %>
+        <table style="width: 100%; border-collapse: collapse;">
+          <thead>
+            <tr style="text-align: left; border-bottom: 2px solid #f8fafc;">
+              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Fecha</th>
+              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Ubicación</th>
+              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Monto</th>
+              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700; text-align: right;">Detalles</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @proximos_gigs.each do |gig| %>
+              <tr style="border-bottom: 1px solid #f8fafc;">
+                <td style="padding: 15px 0; font-weight: 600; color: #1e293b;"><%= gig.date.strftime("%d/%m/%Y") %></td>
+                <td style="padding: 15px 0; color: #475569;"><%= gig.location.presence || "No especificada" %></td>
+                <td style="padding: 15px 0; font-weight: 700; color: #0f172a;"><%= number_with_precision(gig.amount, precision: 2) %> <%= gig.currency %></td>
+                <td style="padding: 15px 0; text-align: right;">
+                  <%= link_to "Ver Detalles ➔", client_gig_path(gig), style: "background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 700; text-decoration: none;" %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <div style="text-align: center; padding: 30px; color: #94a3b8;">
+          <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
+          No tienes eventos próximos programados en este momento.
+        </div>
+      <% end %>
+    </div>
+
   </div>
 <% end %>

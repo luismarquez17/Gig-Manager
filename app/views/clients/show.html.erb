@@ -30,6 +30,12 @@
         <p style="margin: 5px 0; font-weight: bold; color: #34495e;">📍 <%= @client.resumen_ubicacion %></p>
       </div>
     </div>
+    <% if @client.email.present? %>
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #f1f5f9;">
+        <p style="margin: 0; color: #7f8c8d; font-size: 0.85em; text-transform: uppercase;">Correo vinculado</p>
+        <p style="margin: 5px 0; font-weight: bold; color: #34495e;">📧 <%= @client.email %></p>
+      </div>
+    <% end %>
   </div>
 
   <%# CINTA DE NOTAS (VISUALIZACIÓN RÁPIDA) %>
@@ -217,6 +223,12 @@
         </div>
       </div>
 
+      <div style="margin-top: 20px;">
+        <%= f.label :email, "📧 Correo Electrónico", style: "display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;" %>
+        <%= f.email_field :email, placeholder: "cliente@correo.com", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;" %>
+        <small style="color: #94a3b8; font-size: 0.8em; margin-top: 4px; display: block;">Vincular con el correo que usará al registrarse.</small>
+      </div>
+
       <%# CAMPO DE NOTAS PARA EDITAR %>
       <div style="margin-top: 20px;">
         <%= f.label :notes, "Nota Rápida / Referencia", style: "display: block; font-weight: bold; margin-bottom: 5px; font-size: 0.9em;" %>
@@ -252,6 +264,35 @@
       <div style="margin-top: 30px;">
         <%= f.submit "🚀 Actualizar y Recalcular Prioridad", 
             style: "width: 100%; background: #007bff; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1em; transition: 0.3s;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# SECCIÓN DE FUSIÓN DE CLIENTES %>
+  <div style="background: #fefce8; padding: 25px; border-radius: 15px; border: 1px solid #fde68a; margin-top: 25px;">
+    <h3 style="margin-top: 0; border-bottom: 2px solid #fde68a; padding-bottom: 10px; color: #92400e; display: flex; align-items: center; gap: 8px;">
+      <span>🔗</span> Fusionar con otro cliente
+    </h3>
+    <p style="color: #a16207; font-size: 0.9em; margin-bottom: 15px;">
+      Si este cliente tiene un duplicado, selecciónalo abajo para absorber sus shows y datos en <strong><%= @client.name %></strong>.
+      El cliente seleccionado será eliminado y todos sus shows se transferirán aquí.
+    </p>
+
+    <%= form_with url: merge_client_path(@client), method: :post, local: true, 
+        data: { turbo_confirm: "⚠️ ¿Estás seguro? Esta acción transferirá todos los shows del cliente seleccionado a #{@client.name} y eliminará el duplicado. No se puede deshacer." } do |f| %>
+      <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+        <div style="flex-grow: 1; min-width: 200px;">
+          <%= f.label :source_client_id, "Selecciona el cliente duplicado:", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #92400e; font-size: 0.9em;" %>
+          <%= f.select :source_client_id, 
+              Client.where.not(id: @client.id).order(:name).map { |c| ["#{c.name} (#{c.phone || 'sin tel'}) #{c.email.present? ? '— ' + c.email : ''}", c.id] },
+              { prompt: "-- Selecciona un cliente --" },
+              { style: "width: 100%; padding: 12px; border: 2px solid #fbbf24; border-radius: 8px; font-size: 1em; background: white; outline: none;" } %>
+        </div>
+        <%= f.submit "🔗 Fusionar Clientes", 
+            onclick: "return confirm('⚠️ ¿Estás seguro? Esta acción no se puede deshacer.');",
+            style: "background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2); transition: 0.2s; white-space: nowrap;",
+            onmouseover: "this.style.background='#d97706'",
+            onmouseout: "this.style.background='#f59e0b'" %>
       </div>
     <% end %>
   </div>

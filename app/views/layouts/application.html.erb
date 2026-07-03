@@ -127,6 +127,29 @@
               <%= link_to help_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'help'}" do %>
                 <span class="icon">❓</span> <span>Ayuda</span>
               <% end %>
+            <% elsif current_user.client? %>
+              <div class="nav-header">Cliente</div>
+              <%= link_to client_gigs_path, class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'index'}" do %>
+                <span class="icon">🎫</span> <span>Mis Eventos</span>
+              <% end %>
+
+              <%# Acceso rápido al próximo evento %>
+              <%
+                next_gig = current_user.client&.gigs&.where('date >= ?', Date.today)&.order(date: :asc)&.first
+              %>
+              <% if next_gig %>
+                <%= link_to client_gig_path(next_gig), class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'show'}" do %>
+                  <span class="icon">⭐</span> <span>Mi Próximo Show</span>
+                <% end %>
+              <% end %>
+
+              <%= link_to edit_user_registration_path, class: "sidebar-link #{'active' if current_page?(edit_user_registration_path)}" do %>
+                <span class="icon">👤</span> <span>Perfil</span>
+              <% end %>
+
+              <%= link_to help_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'help'}" do %>
+                <span class="icon">❓</span> <span>Ayuda</span>
+              <% end %>
             <% end %>
             <div id="sidebar-scroll-indicator" aria-hidden="true"></div>
           </nav>

@@ -10,12 +10,12 @@ class EmployeePaymentsController < ApplicationController
     end
 
     # Calculamos métricas en bloque para evitar N+1
-    payments = EmployeePayment.where(user_id: User.staff.select(:id))
+    payments = EmployeePayment.where(user_id: User.workers.select(:id))
     paid_sums = payments.group(:user_id).sum(:amount)
     expected_sums = payments.group(:user_id).sum(:expected_amount)
     counts = payments.group(:user_id).count
 
-    @worker_metrics = User.staff.order(:email).map do |worker|
+    @worker_metrics = User.workers.order(:email).map do |worker|
       paid_total = paid_sums[worker.id].to_f
       expected_total = expected_sums[worker.id].to_f
 

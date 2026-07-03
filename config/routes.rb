@@ -7,14 +7,28 @@ Rails.application.routes.draw do
 
   get '/funds/:fund_type', to: 'funds#show', as: 'fund'
 
-  resources :clients
+  resources :clients do
+    member do
+      post :merge
+    end
+  end
   resources :gig_payments, only: [:index]
-  resources :gigs, only: [:index, :new, :create, :destroy, :show] do
+  
+  namespace :client do
+    resources :gigs, only: [:index, :show]
+  end
+
+  # Portal Público de Clientes (Acceso mediante token seguro de WhatsApp)
+  get '/portal/:token', to: 'portals#show', as: 'public_portal'
+  post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
+
+  resources :gigs, only: [:index, :new, :create, :destroy, :show, :edit, :update] do
     member do
       get :load_in_checklist
       post :add_kit
       post :assign_staff
     end
+    resources :gig_timeline_items, only: [:create, :destroy]
     resources :gig_items, only: [:create, :destroy]
     resources :gig_payments, only: [:index, :new, :create]
     resources :fund_allocations, only: [:create, :destroy]
@@ -48,7 +62,7 @@ Rails.application.routes.draw do
       delete 'remove_item/:item_id', to: 'kits#remove_item', as: 'remove_item'
     end
   end
-  resources :users, only: [:index] do
+  resources :users, only: [:index, :edit, :update] do
     member do
       patch :update_role
     end

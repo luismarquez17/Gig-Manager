@@ -24,7 +24,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h3", "Métricas de pagos a trabajadores"
-    assert_match "Saldo pendiente", response.body
+    assert_match "Pendiente por pagar", response.body
     assert_match @worker.email, response.body
   end
 end

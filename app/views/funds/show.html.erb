@@ -30,7 +30,7 @@
           <% end %>
 
           <div style="margin-top:10px; display:flex; gap:8px; align-items:center;">
-            <%= form_with url: gig_fund_allocation_fund_expenses_path(fa.gig, fa), local: true do |ff| %>
+            <%= form_with scope: :fund_expense, url: gig_fund_allocation_fund_expenses_path(fa.gig, fa), local: true do |ff| %>
               <%= ff.number_field :amount, step: 0.01, placeholder: '0.00', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; width:120px;' %>
               <%= ff.text_field :notes, placeholder: '¿En qué se gastó?', style: 'padding:8px 10px; border-radius:8px; border:1px solid #e6eef8; flex:1;' %>
               <%= ff.submit 'Registrar gasto', style: 'background:#ef4444; color:white; padding:8px 12px; border-radius:8px; font-weight:700; border:none;' %>

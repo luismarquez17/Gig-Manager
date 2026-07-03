@@ -15,7 +15,13 @@
   <%# --- HEADER Y ACCIONES BASICAS --- %>
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
     <div>
-      <%= link_to '⬅ Volver al Historial', gigs_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; margin-bottom: 10px; display: inline-block;" %>
+      <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 10px;">
+        <%= link_to '⬅ Volver al Historial', gigs_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em;" %>
+        <% if current_user.leader? %>
+          <span style="color: #cbd5e1;">|</span>
+          <%= link_to '✏️ Editar Evento', edit_gig_path(@gig), style: "color: #2563eb; text-decoration: none; font-weight: bold; font-size: 0.9em;" %>
+        <% end %>
+      </div>
       <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
     </div>
     
@@ -47,6 +53,9 @@
       <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Fecha &amp; Ubicación</p>
       <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #1e293b;">📅 <%= @gig.date&.strftime("%d/%m/%Y") || "---" %></p>
       <p style="margin: 2px 0 0 0; color: #475569;">📍 <%= @gig.location.presence || "No especificada" %></p>
+      <% if @gig.start_time.present? && @gig.end_time.present? %>
+        <p style="margin: 4px 0 0 0; color: #4f46e5; font-size: 0.9em; font-weight: 600;">🕐 <%= @gig.formatted_time_range %></p>
+      <% end %>
     </div>
 
     <% if current_user.leader? %>
@@ -80,6 +89,81 @@
 
   </div>
   <% if current_user.leader? %>
+    <%# --- PORTAL DEL CLIENTE Y FIRMA DIGITAL --- %>
+    <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+      
+      <div>
+        <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.1em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          🔗 Portal Público del Cliente
+        </h3>
+        <p style="margin: 0 0 15px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
+          Comparte este enlace seguro con tu cliente para que vea su cuenta regresiva, estado de pagos y cronograma sin necesidad de registrarse.
+        </p>
+        
+        <%
+          portal_url = public_portal_url(token: @gig.portal_token)
+        %>
+        <div style="display: flex; gap: 10px; align-items: center; background: #f8fafc; padding: 10px 14px; border-radius: 12px; border: 1px solid #cbd5e1; margin-bottom: 15px;">
+          <span style="font-size: 0.85em; color: #475569; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-grow: 1;" id="portal-url-text"><%= portal_url %></span>
+          <button onclick="copyPortalLink()" style="background: #e0f2fe; color: #0369a1; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85em; white-space: nowrap;">
+            📋 Copiar
+          </button>
+        </div>
+
+        <%
+          # Mensaje predefinido para WhatsApp
+          wa_msg = "¡Hola #{@gig.client&.name}! Te comparto el link de tu Portal del Cliente personalizado para tu evento del #{@gig.date&.strftime('%d/%m/%Y')}. Podrás ver los detalles contratados, el estado de tus abonos y el cronograma del día: #{portal_url}"
+          
+          # Si tenemos el teléfono formateado del cliente, generamos el link directo, de lo contrario a WhatsApp Web general
+          wa_share_url = @gig.client&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@gig.client.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(wa_msg)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_msg)}"
+        %>
+        <a href="<%= wa_share_url %>" target="_blank" style="background: #25d366; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 18px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.15); transition: 0.2s;">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 2px;">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+          Enviar por WhatsApp
+        </a>
+      </div>
+
+      <div style="border-left: 1px dashed #e2e8f0; padding-left: 25px;">
+        <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.1em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          ✍️ Estado del Contrato
+        </h3>
+        <p style="margin: 0 0 15px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
+          El cliente puede firmar digitalmente el acuerdo directamente desde su portal público de cliente.
+        </p>
+
+        <% if @gig.contract_signed? %>
+          <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 15px; border-radius: 14px; font-size: 0.9em;">
+            <p style="margin: 0 0 5px 0; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+              ✓ Firmado Digitalmente
+            </p>
+            <div style="color: #047857; font-size: 0.9em; line-height: 1.5;">
+              <strong>Firmante:</strong> <%= @gig.contract_signed_name %><br>
+              <strong>Fecha/Hora:</strong> <%= @gig.contract_signed_at&.strftime("%d/%m/%Y %I:%M %p") %><br>
+              <strong>IP:</strong> <%= @gig.contract_signed_ip %>
+            </div>
+          </div>
+        <% else %>
+          <div style="background: #fffbeb; border: 1px solid #fef3c7; color: #78350f; padding: 15px; border-radius: 14px; font-size: 0.95em; font-weight: 700; display: inline-flex; align-items: center; gap: 8px;">
+            ⚠️ Pendiente de Firma por el Cliente
+          </div>
+        <% end %>
+      </div>
+
+    </div>
+
+    <script>
+      function copyPortalLink() {
+        const text = document.getElementById('portal-url-text').textContent;
+        navigator.clipboard.writeText(text).then(() => {
+          alert("Enlace copiado al portapapeles con éxito.");
+        }).catch(err => {
+          console.error('Error al copiar el enlace: ', err);
+        });
+      }
+    </script>
+
     <%# --- BALANCE FINANCIERO DEL SHOW --- %>
     <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(2,6,23,0.04); border: 1px solid #e6eef8; margin-bottom: 24px;">
       <h3 style="margin: 0 0 12px 0; font-size: 1.05em; font-weight: 800; color: #1e293b;">💰 Balance Financiero del Show</h3>
@@ -191,7 +275,7 @@
       </div>
       
       <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 10px; align-items: center; flex-wrap: wrap;" do |f| %>
-        <%= f.select :staff_id, User.staff.pluck(:email, :id), { prompt: "Seleccionar trabajador..." }, style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: #f8fafc;" %>
+        <%= f.select :staff_id, User.workers.order(:email).pluck(:email, :id), { prompt: "Seleccionar trabajador..." }, style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: #f8fafc;" %>
         <%= f.submit "Asignar trabajador", style: "background: #2563eb; color: white; border: none; padding: 9px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
       <% end %>
       <div style="margin-top: 10px;">
@@ -200,6 +284,75 @@
       <small style="color: #64748b; margin-top: 8px; display: block;">Asigna a los trabajadores del show y registra pagos desde aquí para mantener el control claro.</small>
     </div>
   <% end %>
+
+  <%# --- CRONOGRAMA / TIMELINE DEL EVENTO --- %>
+  <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+    <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.25em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+      📅 Cronograma y Agenda del Evento
+    </h3>
+    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
+      Planifica el horario de las actividades del show. Estos hitos se actualizarán al instante en el portal del cliente.
+    </p>
+
+    <% if @gig.gig_timeline_items.any? %>
+      <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: #f8fafc; font-size: 0.85em; font-weight: 800; color: #475569; text-transform: uppercase;">
+              <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Hora</th>
+              <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Título de Actividad</th>
+              <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Descripción</th>
+              <% if current_user.leader? %>
+                <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; text-align: center;">Acciones</th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% @gig.gig_timeline_items.each do |item| %>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px 18px; font-weight: 700; color: #7c3aed; white-space: nowrap;">⏰ <%= item.time %></td>
+                <td style="padding: 12px 18px; font-weight: 700; color: #1e293b;"><%= item.title %></td>
+                <td style="padding: 12px 18px; color: #475569; font-size: 0.9em;"><%= item.description %></td>
+                <% if current_user.leader? %>
+                  <td style="padding: 12px 18px; text-align: center;">
+                    <%= button_to gig_gig_timeline_item_path(@gig, item), method: :delete, data: { turbo_confirm: "¿Remover actividad del cronograma?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s;" do %>
+                      Eliminar
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de este show.</p>
+    <% end %>
+
+    <%# Formulario para añadir hito (solo líderes) %>
+    <% if current_user.leader? %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+        <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 0.95em; font-weight: bold; text-transform: uppercase;">➕ Agregar Nueva Actividad</h4>
+        <%= form_with(model: [@gig, GigTimelineItem.new], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
+          <div style="width: 120px;">
+            <%= f.label :time, "Hora", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+            <%= f.text_field :time, placeholder: "e.g. 08:30 PM", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+          </div>
+          <div style="flex: 1; min-width: 200px;">
+            <%= f.label :title, "Título", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+            <%= f.text_field :title, placeholder: "e.g. Entrada de Novios / Inicio Show", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+          </div>
+          <div style="flex: 2; min-width: 250px;">
+            <%= f.label :description, "Descripción (Opcional)", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+            <%= f.text_field :description, placeholder: "e.g. Usar chispa fría y canción especial", style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+          </div>
+          <div>
+            <%= f.submit "Agregar", style: "background: #7c3aed; color: white; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;" %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
 
   <%# --- CHECKLIST DE INVENTARIO --- %>
   <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">

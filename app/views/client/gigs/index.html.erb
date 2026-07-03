@@ -1,0 +1,272 @@
+<style>
+  .ci-wrapper {
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .ci-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+  .ci-header h1 {
+    color: #0f172a;
+    margin: 0;
+    font-weight: 800;
+    font-size: 2em;
+    letter-spacing: -0.5px;
+  }
+  .ci-badge {
+    background: linear-gradient(135deg, #ede9fe, #dbeafe);
+    color: #4f46e5;
+    padding: 6px 16px;
+    border-radius: 99px;
+    font-size: 0.82em;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    border: 1px solid #c7d2fe;
+  }
+
+  .ci-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+  .ci-stat {
+    background: white;
+    border-radius: 16px;
+    padding: 18px 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+  }
+  .ci-stat .s-lbl { font-size: 0.78em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .ci-stat .s-val { font-size: 1.6em; font-weight: 800; color: #0f172a; font-family: 'Outfit', monospace; }
+
+  .ci-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .ci-event-card {
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    overflow: hidden;
+    transition: box-shadow 0.25s, transform 0.25s;
+    text-decoration: none;
+    color: inherit;
+    display: block;
+  }
+  .ci-event-card:hover {
+    box-shadow: 0 12px 28px rgba(0,0,0,0.08);
+    transform: translateY(-2px);
+  }
+
+  .ci-event-card-inner {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+  }
+
+  .ci-event-accent {
+    width: 6px;
+    flex-shrink: 0;
+    border-radius: 0;
+  }
+  .ci-event-accent.paid     { background: linear-gradient(180deg, #10b981, #34d399); }
+  .ci-event-accent.partial  { background: linear-gradient(180deg, #f59e0b, #fbbf24); }
+  .ci-event-accent.unpaid   { background: linear-gradient(180deg, #ef4444, #f87171); }
+
+  .ci-event-content {
+    flex-grow: 1;
+    padding: 20px 22px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+  }
+
+  .ci-event-date-badge {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 10px 14px;
+    text-align: center;
+    min-width: 68px;
+    flex-shrink: 0;
+  }
+  .ci-event-date-badge .day { font-size: 1.6em; font-weight: 800; color: #0f172a; line-height: 1; font-family: 'Outfit', sans-serif; }
+  .ci-event-date-badge .month { font-size: 0.72em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+
+  .ci-event-info { flex-grow: 1; }
+  .ci-event-location { font-size: 1.05em; font-weight: 700; color: #1e293b; margin: 0 0 4px; }
+  .ci-event-meta { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .ci-event-meta span { font-size: 0.82em; color: #64748b; font-weight: 600; display: flex; align-items: center; gap: 4px; }
+
+  .ci-event-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 99px;
+    font-size: 0.78em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+  .ci-event-status.paid    { background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; }
+  .ci-event-status.partial { background: #fffbeb; color: #78350f; border: 1px solid #fde68a; }
+  .ci-event-status.unpaid  { background: #fef2f2; color: #7f1d1d; border: 1px solid #fecaca; }
+
+  .ci-event-cta {
+    padding: 20px 22px;
+    border-left: 1px solid #f1f5f9;
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .ci-portal-btn {
+    background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+    color: white;
+    padding: 10px 18px;
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 0.88em;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    box-shadow: 0 4px 10px rgba(139, 92, 246, 0.25);
+    transition: transform 0.2s, box-shadow 0.2s;
+    white-space: nowrap;
+  }
+  .ci-portal-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px rgba(139, 92, 246, 0.35);
+  }
+
+  .ci-empty {
+    padding: 60px 20px;
+    text-align: center;
+    color: #94a3b8;
+    background: white;
+    border-radius: 20px;
+    border: 1px solid #e2e8f0;
+  }
+  .ci-empty .empty-emoji { font-size: 48px; margin-bottom: 12px; }
+  .ci-empty h3 { margin: 0; color: #64748b; font-weight: 800; font-size: 1.1em; }
+  .ci-empty p { margin: 6px 0 0; font-size: 0.9em; }
+
+  @media (max-width: 640px) {
+    .ci-event-content { padding: 16px; }
+    .ci-event-cta { display: none; }
+    .ci-event-card { cursor: pointer; }
+  }
+</style>
+
+<div class="ci-wrapper">
+
+  <div class="ci-header">
+    <h1>🎸 Mis Eventos</h1>
+    <span class="ci-badge">Vista Cliente</span>
+  </div>
+
+  <% if alert %>
+    <div style="background:#fff1f2; border:1px solid #fca5a5; color:#be123c; padding:14px 20px; border-radius:12px; margin-bottom:22px; font-weight:600; display:flex; align-items:center; gap:10px;">
+      ⚠️ <%= alert %>
+    </div>
+  <% end %>
+
+  <%# Resumen rápido %>
+  <% if @gigs.any? %>
+    <%
+      total_agreed = @gigs.sum { |g| g.amount.to_f }
+      total_paid   = @gigs.sum { |g| g.total_received.to_f }
+      pending      = total_agreed - total_paid
+    %>
+    <div class="ci-summary">
+      <div class="ci-stat">
+        <div class="s-lbl">Total Eventos</div>
+        <div class="s-val"><%= @gigs.count %></div>
+      </div>
+      <div class="ci-stat">
+        <div class="s-lbl">Total Acordado</div>
+        <div class="s-val"><%= number_with_precision(total_agreed, precision: 2) %></div>
+      </div>
+      <div class="ci-stat">
+        <div class="s-lbl">Total Abonado</div>
+        <div class="s-val" style="color:#10b981;"><%= number_with_precision(total_paid, precision: 2) %></div>
+      </div>
+      <div class="ci-stat">
+        <div class="s-lbl">Saldo Pendiente</div>
+        <div class="s-val" style="color:<%= pending > 0 ? '#f59e0b' : '#10b981' %>;"><%= number_with_precision(pending, precision: 2) %></div>
+      </div>
+    </div>
+  <% end %>
+
+  <%# Lista de eventos %>
+  <div class="ci-events-list">
+    <% if @gigs.any? %>
+      <% @gigs.each do |gig| %>
+        <% status_class = case gig.payment_status
+                          when :paid    then 'paid'
+                          when :partial then 'partial'
+                          else               'unpaid'
+                          end %>
+        <div class="ci-event-card" onclick="window.location='<%= client_gig_path(gig) %>'" style="cursor:pointer;">
+          <div class="ci-event-card-inner">
+            <div class="ci-event-accent <%= status_class %>"></div>
+            <div class="ci-event-content">
+
+              <% if gig.date %>
+                <div class="ci-event-date-badge">
+                  <div class="day"><%= gig.date.strftime("%d") %></div>
+                  <div class="month"><%= gig.date.strftime("%b %Y") %></div>
+                </div>
+              <% end %>
+
+              <div class="ci-event-info">
+                <p class="ci-event-location">📍 <%= gig.location.presence || "Ubicación por confirmar" %></p>
+                <div class="ci-event-meta">
+                  <span>💰 <%= number_with_precision(gig.amount, precision: 2) %> <%= gig.currency %></span>
+                  <span>✅ Abonado: <%= number_with_precision(gig.total_received, precision: 2) %> <%= gig.currency %></span>
+                  <% if gig.remaining_amount.positive? %>
+                    <span style="color:#ef4444;">⚠️ Pendiente: <%= number_with_precision(gig.remaining_amount, precision: 2) %></span>
+                  <% end %>
+                </div>
+              </div>
+
+              <div class="ci-event-status <%= status_class %>">
+                <%= case gig.payment_status
+                    when :paid    then '✓ Pagado'
+                    when :partial then '◑ Parcial'
+                    else               '○ Pendiente'
+                    end %>
+              </div>
+
+            </div>
+            <div class="ci-event-cta">
+              <%= link_to client_gig_path(gig), class: "ci-portal-btn" do %>
+                🌐 Ver Portal
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% else %>
+      <div class="ci-empty">
+        <div class="empty-emoji">🤷‍♂️</div>
+        <h3>No tienes shows registrados todavía</h3>
+        <p>Una vez que se te agende un evento, aparecerá aquí con toda su información.</p>
+      </div>
+    <% end %>
+  </div>
+
+</div>

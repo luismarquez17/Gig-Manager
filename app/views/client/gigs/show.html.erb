@@ -1,0 +1,732 @@
+<%# ===== ESTILOS DEL PORTAL PREMIUM (embebidos, para funcionar dentro del layout de la app) ===== %>
+<style>
+  :root {
+    --portal-primary: #8b5cf6;
+    --portal-primary-hover: #7c3aed;
+    --portal-primary-glow: rgba(139, 92, 246, 0.25);
+    --portal-success: #10b981;
+    --portal-warning: #f59e0b;
+    --portal-danger: #ef4444;
+    --portal-bg: #06090e;
+    --portal-card-bg: rgba(15, 23, 42, 0.60);
+    --portal-card-border: rgba(255, 255, 255, 0.08);
+    --portal-card-border-hover: rgba(139, 92, 246, 0.35);
+    --portal-text-main: #f8fafc;
+    --portal-text-muted: #94a3b8;
+    --portal-font-outfit: 'Outfit', sans-serif;
+  }
+
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+  .client-portal-wrapper {
+    background: var(--portal-bg);
+    background-image:
+      radial-gradient(circle at 10% 20%, rgba(139, 92, 246, 0.10) 0%, transparent 45%),
+      radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.07) 0%, transparent 45%);
+    border-radius: 24px;
+    padding: 30px;
+    color: var(--portal-text-main);
+    font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+    min-height: 80vh;
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Glassmorphism card */
+  .p-glass-card {
+    background: var(--portal-card-bg);
+    border: 1px solid var(--portal-card-border);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    border-radius: 20px;
+    padding: 25px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+    transition: border-color 0.3s ease, transform 0.3s ease;
+  }
+  .p-glass-card:hover {
+    border-color: var(--portal-card-border-hover);
+    transform: translateY(-2px);
+  }
+
+  /* Typography */
+  .p-title-accent {
+    background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: var(--portal-font-outfit);
+    font-weight: 800;
+  }
+
+  /* Header */
+  .p-portal-header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+  .p-badge {
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    color: #c084fc;
+    padding: 5px 14px;
+    border-radius: 99px;
+    font-size: 0.8em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .p-portal-header h1 {
+    font-size: 2.2em;
+    margin: 0 0 8px 0;
+    line-height: 1.2;
+    letter-spacing: -1px;
+  }
+  .p-portal-header p {
+    color: var(--portal-text-muted);
+    font-size: 0.95em;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  /* Back link */
+  .p-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--portal-text-muted);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.88em;
+    margin-bottom: 20px;
+    transition: color 0.2s;
+  }
+  .p-back-link:hover { color: #c084fc; }
+
+  /* Countdown */
+  .p-countdown-container {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .p-countdown-box {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 12px 8px;
+  }
+  .p-countdown-box .pval {
+    font-family: var(--portal-font-outfit);
+    font-size: 2.2em;
+    font-weight: 800;
+    line-height: 1;
+    margin-bottom: 4px;
+    background: linear-gradient(180deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .p-countdown-box .plbl {
+    color: var(--portal-text-muted);
+    font-size: 0.72em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .p-countdown-title {
+    text-align: center;
+    font-family: var(--portal-font-outfit);
+    font-size: 1em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: #a78bfa;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 500px) {
+    .p-countdown-container { grid-template-columns: repeat(2, 1fr); }
+    .p-countdown-box .pval { font-size: 1.8em; }
+  }
+
+  /* Section title */
+  .p-section-title {
+    font-family: var(--portal-font-outfit);
+    font-size: 1.25em;
+    font-weight: 800;
+    color: var(--portal-text-main);
+    margin: 0 0 18px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .p-section-title .picon {
+    background: var(--portal-primary-glow);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9em;
+    color: #c084fc;
+    flex-shrink: 0;
+  }
+
+  /* Finance cards */
+  .p-finance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .p-finance-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 14px;
+    padding: 16px;
+  }
+  .p-finance-card .pflbl { font-size: 0.78em; font-weight: 700; color: var(--portal-text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .p-finance-card .pfval { font-family: var(--portal-font-outfit); font-size: 1.45em; font-weight: 800; }
+  .pfval-total { color: var(--portal-text-main); }
+  .pfval-paid { color: var(--portal-success); }
+  .pfval-remaining { color: var(--portal-warning); }
+
+  @media (max-width: 600px) {
+    .p-finance-grid { grid-template-columns: 1fr; gap: 10px; }
+  }
+
+  /* Progress */
+  .p-progress-track {
+    background: rgba(255, 255, 255, 0.06);
+    height: 10px;
+    border-radius: 99px;
+    overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    margin-top: 8px;
+  }
+  .p-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--portal-primary) 0%, #06b6d4 100%);
+    border-radius: 99px;
+    box-shadow: 0 0 12px var(--portal-primary-glow);
+    transition: width 1.2s ease-in-out;
+  }
+
+  /* Table */
+  .p-table-wrapper {
+    overflow-x: auto;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.2);
+  }
+  .p-portal-table { width: 100%; border-collapse: collapse; text-align: left; }
+  .p-portal-table th {
+    background: rgba(255, 255, 255, 0.02);
+    padding: 12px 16px;
+    color: var(--portal-text-muted);
+    font-weight: 700;
+    font-size: 0.8em;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .p-portal-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+    font-size: 0.9em;
+  }
+  .p-portal-table tr:last-child td { border-bottom: none; }
+
+  /* Timeline */
+  .p-timeline-container { position: relative; padding-left: 28px; margin-left: 8px; }
+  .p-timeline-container::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 5px; bottom: 5px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--portal-primary) 0%, rgba(6, 182, 212, 0.3) 100%);
+  }
+  .p-timeline-item { position: relative; margin-bottom: 22px; }
+  .p-timeline-item:last-child { margin-bottom: 0; }
+  .p-timeline-dot {
+    position: absolute;
+    left: -33px; top: 5px;
+    width: 11px; height: 11px;
+    border-radius: 50%;
+    background: var(--portal-bg);
+    border: 3px solid var(--portal-primary);
+    box-shadow: 0 0 8px var(--portal-primary);
+  }
+  .p-timeline-time { font-family: var(--portal-font-outfit); font-weight: 800; color: #c084fc; font-size: 0.85em; margin-bottom: 3px; text-transform: uppercase; }
+  .p-timeline-title { font-weight: 700; font-size: 1.05em; color: var(--portal-text-main); margin-bottom: 4px; }
+  .p-timeline-desc { color: var(--portal-text-muted); font-size: 0.88em; line-height: 1.4; }
+
+  /* Contract */
+  .p-contract-content {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    padding: 18px;
+    max-height: 220px;
+    overflow-y: auto;
+    font-size: 0.92em;
+    line-height: 1.6;
+    color: #cbd5e1;
+    margin-bottom: 18px;
+    white-space: pre-line;
+  }
+  .p-signature-box {
+    background: rgba(139, 92, 246, 0.05);
+    border: 1px dashed rgba(139, 92, 246, 0.25);
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 14px;
+  }
+  .p-signed-badge {
+    background: rgba(16, 185, 129, 0.10);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #34d399;
+    border-radius: 14px;
+    padding: 18px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+  .p-signed-badge p { margin: 2px 0; font-size: 0.88em; }
+
+  .p-alert-warning {
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    color: #fbd38d;
+    padding: 10px 14px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    font-size: 0.88em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Inputs & buttons */
+  .p-form-input {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    color: white;
+    font-family: inherit;
+    font-size: 0.95em;
+    box-sizing: border-box;
+    outline: none;
+    margin-bottom: 10px;
+    transition: border-color 0.3s;
+  }
+  .p-form-input:focus { border-color: var(--portal-primary); }
+  .p-form-input::placeholder { color: rgba(148, 163, 184, 0.6); }
+
+  .p-btn-portal {
+    background: linear-gradient(135deg, var(--portal-primary) 0%, var(--portal-primary-hover) 100%);
+    color: white;
+    border: none;
+    padding: 11px 20px;
+    border-radius: 10px;
+    font-weight: 700;
+    cursor: pointer;
+    font-size: 0.95em;
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px var(--portal-primary-glow);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+  }
+  .p-btn-portal:hover { transform: translateY(-1px); box-shadow: 0 6px 18px var(--portal-primary-glow); }
+  .p-btn-portal:active { transform: translateY(0); }
+  .p-btn-portal:disabled { background: #475569; color: #94a3b8; cursor: not-allowed; box-shadow: none; }
+
+  .p-btn-wa {
+    background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);
+    box-shadow: 0 4px 12px rgba(37, 211, 102, 0.2);
+  }
+  .p-btn-wa:hover { box-shadow: 0 6px 18px rgba(37, 211, 102, 0.3); }
+
+  /* WA link style as button */
+  a.p-btn-portal {
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  @keyframes p-scaleIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+</style>
+
+<div class="client-portal-wrapper">
+
+  <%# Back link %>
+  <%= link_to client_gigs_path, class: "p-back-link" do %>
+    ← Volver a Mis Eventos
+  <% end %>
+
+  <%# Header %>
+  <header class="p-portal-header">
+    <span class="p-badge">Portal Oficial del Cliente</span>
+    <h1 class="p-title-accent">El Evento de <%= @gig.client&.name || current_user.email.split('@').first.capitalize %></h1>
+    <p>
+      <span>📅 <%= @gig.date&.strftime("%d/%m/%Y") || "Fecha por definir" %></span>
+      <span>•</span>
+      <span>📍 <%= @gig.location.presence || "Ubicación por confirmar" %></span>
+      <% if @gig.formatted_time_range.present? %>
+        <span>•</span>
+        <span>🕐 <%= @gig.formatted_time_range %></span>
+      <% end %>
+    </p>
+  </header>
+
+  <%# === CUENTA REGRESIVA === %>
+  <section class="p-glass-card">
+    <h2 class="p-countdown-title" id="pcd-label">Tiempo Restante para el Evento</h2>
+    <div class="p-countdown-container">
+      <div class="p-countdown-box">
+        <div class="pval" id="pcd-days">--</div>
+        <div class="plbl">Días</div>
+      </div>
+      <div class="p-countdown-box">
+        <div class="pval" id="pcd-hours">--</div>
+        <div class="plbl">Horas</div>
+      </div>
+      <div class="p-countdown-box">
+        <div class="pval" id="pcd-minutes">--</div>
+        <div class="plbl">Minutos</div>
+      </div>
+      <div class="p-countdown-box">
+        <div class="pval" id="pcd-seconds">--</div>
+        <div class="plbl">Segundos</div>
+      </div>
+    </div>
+  </section>
+
+  <%# === CONTRATO Y FIRMA DIGITAL === %>
+  <section class="p-glass-card">
+    <h2 class="p-section-title">
+      <span class="picon">📜</span>
+      Resumen de Contrato y Condiciones
+    </h2>
+
+    <% if @gig.details.present? %>
+      <div class="p-contract-content"><%= @gig.details %></div>
+    <% else %>
+      <div class="p-alert-warning" style="margin-bottom: 18px;">
+        ℹ️ Los detalles del paquete contratado se están terminando de redactar.
+      </div>
+    <% end %>
+
+    <%# Firma digital %>
+    <div id="p-signature-section">
+      <% if @gig.contract_signed? %>
+        <div class="p-signed-badge" style="animation: p-scaleIn 0.4s ease;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <div>
+            <h4 style="margin: 0 0 5px 0; font-size: 1.05em; font-weight: 800;">✅ Contrato Firmado Digitalmente</h4>
+            <p><strong>Firmante:</strong> <%= @gig.contract_signed_name %></p>
+            <p><strong>Fecha:</strong> <%= @gig.contract_signed_at&.strftime("%d/%m/%Y %I:%M %p") %></p>
+            <p><strong>IP de Registro:</strong> <%= @gig.contract_signed_ip %></p>
+          </div>
+        </div>
+      <% else %>
+        <div class="p-alert-warning">
+          ⚠️ El contrato está pendiente de firma. Por favor léelo y fírmalo digitalmente a continuación.
+        </div>
+        <div class="p-signature-box">
+          <label style="display:block; font-weight:700; font-size:0.82em; text-transform:uppercase; color:var(--portal-text-muted); margin-bottom:8px; letter-spacing:0.5px;">Firma Digital del Cliente</label>
+          <input type="text" id="p-signature-input" placeholder="Escribe tu nombre completo para firmar..." class="p-form-input">
+          <button id="p-btn-sign" onclick="pSubmitSignature()" class="p-btn-portal">
+            ✍️ Aceptar Términos y Firmar Contrato
+          </button>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# === EQUIPO DE TRABAJO === %>
+  <% if @staff_members.present? %>
+  <section class="p-glass-card">
+    <h2 class="p-section-title">
+      <span class="picon">👥</span>
+      Tu Equipo de Trabajo
+    </h2>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px;">
+      <% @staff_members.each do |staff| %>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 18px; text-align: center; transition: border-color 0.3s, transform 0.3s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='translateY(0)';">
+          <% if staff.avatar.attached? %>
+            <div style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; overflow: hidden; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 12px rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center;">
+              <%= image_tag staff.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+            </div>
+          <% else %>
+            <div style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--portal-font-outfit); font-size: 1.5em; font-weight: 800; color: white; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);">
+              <%= staff.display_name[0].upcase %>
+            </div>
+          <% end %>
+          <h4 style="margin: 0 0 4px 0; font-family: var(--portal-font-outfit); font-weight: 700; font-size: 1em; color: var(--portal-text-main);">
+            <%= staff.display_name %>
+          </h4>
+          <% if staff.specialty.present? %>
+            <span style="display: inline-block; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.25); color: #c084fc; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+              <%= staff.specialty %>
+            </span>
+          <% end %>
+          <% if staff.bio.present? %>
+            <p style="margin: 6px 0 0 0; color: var(--portal-text-muted); font-size: 0.83em; line-height: 1.4;">
+              <%= staff.bio %>
+            </p>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+  <% end %>
+
+  <%# === ESTADO DE CUENTA === %>
+  <section class="p-glass-card">
+    <h2 class="p-section-title">
+      <span class="picon">💳</span>
+      Estado de Cuenta y Pagos
+    </h2>
+
+    <div class="p-finance-grid">
+      <div class="p-finance-card">
+        <div class="pflbl">Total Acordado</div>
+        <div class="pfval pfval-total"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size:0.55em; color:var(--portal-text-muted);"><%= @gig.currency %></span></div>
+      </div>
+      <div class="p-finance-card">
+        <div class="pflbl">Total Abonado</div>
+        <div class="pfval pfval-paid"><%= number_with_precision(@gig.total_received || 0, precision: 2) %> <span style="font-size:0.55em; color:var(--portal-text-muted);"><%= @gig.currency %></span></div>
+      </div>
+      <div class="p-finance-card">
+        <div class="pflbl">Saldo Pendiente</div>
+        <div class="pfval pfval-remaining"><%= number_with_precision(@gig.remaining_amount || 0, precision: 2) %> <span style="font-size:0.55em; color:var(--portal-text-muted);"><%= @gig.currency %></span></div>
+      </div>
+    </div>
+
+    <% pct = (@gig.total_received.to_f / (@gig.amount.to_f.nonzero? || 1) * 100).to_f %>
+    <div style="display:flex; justify-content:space-between; font-size:0.85em; font-weight:700; margin-bottom:6px;">
+      <span style="color:var(--portal-text-muted);">Progreso de Pago</span>
+      <span style="color:#22d3ee;"><%= pct.round(1) %>% Cobrado</span>
+    </div>
+    <div class="p-progress-track">
+      <div class="p-progress-fill" style="width: <%= [pct, 100].min %>%;"></div>
+    </div>
+
+    <%# Historial %>
+    <h3 style="font-family: var(--portal-font-outfit); font-size:0.95em; font-weight:700; margin:25px 0 12px; text-transform:uppercase; letter-spacing:0.5px; color:var(--portal-text-muted);">Historial de Pagos</h3>
+    <% if @gig_payments.any? %>
+      <div class="p-table-wrapper">
+        <table class="p-portal-table">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Pagado Por</th>
+              <th>Concepto</th>
+              <th style="text-align:right;">Monto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @gig_payments.each do |p| %>
+              <tr>
+                <td style="color:var(--portal-text-muted); font-weight:600;"><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
+                <td style="font-weight:600; color:var(--portal-text-main);"><%= p.payer_name.presence || "Cliente" %></td>
+                <td style="color:var(--portal-text-muted); font-size:0.88em;">
+                  <span style="background:rgba(255,255,255,0.06); padding:2px 6px; border-radius:4px; font-weight:700; font-size:0.82em; color:var(--portal-text-main); margin-right:4px;"><%= p.category.presence || "Abono" %></span>
+                  <%= p.notes %>
+                </td>
+                <td style="text-align:right; font-weight:800; color:var(--portal-success);">+<%= number_with_precision(p.amount, precision: 2) %> <%= p.currency %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p style="text-align:center; color:var(--portal-text-muted); font-style:italic; margin:15px 0;">No se han registrado pagos todavía.</p>
+    <% end %>
+
+    <% if @gig.remaining_amount.positive? %>
+      <div style="margin-top:25px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:20px;">
+        <p style="font-size:0.88em; color:var(--portal-text-muted); text-align:center; margin-bottom:12px;">
+          ¿Realizaste un abono? Envíanos el comprobante por WhatsApp y lo registramos de inmediato.
+        </p>
+        <%
+          wa_msg = "Hola! Acabo de hacer un pago para mi evento del #{@gig.date&.strftime('%d/%m/%Y')}. Adjunto el comprobante."
+          wa_url = "https://wa.me/584140000000?text=#{ERB::Util.url_encode(wa_msg)}"
+        %>
+        <a href="<%= wa_url %>" target="_blank" class="p-btn-portal p-btn-wa">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path></svg>
+          Notificar Pago por WhatsApp
+        </a>
+      </div>
+    <% end %>
+  </section>
+
+  <%# === CRONOGRAMA === %>
+  <section class="p-glass-card">
+    <h2 class="p-section-title">
+      <span class="picon">📅</span>
+      Cronograma y Agenda del Evento
+    </h2>
+    <% if @timeline_items.any? %>
+      <div class="p-timeline-container">
+        <% @timeline_items.each do |item| %>
+          <div class="p-timeline-item">
+            <div class="p-timeline-dot"></div>
+            <div class="p-timeline-time">⏰ <%= item.time %></div>
+            <div class="p-timeline-title"><%= item.title %></div>
+            <% if item.description.present? %>
+              <div class="p-timeline-desc"><%= item.description %></div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div style="text-align:center; padding:25px 10px; color:var(--portal-text-muted);">
+        <p style="font-size:32px; margin:0 0 8px;">⏳</p>
+        <p style="font-weight:700; margin:0; color:var(--portal-text-main);">Cronograma en preparación</p>
+        <p style="margin:4px 0 0; font-size:0.88em; line-height:1.5;">El equipo organizador está afinando los detalles de la agenda del evento. Aquí aparecerán en tiempo real.</p>
+      </div>
+    <% end %>
+  </section>
+
+  <%# Footer %>
+  <footer style="text-align:center; color:var(--portal-text-muted); font-size:0.82em; margin-top:40px; border-top:1px solid rgba(255,255,255,0.05); padding-top:18px;">
+    <p style="margin:0;">Generado por <strong style="color:var(--portal-text-main);">Gig Manager</strong>. Todos los derechos reservados.</p>
+  </footer>
+
+</div>
+
+<%# === JAVASCRIPT === %>
+<script>
+  // 1. Cuenta Regresiva
+  (function() {
+    const gigDateStr = '<%= @gig.date&.to_s %>';
+    if (!gigDateStr || gigDateStr === '') return;
+
+    const targetDate = new Date(`${gigDateStr}T20:00:00`).getTime();
+    const lblEl = document.getElementById('pcd-label');
+
+    const updateCountdown = () => {
+      const now = new Date().getTime();
+      const diff = targetDate - now;
+
+      if (diff <= 0) {
+        const eventDayStart = new Date(`${gigDateStr}T00:00:00`).getTime();
+        const eventDayEnd   = new Date(`${gigDateStr}T23:59:59`).getTime();
+        const currentNow    = new Date().getTime();
+
+        if (currentNow >= eventDayStart && currentNow <= eventDayEnd) {
+          document.getElementById('pcd-days').textContent    = '🎉';
+          document.getElementById('pcd-hours').textContent   = '🎸';
+          document.getElementById('pcd-minutes').textContent = '🔥';
+          document.getElementById('pcd-seconds').textContent = '⚡';
+          lblEl.textContent = '¡TU EVENTO ES HOY! ¡A DISFRUTAR!';
+          lblEl.style.color = '#10b981';
+        } else {
+          ['pcd-days','pcd-hours','pcd-minutes','pcd-seconds'].forEach(id => {
+            document.getElementById(id).textContent = '00';
+          });
+          lblEl.textContent = '¡Evento Finalizado! Gracias por tu preferencia.';
+          lblEl.style.color = '#94a3b8';
+        }
+        clearInterval(interval);
+        return;
+      }
+
+      const days    = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours   = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+      document.getElementById('pcd-days').textContent    = days.toString().padStart(2, '0');
+      document.getElementById('pcd-hours').textContent   = hours.toString().padStart(2, '0');
+      document.getElementById('pcd-minutes').textContent = minutes.toString().padStart(2, '0');
+      document.getElementById('pcd-seconds').textContent = seconds.toString().padStart(2, '0');
+    };
+
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+  })();
+
+  // 2. Firma Digital
+  function pSubmitSignature() {
+    const sigInput = document.getElementById('p-signature-input');
+    const name     = sigInput ? sigInput.value.trim() : '';
+
+    if (!name) {
+      if (sigInput) sigInput.style.borderColor = '#ef4444';
+      alert('Por favor, escribe tu nombre completo para poder firmar.');
+      return;
+    }
+
+    const btn = document.getElementById('p-btn-sign');
+    if (btn) { btn.disabled = true; btn.innerHTML = 'Firmando...'; }
+
+    const gigId = '<%= @gig.id %>';
+    const token  = '<%= @gig.portal_token %>';
+    const csrf   = document.querySelector('meta[name="csrf-token"]');
+    const csrfVal = csrf ? csrf.getAttribute('content') : '';
+
+    fetch(`/portal/${token}/sign`, {
+      method: 'POST',
+      headers: {
+        'Content-Type':  'application/json',
+        'X-CSRF-Token':  csrfVal,
+        'Accept':        'application/json'
+      },
+      body: JSON.stringify({ signature_name: name })
+    })
+    .then(res => {
+      if (!res.ok && res.status !== 422) throw new Error('Network error');
+      return res.json();
+    })
+    .then(data => {
+      if (data.success) {
+        const section = document.getElementById('p-signature-section');
+        section.innerHTML = `
+          <div class="p-signed-badge" style="animation: p-scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+            <div>
+              <h4 style="margin:0 0 5px 0; font-size:1.05em; font-weight:800;">✅ Contrato Firmado Digitalmente</h4>
+              <p><strong>Firmante:</strong> ${data.name}</p>
+              <p><strong>Fecha:</strong> ${data.signed_at}</p>
+              <p><strong>IP de Registro:</strong> ${data.ip}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        alert('Error al firmar: ' + (data.error || 'Ocurrió un problema.'));
+        if (btn) { btn.disabled = false; btn.innerHTML = '✍️ Aceptar Términos y Firmar Contrato'; }
+      }
+    })
+    .catch(() => {
+      alert('Error de red. Verifica tu conexión e intenta de nuevo.');
+      if (btn) { btn.disabled = false; btn.innerHTML = '✍️ Aceptar Términos y Firmar Contrato'; }
+    });
+  }
+</script>

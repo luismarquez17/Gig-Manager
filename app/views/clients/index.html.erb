@@ -58,7 +58,7 @@
             <tr style="border-bottom: 1px solid #f1f1f1;" onmouseover="this.style.backgroundColor='#fdfdfd'" onmouseout="this.style.backgroundColor='transparent'">
               <td style="padding: 15px;">
                 <div style="font-weight: bold; color: #2c3e50;"><%= client.name %></div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px;">
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 3px; flex-wrap: wrap;">
                   <small style="color: #94a3b8;"><%= client.phone.presence || "Sin teléfono" %></small>
                   <% if client.phone.present? && client.formatted_phone_for_whatsapp.present? %>
                     <%= link_to client.whatsapp_url, target: "_blank", title: "Contactar por WhatsApp", style: "display: inline-flex; align-items: center; text-decoration: none;" do %>
@@ -68,6 +68,11 @@
                     <% end %>
                   <% end %>
                 </div>
+                <% if client.email.present? %>
+                  <div style="margin-top: 2px;">
+                    <small style="color: #6366f1; font-size: 0.75em;">📧 <%= client.email %></small>
+                  </div>
+                <% end %>
               </td>
               <td style="padding: 15px;">
                 <div style="display: flex; align-items: center; gap: 8px;">

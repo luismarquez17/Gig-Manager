@@ -12,12 +12,23 @@ class GigsController < ApplicationController
 
   def index
     # 1. Unimos la tabla de clientes para poder buscar y filtrar
-    @gigs = Gig.includes(:client).all
+    @gigs = Gig.left_joins(:client).includes(:client).all
 
-    # 2. Buscador por nombre o teléfono
+    # 2. Buscador inteligente por nombre de cliente, teléfono, correo, ubicación o detalles del toque
     if params[:query].present?
-      query_term = "%#{params[:query]}%"
-      @gigs = @gigs.where("clients.name ILIKE ? OR clients.phone ILIKE ?", query_term, query_term)
+      terms = params[:query].split(/\s+/)
+      terms.each do |term|
+        next if term.blank?
+        query_term = "%#{term}%"
+        @gigs = @gigs.where(
+          "unaccent(clients.name) ILIKE unaccent(?) OR " \
+          "clients.phone ILIKE ? OR " \
+          "unaccent(gigs.location) ILIKE unaccent(?) OR " \
+          "unaccent(gigs.details) ILIKE unaccent(?) OR " \
+          "gigs.client_email ILIKE ?",
+          query_term, query_term, query_term, query_term, query_term
+        )
+      end
     end
 
     # 3. Filtro por prioridad
@@ -83,7 +94,7 @@ class GigsController < ApplicationController
     @gig = Gig.find(params[:id])
     user = User.find_by(id: params[:staff_id])
 
-    if user && user.staff?
+    if user && (user.staff? || user.leader?)
       if @gig.staff_members.include?(user)
         redirect_to gig_path(@gig), alert: "Este trabajador ya está asignado."
       else
@@ -118,6 +129,20 @@ class GigsController < ApplicationController
     end
   end
 
+  def edit
+    @gig = Gig.find(params[:id])
+  end
+
+  def update
+    @gig = Gig.find(params[:id])
+    if @gig.update(gig_params)
+      @gig.client.update_priority! if @gig.client
+      redirect_to gig_path(@gig), notice: "Evento actualizado correctamente."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
   def destroy
     @gig = Gig.find(params[:id])
     @client = @gig.client
@@ -135,6 +160,6 @@ class GigsController < ApplicationController
   private
 
   def gig_params
-    params.require(:gig).permit(:client_id, :amount, :date, :location, :currency, :details)
+    params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :start_time, :end_time)
   end
 end

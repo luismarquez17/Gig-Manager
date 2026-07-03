@@ -4,7 +4,7 @@
   <%= form_with model: @payment, local: true do |f| %>
     <div class="form-group-custom">
       <%= f.label :user_id, 'Trabajador' %>
-      <%= f.collection_select :user_id, User.staff.order(:email), :id, :email, { include_blank: true }, { class: 'form-input-custom' } %>
+      <%= f.collection_select :user_id, User.workers.order(:email), :id, :email, { include_blank: true }, { class: 'form-input-custom' } %>
     </div>
 
     <div class="form-group-custom">

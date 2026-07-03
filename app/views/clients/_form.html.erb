@@ -11,6 +11,12 @@
       <%= f.text_field :phone, placeholder: "0414-0000000", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
     </div>
 
+    <div style="margin-bottom: 20px;">
+      <%= f.label :email, "📧 Correo Electrónico", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+      <%= f.email_field :email, placeholder: "cliente@correo.com (Opcional, útil para vincular cuando se registre)", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      <small style="color: #94a3b8; font-size: 0.8em; margin-top: 4px; display: block;">Si pones el correo aquí, cuando el cliente se registre con ese mismo correo se vinculará automáticamente.</small>
+    </div>
+
     <div style="margin-bottom: 25px;">
       <%= f.label :notes, "📝 Notas Adicionales", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
       <%= f.text_area :notes, rows: 3, placeholder: "Detalles del cliente...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>

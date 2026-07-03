@@ -32,7 +32,7 @@ class PagesController < ApplicationController
       @discrepant_count = @discrepant_gig_items.count
     else
       # Client
-      @proximos_gigs = []
+      @proximos_gigs = current_user.client ? current_user.client.gigs.where("date >= ?", Date.today).order(date: :asc).limit(5) : []
     end
   end
 

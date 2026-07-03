@@ -30,6 +30,12 @@
       <%= f.hidden_field :client_id, id: "real-client-id" %>
     </div>
 
+    <%# --- CORREO DEL CLIENTE (OPCIONAL O ALTERNATIVO) --- %>
+    <div style="margin-bottom: 25px; background: #f0fdf4; padding: 20px; border-radius: 15px; border: 1px solid #bbf7d0;">
+      <%= f.label :client_email, "📧 Correo del Cliente", style: "display: block; font-weight: bold; color: #166534; margin-bottom: 10px;" %>
+      <%= f.email_field :client_email, placeholder: "ejemplo@correo.com (Necesario si no buscas un cliente arriba)", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
+    </div>
+
     <%# --- MONTO Y MONEDA --- %>
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px; align-items: end;">
       <div>
@@ -55,6 +61,18 @@
       <div>
         <%= f.label :date, "📅 Fecha", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
         <%= f.date_field :date, value: gig.date || Date.today, style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      </div>
+    </div>
+
+    <%# --- HORA INICIO Y FIN --- %>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+      <div>
+        <%= f.label :start_time, "🕐 Hora de Inicio", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.time_field :start_time, value: gig.start_time&.strftime("%H:%M"), style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
+      </div>
+      <div>
+        <%= f.label :end_time, "🕛 Hora de Fin", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.time_field :end_time, value: gig.end_time&.strftime("%H:%M"), style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box;" %>
       </div>
     </div>
 
