@@ -11,6 +11,14 @@ class PortalsController < ApplicationController
     @staff_members = @gig.staff_members.with_attached_avatar
   end
 
+  def worker_profile
+    @worker = User.find(params[:worker_id])
+    unless @gig.staff_members.include?(@worker)
+      render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
+      return
+    end
+  end
+
   def sign_contract
     if params[:signature_name].blank?
       render json: { success: false, error: "El nombre es obligatorio para firmar." }, status: :unprocessable_entity

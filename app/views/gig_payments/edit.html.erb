@@ -1,0 +1,81 @@
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 25px;">
+    <%= link_to '← Volver al Show', gig_path(@payment.gig), style: "text-decoration: none; color: #64748b; font-weight: 700; font-size: 0.9em;" %>
+    <h1 style="color: #0f172a; margin: 5px 0 0 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">
+      ✏️ Editar Pago
+    </h1>
+    <p style="color: #64748b; margin: 5px 0 0 0;">
+      Show: <strong><%= @payment.gig.client.name %></strong> — <%= @payment.gig.date&.strftime('%d/%m/%Y') %>
+    </p>
+  </div>
+
+  <div class="custom-card">
+    <% if @payment.errors.any? %>
+      <div style="margin-bottom: 12px; padding: 10px; border-radius: 6px; background: #fff1f2; color: #981b1b; border: 1px solid #fecaca;">
+        <strong>No se pudo actualizar el pago:</strong>
+        <ul style="margin: 6px 0 0 16px;">
+          <% @payment.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @payment, local: true do |f| %>
+      <div class="row">
+        <div class="col-md-6 form-group-custom">
+          <%= f.label :amount, "Monto *" %>
+          <%= f.text_field :amount,
+            inputmode: 'decimal',
+            placeholder: "0.00",
+            class: "form-input-custom",
+            required: true %>
+        </div>
+
+        <div class="col-md-6 form-group-custom">
+          <%= f.label :currency, "Moneda *" %>
+          <%= f.select :currency, [["Dólares (USD)", "USD"], ["Bolívares (BS)", "BS"]], {}, { class: "form-input-custom", required: true } %>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 form-group-custom">
+          <%= f.label :date_paid, "Fecha de Pago *" %>
+          <%= f.date_field :date_paid, class: "form-input-custom", required: true %>
+        </div>
+
+        <div class="col-md-6 form-group-custom">
+          <%= f.label :category, "Categoría" %>
+          <%= f.select :category, GigPayment::CATEGORIES.map { |c| [c.humanize, c] }, { include_blank: "Selecciona una categoría..." }, { class: "form-input-custom" } %>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-md-6 form-group-custom">
+          <%= f.label :payer_name, "Pagador (Payer Name)" %>
+          <%= f.text_field :payer_name, placeholder: "Nombre del pagador...", class: "form-input-custom" %>
+        </div>
+
+        <div class="col-md-6 form-group-custom">
+          <%= f.label :for_date, "Asociado a la Fecha" %>
+          <%= f.date_field :for_date, class: "form-input-custom" %>
+        </div>
+      </div>
+
+      <div class="form-group-custom d-flex align-items-center gap-2 py-2">
+        <%= f.check_box :is_advance, style: "width: 20px; height: 20px; cursor: pointer;" %>
+        <%= f.label :is_advance, "Es un adelanto (Advance Payment)", style: "margin: 0; cursor: pointer; font-weight: 700; color: #475569;" %>
+      </div>
+
+      <div class="form-group-custom">
+        <%= f.label :notes, "Notas / Observaciones" %>
+        <%= f.text_area :notes, placeholder: "Detalles adicionales sobre la transacción...", class: "form-input-custom", rows: 4 %>
+      </div>
+
+      <div style="margin-top: 25px; border-top: 1px solid #f1f5f9; padding-top: 20px; display: flex; gap: 15px; justify-content: flex-end;">
+        <%= link_to 'Cancelar', gig_path(@payment.gig), class: 'btn-main btn-gray-custom' %>
+        <%= f.submit "💾 Guardar Cambios", class: 'btn-main btn-primary-custom' %>
+      </div>
+    <% end %>
+  </div>
+</div>

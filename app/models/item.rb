@@ -30,8 +30,13 @@ class Item < ApplicationRecord
     maintenance_records.order(created_at: :desc)
   end
 
-  # LISTA MAESTRA DE CATEGORÍAS
+  # LISTA MAESTRA DE CATEGORÍAS BASE (inmutables)
   CATEGORIES = ["Cornetas", "Cables", "Estructuras", "Pantallas", "Consolas", "Microfonos", "Luces", "Bajos", "Accesorios"]
+
+  # Retorna todas las categorías: las base + las creadas por el usuario
+  def self.categories
+    (CATEGORIES + Category.pluck(:name)).uniq
+  end
 
   # LISTA MAESTRA DE SUB-CABLES
   CABLE_TYPES = ["Micrófono (XLR)", "RCA", "HDMI", "Plug (3.5mm)", "Plug (6.3mm)", "USB C", ]

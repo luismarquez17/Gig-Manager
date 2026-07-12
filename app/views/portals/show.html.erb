@@ -497,30 +497,32 @@
     </h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
       <% @staff_members.each do |staff| %>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 20px; text-align: center; transition: border-color 0.3s, transform 0.3s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='translateY(0)';">
-          <% if staff.avatar.attached? %>
-            <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; overflow: hidden; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center;">
-              <%= image_tag staff.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
-            </div>
-          <% else %>
-            <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 1.6em; font-weight: 800; color: white; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);">
-              <%= staff.display_name[0].upcase %>
-            </div>
-          <% end %>
-          <h4 style="margin: 0 0 4px 0; font-family: var(--font-outfit); font-weight: 700; font-size: 1.05em; color: var(--text-main);">
-            <%= staff.display_name %>
-          </h4>
-          <% if staff.specialty.present? %>
-            <span style="display: inline-block; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.25); color: #c084fc; padding: 3px 10px; border-radius: 99px; font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-              <%= staff.specialty %>
-            </span>
-          <% end %>
-          <% if staff.bio.present? %>
-            <p style="margin: 8px 0 0 0; color: var(--text-muted); font-size: 0.85em; line-height: 1.4;">
-              <%= staff.bio %>
-            </p>
-          <% end %>
-        </div>
+        <%= link_to public_portal_worker_path(token: @gig.portal_token, worker_id: staff.id), style: "text-decoration: none; color: inherit; display: block;" do %>
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 20px; text-align: center; height: 100%; box-sizing: border-box; transition: border-color 0.3s, transform 0.3s; cursor: pointer;" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='translateY(0)';">
+            <% if staff.avatar.attached? %>
+              <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; overflow: hidden; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center;">
+                <%= image_tag staff.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+              </div>
+            <% else %>
+              <div style="width: 80px; height: 80px; border-radius: 50%; margin: 0 auto 12px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 1.6em; font-weight: 800; color: white; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 15px rgba(139, 92, 246, 0.15);">
+                <%= staff.display_name[0].upcase %>
+              </div>
+            <% end %>
+            <h4 style="margin: 0 0 4px 0; font-family: var(--font-outfit); font-weight: 700; font-size: 1.05em; color: var(--text-main);">
+              <%= staff.display_name %>
+            </h4>
+            <% if staff.specialty.present? %>
+              <span style="display: inline-block; background: rgba(139, 92, 246, 0.12); border: 1px solid rgba(139, 92, 246, 0.25); color: #c084fc; padding: 3px 10px; border-radius: 99px; font-size: 0.78em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+                <%= staff.specialty %>
+              </span>
+            <% end %>
+            <% if staff.bio.present? %>
+              <p style="margin: 8px 0 0 0; color: var(--text-muted); font-size: 0.85em; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis;">
+                <%= staff.bio %>
+              </p>
+            <% end %>
+          </div>
+        <% end %>
       <% end %>
     </div>
   </section>

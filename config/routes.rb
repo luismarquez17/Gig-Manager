@@ -13,7 +13,7 @@ Rails.application.routes.draw do
       post :merge
     end
   end
-  resources :gig_payments, only: [:index]
+  resources :gig_payments, only: [:index, :edit, :update, :destroy]
   
   namespace :client do
     resources :gigs, only: [:index, :show]
@@ -21,6 +21,7 @@ Rails.application.routes.draw do
 
   # Portal Público de Clientes (Acceso mediante token seguro de WhatsApp)
   get '/portal/:token', to: 'portals#show', as: 'public_portal'
+  get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
 
   resources :gigs, only: [:index, :new, :create, :destroy, :show, :edit, :update] do
@@ -47,6 +48,7 @@ Rails.application.routes.draw do
   resources :items do
     resources :inventory_items, only: [:update]
   end
+  resources :categories, only: [:create, :destroy]
   resources :maintenance_records, only: [:index, :edit, :update]
 
   get '/investments/report', to: 'investments#report', as: 'investments_report'
@@ -64,12 +66,12 @@ Rails.application.routes.draw do
       delete 'remove_item/:item_id', to: 'kits#remove_item', as: 'remove_item'
     end
   end
-  resources :users, only: [:index, :edit, :update] do
+  resources :users, only: [:index, :edit, :update, :show] do
     member do
       patch :update_role
     end
   end
-  resources :employee_payments, only: [:index, :new, :create]
+  resources :employee_payments, only: [:index, :new, :create, :edit, :update, :destroy]
   # Staff: view only their assigned gigs
   get '/my_gigs', to: 'gigs#my', as: 'my_gigs'
   # Staff & Musician: view their payments and balances

@@ -21,6 +21,12 @@
         <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
       </div>
 
+      <%# Filtro de Fecha %>
+      <div style="flex-grow: 1; min-width: 150px; margin-bottom: 20px;">
+        <%= f.label :date_filter, "Fecha", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+        <%= f.select :date_filter, [["Todos", ""], ["Próximos 🔮", "upcoming"], ["Pasados ⏳", "past"]], { selected: params[:date_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+      </div>
+
       <%# Selector de Ordenamiento %>
       <div style="flex-grow: 1; min-width: 180px; margin-bottom: 20px;">
         <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>

@@ -269,7 +269,7 @@
       <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
         <% @gig.staff_members.each do |staff| %>
           <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px;">
-            <%= staff.email %>
+            <%= link_to staff.display_name, user_path(staff), style: "color: #2563eb; text-decoration: none;" %>
           </div>
         <% end %>
         <% if @gig.staff_members.empty? %>

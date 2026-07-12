@@ -1,0 +1,96 @@
+<style>
+  .glass-card {
+    background: var(--card-bg);
+    border: 1px solid var(--card-border);
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    border-radius: 24px;
+    padding: 40px 30px;
+    margin-top: 20px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  .glass-card:hover {
+    border-color: rgba(139, 92, 246, 0.35);
+    box-shadow: 0 12px 40px 0 rgba(139, 92, 246, 0.15);
+  }
+  .back-link {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-family: var(--font-outfit);
+    font-weight: 600;
+    font-size: 0.95em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: color 0.2s, transform 0.2s;
+  }
+  .back-link:hover {
+    color: #c084fc;
+    transform: translateX(-3px);
+  }
+</style>
+
+<div class="portal-container">
+  <div style="margin-bottom: 20px;">
+    <%= link_to public_portal_path(token: @gig.portal_token), class: "back-link" do %>
+      <span>⬅️</span> Volver al Portal del Evento
+    <% end %>
+  </div>
+
+  <div class="glass-card" style="text-align: center; position: relative; overflow: hidden;">
+    <%# Background Glow Effect inside Card %>
+    <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 250px; height: 250px; background: radial-gradient(circle, rgba(139, 92, 246, 0.15) 0%, transparent 70%); pointer-events: none; z-index: 1;"></div>
+
+    <div style="position: relative; z-index: 2;">
+      <%# Avatar %>
+      <div style="margin-bottom: 25px; display: flex; justify-content: center;">
+        <% if @worker.avatar.attached? %>
+          <div style="width: 130px; height: 130px; border-radius: 50%; overflow: hidden; border: 4px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 25px rgba(139, 92, 246, 0.35); display: flex; align-items: center; justify-content: center;">
+            <%= image_tag @worker.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+          </div>
+        <% else %>
+          <div style="width: 130px; height: 130px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 3.5em; font-weight: 800; color: white; border: 4px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);">
+            <%= @worker.display_name[0].upcase %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Name %>
+      <h1 style="margin: 0; font-family: var(--font-outfit); font-size: 2.4em; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px;">
+        <%= @worker.display_name %>
+      </h1>
+
+      <%# Specialty Badge %>
+      <% if @worker.specialty.present? %>
+        <div style="margin-top: 15px;">
+          <span style="display: inline-block; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #c084fc; padding: 6px 18px; border-radius: 99px; font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-outfit);">
+            <%= @worker.specialty %>
+          </span>
+        </div>
+      <% else %>
+        <div style="margin-top: 15px;">
+          <span style="display: inline-block; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); padding: 6px 18px; border-radius: 99px; font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; font-family: var(--font-outfit);">
+            Miembro del Equipo
+          </span>
+        </div>
+      <% end %>
+
+      <%# Biography %>
+      <div style="margin-top: 35px; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 30px; text-align: left; max-width: 650px; margin-left: auto; margin-right: auto;">
+        <h3 style="margin: 0 0 15px 0; color: var(--text-muted); font-family: var(--font-outfit); font-size: 0.85em; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">
+          ✨ Presentación / Biografía
+        </h3>
+        <% if @worker.bio.present? %>
+          <p style="margin: 0; color: var(--text-main); line-height: 1.7; font-size: 1.05em; font-family: var(--font-jakarta); white-space: pre-line;">
+            <%= @worker.bio %>
+          </p>
+        <% else %>
+          <p style="margin: 0; color: var(--text-muted); line-height: 1.7; font-size: 1.05em; font-family: var(--font-jakarta); font-style: italic;">
+            Este miembro del equipo aún no ha configurado su presentación. ¡Pero estará listo para darlo todo en tu show!
+          </p>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</div>

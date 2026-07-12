@@ -1,8 +1,30 @@
+<%
+  role_title = if @user.client?
+                 "Cliente"
+               elsif @user.musician?
+                 "Músico"
+               elsif @user.staff?
+                 "Staff"
+               elsif @user.leader?
+                 "Líder"
+               else
+                 "Usuario"
+               end
+
+  back_path = current_user.leader? ? users_path : root_path
+%>
+
 <div style="max-width: 600px; margin: 0 auto; font-family: 'Segoe UI', sans-serif;">
   <div style="margin-bottom: 25px;">
-    <%= link_to '⬅ Volver a Usuarios', users_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; margin-bottom: 10px;" %>
-    <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👤 Editar Perfil de Trabajador</h1>
-    <p style="color: #64748b; margin: 5px 0 0 0;">Configura los datos del trabajador que verá el cliente en su portal.</p>
+    <%= link_to "⬅ Volver al #{current_user.leader? ? 'Listado' : 'Inicio'}", back_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; margin-bottom: 10px;" %>
+    <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👤 Editar Perfil de <%= role_title %></h1>
+    <p style="color: #64748b; margin: 5px 0 0 0;">
+      <% if @user.client? %>
+        Configura tus datos personales y teléfono de contacto.
+      <% else %>
+        Configura los datos del trabajador que verá el cliente en su portal.
+      <% end %>
+    </p>
   </div>
 
   <div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05);">
@@ -38,25 +60,37 @@
 
       <%# --- NOMBRE --- %>
       <div style="margin-bottom: 20px;">
-        <%= f.label :name, "✏️ Nombre Completo", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.label :name, "✏️ Nombre y Apellido (Cómo aparecerá en el portal)", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
         <%= f.text_field :name, placeholder: "Ej: Juan Pérez", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
+        <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #94a3b8;">Si lo dejas en blanco, se usará la parte del correo electrónico como nombre.</p>
       </div>
 
-      <%# --- ESPECIALIDAD --- %>
-      <div style="margin-bottom: 20px;">
-        <%= f.label :specialty, "🎸 Especialidad o Rol", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
-        <%= f.text_field :specialty, placeholder: "Ej: DJ Principal, Sonidista, Técnico de Luces, Cantante", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
-      </div>
+      <%# --- DATOS DE CLIENTE --- %>
+      <% if @user.client? && @user.client.present? %>
+        <div style="margin-bottom: 20px;">
+          <label style="display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;">📞 Teléfono de Contacto</label>
+          <%= text_field_tag "user[client_phone]", @user.client.phone, placeholder: "Ej: +584141234567", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
+        </div>
+      <% end %>
 
-      <%# --- BIO --- %>
-      <div style="margin-bottom: 25px;">
-        <%= f.label :bio, "📝 Biografía Corta (Mensaje para el Cliente)", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
-        <%= f.text_area :bio, rows: 4, placeholder: "Ej: Con más de 8 años de experiencia animando eventos corporativos y bodas. Especialista en música crossover y mezclas en vivo...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em; resize: vertical; font-family: inherit;" %>
-      </div>
+      <%# --- DATOS DE TRABAJADOR (Solo si no es cliente) --- %>
+      <% unless @user.client? %>
+        <%# --- ESPECIALIDAD --- %>
+        <div style="margin-bottom: 20px;">
+          <%= f.label :specialty, "🎸 Especialidad o Rol", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+          <%= f.text_field :specialty, placeholder: "Ej: DJ Principal, Sonidista, Técnico de Luces, Cantante", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
+        </div>
+
+        <%# --- BIO --- %>
+        <div style="margin-bottom: 25px;">
+          <%= f.label :bio, "📝 Biografía Corta (Mensaje para el Cliente)", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+          <%= f.text_area :bio, rows: 4, placeholder: "Ej: Con más de 8 años de experiencia animando eventos corporativos y bodas. Especialista en música crossover y mezclas en vivo...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em; resize: vertical; font-family: inherit;" %>
+        </div>
+      <% end %>
 
       <div style="display: flex; flex-direction: column; gap: 12px;">
         <%= f.submit "💾 Guardar Perfil", style: "width: 100%; background: #2563eb; color: white; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);" %>
-        <%= link_to "🚫 Cancelar", users_path, style: "text-align: center; text-decoration: none; color: #64748b; font-weight: 600; font-size: 0.9em; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px;" %>
+        <%= link_to "🚫 Cancelar", back_path, style: "text-align: center; text-decoration: none; color: #64748b; font-weight: 600; font-size: 0.9em; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px;" %>
       </div>
     <% end %>
   </div>

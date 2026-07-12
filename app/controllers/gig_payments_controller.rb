@@ -1,6 +1,7 @@
 class GigPaymentsController < ApplicationController
   before_action :require_leader!
   before_action :set_gig, if: -> { params[:gig_id].present? }
+  before_action :set_payment, only: [:edit, :update, :destroy]
 
   def index
     if defined?(@gig) && @gig.present?
@@ -48,10 +49,31 @@ class GigPaymentsController < ApplicationController
     redirect_to gig_payments_path, alert: "Ocurrió un error al registrar el pago. Revisa la consola del servidor."
   end
 
+  def edit
+  end
+
+  def update
+    if @payment.update(payment_params)
+      redirect_to gig_path(@payment.gig), notice: "Pago actualizado correctamente."
+    else
+      render :edit, status: :unprocessable_entity
+    end
+  end
+
+  def destroy
+    gig = @payment.gig
+    @payment.destroy
+    redirect_to gig_path(gig), notice: "Pago eliminado correctamente."
+  end
+
   private
 
   def set_gig
     @gig = Gig.find(params[:gig_id])
+  end
+
+  def set_payment
+    @payment = GigPayment.find(params[:id])
   end
 
   def payment_params

@@ -1,5 +1,6 @@
 class EmployeePaymentsController < ApplicationController
   before_action :require_leader!
+  before_action :set_payment, only: [:edit, :update, :destroy]
 
   def index
     @payments = EmployeePayment.includes(:user, :gig).order(date_paid: :desc)
@@ -66,7 +67,46 @@ class EmployeePaymentsController < ApplicationController
     render :new, status: :unprocessable_entity
   end
 
+  def edit
+  end
+
+  def update
+    old_amount = @payment.amount.to_f
+    payroll_gig = @payment.gig
+
+    ActiveRecord::Base.transaction do
+      # Revertir los gastos de nómina anteriores asociados a este pago
+      if payroll_gig.present?
+        @payment.fund_expenses.destroy_all
+      end
+
+      @payment.update!(payment_params)
+
+      # Re-consumir con el nuevo monto si tiene show
+      if payroll_gig.present?
+        if @payment.amount.to_f > payroll_gig.total_payroll_remaining
+          raise ActiveRecord::RecordInvalid.new(@payment)
+        end
+        consume_payroll_funds(payroll_gig, @payment.amount.to_f, @payment)
+      end
+    end
+
+    redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
+  rescue ActiveRecord::RecordInvalid
+    render :edit, status: :unprocessable_entity
+  end
+
+  def destroy
+    user_id = @payment.user_id
+    @payment.destroy
+    redirect_to employee_payments_path(user_id: user_id), notice: "Pago eliminado correctamente."
+  end
+
   private
+
+  def set_payment
+    @payment = EmployeePayment.find(params[:id])
+  end
 
   def consume_payroll_funds(gig, amount, payment)
     remaining_amount = amount.to_f
@@ -76,7 +116,12 @@ class EmployeePaymentsController < ApplicationController
       next if available <= 0
 
       used = [available, remaining_amount].min
-      allocation.fund_expenses.create!(amount: used, currency: allocation.currency, notes: "Pago a trabajador #{payment.user.email} (#{payment.date_paid})")
+      allocation.fund_expenses.create!(
+        amount: used,
+        currency: allocation.currency,
+        notes: "Pago a trabajador #{payment.user.email} (#{payment.date_paid})",
+        employee_payment_id: payment.id
+      )
       remaining_amount -= used
     end
 

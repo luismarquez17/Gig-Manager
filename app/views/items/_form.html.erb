@@ -8,10 +8,24 @@
     <div style="margin-bottom: 20px;">
       <%= f.label :category, "📂 Categoría del Equipo", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
       <%= f.select :category, 
-          Item::CATEGORIES, 
+          Item.categories, 
           { prompt: "--- Selecciona el tipo de equipo ---" }, 
           { id: "category-select", onchange: "updateFormLogic()", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; background: white; cursor: pointer;" } 
       %>
+      
+      <div style="margin-top: 8px; font-size: 0.85em;">
+        ¿No ves la categoría que necesitas? 
+        <a href="javascript:void(0);" onclick="toggleNewCategoryInlineForm();" style="color: #2563eb; font-weight: 600; text-decoration: none;">Crear una nueva categoría aquí</a>
+      </div>
+      
+      <div id="inline-category-form-container" style="display: none; margin-top: 10px; padding: 15px; border-radius: 12px; background: #f8fafc; border: 1px solid #cbd5e1;">
+        <p style="margin: 0 0 8px 0; font-size: 0.85em; font-weight: bold; color: #475569;">Crear nueva categoría:</p>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="inline-category-name-input" placeholder="Ej: Cosas adicionales" style="flex-grow: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none;">
+          <button type="button" onclick="submitNewCategoryInline();" style="background: #10b981; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em; transition: 0.2s;">Agregar</button>
+        </div>
+        <p id="inline-category-error" style="display: none; margin: 5px 0 0 0; font-size: 0.8em; color: #ef4444; font-weight: bold;"></p>
+      </div>
     </div>
 
     <%# 2. SUB-CATEGORÍA DINÁMICA %>
@@ -104,6 +118,59 @@
 
     // Aviso de Tirro
     damageNotice.style.display = (status === "Dañado") ? "block" : "none";
+  }
+
+  function toggleNewCategoryInlineForm() {
+    var container = document.getElementById('inline-category-form-container');
+    if (container.style.display === 'none') {
+      container.style.display = 'block';
+      document.getElementById('inline-category-name-input').focus();
+    } else {
+      container.style.display = 'none';
+    }
+  }
+
+  function submitNewCategoryInline() {
+    var input = document.getElementById('inline-category-name-input');
+    var name = input.value.trim();
+    var errorLabel = document.getElementById('inline-category-error');
+    if (!name) return;
+
+    errorLabel.style.display = 'none';
+
+    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch('/categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ category: { name: name } })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        var select = document.getElementById('category-select');
+        var option = document.createElement('option');
+        option.value = data.category.name;
+        option.text = data.category.name;
+        select.add(option);
+        select.value = data.category.name;
+        input.value = '';
+        toggleNewCategoryInlineForm();
+        updateFormLogic();
+      } else {
+        errorLabel.innerText = data.errors.join(', ');
+        errorLabel.style.display = 'block';
+      }
+    })
+    .catch(error => {
+      errorLabel.innerText = 'Error al crear la categoría.';
+      errorLabel.style.display = 'block';
+      console.error(error);
+    });
   }
 
   // EJECUCIÓN INMEDIATA (Para Editar)

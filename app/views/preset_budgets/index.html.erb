@@ -13,8 +13,29 @@
       <h1 style="color: #0f172a; margin: 0; font-weight: 800; font-size: 2.2em; letter-spacing: -0.5px;">📋 Presupuestos Base</h1>
       <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1.05em;">Diseña y guarda paquetes de servicios estándar para enviárselos al instante a tus clientes.</p>
     </div>
-    <%= link_to '➕ Nuevo Presupuesto Base', new_preset_budget_path, style: "background: #2563eb; color: white; padding: 14px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); transition: 0.2s;", onmouseover: "this.style.background='#1d4ed8'", onmouseout: "this.style.background='#2563eb'" %>
+    <% unless current_user.client? %>
+      <%= link_to '➕ Nuevo Presupuesto Base', new_preset_budget_path, style: "background: #2563eb; color: white; padding: 14px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); transition: 0.2s;", onmouseover: "this.style.background='#1d4ed8'", onmouseout: "this.style.background='#2563eb'" %>
+    <% end %>
   </div>
+
+  <% if current_user.client? %>
+    <div style="background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%); padding: 30px; border-radius: 20px; color: white; margin-bottom: 35px; box-shadow: 0 10px 20px rgba(59, 130, 246, 0.15); display: flex; align-items: center; gap: 25px; flex-wrap: wrap;">
+      <div style="font-size: 3.5em;">✨</div>
+      <div style="flex: 1; min-width: 250px;">
+        <h3 style="margin: 0; font-size: 1.3em; font-weight: 800; font-family: 'Inter', sans-serif;">¡Potencia tu evento con adicionales increíbles!</h3>
+        <p style="margin: 8px 0 0 0; font-size: 0.95em; opacity: 0.9; line-height: 1.5;">
+          Contamos con equipos de efectos especiales de última generación y horas extra opcionales para hacer tu fiesta única.
+          <strong style="color: #6ee7b7;">Pregunta a tu organizador por nuestras máquinas de sparkulas, subwoofers premium y puentes de luces robóticas.</strong>
+        </p>
+      </div>
+      <div>
+        <% wa_msg = "Hola! Estoy revisando los presupuestos base de la empresa y me gustaría cotizar algunos adicionales para mi evento." %>
+        <a href="https://wa.me/584140000000?text=<%= ERB::Util.url_encode(wa_msg) %>" target="_blank" style="background: #10b981; color: white; padding: 14px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
+          💬 Consultar Adicionales
+        </a>
+      </div>
+    </div>
+  <% end %>
 
   <%# --- GRID DE TARJETAS --- %>
   <% if @preset_budgets.any? %>
@@ -50,10 +71,12 @@
             <div style="display: flex; gap: 8px; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-wrap: wrap;">
               <%= link_to '🔍 Detalles', preset_budget_path(budget), style: "flex: 1; min-width: 80px; text-align: center; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 8px 0; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s;", onmouseover: "this.style.background='#dbeafe'", onmouseout: "this.style.background='#eff6ff'" %>
               <%= link_to '🖨️ PDF', print_preset_budget_path(budget), target: '_blank', style: "flex: 1; min-width: 80px; text-align: center; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 8px 0; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s;", onmouseover: "this.style.background='#d1fae5'", onmouseout: "this.style.background='#ecfdf5'" %>
-              <%= link_to '⚙️', edit_preset_budget_path(budget), style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center;", title: "Editar" %>
-              
-              <%= button_to preset_budget_path(budget), method: :delete, data: { turbo_confirm: "¿Estás seguro de eliminar este presupuesto base?" }, style: "background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; padding: 8px 12px; border-radius: 8px; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer;", title: "Eliminar" do %>
-                🗑️
+              <% unless current_user.client? %>
+                <%= link_to '⚙️', edit_preset_budget_path(budget), style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center;", title: "Editar" %>
+                
+                <%= button_to preset_budget_path(budget), method: :delete, data: { turbo_confirm: "¿Estás seguro de eliminar este presupuesto base?" }, style: "background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; padding: 8px 12px; border-radius: 8px; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer;", title: "Eliminar" do %>
+                  🗑️
+                <% end %>
               <% end %>
             </div>
           </div>

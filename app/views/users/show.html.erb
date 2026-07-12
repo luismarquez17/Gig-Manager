@@ -1,0 +1,104 @@
+<div style="max-width: 650px; margin: 40px auto; font-family: 'Inter', 'Segoe UI', sans-serif; padding: 0 20px;">
+  
+  <div style="margin-bottom: 25px;">
+    <% if current_user.leader? %>
+      <%= link_to '⬅ Volver a Usuarios', users_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; margin-bottom: 10px;" %>
+    <% else %>
+      <%= link_to '⬅ Volver al Inicio', root_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; display: inline-block; margin-bottom: 10px;" %>
+    <% end %>
+  </div>
+
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 10px 30px rgba(0,0,0,0.04); overflow: hidden;">
+    
+    <%# --- ENCABEZADO CON GRADIENTE --- %>
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); padding: 40px 30px; text-align: center; color: white; position: relative;">
+      
+      <%# Avatar %>
+      <div style="margin-bottom: 15px; display: flex; justify-content: center;">
+        <% if @user.avatar.attached? %>
+          <div style="width: 110px; height: 110px; border-radius: 50%; overflow: hidden; border: 4px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
+            <%= image_tag @user.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+          </div>
+        <% else %>
+          <div style="width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; font-size: 2.5em; font-weight: 800; color: white; border: 4px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+            <%= @user.display_name[0].upcase %>
+          </div>
+        <% end %>
+      </div>
+
+      <h1 style="margin: 0; font-size: 1.8em; font-weight: 800; font-family: 'Inter', sans-serif;"><%= @user.display_name %></h1>
+      <p style="margin: 5px 0 0 0; opacity: 0.8; font-size: 0.95em;"><%= @user.email %></p>
+
+      <%# Badge de Rol %>
+      <span style="display: inline-block; margin-top: 15px; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 4px 14px; border-radius: 99px; font-size: 0.8em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+        <%= @user.role.capitalize %>
+      </span>
+
+      <%# Botón de Editar si es su perfil o líder %>
+      <% if current_user.leader? || current_user == @user %>
+        <%= link_to edit_user_path(@user), style: "position: absolute; top: 20px; right: 20px; text-decoration: none; background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 12px; border-radius: 10px; color: white; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; gap: 6px;" do %>
+          ✏️ Editar Perfil
+        <% end %>
+      <% end %>
+
+    </div>
+
+    <%# --- CONTENIDO --- %>
+    <div style="padding: 35px 30px;">
+      
+      <%# Especialidad (Solo si tiene) %>
+      <% if @user.specialty.present? %>
+        <div style="margin-bottom: 25px;">
+          <h3 style="margin: 0 0 8px 0; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🎸 Especialidad o Rol en el Equipo</h3>
+          <div style="font-size: 1.1em; color: #0f172a; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; padding: 8px 16px; border-radius: 12px;">
+            <span>✨</span> <%= @user.specialty %>
+          </div>
+        </div>
+      <% end %>
+
+      <%# Biografía (Solo si tiene) %>
+      <% if @user.bio.present? %>
+        <div style="margin-bottom: 25px; border-bottom: 1px solid #f1f5f9; padding-bottom: 20px;">
+          <h3 style="margin: 0 0 8px 0; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📝 Biografía / Mensaje</h3>
+          <p style="margin: 0; color: #334155; line-height: 1.6; font-size: 0.95em; white-space: pre-line;">
+            <%= @user.bio %>
+          </p>
+        </div>
+      <% end %>
+
+      <%# --- SECCIÓN CLIENTE (Si corresponde) --- %>
+      <% if @user.client? && @user.client.present? %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-top: 20px;">
+          <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 1em; font-weight: bold; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; display: flex; align-items: center; gap: 8px;">
+            <span>👤</span> Información de Cliente Asociado
+          </h3>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+            <div>
+              <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Teléfono</span>
+              <p style="margin: 4px 0 0 0; font-weight: bold; color: #334155;"><%= @user.client.phone.presence || '---' %></p>
+            </div>
+            <div>
+              <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Prioridad</span>
+              <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                <% color_map = { "baja" => "#ef4444", "media" => "#f59e0b", "alta" => "#10b981" } %>
+                <span style="display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: <%= color_map[@user.client.priority] || '#64748b' %>;"></span>
+                <p style="margin: 0; font-weight: bold; color: #334155; text-transform: capitalize;"><%= @user.client.priority %></p>
+              </div>
+            </div>
+            <div style="grid-column: span 2;">
+              <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Estadísticas</span>
+              <p style="margin: 4px 0 0 0; color: #475569; font-size: 0.9em;">
+                Presupuesto promedio: <strong><%= number_to_currency(@user.client.average_budget, unit: '$') %></strong> <br>
+                Total invertido en shows: <strong><%= number_to_currency(@user.client.total_spent, unit: '$') %></strong>
+              </p>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
+
+  </div>
+
+</div>

@@ -13,3 +13,18 @@ two:
   email: two@example.com
   encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
   role: 1
+
+musician:
+  email: musician@example.com
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  role: 3
+  name: "Pepito Musico"
+  specialty: "Saxofón"
+  bio: "Toco jazz y blues."
+
+client_user:
+  email: client@example.com
+  encrypted_password: <%= Devise::Encryptor.digest(User, 'password123') %>
+  role: 0
+  client: one
+  name: "Luis Cliente"

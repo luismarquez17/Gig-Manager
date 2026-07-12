@@ -44,6 +44,7 @@
               <th>Payer</th>
               <th>Categoría</th>
               <th>Notas</th>
+              <th class="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -73,6 +74,12 @@
                 </td>
                 <td style="max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<%= p.notes %>">
                   <%= p.notes.presence || '---' %>
+                </td>
+                <td class="text-center">
+                  <div style="display: flex; gap: 8px; justify-content: center;">
+                    <%= link_to '✏️', edit_gig_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', title: 'Editar pago' %>
+                    <%= button_to '🗑️', gig_payment_path(p), method: :delete, data: { turbo_confirm: '¿Eliminar este pago? Esta acción no se puede deshacer.' }, class: 'btn-main py-1 px-2 fs-7', style: 'background:#fff1f2; color:#e11d48; border:1px solid #fecaca; cursor:pointer;', title: 'Eliminar pago' %>
+                  </div>
                 </td>
               </tr>
             <% end %>

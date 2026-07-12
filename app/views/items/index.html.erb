@@ -27,7 +27,7 @@
 
         <div style="flex: 1; min-width: 200px;">
           <%= f.select :category, 
-              Item::CATEGORIES, 
+              Item.categories, 
               { include_blank: "📂 Todas las Categorías", selected: params[:category] }, 
               { onchange: "this.form.submit()", style: "width: 100%; padding: 16px; border: 2px solid #f1f5f9; border-radius: 16px; background: white; cursor: pointer; font-weight: 500; color: #475569;" } %>
         </div>
@@ -62,6 +62,22 @@
       </div>
     <% end %>
   </div>
+
+  <%# --- CREAR NUEVA CATEGORÍA (Líderes) --- %>
+  <% if current_user.leader? %>
+    <div style="background: #ffffff; padding: 20px 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
+      <div>
+        <h3 style="margin: 0; font-size: 1em; color: #0f172a; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+          <span>📂</span> Administrar Categorías
+        </h3>
+        <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #64748b;">Agrega nuevas categorías personalizadas al inventario.</p>
+      </div>
+      <%= form_with model: Category.new, url: categories_path, local: true, style: "display: flex; gap: 10px; align-items: center;" do |f| %>
+        <%= f.text_field :name, placeholder: "Ej: Cosas adicionales", required: true, style: "padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; outline: none;" %>
+        <%= f.submit "＋ Agregar Categoría", style: "background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; transition: 0.2s;", onmouseover: "this.style.background='#059669'", onmouseout: "this.style.background='#10b981'" %>
+      <% end %>
+    </div>
+  <% end %>
 
   <%# --- GRID DE TARJETAS --- %>
   <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px;">

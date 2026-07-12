@@ -36,6 +36,13 @@ class GigsController < ApplicationController
       @gigs = @gigs.where(clients: { priority: params[:priority].downcase })
     end
 
+    # Filtro por Fecha (Próximos vs Pasados)
+    if params[:date_filter] == "upcoming"
+      @gigs = @gigs.where("gigs.date >= ?", Date.today)
+    elsif params[:date_filter] == "past"
+      @gigs = @gigs.where("gigs.date < ?", Date.today)
+    end
+
     # 4. Lógica de Ordenamiento Dinámico
     case params[:sort]
     when "monto_desc"

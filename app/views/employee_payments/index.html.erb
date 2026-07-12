@@ -67,6 +67,7 @@
               <th>Show</th>
               <th>Método</th>
               <th>Notas</th>
+              <th class="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -84,6 +85,12 @@
                 <td><%= p.gig&.client&.name %> - <%= p.gig&.date %></td>
                 <td><%= p.payment_method %></td>
                 <td><%= p.notes %></td>
+                <td class="text-center">
+                  <div style="display: flex; gap: 8px; justify-content: center;">
+                    <%= link_to '✏️', edit_employee_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', title: 'Editar' %>
+                    <%= button_to '🗑️', employee_payment_path(p), method: :delete, data: { turbo_confirm: '¿Eliminar este pago? Esta acción no se puede deshacer.' }, class: 'btn-main py-1 px-2 fs-7', style: 'background:#fff1f2; color:#e11d48; border:1px solid #fecaca; cursor:pointer;', title: 'Eliminar' %>
+                  </div>
+                </td>
               </tr>
             <% end %>
           </tbody>

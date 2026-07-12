@@ -1,6 +1,7 @@
 class FundExpense < ApplicationRecord
   belongs_to :fund_allocation
   belongs_to :maintenance_record, optional: true
+  belongs_to :employee_payment, optional: true
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
 

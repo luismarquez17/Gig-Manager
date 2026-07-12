@@ -25,4 +25,15 @@ class PortalsControllerTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_equal false, JSON.parse(response.body)["success"]
   end
+
+  test "should show worker profile when assigned to the gig" do
+    get public_portal_worker_url(token: @gig.portal_token, worker_id: users(:one).id)
+    assert_response :success
+    assert_select "h1", text: users(:one).display_name
+  end
+
+  test "should not show worker profile when not assigned to the gig" do
+    get public_portal_worker_url(token: @gig.portal_token, worker_id: users(:two).id)
+    assert_response :not_found
+  end
 end
