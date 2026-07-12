@@ -123,6 +123,9 @@
           </svg>
           Enviar por WhatsApp
         </a>
+        <%= link_to print_contract_gig_path(@gig), target: "_blank", style: "background: #f1f5f9; color: #475569; padding: 10px 18px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: inline-flex; align-items: center; justify-content: center; transition: 0.2s;" do %>
+          🖨️ Imprimir Físico
+        <% end %>
       </div>
 
       <div style="border-left: 1px dashed #e2e8f0; padding-left: 25px;">
@@ -185,7 +188,7 @@
 
           <div style="display:flex; gap:12px; margin-top: 8px;">
             <div style="flex:1; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e6eef8;">
-              <div style="font-size:0.85em; color:#64748b; font-weight:700;">Pagos a Staff</div>
+              <div style="font-size:0.85em; color:#64748b; font-weight:700;">Pagos a Agrupación</div>
               <div style="font-size:1.1em; font-weight:800; color:#ef4444;"><%= number_with_precision(@gig.total_employee_payouts || 0, precision: 2) %> <%= @gig.currency %></div>
             </div>
             <div style="flex:1; background:#f8fafc; padding:10px; border-radius:8px; border:1px solid #e6eef8;">

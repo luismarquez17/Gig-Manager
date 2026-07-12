@@ -3,7 +3,7 @@ class GigPayment < ApplicationRecord
 
   CATEGORIES = %w[reinvest waste other].freeze
 
-  validates :amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :category, inclusion: { in: CATEGORIES }, allow_blank: true
 
   validate :amount_cannot_exceed_agreed_amount

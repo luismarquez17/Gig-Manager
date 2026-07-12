@@ -1,6 +1,6 @@
 class GigsController < ApplicationController
   before_action :require_leader!, except: [:show, :load_in_checklist, :my]
-  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist]
+  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract]
   before_action :check_gig_assignment, only: [:show, :load_in_checklist]
 
   def check_gig_assignment
@@ -113,6 +113,11 @@ class GigsController < ApplicationController
     gig_ids = @gigs.pluck(:id)
     @pending_gig_items = GigItem.where(gig_id: gig_ids).where(loaded_quantity: 0)
     @items_to_load_count = @pending_gig_items.sum(:quantity)
+  end
+
+  def print_contract
+    @gig = Gig.find(params[:id])
+    render layout: false
   end
 
   def new

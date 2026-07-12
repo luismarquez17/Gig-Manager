@@ -60,13 +60,13 @@
           <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
             <div style="color: #64748b; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Nómina reservada</div>
             <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= number_to_currency(@total_payroll_reserved, unit: 'USD') %></h2>
-            <div style="color: #1d4ed8; font-size: 0.85em; margin-top: 8px;">Dinero apartado para pagos de staff</div>
+            <div style="color: #1d4ed8; font-size: 0.85em; margin-top: 8px;">Dinero apartado para pagos de agrupación</div>
           </div>
 
           <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
             <div style="color: #64748b; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">Nómina disponible</div>
             <h2 style="font-size: 2em; margin: 0; color: <%= @total_payroll_available >= 0 ? '#059669' : '#b45309' %>;"><%= number_to_currency(@total_payroll_available, unit: 'USD') %></h2>
-            <div style="color: #1d4ed8; font-size: 0.85em; margin-top: 8px;">Saldo libre en el fondo de Nómina / Staff</div>
+            <div style="color: #1d4ed8; font-size: 0.85em; margin-top: 8px;">Saldo libre en el fondo de Nómina / Agrupación</div>
           </div>
 
           <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">

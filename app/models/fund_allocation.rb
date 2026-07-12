@@ -7,7 +7,7 @@ class FundAllocation < ApplicationRecord
     repairs: 'Fondo de Reparaciones',
     savings: 'Ahorros',
     transport: 'Transporte',
-    payroll: 'Nómina / Staff',
+    payroll: 'Nómina / Agrupación',
     other: 'Otro'
   }.freeze
 

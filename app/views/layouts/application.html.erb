@@ -62,7 +62,7 @@
           <%# Navegación %>
           <nav class="sidebar-nav">
             <%= link_to root_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'dashboard'}" do %>
-              <span class="icon">🏠</span> <span>Inicio</span>
+              <span class="icon">🏠</span> <span>Inicio (Dashboard)</span>
             <% end %>
 
             <% if current_user.leader? %>
@@ -77,6 +77,7 @@
               <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
                 <span class="icon">📄</span> <span>Presupuestos Base</span>
               <% end %>
+
 
               <%= link_to gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name != 'my'}" do %>
                 <span class="icon">🎸</span> <span>Gigs / Eventos</span>
@@ -115,7 +116,7 @@
               <% end %>
 
             <% elsif current_user.staff? %>
-              <div class="nav-header">Staff</div>
+              <div class="nav-header">Agrupación</div>
               <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
                 <span class="icon">🎫</span> <span>Mis eventos</span>
               <% end %>

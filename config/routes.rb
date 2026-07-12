@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   devise_for :users
   
   root "pages#dashboard"
+
   get '/availability', to: 'pages#availability', as: 'availability_dashboard'
   get '/financials', to: 'pages#financials', as: 'financials_dashboard'
 
@@ -27,6 +28,7 @@ Rails.application.routes.draw do
       get :load_in_checklist
       post :add_kit
       post :assign_staff
+      get :print_contract
     end
     resources :gig_timeline_items, only: [:create, :destroy]
     resources :gig_items, only: [:create, :destroy]
