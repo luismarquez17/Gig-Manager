@@ -1,42 +1,170 @@
-<div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
-  <header style="margin-bottom: 18px;">
-    <h1 style="font-size: 1.6em; margin: 0;">Mis eventos asignados</h1>
-    <p style="color: #64748b; margin-top: 6px;">Lista de eventos a los que te han asignado. Accede al checklist para preparar la carga.</p>
-  </header>
+<div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif; color: #1e293b;">
 
-  <% if @gigs.present? %>
-    <div style="display: grid; gap: 12px;">
-      <% @gigs.each do |gig| %>
-        <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; display:flex; justify-content: space-between; align-items: center;">
-          <div>
-            <div style="font-weight: 700;"><%= gig.client&.name || 'Cliente desconocido' %> — <span style="color:#64748b; font-weight:600;"><%= gig.date&.strftime('%d %b %Y') %></span></div>
-            <div style="color:#94a3b8; margin-top:6px; font-size:0.95em;"><%= truncate(gig.details || '', length: 140) %></div>
-          </div>
-          <div style="display:flex; gap:8px;">
-            <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background:#f8fafc; border:1px solid #e2e8f0; padding:8px 10px; border-radius:8px; font-weight:700; text-decoration:none; color:#0f172a;' %>
-            <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background:#2563eb; color:white; padding:8px 10px; border-radius:8px; font-weight:700; text-decoration:none;' %>
-          </div>
-        </div>
+  <%# --- HEADER --- %>
+  <header style="margin-bottom: 28px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 style="font-size: 2em; font-weight: 800; margin: 0;
+          <% if current_user.musician? %>
+            background: linear-gradient(135deg, #1e1b4b, #4338ca); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+          <% else %>
+            color: #0f172a;
+          <% end %>
+        ">
+          <% if current_user.musician? %>
+            🎸 Mis Shows
+          <% else %>
+            🎫 Mis Eventos Asignados
+          <% end %>
+        </h1>
+        <p style="color: #64748b; margin-top: 6px; font-size: 1em;">
+          <% if current_user.musician? %>
+            Lista de shows en los que participas. Consulta fecha, lugar y detalles de cada uno.
+          <% else %>
+            Eventos a los que te han asignado. Accede al checklist para preparar la carga.
+          <% end %>
+        </p>
+      </div>
+      <%= link_to root_path, style: "text-decoration: none; padding: 10px 18px; background: #f1f5f9; border-radius: 10px; color: #475569; font-weight: 700; font-size: 0.9em; align-self: flex-start;" do %>
+        ← Dashboard
       <% end %>
     </div>
-  <% else %>
-    <div style="background: white; padding: 18px; border-radius: 10px; border: 1px solid #eef2ff; color:#64748b;">No tienes eventos asignados.</div>
+  </header>
+
+  <%# --- STATS BAR --- %>
+  <% upcoming_count = @gigs.select { |g| g.date >= Date.today rescue false }.count %>
+  <% past_count = @gigs.count - upcoming_count %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 14px; margin-bottom: 24px;">
+    <div style="background: white; border-radius: 14px; padding: 16px 18px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+      <div style="font-size: 0.75em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Total</div>
+      <div style="font-size: 2em; font-weight: 900; color: #1e293b; margin-top: 2px;"><%= @gigs.count %></div>
+    </div>
+    <div style="background: linear-gradient(135deg, #eef2ff, #e0e7ff); border-radius: 14px; padding: 16px 18px; border: 1px solid #c7d2fe;">
+      <div style="font-size: 0.75em; font-weight: 700; color: #4338ca; text-transform: uppercase; letter-spacing: 0.05em;">Próximos</div>
+      <div style="font-size: 2em; font-weight: 900; color: #4f46e5; margin-top: 2px;"><%= upcoming_count %></div>
+    </div>
+    <div style="background: white; border-radius: 14px; padding: 16px 18px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+      <div style="font-size: 0.75em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Realizados</div>
+      <div style="font-size: 2em; font-weight: 900; color: #64748b; margin-top: 2px;"><%= past_count %></div>
+    </div>
+    <% if current_user.staff? %>
+      <div style="background: white; border-radius: 14px; padding: 16px 18px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.03);">
+        <div style="font-size: 0.75em; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.05em;">Por cargar</div>
+        <div style="font-size: 2em; font-weight: 900; color: <%= @items_to_load_count.to_i > 0 ? '#d97706' : '#16a34a' %>; margin-top: 2px;"><%= @items_to_load_count.to_i %></div>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- UPCOMING SHOWS --- %>
+  <% upcoming_gigs = @gigs.select { |g| g.date >= Date.today rescue false } %>
+  <% past_gigs     = @gigs.select { |g| g.date < Date.today rescue false } %>
+
+  <% if upcoming_gigs.any? %>
+    <section style="margin-bottom: 28px;">
+      <h2 style="font-size: 1em; font-weight: 800; color: #4f46e5; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+        <span>⚡</span> Próximos
+      </h2>
+      <div style="display: grid; gap: 12px;">
+        <% upcoming_gigs.each do |gig| %>
+          <div style="background: white; border-radius: 14px; border: 1px solid #e0e7ff; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(79,70,229,0.06); transition: transform 0.15s, box-shadow 0.15s;"
+               onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(79,70,229,0.12)'"
+               onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(79,70,229,0.06)'">
+            <div style="flex: 1; min-width: 0;">
+              <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 6px;">
+                <span style="font-weight: 800; font-size: 1.05em; color: #0f172a;"><%= gig.client&.name || 'Cliente desconocido' %></span>
+                <% days_left = (gig.date - Date.today).to_i %>
+                <span style="background: <%= days_left <= 3 ? '#fee2e2' : '#e0e7ff' %>; color: <%= days_left <= 3 ? '#b91c1c' : '#4338ca' %>; padding: 2px 8px; border-radius: 9999px; font-size: 0.75em; font-weight: 800;">
+                  <%= days_left == 0 ? '¡Hoy!' : days_left == 1 ? 'Mañana' : "En #{days_left} días" %>
+                </span>
+              </div>
+              <div style="display: flex; flex-wrap: wrap; gap: 14px; color: #64748b; font-size: 0.88em;">
+                <span>📅 <%= gig.date&.strftime('%d de %B de %Y') %></span>
+                <% if gig.start_time.present? %>
+                  <span>⏰ <%= gig.start_time.strftime('%I:%M %p') %></span>
+                <% end %>
+                <% if gig.location.present? %>
+                  <span>📍 <%= truncate(gig.location, length: 40) %></span>
+                <% end %>
+              </div>
+              <% if gig.details.present? %>
+                <div style="margin-top: 6px; color: #94a3b8; font-size: 0.85em;"><%= truncate(gig.details, length: 100) %></div>
+              <% end %>
+            </div>
+            <div style="display: flex; gap: 8px; flex-shrink: 0;">
+              <% if current_user.staff? %>
+                <%= link_to 'Checklist', load_in_checklist_gig_path(gig),
+                    style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #475569; font-weight: 700; font-size: 0.85em;' %>
+              <% end %>
+              <%= link_to 'Ver', gig_path(gig),
+                  style: 'background: #4f46e5; color: white; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85em;' %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
   <% end %>
 
-  <%# -- Sección Pendientes (anclable) -- %>
-  <section id="pendientes" style="margin-top: 22px;">
-    <h2 style="font-size: 1.1em; margin-bottom: 8px; color: #0f172a; font-weight: 800;">Pendientes de carga</h2>
-    <% if @pending_gig_items.present? %>
-      <div style="background: white; padding: 14px; border-radius: 10px; border: 1px solid #eef2ff;">
-        <p style="margin: 0 0 8px 0; color: #475569; font-weight: 700;"><%= @items_to_load_count %> unidades por cargar en tus eventos asignados</p>
-        <ul style="margin: 8px 0 0 16px; color: #64748b;">
+  <%# --- PAST SHOWS --- %>
+  <% if past_gigs.any? %>
+    <section>
+      <h2 style="font-size: 1em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+        <span>📋</span> Realizados
+      </h2>
+      <div style="display: grid; gap: 10px;">
+        <% past_gigs.each do |gig| %>
+          <div style="background: #fafbfc; border-radius: 12px; border: 1px solid #f1f5f9; padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-weight: 700; color: #475569; font-size: 0.95em;"><%= gig.client&.name || 'Cliente desconocido' %></div>
+              <div style="display: flex; flex-wrap: wrap; gap: 12px; color: #94a3b8; font-size: 0.84em; margin-top: 4px;">
+                <span>📅 <%= gig.date&.strftime('%d %b %Y') %></span>
+                <% if gig.location.present? %>
+                  <span>📍 <%= truncate(gig.location, length: 35) %></span>
+                <% end %>
+              </div>
+            </div>
+            <%= link_to 'Ver', gig_path(gig),
+                style: 'background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82em; flex-shrink: 0;' %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# --- EMPTY STATE --- %>
+  <% if @gigs.empty? %>
+    <div style="background: white; padding: 50px 30px; border-radius: 16px; border: 1px solid #f1f5f9; text-align: center; color: #94a3b8;">
+      <div style="font-size: 3em; margin-bottom: 12px;">🎸</div>
+      <div style="font-size: 1.1em; font-weight: 700; color: #64748b; margin-bottom: 6px;">
+        <% if current_user.musician? %>Sin shows asignados<% else %>Sin eventos asignados<% end %>
+      </div>
+      <div style="font-size: 0.9em;">
+        <% if current_user.musician? %>
+          Aún no has sido asignado a ningún show.
+        <% else %>
+          No tienes eventos asignados por ahora.
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# --- PENDING LOAD SECTION (staff only) --- %>
+  <% if current_user.staff? && @pending_gig_items.present? %>
+    <section id="pendientes" style="margin-top: 28px;">
+      <h2 style="font-size: 1em; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.06em; margin: 0 0 12px 0; display: flex; align-items: center; gap: 6px;">
+        ⚠️ Pendientes de carga
+      </h2>
+      <div style="background: white; padding: 18px; border-radius: 12px; border: 1px solid #fef3c7;">
+        <p style="margin: 0 0 10px 0; color: #b45309; font-weight: 700;"><%= @items_to_load_count %> unidades por cargar en tus eventos próximos</p>
+        <ul style="margin: 0 0 0 16px; color: #64748b; display: flex; flex-direction: column; gap: 6px;">
           <% @pending_gig_items.includes(:item, :gig).limit(10).each do |gi| %>
-            <li style="margin-bottom:6px;"><strong><%= gi.item&.name || 'Ítem' %></strong> — <%= gi.quantity %> (Evento: <%= link_to (gi.gig.client&.name || 'cliente'), gig_path(gi.gig) %>)</li>
+            <li>
+              <strong><%= gi.item&.name || 'Ítem' %></strong> — <%= gi.quantity %> uds.
+              <span style="color: #94a3b8;">(<%= link_to gi.gig.client&.name || 'cliente', gig_path(gi.gig), style: 'color: #4f46e5; font-weight: 700;' %>)</span>
+            </li>
           <% end %>
         </ul>
       </div>
-    <% else %>
-      <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No hay ítems pendientes de carga.</div>
-    <% end %>
-  </section>
+    </section>
+  <% end %>
+
 </div>

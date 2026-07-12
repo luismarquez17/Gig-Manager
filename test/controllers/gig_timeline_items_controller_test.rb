@@ -45,4 +45,33 @@ class GigTimelineItemsControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to root_path
   end
+
+  test "should create gig_timeline_item for musician" do
+    assert_difference("GigTimelineItem.count") do
+      post gig_gig_timeline_items_url(@gig), params: {
+        gig_timeline_item: {
+          time: "07:00 PM",
+          title: "Soundcheck",
+          description: "Prueba de sonido músicos",
+          for_musician: "true"
+        }
+      }
+    end
+    assert_redirected_to gig_path(@gig)
+    item = GigTimelineItem.last
+    assert_equal true, item.for_musician
+  end
+
+  test "should create gig_timeline_item for client by default" do
+    assert_difference("GigTimelineItem.count") do
+      post gig_gig_timeline_items_url(@gig), params: {
+        gig_timeline_item: {
+          time: "08:00 PM",
+          title: "Boda inicio"
+        }
+      }
+    end
+    item = GigTimelineItem.last
+    assert_equal false, item.for_musician
+  end
 end

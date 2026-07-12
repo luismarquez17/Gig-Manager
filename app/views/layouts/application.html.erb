@@ -121,6 +121,27 @@
                 <span class="icon">🎫</span> <span>Mis eventos</span>
               <% end %>
 
+              <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
+                <span class="icon">💵</span> <span>Mis Pagos</span>
+              <% end %>
+
+              <%= link_to edit_user_registration_path, class: "sidebar-link #{'active' if current_page?(edit_user_registration_path)}" do %>
+                <span class="icon">👤</span> <span>Perfil</span>
+              <% end %>
+
+              <%= link_to help_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'help'}" do %>
+                <span class="icon">❓</span> <span>Ayuda</span>
+              <% end %>
+            <% elsif current_user.musician? %>
+              <div class="nav-header">Músico</div>
+              <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
+                <span class="icon">🎸</span> <span>Mis Shows</span>
+              <% end %>
+
+              <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
+                <span class="icon">💵</span> <span>Mis Pagos</span>
+              <% end %>
+
               <%= link_to edit_user_registration_path, class: "sidebar-link #{'active' if current_page?(edit_user_registration_path)}" do %>
                 <span class="icon">👤</span> <span>Perfil</span>
               <% end %>

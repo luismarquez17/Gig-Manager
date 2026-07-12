@@ -26,6 +26,6 @@ class GigTimelineItemsController < ApplicationController
   end
 
   def timeline_item_params
-    params.require(:gig_timeline_item).permit(:time, :title, :description, :position)
+    params.require(:gig_timeline_item).permit(:time, :title, :description, :position, :for_musician)
   end
 end

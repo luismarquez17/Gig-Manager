@@ -15,6 +15,16 @@
       </ul>
       <h3 style="color: #1e293b; margin-top: 25px;">Contacto</h3>
       <p style="color: #475569; line-height: 1.6;">Si tienes dudas sobre el presupuesto, pagos o la logística de tu evento, comunícate con el líder o productor encargado de tu show.</p>
+    <% elsif current_user.musician? %>
+      <h3 style="margin-top: 0; color: #1e293b;">Para Músicos 🎵</h3>
+      <ul style="line-height: 1.6; color: #475569; padding-left: 20px;">
+        <li style="margin-bottom: 10px;"><strong>Ver Shows Asignados:</strong> Accede a la pestaña "Mis Eventos" o a tu Panel de Músico para ver los próximos shows asignados, ubicaciones y detalles de contacto.</li>
+        <li style="margin-bottom: 10px;"><strong>Consultar tu Cronograma:</strong> Dentro del show asignado, verás tu cronograma exclusivo para músicos (horario de llegada recomendado, soundcheck y agenda del show).</li>
+        <li style="margin-bottom: 10px;"><strong>Mis Pagos y Saldos:</strong> Accede al menú "Mis Pagos" para llevar el control de tus honorarios, pagos recibidos y saldos pendientes por cobrar.</li>
+        <li style="margin-bottom: 10px;"><strong>Instrumento y Perfil:</strong> Modifica tu especialidad instrumental y biografía en la sección "Perfil" para facilitar tus futuras asignaciones.</li>
+      </ul>
+      <h3 style="color: #1e293b; margin-top: 25px;">Contacto</h3>
+      <p style="color: #475569; line-height: 1.6;">Si tienes dudas sobre tus horarios de llegada, vestimenta o el pago por un show, comunícate directamente con el <strong>Leader</strong> del evento.</p>
     <% else %>
       <h3 style="margin-top: 0; color: #1e293b;">Para Agrupación / Trabajadores</h3>
       <ul style="line-height: 1.6; color: #475569; padding-left: 20px;">

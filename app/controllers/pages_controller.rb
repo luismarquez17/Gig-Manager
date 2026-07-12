@@ -15,7 +15,7 @@ class PagesController < ApplicationController
       @total_payroll_spent = FundAllocation.joins(:fund_expenses).where(fund_type: 'payroll').sum('fund_expenses.amount').to_f
       @total_payroll_available = @total_payroll_reserved - @total_payroll_spent
       @total_funds_allocated = FundAllocation.sum(:amount).to_f
-      @total_pending_worker_payments = EmployeePayment.where('expected_amount > amount').sum('expected_amount - amount').to_f
+      @total_pending_worker_payments = EmployeePayment.where('employee_payments.expected_amount > employee_payments.amount').sum('employee_payments.expected_amount - employee_payments.amount').to_f
       @needed_payroll = [@total_pending_worker_payments - @total_payroll_available, 0].max
       @shows_with_payroll = Gig.joins(:fund_allocations).where(fund_allocations: { fund_type: 'payroll' }).distinct.count
     elsif current_user.staff?
@@ -30,6 +30,18 @@ class PagesController < ApplicationController
       @discrepant_gig_items = GigItem.where(gig_id: gig_ids)
                                      .where("loaded_quantity IS NOT NULL AND returned_quantity IS NOT NULL AND loaded_quantity != returned_quantity")
       @discrepant_count = @discrepant_gig_items.count
+
+      # Pagos y deudas del staff
+      @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
+      @total_owed = @employee_payments.sum("employee_payments.expected_amount - employee_payments.amount").to_f
+    elsif current_user.musician?
+      @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+      @proximos_gigs = current_user.assigned_gigs.includes(:client).where("date >= ?", Date.today).order(date: :asc)
+      @next_gig = @proximos_gigs.first
+      
+      # Pagos y deudas del músico
+      @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
+      @total_owed = @employee_payments.sum("employee_payments.expected_amount - employee_payments.amount").to_f
     else
       # Client
       @proximos_gigs = current_user.client ? current_user.client.gigs.where("date >= ?", Date.today).order(date: :asc).limit(5) : []
@@ -176,6 +188,18 @@ class PagesController < ApplicationController
 
     @net_gain_bs  = @total_received_bs - @total_invested_bs
     @roi_bs       = @total_invested_bs > 0 ? (@net_gain_bs / @total_invested_bs) * 100 : 0
+  end
+
+  def my_payments
+    unless current_user.staff? || current_user.musician?
+      redirect_to root_path, alert: "No tienes permiso para acceder a esta sección."
+      return
+    end
+
+    @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
+    @total_owed = @employee_payments.sum("employee_payments.expected_amount - employee_payments.amount").to_f
+    @total_expected = @employee_payments.sum("employee_payments.expected_amount").to_f
+    @total_paid = @employee_payments.sum("employee_payments.amount").to_f
   end
 
   def help

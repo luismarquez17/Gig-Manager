@@ -4,9 +4,9 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  enum role: { client: 0, staff: 1, leader: 2 }
+  enum role: { client: 0, staff: 1, leader: 2, musician: 3 }
 
-  scope :workers, -> { where(role: [:staff, :leader]) }
+  scope :workers, -> { where(role: [:staff, :leader, :musician]) }
 
   belongs_to :client, optional: true
 

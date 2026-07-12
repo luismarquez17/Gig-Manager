@@ -180,6 +180,8 @@
   </div>
 <% elsif current_user.staff? %>
   <%= render 'staff_dashboard' %>
+<% elsif current_user.musician? %>
+  <%= render 'musician_dashboard' %>
 <% else %>
   <div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
     

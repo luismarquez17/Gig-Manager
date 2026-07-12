@@ -94,7 +94,7 @@ class GigsController < ApplicationController
     @gig = Gig.find(params[:id])
     user = User.find_by(id: params[:staff_id])
 
-    if user && (user.staff? || user.leader?)
+    if user && (user.staff? || user.leader? || user.musician?)
       if @gig.staff_members.include?(user)
         redirect_to gig_path(@gig), alert: "Este trabajador ya está asignado."
       else

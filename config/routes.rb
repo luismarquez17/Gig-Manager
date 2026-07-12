@@ -72,5 +72,7 @@ Rails.application.routes.draw do
   resources :employee_payments, only: [:index, :new, :create]
   # Staff: view only their assigned gigs
   get '/my_gigs', to: 'gigs#my', as: 'my_gigs'
+  # Staff & Musician: view their payments and balances
+  get '/my_payments', to: 'pages#my_payments', as: 'my_payments'
   get '/help', to: 'pages#help', as: 'help'
 end

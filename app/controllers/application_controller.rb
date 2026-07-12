@@ -10,7 +10,7 @@ class ApplicationController < ActionController::Base
   end
 
   def require_staff_or_leader!
-    unless current_user&.leader? || current_user&.staff?
+    unless current_user&.leader? || current_user&.staff? || current_user&.musician?
       redirect_to root_path, alert: "No tienes permiso para acceder a esta sección."
     end
   end

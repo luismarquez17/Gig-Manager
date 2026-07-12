@@ -288,16 +288,54 @@
     </div>
   <% end %>
 
-  <%# --- CRONOGRAMA / TIMELINE DEL EVENTO --- %>
+<% if current_user.musician? %>
+  <%# --- CRONOGRAMA PARA EL MÚSICO --- %>
   <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
     <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.25em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-      📅 Cronograma y Agenda del Evento
+      🎵 Cronograma de Actividades para Músicos
+    </h3>
+    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
+      Este es el cronograma de actividades específico para los músicos asignados a este evento.
+    </p>
+
+    <% musician_items = @gig.gig_timeline_items.for_musician %>
+    <% if musician_items.any? %>
+      <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left;">
+          <thead>
+            <tr style="background: #f8fafc; font-size: 0.85em; font-weight: 800; color: #475569; text-transform: uppercase;">
+              <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Hora</th>
+              <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Título de Actividad</th>
+              <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Descripción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% musician_items.each do |item| %>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px 18px; font-weight: 700; color: #2563eb; white-space: nowrap;">⏰ <%= item.time %></td>
+                <td style="padding: 12px 18px; font-weight: 700; color: #1e293b;"><%= item.title %></td>
+                <td style="padding: 12px 18px; color: #475569; font-size: 0.9em;"><%= item.description %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de músicos para este show.</p>
+    <% end %>
+  </div>
+<% else %>
+  <%# --- CRONOGRAMA DEL CLIENTE (para Líder y Staff) --- %>
+  <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+    <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.25em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+      📅 Cronograma y Agenda del Evento (Cliente)
     </h3>
     <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
       Planifica el horario de las actividades del show. Estos hitos se actualizarán al instante en el portal del cliente.
     </p>
 
-    <% if @gig.gig_timeline_items.any? %>
+    <% client_items = @gig.gig_timeline_items.for_client %>
+    <% if client_items.any? %>
       <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
         <table style="width: 100%; border-collapse: collapse; text-align: left;">
           <thead>
@@ -311,7 +349,7 @@
             </tr>
           </thead>
           <tbody>
-            <% @gig.gig_timeline_items.each do |item| %>
+            <% client_items.each do |item| %>
               <tr style="border-bottom: 1px solid #f1f5f9;">
                 <td style="padding: 12px 18px; font-weight: 700; color: #7c3aed; white-space: nowrap;">⏰ <%= item.time %></td>
                 <td style="padding: 12px 18px; font-weight: 700; color: #1e293b;"><%= item.title %></td>
@@ -335,8 +373,9 @@
     <%# Formulario para añadir hito (solo líderes) %>
     <% if current_user.leader? %>
       <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
-        <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 0.95em; font-weight: bold; text-transform: uppercase;">➕ Agregar Nueva Actividad</h4>
+        <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 0.95em; font-weight: bold; text-transform: uppercase;">➕ Agregar Nueva Actividad al Cliente</h4>
         <%= form_with(model: [@gig, GigTimelineItem.new], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
+          <%= f.hidden_field :for_musician, value: false %>
           <div style="width: 120px;">
             <%= f.label :time, "Hora", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
             <%= f.text_field :time, placeholder: "e.g. 08:30 PM", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
@@ -357,7 +396,82 @@
     <% end %>
   </div>
 
-  <%# --- CHECKLIST DE INVENTARIO --- %>
+  <%# --- CRONOGRAMA PARA EL MÚSICO (Condicional para Líder y Staff si hay músicos asignados) --- %>
+  <% if @gig.staff_members.where(role: :musician).any? %>
+    <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+      <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.25em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+        🎵 Cronograma para el Músico
+      </h3>
+      <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
+        Planifica el cronograma interno para los músicos. El cliente no verá este cronograma en su portal.
+      </p>
+
+      <% musician_items = @gig.gig_timeline_items.for_musician %>
+      <% if musician_items.any? %>
+        <div style="border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; margin-bottom: 20px;">
+          <table style="width: 100%; border-collapse: collapse; text-align: left;">
+            <thead>
+              <tr style="background: #f8fafc; font-size: 0.85em; font-weight: 800; color: #475569; text-transform: uppercase;">
+                <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Hora</th>
+                <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Título de Actividad</th>
+                <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0;">Descripción</th>
+                <% if current_user.leader? %>
+                  <th style="padding: 12px 18px; border-bottom: 1px solid #e2e8f0; text-align: center;">Acciones</th>
+                <% end %>
+              </tr>
+            </thead>
+            <tbody>
+              <% musician_items.each do |item| %>
+                <tr style="border-bottom: 1px solid #f1f5f9;">
+                  <td style="padding: 12px 18px; font-weight: 700; color: #2563eb; white-space: nowrap;">⏰ <%= item.time %></td>
+                  <td style="padding: 12px 18px; font-weight: 700; color: #1e293b;"><%= item.title %></td>
+                  <td style="padding: 12px 18px; color: #475569; font-size: 0.9em;"><%= item.description %></td>
+                  <% if current_user.leader? %>
+                    <td style="padding: 12px 18px; text-align: center;">
+                      <%= button_to gig_gig_timeline_item_path(@gig, item), method: :delete, data: { turbo_confirm: "¿Remover actividad del cronograma del músico?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s;" do %>
+                        Eliminar
+                      <% end %>
+                    </td>
+                  <% end %>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de músicos para este show.</p>
+      <% end %>
+
+      <%# Formulario para añadir hito de músico (solo líderes) %>
+      <% if current_user.leader? %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
+          <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 0.95em; font-weight: bold; text-transform: uppercase;">➕ Agregar Nueva Actividad al Músico</h4>
+          <%= form_with(model: [@gig, GigTimelineItem.new], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
+            <%= f.hidden_field :for_musician, value: true %>
+            <div style="width: 120px;">
+              <%= f.label :time, "Hora", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+              <%= f.text_field :time, placeholder: "e.g. 07:30 PM", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+            </div>
+            <div style="flex: 1; min-width: 200px;">
+              <%= f.label :title, "Título", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+              <%= f.text_field :title, placeholder: "e.g. Soundcheck / Llegada", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+            </div>
+            <div style="flex: 2; min-width: 250px;">
+              <%= f.label :description, "Descripción (Opcional)", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+              <%= f.text_field :description, placeholder: "e.g. Traer vestimenta negra formal", style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+            </div>
+            <div>
+              <%= f.submit "Agregar", style: "background: #2563eb; color: white; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;" %>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+<% end %>
+
+  <%# --- CHECKLIST DE INVENTARIO (oculto para músicos) --- %>
+  <% unless current_user.musician? %>
   <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">
     
     <%# CABECERA CHECKLIST %>
@@ -605,6 +719,7 @@
       <% end %>
     </div>
   </div>
+  <% end %>
 
 </div>
 
