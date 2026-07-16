@@ -1,7 +1,7 @@
 class PresetBudgetsController < ApplicationController
-  # Permitimos que clientes externos vean el diseño de impresión/PDF o detalle del paquete si se les comparte el link
-  skip_before_action :authenticate_user!, only: [:show, :print]
-  before_action :require_leader!, only: [:new, :create, :edit, :update, :destroy]
+  # Permitimos que clientes vean el detalle del paquete, pero NO la vista de impresión/PDF
+  skip_before_action :authenticate_user!, only: [:show]
+  before_action :require_leader!, only: [:new, :create, :edit, :update, :destroy, :print]
   before_action :set_preset_budget, only: [:show, :edit, :update, :destroy, :print]
 
   def index

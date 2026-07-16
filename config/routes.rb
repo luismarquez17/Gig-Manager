@@ -3,6 +3,14 @@ Rails.application.routes.draw do
   
   root "pages#dashboard"
 
+  resources :shopping_items do
+    member do
+      patch :toggle_purchased
+      get   :add_to_inventory
+      post  :increment_inventory
+    end
+  end
+
   get '/availability', to: 'pages#availability', as: 'availability_dashboard'
   get '/financials', to: 'pages#financials', as: 'financials_dashboard'
 

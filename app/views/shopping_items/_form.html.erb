@@ -1,0 +1,174 @@
+<%# Partial: _form.html.erb %>
+<%= form_with model: shopping_item, local: true, style: "display: flex; flex-direction: column; gap: 22px;" do |f| %>
+
+  <% if shopping_item.errors.any? %>
+    <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 14px; padding: 16px 20px; color: #be123c;">
+      <strong>⚠️ Por favor corrige los siguientes errores:</strong>
+      <ul style="margin: 8px 0 0 18px; padding: 0;">
+        <% shopping_item.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <%# Fila 1: Nombre y Categoría %>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        🏷️ Nombre del artículo <span style="color: #e11d48;">*</span>
+      </label>
+      <%= f.text_field :name,
+          placeholder: "Ej: Cable XLR Balanceado 6m",
+          required: true,
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; outline: none; color: #0f172a; box-sizing: border-box; transition: border-color 0.2s;",
+          onfocus: "this.style.borderColor='#6366f1'",
+          onblur: "this.style.borderColor='#e2e8f0'" %>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        📂 Categoría
+      </label>
+      <%= f.select :category,
+          options_for_select(@categories, shopping_item.category),
+          { include_blank: "Seleccionar categoría..." },
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; background: white; color: #0f172a; box-sizing: border-box; cursor: pointer;" %>
+    </div>
+  </div>
+
+  <%# Fila 2: Razón y Para qué %>
+  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        ❓ ¿Por qué comprarlo?
+      </label>
+      <p style="font-size: 0.8em; color: #94a3b8; margin: 0 0 8px 0;">Explica la necesidad o problema actual.</p>
+      <%= f.text_area :reason,
+          rows: 3,
+          placeholder: "Ej: El cable XLR principal se dañó en el último show, produce ruido.",
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #fecdd3; border-radius: 12px; font-size: 0.95em; outline: none; color: #0f172a; box-sizing: border-box; resize: vertical; transition: border-color 0.2s;",
+          onfocus: "this.style.borderColor='#dc2626'",
+          onblur: "this.style.borderColor='#fecdd3'" %>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        🎯 ¿Para qué se usará?
+      </label>
+      <p style="font-size: 0.8em; color: #94a3b8; margin: 0 0 8px 0;">Describe el uso o evento específico.</p>
+      <%= f.text_area :purpose,
+          rows: 3,
+          placeholder: "Ej: Para el show del 20 de agosto en el Club Mónaco, conectar el bajo al mezclador.",
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e9d5ff; border-radius: 12px; font-size: 0.95em; outline: none; color: #0f172a; box-sizing: border-box; resize: vertical; transition: border-color 0.2s;",
+          onfocus: "this.style.borderColor='#7c3aed'",
+          onblur: "this.style.borderColor='#e9d5ff'" %>
+    </div>
+  </div>
+
+  <%# Fila 3: Precio, Moneda, Prioridad %>
+  <div style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; gap: 20px;">
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        💰 Precio estimado
+      </label>
+      <%= f.number_field :estimated_price,
+          step: 0.01,
+          min: 0,
+          placeholder: "0.00",
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; outline: none; color: #0f172a; box-sizing: border-box;" %>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        💱 Moneda
+      </label>
+      <%= f.select :currency,
+          options_for_select([["🇺🇸 USD", "USD"], ["🇻🇪 BS", "BS"], ["🇪🇺 EUR", "EUR"]], shopping_item.currency.presence || "USD"),
+          {},
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; background: white; color: #0f172a; box-sizing: border-box;" %>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        🔴 Prioridad
+      </label>
+      <div style="display: flex; gap: 8px;">
+        <% [["🔴 Alta", "high", "#ef4444", "#fee2e2"], ["🟡 Media", "medium", "#f59e0b", "#fef3c7"], ["🟢 Baja", "low", "#10b981", "#d1fae5"]].each do |label, val, color, bg| %>
+          <label style="flex: 1; cursor: pointer;">
+            <%= f.radio_button :priority, val, style: "display: none;", id: "priority_#{val}" %>
+            <div id="priority_label_<%= val %>"
+                 onclick="selectPriority('<%= val %>')"
+                 style="text-align: center; padding: 11px 4px; border-radius: 10px; font-size: 0.8em; font-weight: 700;
+                        border: 2px solid <%= shopping_item.priority.to_s == val ? color : '#e2e8f0' %>;
+                        background: <%= shopping_item.priority.to_s == val ? bg : 'white' %>;
+                        color: <%= shopping_item.priority.to_s == val ? color : '#94a3b8' %>;
+                        transition: all 0.15s;"
+                 data-val="<%= val %>"
+                 data-color="<%= color %>"
+                 data-bg="<%= bg %>">
+              <%= label %>
+            </div>
+          </label>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Fila 4: Notas y Estado %>
+  <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px; align-items: start;">
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        📝 Notas adicionales
+      </label>
+      <%= f.text_area :notes,
+          rows: 2,
+          placeholder: "Cualquier otra nota relevante...",
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95em; outline: none; color: #0f172a; box-sizing: border-box; resize: vertical;" %>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        ✅ Estado
+      </label>
+      <%= f.select :status,
+          options_for_select([["⏳ Pendiente", "pending"], ["✅ Comprado", "purchased"]], shopping_item.status),
+          {},
+          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; background: white; color: #0f172a; box-sizing: border-box;" %>
+    </div>
+  </div>
+
+  <%# Botones %>
+  <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 10px; border-top: 1px solid #f1f5f9; margin-top: 4px;">
+    <%= link_to "Cancelar", shopping_items_path,
+        style: "padding: 13px 28px; border-radius: 12px; font-weight: 700; font-size: 0.95em; color: #64748b; background: #f1f5f9; text-decoration: none; transition: all 0.2s;",
+        onmouseover: "this.style.background='#e2e8f0'",
+        onmouseout:  "this.style.background='#f1f5f9'" %>
+    <%= f.submit shopping_item.new_record? ? "🛒 Agregar a la Lista" : "💾 Guardar Cambios",
+        style: "padding: 13px 28px; border-radius: 12px; font-weight: 800; font-size: 0.95em; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); transition: all 0.2s;",
+        onmouseover: "this.style.transform='translateY(-1px)'; this.style.boxShadow='0 6px 20px rgba(99,102,241,0.45)'",
+        onmouseout:  "this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 14px rgba(99,102,241,0.35)'" %>
+  </div>
+
+<% end %>
+
+<script>
+  function selectPriority(val) {
+    // Update hidden radio
+    document.getElementById('priority_' + val).checked = true;
+
+    // Reset all labels
+    ['high', 'medium', 'low'].forEach(function(v) {
+      var lbl = document.getElementById('priority_label_' + v);
+      lbl.style.borderColor = '#e2e8f0';
+      lbl.style.background  = 'white';
+      lbl.style.color       = '#94a3b8';
+    });
+
+    // Activate selected
+    var selected = document.getElementById('priority_label_' + val);
+    selected.style.borderColor = selected.dataset.color;
+    selected.style.background  = selected.dataset.bg;
+    selected.style.color       = selected.dataset.color;
+  }
+</script>

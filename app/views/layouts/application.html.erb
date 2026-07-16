@@ -70,6 +70,10 @@
                 <span class="icon">📦</span> <span>Inventario</span>
               <% end %>
 
+              <%= link_to shopping_items_path, class: "sidebar-link #{'active' if controller_name == 'shopping_items'}" do %>
+                <span class="icon">🛒</span> <span>Lista de Compras</span>
+              <% end %>
+
               <%= link_to clients_path, class: "sidebar-link #{'active' if controller_name == 'clients'}" do %>
                 <span class="icon">👥</span> <span>Clientes</span>
               <% end %>

@@ -38,11 +38,17 @@ class ItemsController < ApplicationController
     @item.status ||= "Excelente"
 
     if @item.save
-      redirect_to items_path, notice: "Equipo registrado exitosamente."
+      if params[:from_shopping_item].present?
+        redirect_to shopping_items_path,
+          notice: "📦 ¡\"#{@item.name}\" añadido al inventario exitosamente! Ya está disponible para tus próximos gigs. 🎉"
+      else
+        redirect_to items_path, notice: "Equipo registrado exitosamente."
+      end
     else
       render :new, status: :unprocessable_entity
     end
   end
+
 
   def edit
   end

@@ -1,0 +1,350 @@
+<div style="max-width: 840px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+
+  <%# ── BANNER ── %>
+  <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+              border-radius: 28px; padding: 34px 44px; margin-bottom: 28px;
+              box-shadow: 0 12px 40px rgba(99,102,241,0.3); position: relative; overflow: hidden;">
+    <div style="position: absolute; top: -30px; right: -30px; width: 160px; height: 160px; background: rgba(255,255,255,0.06); border-radius: 50%;"></div>
+    <div style="position: relative; z-index: 1;">
+      <div style="font-size: 2.6em; margin-bottom: 10px;">🛍️</div>
+      <h1 style="color: white; margin: 0 0 8px 0; font-size: 1.75em; font-weight: 800; line-height: 1.2;">
+        ¡<%= @shopping_item.name %> marcado como comprado!
+      </h1>
+      <p style="color: rgba(255,255,255,0.82); margin: 0; font-size: 1em;">
+        ¿Deseas reflejar esta compra en el <strong style="color: white;">inventario</strong>?
+      </p>
+    </div>
+  </div>
+
+  <%# ── CONTEXTO ── %>
+  <% if @shopping_item.reason.present? || @shopping_item.purpose.present? %>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 24px;">
+      <% if @shopping_item.reason.present? %>
+        <div style="background: #fff5f5; border-left: 4px solid #f87171; border-radius: 14px; padding: 14px 18px;">
+          <div style="font-size: 0.7em; font-weight: 800; color: #dc2626; text-transform: uppercase; margin-bottom: 4px;">❓ Por qué se compró</div>
+          <p style="margin: 0; color: #374151; font-size: 0.88em; line-height: 1.5;"><%= @shopping_item.reason %></p>
+        </div>
+      <% end %>
+      <% if @shopping_item.purpose.present? %>
+        <div style="background: #f5f3ff; border-left: 4px solid #a78bfa; border-radius: 14px; padding: 14px 18px;">
+          <div style="font-size: 0.7em; font-weight: 800; color: #7c3aed; text-transform: uppercase; margin-bottom: 4px;">🎯 Para qué se usará</div>
+          <p style="margin: 0; color: #374151; font-size: 0.88em; line-height: 1.5;"><%= @shopping_item.purpose %></p>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# ══════════════════════════════════════════════════════ %>
+  <%# BLOQUE PRINCIPAL: ¿A qué equipo del inventario añadir? %>
+  <%# ══════════════════════════════════════════════════════ %>
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px 32px; margin-bottom: 22px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+
+    <h3 style="margin: 0 0 6px 0; color: #0f172a; font-size: 1.1em; font-weight: 800;">
+      📦 ¿A qué equipo del inventario corresponde?
+    </h3>
+    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.88em;">
+      Selecciona el equipo existente para sumarle una unidad, o elige "Crear nuevo" si es un equipo que aún no estaba registrado.
+    </p>
+
+    <%# Sugerencia automática si hay match por nombre %>
+    <% if @suggested_item %>
+      <div style="background: #fefce8; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.3em;">💡</span>
+        <span style="font-size: 0.88em; color: #92400e;">
+          Sugerencia automática: <strong><%= @suggested_item.name %></strong>
+          (<%= @suggested_item.quantity || 0 %> und. · <%= @suggested_item.category %>)
+          — <a href="javascript:void(0)" onclick="selectSuggested(<%= @suggested_item.id %>)"
+               style="color: #d97706; font-weight: 700; text-decoration: underline;">Usar esta sugerencia</a>
+        </span>
+      </div>
+    <% end %>
+
+    <%# Selector de equipo existente %>
+    <div style="margin-bottom: 20px;">
+      <label style="display: block; font-size: 0.78em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
+        Buscar equipo existente
+      </label>
+      <select id="existing-item-select"
+              onchange="onItemSelected(this)"
+              style="width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; background: white;
+                     font-size: 1em; color: #0f172a; box-sizing: border-box; cursor: pointer;
+                     transition: border-color 0.2s;"
+              onfocus="this.style.borderColor='#6366f1'"
+              onblur="this.style.borderColor='#e2e8f0'">
+        <option value="">— Selecciona un equipo del inventario —</option>
+        <option value="NEW" style="color: #6366f1; font-weight: 700;">➕ Crear como equipo nuevo</option>
+        <optgroup label="──────────────────────────────────">
+        <% @all_items.group_by(&:category).each do |category, items| %>
+          <optgroup label="📂 <%= category %>">
+            <% items.each do |item| %>
+              <option value="<%= item.id %>"
+                      data-quantity="<%= item.quantity || 0 %>"
+                      data-name="<%= item.name %>"
+                      data-status="<%= item.status %>"
+                      <%= 'selected' if @suggested_item&.id == item.id %>>
+                <%= item.name %> · <%= item.quantity || 0 %> und. · <%= item.status %>
+              </option>
+            <% end %>
+          </optgroup>
+        <% end %>
+        </optgroup>
+      </select>
+    </div>
+
+    <%# ── PANEL: Sumar unidades a equipo existente ── %>
+    <div id="increment-panel" style="display: none;">
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 16px; padding: 22px 26px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; justify-content: center; gap: 24px; flex-wrap: wrap;">
+          <div style="text-align: center;">
+            <div style="font-size: 0.72em; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Stock actual</div>
+            <div style="font-size: 2.4em; font-weight: 800; color: #475569;" id="stock-current">0</div>
+          </div>
+          <div style="font-size: 1.8em; color: #86efac;">＋</div>
+          <div style="text-align: center;">
+            <div style="font-size: 0.72em; color: #6366f1; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Compraste</div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <button type="button" onclick="changeAmount(-1)"
+                      style="width: 36px; height: 36px; border-radius: 10px; border: 2px solid #e2e8f0; background: white; font-size: 1.1em; cursor: pointer; font-weight: 800; color: #475569; transition: all 0.15s;"
+                      onmouseover="this.style.borderColor='#6366f1'; this.style.color='#6366f1'"
+                      onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569'">−</button>
+              <input type="number" id="amount-input" value="1" min="1" max="99"
+                     oninput="updatePreview()"
+                     style="width: 60px; text-align: center; font-size: 1.8em; font-weight: 800; color: #4f46e5;
+                            border: 2px solid #c7d2fe; border-radius: 12px; padding: 4px; outline: none; box-sizing: border-box;">
+              <button type="button" onclick="changeAmount(1)"
+                      style="width: 36px; height: 36px; border-radius: 10px; border: 2px solid #e2e8f0; background: white; font-size: 1.1em; cursor: pointer; font-weight: 800; color: #475569; transition: all 0.15s;"
+                      onmouseover="this.style.borderColor='#6366f1'; this.style.color='#6366f1'"
+                      onmouseout="this.style.borderColor='#e2e8f0'; this.style.color='#475569'">＋</button>
+            </div>
+          </div>
+          <div style="font-size: 1.8em; color: #86efac;">=</div>
+          <div style="text-align: center;">
+            <div style="font-size: 0.72em; color: #059669; font-weight: 700; text-transform: uppercase; margin-bottom: 6px;">Nuevo total</div>
+            <div style="font-size: 2.4em; font-weight: 800; color: #059669;" id="stock-new">1</div>
+          </div>
+        </div>
+      </div>
+
+      <%# Form oculto para enviar el increment %>
+      <%= form_with url: increment_inventory_shopping_item_path(@shopping_item), method: :post, local: true, id: "increment-form" do |f| %>
+        <input type="hidden" name="item_id" id="hidden-item-id" value="">
+        <input type="hidden" name="amount"  id="hidden-amount"  value="1">
+        <div style="display: flex; gap: 12px; justify-content: flex-end;">
+          <%= link_to shopping_items_path,
+              style: "padding: 12px 22px; border-radius: 12px; font-weight: 700; font-size: 0.9em; color: #64748b; background: #f1f5f9; text-decoration: none;" do %>
+            No, volver al carrito
+          <% end %>
+          <button type="submit" onclick="syncHiddenFields()"
+                  style="padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 0.9em;
+                         background: linear-gradient(135deg, #059669, #047857); color: white; border: none;
+                         cursor: pointer; box-shadow: 0 4px 14px rgba(5,150,105,0.3); transition: all 0.2s;"
+                  onmouseover="this.style.transform='translateY(-1px)'"
+                  onmouseout="this.style.transform='translateY(0)'">
+            📦 Añadir unidades al inventario
+          </button>
+        </div>
+      <% end %>
+    </div>
+
+    <%# ── PANEL: Crear equipo nuevo ── %>
+    <div id="new-item-panel" style="display: none;">
+      <div style="border-top: 2px dashed #e2e8f0; padding-top: 24px;">
+
+        <%= form_with model: @item, url: items_path, local: true do |f| %>
+          <% if @item.errors.any? %>
+            <div style="background: #fff1f2; border: 1px solid #fecdd3; border-radius: 14px; padding: 14px 18px; color: #be123c; margin-bottom: 20px;">
+              <strong>⚠️ Errores:</strong>
+              <ul style="margin: 8px 0 0 18px;">
+                <% @item.errors.full_messages.each do |msg| %><li><%= msg %></li><% end %>
+              </ul>
+            </div>
+          <% end %>
+
+          <%= hidden_field_tag :from_shopping_item, @shopping_item.id %>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;">
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">📂 Categoría</label>
+              <%= f.select :category, Item.categories,
+                  { prompt: "--- Selecciona ---", selected: @item.category },
+                  { id: "category-select", onchange: "updateFormLogic()",
+                    style: "width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; font-size: 0.95em; box-sizing: border-box;" } %>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🏷️ Nombre <span style="color: #e11d48;">*</span></label>
+              <%= f.text_field :name,
+                  style: "width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95em; color: #0f172a; box-sizing: border-box; outline: none;",
+                  onfocus: "this.style.borderColor='#6366f1'", onblur: "this.style.borderColor='#e2e8f0'" %>
+            </div>
+          </div>
+
+          <div id="sub-category-wrapper" style="display: none; margin-bottom: 18px; padding: 14px; border-radius: 12px; border-width: 1px; border-style: solid;">
+            <label id="sub-category-label" style="display: block; font-weight: bold; margin-bottom: 8px;"></label>
+            <div id="cables-dropdown" style="display: none;">
+              <%= f.select :sub_category_cable, Item::CABLE_TYPES,
+                  { prompt: "Tipo de cable..." }, { class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3498db; background: white;" } %>
+            </div>
+            <div id="lights-dropdown" style="display: none;">
+              <%= f.select :sub_category_light, ["Cabezal Móvil", "Par Led", "Estrobo", "Láser", "Máquina de Humo"],
+                  { prompt: "Tipo de luz..." }, { class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #a855f7; background: white;" } %>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-bottom: 18px;">
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">✨ Estado inicial</label>
+              <%= f.select :status,
+                  [["✅ Excelente", "Excelente"], ["⚠️ Operativo", "Operativo"], ["❌ Dañado", "Dañado"]],
+                  { selected: "Excelente" },
+                  { id: "status-select", onchange: "updateFormLogic()",
+                    style: "width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 12px; background: white; font-size: 0.95em; box-sizing: border-box;" } %>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🔢 Cantidad</label>
+              <%= f.number_field :quantity, value: 1, min: 1,
+                  style: "width: 100%; padding: 12px 14px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95em; box-sizing: border-box; outline: none;",
+                  onfocus: "this.style.borderColor='#6366f1'", onblur: "this.style.borderColor='#e2e8f0'" %>
+            </div>
+          </div>
+
+          <div id="damage-notice" style="display: none; margin-bottom: 16px; background: #fef2f2; border: 2px dashed #ef4444; padding: 12px; border-radius: 12px; text-align: center;">
+            <p style="margin: 0; color: #b91c1c; font-weight: 800; font-size: 0.82em; text-transform: uppercase;">⚠️ MARCADO CON TIRRO OBLIGATORIO</p>
+          </div>
+
+          <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #f1f5f9;">
+            <%= link_to shopping_items_path,
+                style: "padding: 12px 22px; border-radius: 12px; font-weight: 700; font-size: 0.9em; color: #64748b; background: #f1f5f9; text-decoration: none;" do %>
+              Volver al carrito sin guardar
+            <% end %>
+            <%= f.submit "📦 Crear en el inventario",
+                style: "padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 0.9em;
+                        background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none;
+                        cursor: pointer; box-shadow: 0 4px 14px rgba(99,102,241,0.3);",
+                onmouseover: "this.style.transform='translateY(-1px)'",
+                onmouseout:  "this.style.transform='translateY(0)'" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# ── PANEL: Omitir ── %>
+    <div id="skip-panel" style="text-align: right; margin-top: 16px;">
+      <%= link_to shopping_items_path,
+          style: "font-size: 0.88em; color: #94a3b8; text-decoration: none; font-weight: 600;" do %>
+        ✕ No añadir al inventario, volver al carrito
+      <% end %>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Inicializar con la sugerencia automática si hay una
+  <% if @suggested_item %>
+  document.addEventListener('DOMContentLoaded', function() {
+    selectSuggested(<%= @suggested_item.id %>);
+  });
+  <% end %>
+
+  function selectSuggested(itemId) {
+    var select = document.getElementById('existing-item-select');
+    select.value = String(itemId);
+    onItemSelected(select);
+  }
+
+  function onItemSelected(select) {
+    var val = select.value;
+    var incrementPanel = document.getElementById('increment-panel');
+    var newItemPanel   = document.getElementById('new-item-panel');
+    var skipPanel      = document.getElementById('skip-panel');
+
+    // Ocultar todo primero
+    incrementPanel.style.display = 'none';
+    newItemPanel.style.display   = 'none';
+
+    if (!val) {
+      // Sin selección: mostrar solo el link de omitir
+      skipPanel.style.display = 'block';
+      return;
+    }
+
+    skipPanel.style.display = 'none';
+
+    if (val === 'NEW') {
+      // Mostrar formulario de nuevo equipo
+      newItemPanel.style.display = 'block';
+      newItemPanel.style.opacity = '0';
+      newItemPanel.style.transition = 'opacity 0.25s ease';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() { newItemPanel.style.opacity = '1'; });
+      });
+      updateFormLogic();
+    } else {
+      // Mostrar panel de incrementar
+      var option  = select.options[select.selectedIndex];
+      var qty     = parseInt(option.dataset.quantity) || 0;
+
+      document.getElementById('stock-current').innerText = qty;
+      document.getElementById('amount-input').value = 1;
+      document.getElementById('stock-new').innerText = qty + 1;
+      document.getElementById('hidden-item-id').value = val;
+      document.getElementById('hidden-amount').value  = 1;
+
+      incrementPanel.style.display = 'block';
+      incrementPanel.style.opacity = '0';
+      incrementPanel.style.transition = 'opacity 0.25s ease';
+      requestAnimationFrame(function() {
+        requestAnimationFrame(function() { incrementPanel.style.opacity = '1'; });
+      });
+    }
+  }
+
+  function changeAmount(delta) {
+    var input = document.getElementById('amount-input');
+    var val = parseInt(input.value) + delta;
+    if (val < 1) val = 1;
+    if (val > 99) val = 99;
+    input.value = val;
+    updatePreview();
+  }
+
+  function updatePreview() {
+    var input   = document.getElementById('amount-input');
+    var current = parseInt(document.getElementById('stock-current').innerText) || 0;
+    var amount  = parseInt(input.value) || 1;
+    document.getElementById('stock-new').innerText = current + amount;
+  }
+
+  function syncHiddenFields() {
+    document.getElementById('hidden-amount').value =
+      document.getElementById('amount-input').value || 1;
+  }
+
+  function updateFormLogic() {
+    var catSelect    = document.getElementById('category-select');
+    var statusSelect = document.getElementById('status-select');
+    if (!catSelect) return;
+    var category = catSelect.value;
+    var status   = statusSelect ? statusSelect.value : '';
+
+    var wrapper      = document.getElementById('sub-category-wrapper');
+    var label        = document.getElementById('sub-category-label');
+    var cableDiv     = document.getElementById('cables-dropdown');
+    var lightDiv     = document.getElementById('lights-dropdown');
+    var damageNotice = document.getElementById('damage-notice');
+
+    if (wrapper) {
+      wrapper.style.display = cableDiv.style.display = lightDiv.style.display = 'none';
+      if (category === 'Cables') {
+        wrapper.style.cssText += '; display:block; background:#f0f9ff; border-color:#bae6fd;';
+        label.innerText = '🔌 Tipo de Cable'; label.style.color = '#0369a1';
+        cableDiv.style.display = 'block';
+      } else if (category === 'Luces') {
+        wrapper.style.cssText += '; display:block; background:#faf5ff; border-color:#e9d5ff;';
+        label.innerText = '💡 Tipo de Iluminación'; label.style.color = '#6b21a8';
+        lightDiv.style.display = 'block';
+      }
+    }
+    if (damageNotice) damageNotice.style.display = (status === 'Dañado') ? 'block' : 'none';
+  }
+</script>

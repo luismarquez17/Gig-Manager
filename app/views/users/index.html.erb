@@ -31,9 +31,29 @@
           <tr style="border-bottom: 1px solid #f1f5f9;">
             <td style="padding: 15px 20px; font-weight: 600; color: #1e293b;"><%= user.email %></td>
             <td style="padding: 15px 20px;">
-              <span style="padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 800; text-transform: uppercase;
-                <%= user.leader? ? 'background: #eff6ff; color: #2563eb;' : (user.staff? ? 'background: #ecfdf5; color: #10b981;' : 'background: #f1f5f9; color: #64748b;') %>">
-                <%= user.role %>
+              <%
+                role_style = if user.leader?
+                  "background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; box-shadow: 0 0 8px rgba(37,99,235,0.18);"
+                elsif user.staff?
+                  "background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; box-shadow: 0 0 8px rgba(5,150,105,0.18);"
+                elsif user.musician?
+                  "background: #fdf4ff; color: #a21caf; border: 1px solid #e879f9; box-shadow: 0 0 8px rgba(162,28,175,0.2);"
+                else
+                  "background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;"
+                end
+
+                role_icon = if user.leader?
+                  "👑"
+                elsif user.staff?
+                  "🔧"
+                elsif user.musician?
+                  "🎵"
+                else
+                  "👤"
+                end
+              %>
+              <span style="padding: 5px 12px; border-radius: 20px; font-size: 0.78em; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; <%= role_style %>">
+                <%= role_icon %> <%= user.role %>
               </span>
             </td>
             <td style="padding: 15px 20px;">

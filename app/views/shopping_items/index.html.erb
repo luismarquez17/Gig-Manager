@@ -1,0 +1,213 @@
+<div style="max-width: 1100px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+
+  <%# ── ENCABEZADO ── %>
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 36px; padding-bottom: 20px; border-bottom: 2px solid #f1f5f9; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <h1 style="color: #0f172a; margin: 0; font-size: 2.2em; font-weight: 800;">🛒 Lista de Compras</h1>
+      <p style="color: #64748b; margin: 6px 0 0 0; font-size: 1.05em;">Registra qué necesitas comprar, por qué y para qué.</p>
+    </div>
+    <%= link_to new_shopping_item_path, style: "text-decoration: none;" do %>
+      <div style="background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 13px 24px; border-radius: 14px; font-weight: 800; display: flex; align-items: center; gap: 8px; box-shadow: 0 6px 16px rgba(99,102,241,0.3); transition: all 0.2s;"
+           onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 24px rgba(99,102,241,0.4)'"
+           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 6px 16px rgba(99,102,241,0.3)'">
+        <span style="font-size: 1.2em;">＋</span> Agregar ítem
+      </div>
+    <% end %>
+  </div>
+
+  <%# ── FLASH ── %>
+  <% if notice %>
+    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 14px 20px; color: #166534; font-weight: 600; margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+      <%= notice %>
+    </div>
+  <% end %>
+
+  <%# ── STATS ── %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">
+    <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+      <div style="color: #64748b; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">Total ítems</div>
+      <div style="font-size: 2em; font-weight: 800; color: #0f172a;"><%= @total_count %></div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #fde68a; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+      <div style="color: #92400e; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">⏳ Pendientes</div>
+      <div style="font-size: 2em; font-weight: 800; color: #b45309;"><%= @pending_count %></div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #86efac; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+      <div style="color: #166534; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">✅ Comprados</div>
+      <div style="font-size: 2em; font-weight: 800; color: #15803d;"><%= @purchased_count %></div>
+    </div>
+    <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #c7d2fe; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
+      <div style="color: #3730a3; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💰 Costo estimado (USD)</div>
+      <div style="font-size: 1.6em; font-weight: 800; color: #4338ca;"><%= number_to_currency(@total_estimated, unit: '$') %></div>
+      <% if @total_estimated_bs > 0 %>
+        <div style="font-size: 0.8em; color: #6366f1; margin-top: 4px; font-weight: 600;">+ Bs. <%= number_with_precision(@total_estimated_bs, precision: 2, delimiter: ',') %></div>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── FILTROS ── %>
+  <div style="background: white; padding: 20px 24px; border-radius: 18px; border: 1px solid #e2e8f0; margin-bottom: 30px; display: flex; gap: 16px; flex-wrap: wrap; align-items: center;">
+    <span style="font-size: 0.8em; font-weight: 800; color: #94a3b8; text-transform: uppercase;">Filtrar:</span>
+
+    <%# Filtro Estado %>
+    <div style="display: flex; gap: 6px;">
+      <%= link_to "Todos", shopping_items_path(params.permit(:priority, :category).to_h), style: "padding: 7px 14px; border-radius: 10px; font-size: 0.85em; font-weight: 700; text-decoration: none; #{!params[:status] ? 'background: #0f172a; color: white;' : 'background: #f1f5f9; color: #64748b;'}" %>
+      <%= link_to "⏳ Pendientes", shopping_items_path(params.permit(:priority, :category).merge(status: 'pending')), style: "padding: 7px 14px; border-radius: 10px; font-size: 0.85em; font-weight: 700; text-decoration: none; #{params[:status] == 'pending' ? 'background: #fef3c7; color: #92400e; border: 1px solid #fde68a;' : 'background: #f1f5f9; color: #64748b;'}" %>
+      <%= link_to "✅ Comprados", shopping_items_path(params.permit(:priority, :category).merge(status: 'purchased')), style: "padding: 7px 14px; border-radius: 10px; font-size: 0.85em; font-weight: 700; text-decoration: none; #{params[:status] == 'purchased' ? 'background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;' : 'background: #f1f5f9; color: #64748b;'}" %>
+    </div>
+
+    <div style="width: 1px; height: 28px; background: #e2e8f0;"></div>
+
+    <%# Filtro Prioridad %>
+    <div style="display: flex; gap: 6px;">
+      <%= link_to "🔴 Alta", shopping_items_path(params.permit(:status, :category).merge(priority: 'high')), style: "padding: 7px 14px; border-radius: 10px; font-size: 0.85em; font-weight: 700; text-decoration: none; #{params[:priority] == 'high' ? 'background: #fee2e2; color: #b91c1c; border: 1px solid #fca5a5;' : 'background: #f1f5f9; color: #64748b;'}" %>
+      <%= link_to "🟡 Media", shopping_items_path(params.permit(:status, :category).merge(priority: 'medium')), style: "padding: 7px 14px; border-radius: 10px; font-size: 0.85em; font-weight: 700; text-decoration: none; #{params[:priority] == 'medium' ? 'background: #fef3c7; color: #b45309; border: 1px solid #fde68a;' : 'background: #f1f5f9; color: #64748b;'}" %>
+      <%= link_to "🟢 Baja", shopping_items_path(params.permit(:status, :category).merge(priority: 'low')), style: "padding: 7px 14px; border-radius: 10px; font-size: 0.85em; font-weight: 700; text-decoration: none; #{params[:priority] == 'low' ? 'background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7;' : 'background: #f1f5f9; color: #64748b;'}" %>
+    </div>
+
+    <% if params[:status].present? || params[:priority].present? || params[:category].present? %>
+      <div style="margin-left: auto;">
+        <%= link_to "✕ Limpiar filtros", shopping_items_path, style: "font-size: 0.85em; color: #94a3b8; text-decoration: none; font-weight: 600;" %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# ── LISTA DE ÍTEMS ── %>
+  <% if @shopping_items.any? %>
+    <div style="display: flex; flex-direction: column; gap: 14px;">
+      <% @shopping_items.each do |item| %>
+        <%
+          is_purchased = item.purchased?
+          priority_color = case item.priority
+                           when 'high'   then '#ef4444'
+                           when 'medium' then '#f59e0b'
+                           when 'low'    then '#10b981'
+                           else '#94a3b8'
+                           end
+          priority_bg = case item.priority
+                        when 'high'   then '#fee2e2'
+                        when 'medium' then '#fef3c7'
+                        when 'low'    then '#d1fae5'
+                        else '#f1f5f9'
+                        end
+          priority_label = case item.priority
+                           when 'high'   then '🔴 Alta'
+                           when 'medium' then '🟡 Media'
+                           when 'low'    then '🟢 Baja'
+                           else 'Sin definir'
+                           end
+        %>
+        <div style="background: white; border-radius: 20px; border: 1px solid <%= is_purchased ? '#d1fae5' : '#e2e8f0' %>;
+                    padding: 22px 26px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+                    opacity: <%= is_purchased ? '0.75' : '1' %>;
+                    transition: all 0.25s ease;"
+             onmouseover="this.style.boxShadow='0 8px 20px rgba(0,0,0,0.07)'; this.style.transform='translateY(-2px)'"
+             onmouseout="this.style.boxShadow='0 2px 8px rgba(0,0,0,0.03)'; this.style.transform='translateY(0)'">
+
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap;">
+
+            <%# Lado izquierdo: Info principal %>
+            <div style="flex: 1; min-width: 280px;">
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px; flex-wrap: wrap;">
+                <%# Nombre con tachado si comprado %>
+                <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: #0f172a;
+                           text-decoration: <%= is_purchased ? 'line-through' : 'none' %>;
+                           color: <%= is_purchased ? '#94a3b8' : '#0f172a' %>;">
+                  <%= is_purchased ? '✅' : '⏳' %> <%= item.name %>
+                </h3>
+
+                <%# Badge Prioridad %>
+                <span style="background: <%= priority_bg %>; color: <%= priority_color %>; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 800; white-space: nowrap;">
+                  <%= priority_label %>
+                </span>
+
+                <%# Badge Categoría %>
+                <% if item.category.present? %>
+                  <span style="background: #eff6ff; color: #2563eb; padding: 3px 10px; border-radius: 20px; font-size: 0.75em; font-weight: 700;">
+                    📂 <%= item.category %>
+                  </span>
+                <% end %>
+              </div>
+
+              <%# Razón y Propósito — la parte más importante %>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 10px;">
+                <% if item.reason.present? %>
+                  <div style="background: #fff5f5; border-left: 3px solid #fca5a5; border-radius: 0 10px 10px 0; padding: 10px 14px;">
+                    <div style="font-size: 0.72em; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">❓ ¿Por qué comprarlo?</div>
+                    <p style="margin: 0; font-size: 0.9em; color: #374151; line-height: 1.5;"><%= item.reason %></p>
+                  </div>
+                <% end %>
+                <% if item.purpose.present? %>
+                  <div style="background: #f5f3ff; border-left: 3px solid #c4b5fd; border-radius: 0 10px 10px 0; padding: 10px 14px;">
+                    <div style="font-size: 0.72em; font-weight: 800; color: #7c3aed; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px;">🎯 ¿Para qué?</div>
+                    <p style="margin: 0; font-size: 0.9em; color: #374151; line-height: 1.5;"><%= item.purpose %></p>
+                  </div>
+                <% end %>
+              </div>
+
+              <% if item.notes.present? %>
+                <p style="margin: 0; font-size: 0.85em; color: #94a3b8; font-style: italic;"><%= item.notes %></p>
+              <% end %>
+            </div>
+
+            <%# Lado derecho: Precio + Acciones %>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; min-width: 160px;">
+              <%# Precio estimado %>
+              <% if item.estimated_price.present? && item.estimated_price > 0 %>
+                <div style="text-align: right;">
+                  <div style="font-size: 0.72em; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Precio est.</div>
+                  <div style="font-size: 1.4em; font-weight: 800; color: #1e293b;">
+                    <%= number_to_currency(item.estimated_price, unit: item.currency == 'BS' ? 'Bs.' : '$') %>
+                    <span style="font-size: 0.6em; color: #94a3b8; font-weight: 600;"><%= item.currency %></span>
+                  </div>
+                </div>
+              <% end %>
+
+              <%# Acciones %>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+                <%# Toggle comprado %>
+                <%= button_to is_purchased ? "↩️ Pendiente" : "✓ Comprado",
+                    toggle_purchased_shopping_item_path(item),
+                    method: :patch,
+                    style: "padding: 9px 14px; border-radius: 10px; border: 2px solid #{is_purchased ? '#6ee7b7' : '#86efac'}; background: #{is_purchased ? '#f0fdf4' : '#d1fae5'}; color: #{is_purchased ? '#059669' : '#065f46'}; font-weight: 800; font-size: 0.82em; cursor: pointer; transition: all 0.15s;" %>
+
+                <%= link_to "✏️", edit_shopping_item_path(item),
+                    style: "padding: 9px 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; font-size: 0.9em; text-decoration: none; transition: all 0.15s;",
+                    title: "Editar" %>
+
+                <%= link_to "🗑️", shopping_item_path(item),
+                    data: { turbo_method: :delete, turbo_confirm: "¿Eliminar \"#{item.name}\" de la lista?" },
+                    style: "padding: 9px 12px; border-radius: 10px; background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; font-size: 0.9em; text-decoration: none; transition: all 0.15s;",
+                    title: "Eliminar" %>
+              </div>
+
+              <%# Fecha de creación %>
+              <div style="font-size: 0.75em; color: #cbd5e1;">
+                Agregado <%= item.created_at.strftime("%d/%m/%Y") %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+  <% else %>
+    <%# Estado vacío %>
+    <div style="text-align: center; padding: 80px 40px; border: 2px dashed #e2e8f0; border-radius: 28px; background: #fafafa;">
+      <div style="font-size: 4em; margin-bottom: 16px;">🛒</div>
+      <h3 style="color: #1e293b; font-size: 1.4em; margin: 0 0 10px 0; font-weight: 800;">La lista de compras está vacía</h3>
+      <p style="color: #94a3b8; margin: 0 0 24px 0; font-size: 1em;">
+        <%= params[:status].present? || params[:priority].present? ? "No hay ítems que coincidan con los filtros aplicados." : "Agrega el primer ítem que necesitas comprar para tu agrupación." %>
+      </p>
+      <% if params[:status].present? || params[:priority].present? %>
+        <%= link_to "Ver todos los ítems", shopping_items_path, style: "background: #6366f1; color: white; padding: 12px 24px; border-radius: 12px; text-decoration: none; font-weight: 700;" %>
+      <% else %>
+        <%= link_to new_shopping_item_path, style: "background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 14px 28px; border-radius: 14px; text-decoration: none; font-weight: 800; box-shadow: 0 4px 14px rgba(99,102,241,0.3);" do %>
+          ＋ Agregar primer ítem
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+
+</div>

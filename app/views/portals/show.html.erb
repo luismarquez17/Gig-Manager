@@ -653,6 +653,47 @@
     <% end %>
   </section>
 
+  <%# --- SECCIÓN DE ADICIONALES RECOMENDADOS (UPSELL HORIZONTAL) --- %>
+  <% available_upsells = @gig.available_upsells %>
+  <% if available_upsells.any? %>
+    <section class="glass-card" style="border-color: rgba(139, 92, 246, 0.25); box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.10); margin-bottom: 30px;">
+      <h2 class="section-title" style="color: #a78bfa; margin-bottom: 5px;">
+        <span class="icon" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;">🚀</span>
+        ¿Quieres potenciar tu evento?
+      </h2>
+      <p style="color: var(--text-muted); font-size: 0.9em; margin: 0 0 15px 0; line-height: 1.4;">
+        Lleva tu fiesta al siguiente nivel agregando uno de nuestros servicios recomendados con un solo clic.
+      </p>
+
+      <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 5px 15px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
+        <% available_upsells.each do |upsell| %>
+          <div style="flex: 0 0 280px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.05); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;" 
+               class="upsell-card"
+               onmouseover="this.style.transform='translateY(-2px)'; this.style.borderColor='rgba(139, 92, 246, 0.4)'; this.style.background='rgba(139, 92, 246, 0.02)';" 
+               onmouseout="this.style.transform='none'; this.style.borderColor='rgba(255, 255, 255, 0.05)'; this.style.background='rgba(255, 255, 255, 0.02)';">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <span style="font-size: 1.8em;"><%= upsell[:emoji] %></span>
+                <h4 style="margin: 0; font-size: 1.05em; font-weight: 700; color: var(--text-main); font-family: var(--font-outfit);"><%= upsell[:title] %></h4>
+              </div>
+              <p style="margin: 0; font-size: 0.85em; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 3.6em;">
+                <%= upsell[:description] %>
+              </p>
+            </div>
+            <div style="margin-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+              <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--font-outfit);">
+                +<%= number_to_currency(upsell[:price], unit: upsell[:currency] == "USD" ? "$" : "Bs. ", precision: 0) %> <span style="font-size: 0.7em; color: var(--text-muted); font-weight: normal;"><%= upsell[:currency] %></span>
+              </span>
+              <a href="https://wa.me/584140000000?text=<%= ERB::Util.url_encode(upsell[:whatsapp_message]) %>" target="_blank" class="btn-portal btn-whatsapp" style="text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.8em; width: auto; box-shadow: none;">
+                Añadir ＋
+              </a>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
   <%# --- FOOTER --- %>
   <footer style="text-align: center; color: var(--text-muted); font-size: 0.85em; margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
     <p style="margin: 0;">Generado por <strong>Gig Manager</strong>. Todos los derechos reservados.</p>

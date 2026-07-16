@@ -70,7 +70,9 @@
 
             <div style="display: flex; gap: 8px; margin-top: 15px; border-top: 1px solid #f1f5f9; padding-top: 15px; flex-wrap: wrap;">
               <%= link_to '🔍 Detalles', preset_budget_path(budget), style: "flex: 1; min-width: 80px; text-align: center; background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 8px 0; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s;", onmouseover: "this.style.background='#dbeafe'", onmouseout: "this.style.background='#eff6ff'" %>
-              <%= link_to '🖨️ PDF', print_preset_budget_path(budget), target: '_blank', style: "flex: 1; min-width: 80px; text-align: center; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 8px 0; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s;", onmouseover: "this.style.background='#d1fae5'", onmouseout: "this.style.background='#ecfdf5'" %>
+              <% if current_user.leader? %>
+                <%= link_to '🖨️ PDF', print_preset_budget_path(budget), target: '_blank', style: "flex: 1; min-width: 80px; text-align: center; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; padding: 8px 0; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; transition: 0.2s;", onmouseover: "this.style.background='#d1fae5'", onmouseout: "this.style.background='#ecfdf5'" %>
+              <% end %>
               <% unless current_user.client? %>
                 <%= link_to '⚙️', edit_preset_budget_path(budget), style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 8px; text-decoration: none; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center;", title: "Editar" %>
                 
