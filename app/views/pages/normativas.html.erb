@@ -1,0 +1,154 @@
+<div style="max-width: 1000px; margin: 0 auto; font-family: 'Inter', 'Segoe UI', sans-serif;">
+
+  <%# --- HEADER DE NORMATIVAS --- %>
+  <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #4338ca 100%); border-radius: 24px; padding: 40px 30px; color: white; margin-bottom: 35px; box-shadow: 0 15px 30px rgba(49, 46, 129, 0.25); position: relative; overflow: hidden;">
+    <div style="position: absolute; right: -20px; bottom: -30px; opacity: 0.1; font-size: 160px; user-select: none;">📜</div>
+    
+    <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); padding: 6px 16px; border-radius: 99px; border: 1px solid rgba(255,255,255,0.2); font-size: 0.85em; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; color: #c7d2fe;">
+      <span>📌 Información Importante para el Cliente</span>
+    </div>
+    
+    <h1 style="margin: 0 0 12px 0; font-size: 2.4em; font-weight: 800; letter-spacing: -0.5px;">📜 Normativas y Políticas del Servicio</h1>
+    <p style="margin: 0; font-size: 1.1em; color: #e0e7ff; opacity: 0.95; max-width: 750px; line-height: 1.6;">
+      Para garantizar el éxito rotundo de tu evento, la máxima calidad técnica y la protección de ambas partes, te pedimos revisar detalladamente nuestras condiciones de servicio.
+    </p>
+  </div>
+
+  <%# --- ALERTA PRINCIPAL: REGLA DE PAGO TOTAL EL DÍA DEL EVENTO --- %>
+  <div style="background: linear-gradient(135deg, #fffbe6 0%, #fef3c7 100%); border: 2px solid #f59e0b; border-radius: 20px; padding: 25px 30px; margin-bottom: 35px; box-shadow: 0 8px 20px rgba(245, 158, 11, 0.12); display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
+    <div style="background: #f59e0b; color: white; width: 50px; height: 50px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 1.8em; flex-shrink: 0; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
+      💳
+    </div>
+    <div style="flex: 1; min-width: 260px;">
+      <h3 style="margin: 0 0 6px 0; color: #78350f; font-size: 1.3em; font-weight: 800;">REGLA CLAVE DE PAGO</h3>
+      <p style="margin: 0; color: #92400e; font-size: 1.05em; line-height: 1.6; font-weight: 600;">
+        El evento debe ser <u style="text-decoration-color: #f59e0b;">pagado en su totalidad (100%) a más tardar el mismo día del evento</u>, con anterioridad al inicio del montaje del equipamiento o prueba de sonido. No se dará inicio a la presentación si existe saldo pendiente de cobro.
+      </p>
+    </div>
+  </div>
+
+  <%# --- GRID DE TARJETAS DE NORMATIVAS --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 25px; margin-bottom: 40px;">
+    
+    <%# 1. Pago y Cancelación de Saldos %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #eff6ff; color: #2563eb; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; border: 1px solid #bfdbfe;">
+          💰
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800;">1. Modalidad y Fechas de Pago</h3>
+          <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Abonos y Cobranza</span>
+        </div>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.96em; line-height: 1.7;">
+        <li style="margin-bottom: 8px;"><strong>Reserva de Fecha:</strong> Se requiere un pago inicial (reserva/abono) para bloquear la fecha en nuestra agenda.</li>
+        <li style="margin-bottom: 8px;"><strong>Pago del Saldo:</strong> El saldo restante debe liquidarse el mismo día del show antes del montaje.</li>
+        <li><strong>Formas de Pago:</strong> Aceptamos transferencias bancarias nacionales, divisas en efectivo ($ USD / Bs.) y pagos móviles registrados previamente.</li>
+      </ul>
+    </div>
+
+    <%# 2. Horarios y Horas Extra %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #f0fdf4; color: #16a34a; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; border: 1px solid #bbf7d0;">
+          ⏰
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800;">2. Horarios y Horas Adicionales</h3>
+          <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Puntualidad de Servicio</span>
+        </div>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.96em; line-height: 1.7;">
+        <li style="margin-bottom: 8px;"><strong>Inicio Puntual:</strong> El tiempo de presentación o DJ contratado comenzará a la hora estipulada en la cotización o contrato.</li>
+        <li style="margin-bottom: 8px;"><strong>Retrasos del Cliente:</strong> Si el evento se retrasa por motivos ajenos a la agrupación, el tiempo corrido se contabilizará dentro del paquete acordado.</li>
+        <li><strong>Horas Extra:</strong> Sujetas a disponibilidad del personal y deben ser autorizadas y canceladas en el momento de solicitar la extensión.</li>
+      </ul>
+    </div>
+
+    <%# 3. Instalaciones y Requerimientos Eléctricos %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #fff7ed; color: #ea580c; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; border: 1px solid #fed7aa;">
+          ⚡
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800;">3. Requerimientos Eléctricos y Espacio</h3>
+          <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Protección de Equipos</span>
+        </div>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.96em; line-height: 1.7;">
+        <li style="margin-bottom: 8px;"><strong>Energía Estable:</strong> El contratante debe garantizar un punto de energía eléctrica estable (110V/220V según el caso) exclusivo para los equipos a no más de 10 metros del escenario.</li>
+        <li style="margin-bottom: 8px;"><strong>Protección Intemperie:</strong> En eventos al aire libre, se exige tarima o espacio techado e impermeable para proteger equipos de audio, luces e instrumentos ante lluvia o sol directo.</li>
+        <li><strong>Piso Nivelado:</strong> El área de montaje debe ser firme, seca y nivelada.</li>
+      </ul>
+    </div>
+
+    <%# 4. Cuidado de Equipos y Seguridad %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #fef2f2; color: #dc2626; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; border: 1px solid #fecaca;">
+          🛡️
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800;">4. Cuidado de Equipos y Seguridad</h3>
+          <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Responsabilidad en Sitio</span>
+        </div>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.96em; line-height: 1.7;">
+        <li style="margin-bottom: 8px;"><strong>Seguridad del Personal:</strong> El cliente debe garantizar la integridad física de los músicos y técnicos durante su permanencia en el lugar.</li>
+        <li style="margin-bottom: 8px;"><strong>Daños por Terceros:</strong> Cualquier daño a los equipos o instrumentos causado por invitados (derrame de bebidas, caídas, golpes, conducta violenta) será facturado al cliente contratante.</li>
+        <li><strong>Manipulación Exclusiva:</strong> Solamente el personal técnico autorizado de la empresa operará las consolas, micrófonos e iluminación.</li>
+      </ul>
+    </div>
+
+    <%# 5. Cancelación y Reprogramación %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #fcf6bd; color: #b5838d; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; border: 1px solid #e9edc9;">
+          📅
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800;">5. Cancelación y Cambios de Fecha</h3>
+          <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Políticas de Agenda</span>
+        </div>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.96em; line-height: 1.7;">
+        <li style="margin-bottom: 8px;"><strong>Abonos No Reembolsables:</strong> Los montos otorgados en calidad de reserva/abono no son reembolsables en caso de cancelación unilateral por parte del cliente.</li>
+        <li style="margin-bottom: 8px;"><strong>Reprogramación:</strong> Para cambiar la fecha sin perder el abono, se requiere notificación con al menos 7 días de antelación y estará sujeto a nuestra disponibilidad de agenda.</li>
+        <li><strong>Fuerza Mayor:</strong> En situaciones imprevistas de causa mayor comprobada, ambas partes acuerdan renegociar la fecha de mutuo acuerdo.</li>
+      </ul>
+    </div>
+
+    <%# 6. Atención e Logística de Personal %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)';" onmouseout="this.style.transform='none';">
+      <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 16px;">
+        <div style="background: #fdf2f8; color: #db2777; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4em; font-weight: bold; border: 1px solid #fbcfe8;">
+          🍏
+        </div>
+        <div>
+          <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800;">6. Hidratación y Logística Básica</h3>
+          <span style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Atención al Equipo</span>
+        </div>
+      </div>
+      <ul style="margin: 0; padding-left: 20px; color: #334155; font-size: 0.96em; line-height: 1.7;">
+        <li style="margin-bottom: 8px;"><strong>Hidratación Continua:</strong> En eventos de más de 2 horas de duración, el cliente proveerá agua mineral o bebidas no alcohólicas para los músicos y el personal técnico.</li>
+        <li style="margin-bottom: 8px;"><strong>Alimentación (Eventos Largos):</strong> En eventos donde la permanencia total del equipo (incluyendo montaje y desmontaje) supere las 4 horas, se requiere coordinar alimento básico para el personal.</li>
+        <li><strong>Acceso de Carga:</strong> Facilitar el acceso y estacionamiento cercano para el vehículo de carga de los equipos.</li>
+      </ul>
+    </div>
+
+  </div>
+
+  <%# --- CONTACTO WHATSAPP PARA CONSULTAS --- %>
+  <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 30px; text-align: center;">
+    <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 1.25em; font-weight: 800;">¿Tienes dudas o requerimientos especiales para tu evento?</h3>
+    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.95em;">Nuestro equipo está dispuesto a ayudarte a solucionar cualquier duda logística o contractual.</p>
+    
+    <% wa_text = "Hola! Estaba revisando las normativas del servicio y me gustaría hacer una consulta sobre mi evento." %>
+    <a href="https://wa.me/584140000000?text=<%= ERB::Util.url_encode(wa_text) %>" target="_blank" style="background: #25d366; color: white; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 10px; font-size: 1em; box-shadow: 0 4px 14px rgba(37, 211, 102, 0.3); transition: transform 0.2s;" onmouseover="this.style.transform='scale(1.03)';" onmouseout="this.style.transform='scale(1)';">
+      <span>💬 Consultar por WhatsApp</span>
+    </a>
+  </div>
+
+</div>

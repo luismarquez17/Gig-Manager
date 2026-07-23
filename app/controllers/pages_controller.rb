@@ -205,4 +205,8 @@ class PagesController < ApplicationController
   def help
     # A simple help page for quick guidance to users
   end
+
+  def normativas
+    # Normativas y términos de servicio para el cliente
+  end
 end

@@ -119,6 +119,10 @@
                 <span class="icon">⚙️</span> <span>Roles / Accesos</span>
               <% end %>
 
+              <%= link_to normativas_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'normativas'}" do %>
+                <span class="icon">📜</span> <span>Normativas</span>
+              <% end %>
+
             <% elsif current_user.staff? %>
               <div class="nav-header">Agrupación</div>
               <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
@@ -171,6 +175,10 @@
 
               <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
                 <span class="icon">📋</span> <span>Presupuestos Base</span>
+              <% end %>
+
+              <%= link_to normativas_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'normativas'}" do %>
+                <span class="icon">📜</span> <span>Normativas</span>
               <% end %>
 
               <%= link_to edit_user_path(current_user), class: "sidebar-link #{'active' if controller_path == 'users' && action_name == 'edit'}" do %>

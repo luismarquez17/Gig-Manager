@@ -172,6 +172,10 @@ class GigsController < ApplicationController
   private
 
   def gig_params
-    params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :start_time, :end_time)
+    params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :start_time, :end_time).tap do |whitelisted|
+      if params[:gig].has_key?(:custom_upsells)
+        whitelisted[:custom_upsells] = params[:gig][:custom_upsells].presence&.to_unsafe_h || []
+      end
+    end
   end
 end

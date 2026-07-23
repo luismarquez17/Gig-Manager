@@ -56,12 +56,14 @@ class MaintenanceRecord < ApplicationRecord
           inventory_item.update!(status: :available)
         end
       when 'pending', 'in_repair'
-        unless inventory_item
+        if inventory_item
+          inventory_item.update!(status: :damaged)
+        else
           # Buscamos un inventory_item disponible para asociar
           ii = item.inventory_items.where(status: :available).first || item.inventory_items.first
           if ii
             update_column(:inventory_item_id, ii.id)
-            ii.update!(status: :maintenance)
+            ii.update!(status: :damaged)
           end
         end
       end

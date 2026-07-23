@@ -19,11 +19,11 @@ class GigItemsControllerTest < ActionDispatch::IntegrationTest
     
     # Check that the inventory item was put in maintenance status
     ii = @item.inventory_items.first
-    assert_equal "maintenance", ii.status
+    assert_equal "damaged", ii.status
     
-    # Check that the item status is now Operativo (since 1 copy is in maintenance, 0 available)
+    # Check that the item status is now Dañado (since the only copy is damaged)
     @item.reload
-    assert_equal "Operativo", @item.status
+    assert_equal "Dañado", @item.status
   end
 
   test "should fail to report damage with empty notes" do

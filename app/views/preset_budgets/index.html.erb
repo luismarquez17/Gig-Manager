@@ -89,9 +89,14 @@
   <% else %>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 60px 20px; text-align: center; color: #94a3b8; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
       <div style="font-size: 60px; margin-bottom: 15px;">📁</div>
-      <h3 style="margin: 0; color: #475569; font-size: 1.3em;">Aún no has creado presupuestos base</h3>
-      <p style="margin: 5px 0 20px 0; font-size: 0.95em;">Crea tu primer paquete de servicios para agilizar el envío de cotizaciones a tus clientes.</p>
-      <%= link_to '➕ Crear Primer Presupuesto Base', new_preset_budget_path, style: "background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;" %>
+      <% if current_user.client? %>
+        <h3 style="margin: 0; color: #475569; font-size: 1.3em;">No hay presupuestos base disponibles</h3>
+        <p style="margin: 5px 0 0 0; font-size: 0.95em;">Por el momento no hay paquetes configurados en la lista. Contacta a tu organizador para una cotización personalizada.</p>
+      <% else %>
+        <h3 style="margin: 0; color: #475569; font-size: 1.3em;">Aún no has creado presupuestos base</h3>
+        <p style="margin: 5px 0 20px 0; font-size: 0.95em;">Crea tu primer paquete de servicios para agilizar el envío de cotizaciones a tus clientes.</p>
+        <%= link_to '➕ Crear Primer Presupuesto Base', new_preset_budget_path, style: "background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold; display: inline-block;" %>
+      <% end %>
     </div>
   <% end %>
 

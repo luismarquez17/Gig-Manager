@@ -110,62 +110,73 @@ class Gig < ApplicationRecord
     details_text = details.to_s.downcase
     item_names = items.pluck(:name, :category).flatten.compact.map(&:downcase)
     
-    # 1. Máquina de Humo
-    has_smoke = details_text.include?('humo') || details_text.include?('smoke') || details_text.include?('fog') || details_text.include?('neblina') ||
-                item_names.any? { |n| n.include?('humo') || n.include?('smoke') || n.include?('fog') }
-    unless has_smoke
-      upsells << {
-        id: :smoke_machine,
+    defaults = {
+      smoke_machine: {
         title: 'Máquina de Humo',
         emoji: '💨',
         price: 40.0,
         currency: 'USD',
-        description: 'Añade una atmósfera espectacular con nuestra máquina de humo profesional. Ideal para resaltar los efectos de las luces y el láser.',
-        whatsapp_message: "Hola! Me gustaría añadir la máquina de humo por $40 USD adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
-      }
-    end
-
-    # 2. Máquina de Sparkulas
-    has_spark = details_text.include?('spark') || details_text.include?('chispa') || details_text.include?('fuego fr') ||
-                item_names.any? { |n| n.include?('spark') || n.include?('chispa') }
-    unless has_spark
-      upsells << {
-        id: :sparkulars,
+        description: 'Añade una atmósfera espectacular con nuestra máquina de humo profesional. Ideal para resaltar los efectos de las luces y el láser.'
+      },
+      sparkulars: {
         title: 'Máquina de Sparkulas',
         emoji: '✨',
         price: 30.0,
         currency: 'USD',
-        description: 'Alquila una máquina de sparkulas (fuego frío) por 6 horas. Totalmente segura para interiores, perfecta para momentos cumbre del evento.',
-        whatsapp_message: "Hola! Me gustaría añadir la máquina de sparkulas por $30 USD adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
-      }
-    end
-
-    # 3. Subwoofer Premium 18"
-    has_sub = details_text.include?('subwoofer') || details_text.include?('bajo') ||
-              item_names.any? { |n| n.include?('subwoofer') || n.include?('bajo') }
-    unless has_sub
-      upsells << {
-        id: :subwoofer,
+        description: 'Alquila una máquina de sparkulas (fuego frío) por 6 horas. Totalmente segura para interiores, perfecta para momentos cumbre del evento.'
+      },
+      subwoofer: {
         title: 'Subwoofer Premium 18"',
         emoji: '🔊',
         price: 25.0,
         currency: 'USD',
-        description: 'Añade un subwoofer activo de 18 pulgadas para lograr unos bajos potentes y envolventes que harán vibrar a todos tus invitados.',
-        whatsapp_message: "Hola! Me gustaría añadir el subwoofer premium de 18 pulgadas por $25 USD adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
-      }
-    end
-
-    # 4. Horas Extra de Música
-    has_extra_time = details_text.include?('hora extra') || details_text.include?('horas extra') || details_text.include?('tiempo extra') || details_text.include?('extra time')
-    unless has_extra_time
-      upsells << {
-        id: :extra_time,
+        description: 'Añade un subwoofer activo de 18 pulgadas para lograr unos bajos potentes y envolventes que harán vibrar a todos tus invitados.'
+      },
+      extra_time: {
         title: 'Horas Extra de Música',
         emoji: '🎵',
         price: 40.0,
         currency: 'USD',
-        description: 'Extiende la diversión del show 2 horas más con música continua en vivo para que la fiesta no pare.',
-        whatsapp_message: "Hola! Me gustaría añadir 2 horas extra de música por $40 USD adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
+        description: 'Extiende la diversión del show 2 horas más con música continua en vivo para que la fiesta no pare.'
+      }
+    }
+
+    # Exclusiones
+    has_smoke = details_text.include?('humo') || details_text.include?('smoke') || details_text.include?('fog') || details_text.include?('neblina') ||
+                item_names.any? { |n| n.include?('humo') || n.include?('smoke') || n.include?('fog') }
+    has_spark = details_text.include?('spark') || details_text.include?('chispa') || details_text.include?('fuego fr') ||
+                item_names.any? { |n| n.include?('spark') || n.include?('chispa') }
+    has_sub = details_text.include?('subwoofer') || details_text.include?('bajo') ||
+              item_names.any? { |n| n.include?('subwoofer') || n.include?('bajo') }
+    has_extra_time = details_text.include?('hora extra') || details_text.include?('horas extra') || details_text.include?('tiempo extra') || details_text.include?('extra time')
+
+    defaults.each do |key, default_attrs|
+      is_excluded = case key
+                    when :smoke_machine then has_smoke
+                    when :sparkulars then has_spark
+                    when :subwoofer then has_sub
+                    when :extra_time then has_extra_time
+                    end
+      next if is_excluded
+
+      custom = (custom_upsells || {}).dig(key.to_s) || {}
+      next if custom['disabled'] == '1'
+
+      price = custom['price'].present? ? custom['price'].to_f : default_attrs[:price]
+      description = custom['description'].presence || default_attrs[:description]
+      title = custom['title'].presence || default_attrs[:title]
+      
+      # Generamos el mensaje de whatsapp dinámicamente con el nuevo precio y título
+      whatsapp_message = "Hola! Me gustaría añadir la opción #{title.downcase} por $#{price.to_i} USD adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
+
+      upsells << {
+        id: key,
+        title: title,
+        emoji: default_attrs[:emoji],
+        price: price,
+        currency: default_attrs[:currency],
+        description: description,
+        whatsapp_message: whatsapp_message
       }
     end
 

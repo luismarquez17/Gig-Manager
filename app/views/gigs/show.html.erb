@@ -24,19 +24,24 @@
       </div>
       <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
     </div>
-    
     <div style="text-align: right;">
-      <%
-        priority_color = case @gig.client.priority
-                         when 'alta' then '#10b981'
-                         when 'media' then '#f59e0b'
-                         when 'baja' then '#ef4444'
-                         else '#64748b'
-                         end
-      %>
-      <span style="background: <%= priority_color %>; padding: 8px 18px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85em; box-shadow: 0 4px 6px <%= priority_color %>33;">
-        Prioridad: <%= @gig.client.priority.capitalize %>
-      </span>
+      <% if @gig.client %>
+        <%
+          priority_color = case @gig.client.priority
+                           when 'alta' then '#10b981'
+                           when 'media' then '#f59e0b'
+                           when 'baja' then '#ef4444'
+                           else '#64748b'
+                           end
+        %>
+        <span style="background: <%= priority_color %>; padding: 8px 18px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85em; box-shadow: 0 4px 6px <%= priority_color %>33;">
+          Prioridad: <%= @gig.client.priority.capitalize %>
+        </span>
+      <% else %>
+        <span style="background: #94a3b8; padding: 8px 18px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85em; box-shadow: 0 4px 6px rgba(148, 163, 184, 0.2);">
+          Sin Cliente
+        </span>
+      <% end %>
     </div>
   </div>
 
@@ -45,8 +50,13 @@
     
     <div>
       <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Cliente</p>
-      <p style="margin: 5px 0 0 0; font-size: 1.2em; font-weight: bold; color: #1e293b;"><%= link_to @gig.client.name, client_path(@gig.client), style: "color: #0ea5e9; text-decoration: none;" %></p>
-      <small style="color: #94a3b8;"><%= @gig.client.phone %></small>
+      <% if @gig.client %>
+        <p style="margin: 5px 0 0 0; font-size: 1.2em; font-weight: bold; color: #1e293b;"><%= link_to @gig.client.name, client_path(@gig.client), style: "color: #0ea5e9; text-decoration: none;" %></p>
+        <small style="color: #94a3b8;"><%= @gig.client.phone %></small>
+      <% else %>
+        <p style="margin: 5px 0 0 0; font-size: 1.2em; font-weight: bold; color: #64748b;">Sin Cliente Registrado</p>
+        <small style="color: #94a3b8;"><%= @gig.client_email %></small>
+      <% end %>
     </div>
 
     <div>
@@ -166,6 +176,73 @@
         });
       }
     </script>
+
+    <%# --- PERSONALIZACIÓN DE ADICIONALES (UPSELLS) PARA EL PORTAL --- %>
+    <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+      <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.1em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+        🚀 Personalizar Adicionales (Upsells) en el Portal
+      </h3>
+      <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
+        Modifica el precio y la descripción de los servicios adicionales recomendados que ve el cliente en su portal. Si dejas los campos vacíos, se usarán los valores por defecto.
+      </p>
+
+      <%= form_with model: @gig, local: true do |f| %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          <% 
+            upsell_definitions = [
+              { key: 'smoke_machine', title: 'Máquina de Humo', emoji: '💨', default_price: 40.0 },
+              { key: 'sparkulars', title: 'Máquina de Sparkulas', emoji: '✨', default_price: 30.0 },
+              { key: 'subwoofer', title: 'Subwoofer Premium 18"', emoji: '🔊', default_price: 25.0 },
+              { key: 'extra_time', title: 'Horas Extra de Música', emoji: '🎵', default_price: 40.0 }
+            ]
+          %>
+
+          <% upsell_definitions.each do |definition| %>
+            <% 
+              custom_data = (@gig.custom_upsells || {}).dig(definition[:key]) || {}
+              custom_title = custom_data['title']
+              custom_price = custom_data['price']
+              custom_desc = custom_data['description']
+              is_active = custom_data['disabled'] != '1'
+            %>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b; font-size: 0.95em;">
+                  <span style="font-size: 1.2em;"><%= definition[:emoji] %></span>
+                  <%= definition[:title] %>
+                </div>
+                <div>
+                  <%= hidden_field_tag "gig[custom_upsells][#{definition[:key]}][disabled]", "1" %>
+                  <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8em; font-weight: bold; color: #475569; cursor: pointer;">
+                    <%= check_box_tag "gig[custom_upsells][#{definition[:key]}][disabled]", "0", is_active %>
+                    Activo
+                  </label>
+                </div>
+              </div>
+              
+              <div>
+                <label style="display: block; font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px;">Nombre del Adicional</label>
+                <%= text_field_tag "gig[custom_upsells][#{definition[:key]}][title]", custom_title, placeholder: "Por defecto: #{definition[:title]}", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none; background: white;" %>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px;">Precio Adicional (USD)</label>
+                <%= number_field_tag "gig[custom_upsells][#{definition[:key]}][price]", custom_price, step: :any, placeholder: "Por defecto: $#{definition[:default_price].to_i}", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none; background: white;" %>
+              </div>
+
+              <div>
+                <label style="display: block; font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px;">Descripción Personalizada</label>
+                <%= text_area_tag "gig[custom_upsells][#{definition[:key]}][description]", custom_desc, rows: 2, placeholder: "Escribe una descripción personalizada...", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85em; outline: none; background: white; resize: vertical;" %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+
+        <div style="text-align: right;">
+          <%= f.submit "Guardar Cambios de Adicionales", style: "background: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.15); transition: 0.2s;" %>
+        </div>
+      <% end %>
+    </div>
 
     <%# --- BALANCE FINANCIERO DEL SHOW --- %>
     <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(2,6,23,0.04); border: 1px solid #e6eef8; margin-bottom: 24px;">

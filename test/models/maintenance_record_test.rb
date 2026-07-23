@@ -11,7 +11,7 @@ class MaintenanceRecordTest < ActiveSupport::TestCase
     mr = MaintenanceRecord.create!(item: item, description: "Broken string", status: :pending)
 
     assert_not_nil mr.inventory_item
-    assert_equal "maintenance", mr.inventory_item.status
+    assert_equal "damaged", mr.inventory_item.status
     assert_equal 2, item.available_count
     assert_equal "Operativo", item.status
 

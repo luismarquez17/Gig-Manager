@@ -13,6 +13,7 @@ Rails.application.routes.draw do
 
   get '/availability', to: 'pages#availability', as: 'availability_dashboard'
   get '/financials', to: 'pages#financials', as: 'financials_dashboard'
+  get '/normativas', to: 'pages#normativas', as: 'normativas'
 
   get '/funds/:fund_type', to: 'funds#show', as: 'fund'
 
@@ -54,10 +55,13 @@ Rails.application.routes.draw do
   post '/gig_items/:id/report_lost', to: 'gig_items#report_lost', as: 'report_lost_gig_item'
 
   resources :items do
+    member do
+      post :report_damage
+    end
     resources :inventory_items, only: [:update]
   end
   resources :categories, only: [:create, :destroy]
-  resources :maintenance_records, only: [:index, :edit, :update]
+  resources :maintenance_records, only: [:index, :new, :create, :edit, :update]
 
   get '/investments/report', to: 'investments#report', as: 'investments_report'
   resources :investments

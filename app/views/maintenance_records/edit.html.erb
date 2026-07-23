@@ -53,8 +53,9 @@
             <%= f.label :cost, "💰 Costo del Servicio ($)", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #475569; font-size: 0.9em;" %>
               <%= f.text_field :cost,
                   inputmode: 'decimal',
-                  data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+                  data: { controller: 'currency', action: 'input->currency#format' },
                   placeholder: '0.00',
+                  style: "width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 12px; outline: none; font-size: 0.95em; color: #1e293b; box-sizing: border-box;" %>
           </div>
 
         </div>

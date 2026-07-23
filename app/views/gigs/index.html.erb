@@ -68,11 +68,19 @@
               <td style="padding: 15px; color: #666;"><%= gig.date.strftime("%d/%m/%Y") if gig.date %></td>
               <td style="padding: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
-                  <div style="width: 12px; height: 12px; border-radius: 50%; background: <%= color_prioridad(gig.client.priority) %>; flex-shrink: 0;"></div>
-                  <div>
-                    <%= link_to gig.client.name, client_path(gig.client), style: "color: #007bff; text-decoration: none; font-weight: bold; display: block;" %>
-                    <small style="color: #999;"><%= gig.client.phone %></small>
-                  </div>
+                  <% if gig.client %>
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: <%= color_prioridad(gig.client.priority) %>; flex-shrink: 0;"></div>
+                    <div>
+                      <%= link_to gig.client.name, client_path(gig.client), style: "color: #007bff; text-decoration: none; font-weight: bold; display: block;" %>
+                      <small style="color: #999;"><%= gig.client.phone %></small>
+                    </div>
+                  <% else %>
+                    <div style="width: 12px; height: 12px; border-radius: 50%; background: #94a3b8; flex-shrink: 0;"></div>
+                    <div>
+                      <span style="color: #64748b; font-weight: bold; display: block;">Sin Cliente</span>
+                      <small style="color: #cbd5e1;"><%= gig.client_email %></small>
+                    </div>
+                  <% end %>
                 </div>
               </td>
               <td style="padding: 15px; color: #555;">

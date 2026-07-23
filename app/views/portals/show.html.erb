@@ -441,6 +441,42 @@
     </div>
   </section>
 
+  <%# --- NORMATIVAS GENERALES DEL SERVICIO --- %>
+  <section class="glass-card">
+    <h2 class="section-title">
+      <span class="icon">📜</span>
+      Normativas y Políticas del Servicio
+    </h2>
+
+    <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; color: #fef08a;">
+      <h4 style="margin: 0 0 6px 0; font-size: 1em; font-weight: 800; color: #fbbf24;">💳 REGLA CLAVE DE PAGO</h4>
+      <p style="margin: 0; font-size: 0.9em; line-height: 1.5; color: #fef3c7;">
+        El evento debe estar <strong>pagado en su totalidad (100%) el mismo día del show</strong>, previo al inicio del montaje del equipamiento técnico.
+      </p>
+    </div>
+
+    <details style="background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 15px; color: #e2e8f0; font-size: 0.9em;">
+      <summary style="cursor: pointer; font-weight: 800; color: #a78bfa; font-size: 1em; list-style: none; display: flex; justify-content: space-between; align-items: center;">
+        <span>🔍 Ver detalle de Normativas y Requerimientos</span>
+        <span style="font-size: 0.8em; opacity: 0.7;">▼ Desplegar</span>
+      </summary>
+      <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px; display: grid; gap: 14px; line-height: 1.5;">
+        <div>
+          <strong style="color: #67e8f9;">1. Horarios y Horas Extra:</strong> El tiempo contratado inicia puntualmente a la hora acordada. Las extensiones de horario tienen un costo adicional.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">2. Toma Eléctrica y Techo:</strong> Se requiere toma eléctrica estable (110V/220V) a menos de 10m y espacio techado si el evento es al aire libre.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">3. Cuidado del Equipamiento:</strong> Cualquier daño a los equipos o instrumentos ocasionado por invitados será facturado al cliente contratante.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">4. Políticas de Abono:</strong> Las señas de reserva no son reembolsables en caso de cancelación del evento por causas ajenas a la empresa.
+        </div>
+      </div>
+    </details>
+  </section>
+
   <%# --- RESUMEN DE CONTRATO / CONDICIONES --- %>
   <section class="glass-card">
     <h2 class="section-title">
@@ -722,20 +758,17 @@
         const eventDayEnd = new Date(`${gigDateStr}T23:59:59`).getTime();
         const currentNow = new Date().getTime();
 
+        document.getElementById('cd-days').textContent = '00';
+        document.getElementById('cd-hours').textContent = '00';
+        document.getElementById('cd-minutes').textContent = '00';
+        document.getElementById('cd-seconds').textContent = '00';
+
         if (currentNow >= eventDayStart && currentNow <= eventDayEnd) {
           // Es hoy!
-          document.getElementById('cd-days').textContent = '🎉';
-          document.getElementById('cd-hours').textContent = '🎸';
-          document.getElementById('cd-minutes').textContent = '🔥';
-          document.getElementById('cd-seconds').textContent = '⚡';
           lblElement.textContent = "¡TU EVENTO ES HOY! ¡A DISFRUTAR!";
           lblElement.style.color = "#10b981";
         } else {
           // Evento finalizado
-          document.getElementById('cd-days').textContent = '00';
-          document.getElementById('cd-hours').textContent = '00';
-          document.getElementById('cd-minutes').textContent = '00';
-          document.getElementById('cd-seconds').textContent = '00';
           lblElement.textContent = "¡Evento Finalizado! Gracias por tu preferencia.";
           lblElement.style.color = '#94a3b8';
         }

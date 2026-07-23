@@ -42,4 +42,21 @@ class GigTest < ActiveSupport::TestCase
 
     assert_empty gig.available_upsells
   end
+
+  test "available_upsells respects custom upsells overridden by leader" do
+    gig = Gig.new(amount: 500, client_email: "test@example.com", custom_upsells: {
+      "sparkulars" => { "price" => "55.0", "description" => "Custom sparkulars description", "title" => "Sparkulas Increíbles" },
+      "smoke_machine" => { "disabled" => "1" }
+    })
+    upsells = gig.available_upsells
+    
+    # Verify smoke_machine is excluded/disabled
+    refute_includes upsells.map { |u| u[:id] }, :smoke_machine
+
+    sparkulars_upsell = upsells.find { |u| u[:id] == :sparkulars }
+    assert_equal "Sparkulas Increíbles", sparkulars_upsell[:title]
+    assert_equal 55.0, sparkulars_upsell[:price]
+    assert_equal "Custom sparkulars description", sparkulars_upsell[:description]
+    assert_includes sparkulars_upsell[:whatsapp_message], "por $55 USD adicionales"
+  end
 end

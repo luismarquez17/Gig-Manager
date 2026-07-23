@@ -110,6 +110,37 @@
         </div>
       </div>
 
+      <%# --- SECCIÓN REPORTE DIRECTO DE DAÑO AL TALLER --- %>
+      <div style="margin-top: 30px; padding: 25px; background: #fff5f5; border-radius: 20px; border: 1px solid #fecaca;">
+        <h3 style="margin: 0 0 8px 0; color: #991b1b; font-size: 1.15em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          🛠️ Reportar Daño de este Equipo
+        </h3>
+        <p style="margin: 0 0 15px 0; color: #b91c1c; font-size: 0.88em; line-height: 1.4;">
+          Si este equipo o una de sus unidades sufrió un desperfecto, repórtalo aquí para enviarlo automáticamente al Taller de reparaciones.
+        </p>
+
+        <%= form_with url: report_damage_item_path(@item), method: :post, local: true, style: "display: flex; gap: 12px; flex-wrap: wrap; align-items: flex-end;" do |f| %>
+          <% if @item.inventory_items.size > 1 %>
+            <div style="flex: 1; min-width: 180px;">
+              <label style="display: block; font-size: 0.75em; color: #991b1b; font-weight: bold; text-transform: uppercase; margin-bottom: 4px;">Seleccionar Unidad</label>
+              <%= f.select :inventory_item_id, 
+                  @item.inventory_items.order(id: :asc).each_with_index.map { |ii, i| ["Unidad ##{i+1} #{ii.serial_number.present? ? "(#{ii.serial_number})" : ""} - #{ii.status}", ii.id] }, 
+                  { include_blank: "Cualquiera disponible" }, 
+                  { style: "width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #fca5a5; font-size: 0.9em; background: white;" } %>
+            </div>
+          <% end %>
+
+          <div style="flex: 2; min-width: 250px;">
+            <label style="display: block; font-size: 0.75em; color: #991b1b; font-weight: bold; text-transform: uppercase; margin-bottom: 4px;">Descripción del Daño / Falla</label>
+            <%= f.text_field :description, placeholder: "Ej: Se cayó, conector doblado, no enciende...", required: true, style: "width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #fca5a5; font-size: 0.9em; box-sizing: border-box;" %>
+          </div>
+
+          <div>
+            <%= f.submit "🛠️ Enviar al Taller", style: "background: #ef4444; color: white; padding: 11px 20px; border-radius: 10px; border: none; font-weight: bold; cursor: pointer; font-size: 0.92em; box-shadow: 0 4px 10px rgba(239, 68, 68, 0.2);" %>
+          </div>
+        <% end %>
+      </div>
+
       <%# --- BOTONES DE ACCIÓN --- %>
       <div style="margin-top: 40px; padding-top: 30px; border-top: 1px solid #f1f5f9; display: flex; gap: 15px;">
         <%= link_to edit_item_path(@item), style: "flex: 3; text-align: center; background: #2563eb; color: white; padding: 18px; border-radius: 14px; text-decoration: none; font-weight: bold; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2); font-size: 1.1em;" do %>

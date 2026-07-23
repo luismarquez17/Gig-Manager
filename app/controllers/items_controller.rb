@@ -68,6 +68,34 @@ class ItemsController < ApplicationController
     redirect_to items_path, notice: "Equipo eliminado."
   end
 
+  def report_damage
+    @item = Item.find(params[:id])
+    description = params[:description].presence || "Reportado como dañado desde el inventario"
+    inventory_item_id = params[:inventory_item_id]
+
+    ii = if inventory_item_id.present?
+           @item.inventory_items.find_by(id: inventory_item_id)
+         else
+           @item.inventory_items.where(status: :available).first || @item.inventory_items.first
+         end
+
+    if ii.nil?
+      redirect_back fallback_location: items_path, alert: "No hay unidades disponibles en inventario para este equipo."
+      return
+    end
+
+    MaintenanceRecord.create!(
+      item: @item,
+      inventory_item: ii,
+      status: :pending,
+      description: description,
+      started_at: Date.today,
+      cost: 0.0
+    )
+
+    redirect_back fallback_location: items_path, notice: "🛠️ ¡Daño reportado! \"#{@item.name}\" ha sido enviado al Taller para su actualización."
+  end
+
   private
 
   def set_item
