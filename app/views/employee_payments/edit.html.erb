@@ -21,7 +21,7 @@
     <div class="form-group-custom">
       <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
       <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client.name} - #{g.date}" }, { include_blank: true }, { class: 'form-input-custom' } %>
-      <small style="color: #64748b; font-size: 0.85em;">Si cambias el show, los fondos de nómina anteriores se revertirán y se recalcularán con el nuevo monto.</small>
+      <small style="color: #64748b; font-size: 0.85em;">Los fondos de nómina se descontarán del pozo universal (priorizando el show seleccionado si tiene fondos asignados).</small>
     </div>
 
     <div class="form-group-custom">

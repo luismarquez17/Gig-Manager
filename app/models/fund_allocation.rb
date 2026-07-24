@@ -32,4 +32,8 @@ class FundAllocation < ApplicationRecord
   def remaining
     amount.to_f - spent_total
   end
+
+  def self.total_payroll_remaining
+    where(fund_type: 'payroll').to_a.sum(&:remaining)
+  end
 end

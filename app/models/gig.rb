@@ -109,39 +109,7 @@ class Gig < ApplicationRecord
     
     details_text = details.to_s.downcase
     item_names = items.pluck(:name, :category).flatten.compact.map(&:downcase)
-    
-    defaults = {
-      smoke_machine: {
-        title: 'Máquina de Humo',
-        emoji: '💨',
-        price: 40.0,
-        currency: 'USD',
-        description: 'Añade una atmósfera espectacular con nuestra máquina de humo profesional. Ideal para resaltar los efectos de las luces y el láser.'
-      },
-      sparkulars: {
-        title: 'Máquina de Sparkulas',
-        emoji: '✨',
-        price: 30.0,
-        currency: 'USD',
-        description: 'Alquila una máquina de sparkulas (fuego frío) por 6 horas. Totalmente segura para interiores, perfecta para momentos cumbre del evento.'
-      },
-      subwoofer: {
-        title: 'Subwoofer Premium 18"',
-        emoji: '🔊',
-        price: 25.0,
-        currency: 'USD',
-        description: 'Añade un subwoofer activo de 18 pulgadas para lograr unos bajos potentes y envolventes que harán vibrar a todos tus invitados.'
-      },
-      extra_time: {
-        title: 'Horas Extra de Música',
-        emoji: '🎵',
-        price: 40.0,
-        currency: 'USD',
-        description: 'Extiende la diversión del show 2 horas más con música continua en vivo para que la fiesta no pare.'
-      }
-    }
 
-    # Exclusiones
     has_smoke = details_text.include?('humo') || details_text.include?('smoke') || details_text.include?('fog') || details_text.include?('neblina') ||
                 item_names.any? { |n| n.include?('humo') || n.include?('smoke') || n.include?('fog') }
     has_spark = details_text.include?('spark') || details_text.include?('chispa') || details_text.include?('fuego fr') ||
@@ -150,31 +118,40 @@ class Gig < ApplicationRecord
               item_names.any? { |n| n.include?('subwoofer') || n.include?('bajo') }
     has_extra_time = details_text.include?('hora extra') || details_text.include?('horas extra') || details_text.include?('tiempo extra') || details_text.include?('extra time')
 
-    defaults.each do |key, default_attrs|
-      is_excluded = case key
-                    when :smoke_machine then has_smoke
-                    when :sparkulars then has_spark
-                    when :subwoofer then has_sub
-                    when :extra_time then has_extra_time
+    standard_catalog = StandardUpsell.all_with_defaults.select(&:active)
+    custom_map = custom_upsells || {}
+
+    standard_catalog.each do |std|
+      key_str = std.key.to_s
+      custom_data = custom_map[key_str] || custom_map[std.id.to_s] || {}
+
+      # Si está desactivado para este toque en particular, omitir
+      next if custom_data['disabled'] == '1' || custom_data['disabled'] == true
+
+      is_excluded = case key_str.downcase
+                    when 'smoke_machine' then has_smoke
+                    when 'sparkulars' then has_spark
+                    when 'subwoofer' then has_sub
+                    when 'extra_time' then has_extra_time
+                    else false
                     end
       next if is_excluded
 
-      custom = (custom_upsells || {}).dig(key.to_s) || {}
-      next if custom['disabled'] == '1'
+      title = custom_data['title'].presence || std.title
+      emoji = custom_data['emoji'].presence || std.emoji || '🚀'
+      price = custom_data['price'].present? ? custom_data['price'].to_f : std.price.to_f
+      currency = custom_data['currency'].presence || std.currency || 'USD'
+      description = custom_data['description'].presence || std.description || ''
 
-      price = custom['price'].present? ? custom['price'].to_f : default_attrs[:price]
-      description = custom['description'].presence || default_attrs[:description]
-      title = custom['title'].presence || default_attrs[:title]
-      
-      # Generamos el mensaje de whatsapp dinámicamente con el nuevo precio y título
-      whatsapp_message = "Hola! Me gustaría añadir la opción #{title.downcase} por $#{price.to_i} USD adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
+      whatsapp_message = "Hola! Me gustaría añadir la opción #{title.downcase} por $#{price.to_i} #{currency} adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
 
       upsells << {
-        id: key,
+        id: key_str.to_sym,
+        key: key_str,
         title: title,
-        emoji: default_attrs[:emoji],
+        emoji: emoji,
         price: price,
-        currency: default_attrs[:currency],
+        currency: currency,
         description: description,
         whatsapp_message: whatsapp_message
       }

@@ -177,72 +177,116 @@
       }
     </script>
 
-    <%# --- PERSONALIZACIÓN DE ADICIONALES (UPSELLS) PARA EL PORTAL --- %>
-    <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
-      <h3 style="margin: 0 0 10px 0; color: #1e293b; font-size: 1.1em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-        🚀 Personalizar Adicionales (Upsells) en el Portal
-      </h3>
-      <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
-        Modifica el precio y la descripción de los servicios adicionales recomendados que ve el cliente en su portal. Si dejas los campos vacíos, se usarán los valores por defecto.
-      </p>
+    <%# --- PERSONALIZACIÓN Y ACTIVACIÓN DE ADICIONALES (UPSELLS) PARA ESTE EVENTO (DESPLEGABLE) --- %>
+    <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; overflow: hidden;">
+      
+      <%# Cabecera Desplegable %>
+      <div onclick="toggleUpsellsPanel()" style="padding: 20px 25px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; background: #ffffff; user-select: none; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='#ffffff'">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.5em; background: #eff6ff; color: #3b82f6; width: 42px; height: 42px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">🚀</span>
+          <div>
+            <h3 style="margin: 0; color: #1e293b; font-size: 1.05em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+              Adicionales (Upsells) Disponibles
+              <span style="background: #e0e7ff; color: #4338ca; font-size: 0.72em; padding: 2px 8px; border-radius: 12px; font-weight: 700;"><%= @gig.available_upsells.size %> Activos</span>
+            </h3>
+            <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.85em;">
+              Haz clic para desplegar y activar/desactivar o personalizar los adicionales de este evento.
+            </p>
+          </div>
+        </div>
 
-      <%= form_with model: @gig, local: true do |f| %>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 20px;">
-          <% 
-            upsell_definitions = [
-              { key: 'smoke_machine', title: 'Máquina de Humo', emoji: '💨', default_price: 40.0 },
-              { key: 'sparkulars', title: 'Máquina de Sparkulas', emoji: '✨', default_price: 30.0 },
-              { key: 'subwoofer', title: 'Subwoofer Premium 18"', emoji: '🔊', default_price: 25.0 },
-              { key: 'extra_time', title: 'Horas Extra de Música', emoji: '🎵', default_price: 40.0 }
-            ]
-          %>
+        <div style="display: flex; align-items: center; gap: 10px;" onclick="event.stopPropagation();">
+          <%= link_to '⚙️ Catálogo Global', standard_upsells_path, style: "background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.82em; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; transition: 0.2s;" %>
+          
+          <button type="button" onclick="toggleUpsellsPanel()" id="upsells-toggle-btn" style="background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;">
+            <span id="upsells-toggle-text">Desplegar</span>
+            <span id="upsells-toggle-icon" style="font-size: 0.8em; transition: transform 0.2s;">▼</span>
+          </button>
+        </div>
+      </div>
 
-          <% upsell_definitions.each do |definition| %>
+      <%# Contenido Desplegable (Oculto por defecto para optimizar espacio) %>
+      <div id="upsells-collapsible-content" style="display: none; border-top: 1px solid #e2e8f0; padding: 25px; background: #fafafa;">
+        <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.88em; line-height: 1.4;">
+          Todos los adicionales del catálogo estándar están activos automáticamente para este toque. Desactiva los que no desees mostrar en el portal de este cliente o modifica su precio/título si este evento lo requiere.
+        </p>
+
+        <%= form_with model: @gig, local: true do |f| %>
+          <div id="upsells-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 20px;">
             <% 
-              custom_data = (@gig.custom_upsells || {}).dig(definition[:key]) || {}
-              custom_title = custom_data['title']
-              custom_price = custom_data['price']
-              custom_desc = custom_data['description']
-              is_active = custom_data['disabled'] != '1'
+              standard_catalog = StandardUpsell.all_with_defaults
+              custom_map = @gig.custom_upsells || {}
             %>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; display: flex; flex-direction: column; gap: 10px;">
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b; font-size: 0.95em;">
-                  <span style="font-size: 1.2em;"><%= definition[:emoji] %></span>
-                  <%= definition[:title] %>
+            <% standard_catalog.each do |std| %>
+              <% 
+                key = std.key.to_s
+                custom_data = custom_map[key] || custom_map[std.id.to_s] || {}
+                is_active = std.active? && custom_data['disabled'] != '1' && custom_data['disabled'] != true
+                custom_emoji = custom_data['emoji'].presence || std.emoji || '🚀'
+              %>
+              <div class="upsell-card-container" style="background: <%= is_active ? '#ffffff' : '#f1f5f9' %>; border: 1px solid <%= is_active ? '#cbd5e1' : '#e2e8f0' %>; border-radius: 14px; padding: 15px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px;">
+                  <div style="display: flex; align-items: center; gap: 8px; font-weight: 700; color: #1e293b; font-size: 0.9em;">
+                    <span style="font-size: 1.2em;"><%= custom_emoji %></span>
+                    <span><%= std.title %></span>
+                  </div>
+                  <div>
+                    <%= hidden_field_tag "gig[custom_upsells][#{key}][disabled]", "1" %>
+                    <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: bold; color: <%= is_active ? '#15803d' : '#64748b' %>; cursor: pointer;">
+                      <%= check_box_tag "gig[custom_upsells][#{key}][disabled]", "0", is_active %>
+                      Activo en este toque
+                    </label>
+                  </div>
                 </div>
+                
                 <div>
-                  <%= hidden_field_tag "gig[custom_upsells][#{definition[:key]}][disabled]", "1" %>
-                  <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.8em; font-weight: bold; color: #475569; cursor: pointer;">
-                    <%= check_box_tag "gig[custom_upsells][#{definition[:key]}][disabled]", "0", is_active %>
-                    Activo
-                  </label>
+                  <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Nombre (Personalizado para este show)</label>
+                  <%= text_field_tag "gig[custom_upsells][#{key}][title]", custom_data['title'], placeholder: "Estándar: #{std.title}", style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; outline: none; background: white;" %>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                  <div style="flex: 1;">
+                    <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Precio Adicional</label>
+                    <%= number_field_tag "gig[custom_upsells][#{key}][price]", custom_data['price'], step: :any, placeholder: "Estándar: $#{std.price.to_f}", style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; outline: none; background: white;" %>
+                  </div>
+                  <div style="width: 80px;">
+                    <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Moneda</label>
+                    <%= text_field_tag "gig[custom_upsells][#{key}][currency]", custom_data['currency'] || std.currency || 'USD', style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; outline: none; background: white; text-transform: uppercase;" %>
+                  </div>
+                </div>
+
+                <div>
+                  <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Descripción (Personalizada para este show)</label>
+                  <%= text_area_tag "gig[custom_upsells][#{key}][description]", custom_data['description'], rows: 2, placeholder: "Dejar vacío para usar la descripción estándar...", style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85em; outline: none; background: white; resize: vertical;" %>
                 </div>
               </div>
-              
-              <div>
-                <label style="display: block; font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px;">Nombre del Adicional</label>
-                <%= text_field_tag "gig[custom_upsells][#{definition[:key]}][title]", custom_title, placeholder: "Por defecto: #{definition[:title]}", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none; background: white;" %>
-              </div>
+            <% end %>
+          </div>
 
-              <div>
-                <label style="display: block; font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px;">Precio Adicional (USD)</label>
-                <%= number_field_tag "gig[custom_upsells][#{definition[:key]}][price]", custom_price, step: :any, placeholder: "Por defecto: $#{definition[:default_price].to_i}", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none; background: white;" %>
-              </div>
-
-              <div>
-                <label style="display: block; font-size: 0.8em; color: #64748b; font-weight: bold; margin-bottom: 4px;">Descripción Personalizada</label>
-                <%= text_area_tag "gig[custom_upsells][#{definition[:key]}][description]", custom_desc, rows: 2, placeholder: "Escribe una descripción personalizada...", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85em; outline: none; background: white; resize: vertical;" %>
-              </div>
-            </div>
-          <% end %>
-        </div>
-
-        <div style="text-align: right;">
-          <%= f.submit "Guardar Cambios de Adicionales", style: "background: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.15); transition: 0.2s;" %>
-        </div>
-      <% end %>
+          <div style="text-align: right;">
+            <%= f.submit "Guardar Cambios de Adicionales", style: "background: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.15); transition: 0.2s;" %>
+          </div>
+        <% end %>
+      </div>
     </div>
+
+    <script>
+      function toggleUpsellsPanel() {
+        const content = document.getElementById('upsells-collapsible-content');
+        const text = document.getElementById('upsells-toggle-text');
+        const icon = document.getElementById('upsells-toggle-icon');
+
+        if (content.style.display === 'none' || !content.style.display) {
+          content.style.display = 'block';
+          text.textContent = 'Plegar';
+          icon.style.transform = 'rotate(180deg)';
+        } else {
+          content.style.display = 'none';
+          text.textContent = 'Desplegar';
+          icon.style.transform = 'rotate(0deg)';
+        }
+      }
+    </script>
 
     <%# --- BALANCE FINANCIERO DEL SHOW --- %>
     <div style="background: white; padding: 20px; border-radius: 16px; box-shadow: 0 6px 20px rgba(2,6,23,0.04); border: 1px solid #e6eef8; margin-bottom: 24px;">
@@ -342,26 +386,69 @@
     </div>
     <%# --- ASIGNACIÓN DE TRABAJADORES --- %>
     <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
-      <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.1em;">👷 Trabajadores asignados</h3>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
-        <% @gig.staff_members.each do |staff| %>
-          <div style="background: #f1f5f9; padding: 8px 12px; border-radius: 8px; font-size: 0.9em; font-weight: 600; color: #475569; display: flex; align-items: center; gap: 8px;">
-            <%= link_to staff.display_name, user_path(staff), style: "color: #2563eb; text-decoration: none;" %>
+      <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;">
+        <span>👷 Trabajadores asignados</span>
+        <span style="font-size: 0.85em; color: #64748b; font-weight: 600;">Total acordado: $<%= number_with_precision(@gig.staff_assignments.sum(:agreed_amount), precision: 2) %></span>
+      </h3>
+
+      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
+        <div style="flex: 1; min-width: 200px;">
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">Seleccionar trabajador</label>
+          <%= f.select :staff_id, User.workers.order(:email).map { |w| [w.display_name, w.id] }, { prompt: "Seleccionar trabajador..." }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+        </div>
+        <div style="flex: 1; min-width: 220px;">
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">¿Cuánto le vas a pagar a este trabajador? ($ USD)</label>
+          <%= f.text_field :agreed_amount, inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+        </div>
+        <div>
+          <%= f.submit "➕ Asignar trabajador", style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
+        </div>
+      <% end %>
+
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+        <% @gig.staff_assignments.includes(:user).each do |sa| %>
+          <% staff = sa.user %>
+          <% paid = sa.total_paid %>
+          <% pending = [sa.pending_balance, 0].max %>
+          <div style="background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <span style="font-size: 1.2em;">👤</span>
+              <div>
+                <%= link_to staff.display_name, user_path(staff), style: "color: #0f172a; font-weight: 700; text-decoration: none;" %>
+                <div style="font-size: 0.8em; color: #64748b;"><%= staff.email %></div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 16px; font-size: 0.88em;">
+              <div>
+                <span style="color: #64748b; font-weight: 600;">Acordado:</span>
+                <strong style="color: #1e293b;">$ <%= number_with_precision(sa.agreed_amount, precision: 2) %></strong>
+              </div>
+
+              <div>
+                <span style="color: #64748b; font-weight: 600;">Pagado:</span>
+                <strong style="color: #059669;">$ <%= number_with_precision(paid, precision: 2) %></strong>
+              </div>
+
+              <div>
+                <span style="color: #64748b; font-weight: 600;">Debido:</span>
+                <strong style="color: <%= pending > 0 ? '#dc2626' : '#059669' %>; background: <%= pending > 0 ? '#fef2f2' : '#ecfdf5' %>; padding: 3px 8px; border-radius: 6px; border: 1px solid <%= pending > 0 ? '#fecaca' : '#a7f3d0' %>;">
+                  $ <%= number_with_precision(pending, precision: 2) %>
+                </strong>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <%= link_to '💵 Pagar', new_employee_payment_path(gig_id: @gig.id, user_id: staff.id), style: 'background: #f59e0b; color: white; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; text-decoration: none;' %>
+                <%= button_to '❌ Desasignar', remove_staff_gig_path(@gig, staff_id: staff.id), method: :delete, data: { confirm: '¿Seguro que deseas desasignar a este trabajador?' }, style: 'background: #f1f5f9; color: #ef4444; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; cursor: pointer;' %>
+              </div>
+            </div>
           </div>
         <% end %>
-        <% if @gig.staff_members.empty? %>
-          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic;">No hay trabajadores asignados.</p>
+
+        <% if @gig.staff_assignments.empty? %>
+          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic;">No hay trabajadores asignados a este show.</p>
         <% end %>
       </div>
-      
-      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 10px; align-items: center; flex-wrap: wrap;" do |f| %>
-        <%= f.select :staff_id, User.workers.order(:email).pluck(:email, :id), { prompt: "Seleccionar trabajador..." }, style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: #f8fafc;" %>
-        <%= f.submit "Asignar trabajador", style: "background: #2563eb; color: white; border: none; padding: 9px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
-      <% end %>
-      <div style="margin-top: 10px;">
-        <%= link_to 'Registrar pago a trabajador', new_employee_payment_path(gig_id: @gig.id), style: 'background: #f59e0b; color: white; padding: 9px 15px; border-radius: 8px; font-weight: bold; text-decoration: none; display: inline-block;' %>
-      </div>
-      <small style="color: #64748b; margin-top: 8px; display: block;">Asigna a los trabajadores del show y registra pagos desde aquí para mantener el control claro.</small>
     </div>
   <% end %>
 

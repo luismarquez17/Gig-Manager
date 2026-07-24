@@ -10,16 +10,17 @@
     <div class="form-group-custom">
       <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
       <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client.name} - #{g.date}" }, { include_blank: true }, { class: 'form-input-custom' } %>
-      <small style="color: #64748b; font-size: 0.85em;">Si seleccionas show, el pago se tomará del fondo de Nómina / Agrupación asignado a ese show.</small>
-      <% if @gig.present? %>
-        <div style="margin-top: 8px; padding: 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; color: #0f172a;">
-          <strong>Saldo disponible en el fondo de Nómina / Agrupación:</strong>
-          <span style="font-weight: 800;"><%= number_to_currency(@payroll_balance, unit: @gig.currency) %></span>
-          <% if @payroll_balance <= 0 %>
-            <div style="margin-top:4px; color:#b45309; font-size:0.9em;">No hay saldo disponible en nómina para este show. Asigna primero un fondo de Nómina / Agrupación.</div>
-          <% end %>
-        </div>
-      <% end %>
+      <small style="color: #64748b; font-size: 0.85em;">El pago se tomará del fondo universal de Nómina / Agrupación (priorizando el show seleccionado si tiene fondos asignados).</small>
+      <div style="margin-top: 8px; padding: 10px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; color: #0f172a;">
+        <strong>Saldo disponible en el fondo universal de Nómina:</strong>
+        <span style="font-weight: 800;"><%= number_to_currency(@payroll_balance.to_f, unit: 'USD') %></span>
+        <% if @gig.present? %>
+          <div style="margin-top:4px; color:#475569; font-size:0.85em;">(Saldo asignado directamente a este show: <%= number_to_currency(@gig_payroll_balance.to_f, unit: (@gig.currency.presence || 'USD')) %>)</div>
+        <% end %>
+        <% if @payroll_balance <= 0 %>
+          <div style="margin-top:4px; color:#b45309; font-size:0.9em;">No hay saldo disponible en el fondo universal de nómina. Asigna primero un fondo de Nómina / Agrupación en un show.</div>
+        <% end %>
+      </div>
     </div>
 
     <div class="form-group-custom">

@@ -38,6 +38,8 @@ Rails.application.routes.draw do
       get :load_in_checklist
       post :add_kit
       post :assign_staff
+      delete :remove_staff
+      patch :update_staff_pay
       get :print_contract
     end
     resources :gig_timeline_items, only: [:create, :destroy]
@@ -65,6 +67,8 @@ Rails.application.routes.draw do
 
   get '/investments/report', to: 'investments#report', as: 'investments_report'
   resources :investments
+
+  resources :standard_upsells
 
   resources :preset_budgets do
     member do

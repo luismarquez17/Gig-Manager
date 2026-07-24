@@ -100,16 +100,44 @@ class GigsController < ApplicationController
   def assign_staff
     @gig = Gig.find(params[:id])
     user = User.find_by(id: params[:staff_id])
+    agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
 
     if user && (user.staff? || user.leader? || user.musician?)
-      if @gig.staff_members.include?(user)
-        redirect_to gig_path(@gig), alert: "Este trabajador ya está asignado."
-      else
-        @gig.staff_members << user
-        redirect_to gig_path(@gig), notice: "Trabajador asignado con éxito."
-      end
+      assignment = @gig.staff_assignments.find_or_initialize_by(user_id: user.id)
+      is_new = assignment.new_record?
+      assignment.agreed_amount = agreed_amount
+      assignment.save!
+
+      notice_msg = is_new ? "Trabajador #{user.display_name} asignado con éxito con pago acordado de $#{view_context.number_with_precision(agreed_amount, precision: 2)}." : "Pago acordado para #{user.display_name} actualizado."
+      redirect_to gig_path(@gig), notice: notice_msg
     else
       redirect_to gig_path(@gig), alert: "Usuario no válido."
+    end
+  end
+
+  def remove_staff
+    @gig = Gig.find(params[:id])
+    user = User.find_by(id: params[:staff_id])
+    assignment = @gig.staff_assignments.find_by(user_id: user&.id)
+
+    if assignment
+      assignment.destroy
+      redirect_to gig_path(@gig), notice: "Trabajador desasignado del show."
+    else
+      redirect_to gig_path(@gig), alert: "Asignación no encontrada."
+    end
+  end
+
+  def update_staff_pay
+    @gig = Gig.find(params[:id])
+    assignment = @gig.staff_assignments.find_by(id: params[:staff_assignment_id])
+    agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
+
+    if assignment
+      assignment.update!(agreed_amount: agreed_amount)
+      redirect_to gig_path(@gig), notice: "Pago acordado para #{assignment.user.display_name} actualizado a $#{view_context.number_with_precision(agreed_amount, precision: 2)}."
+    else
+      redirect_to gig_path(@gig), alert: "Asignación no encontrada."
     end
   end
 
@@ -174,7 +202,7 @@ class GigsController < ApplicationController
   def gig_params
     params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :start_time, :end_time).tap do |whitelisted|
       if params[:gig].has_key?(:custom_upsells)
-        whitelisted[:custom_upsells] = params[:gig][:custom_upsells].presence&.to_unsafe_h || []
+        whitelisted[:custom_upsells] = params[:gig][:custom_upsells].presence&.to_unsafe_h || {}
       end
     end
   end

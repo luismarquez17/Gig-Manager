@@ -59,4 +59,24 @@ class GigTest < ActiveSupport::TestCase
     assert_equal "Custom sparkulars description", sparkulars_upsell[:description]
     assert_includes sparkulars_upsell[:whatsapp_message], "por $55 USD adicionales"
   end
+
+  test "disabling an upsell on a gig removes it from available_upsells for that gig" do
+    gig = Gig.create!(amount: 500, client_email: "test@example.com", custom_upsells: { "smoke_machine" => { "disabled" => "1" } })
+    upsells = gig.available_upsells
+    refute_includes upsells.map { |u| u[:id] }, :smoke_machine
+    assert_equal 3, upsells.size
+  end
+
+  test "adding a new global StandardUpsell automatically adds it to all gigs" do
+    StandardUpsell.create!(key: "projector", title: "Proyector & Pantalla", emoji: "🎬", price: 50.0, active: true)
+
+    gig = Gig.create!(amount: 500, client_email: "test@example.com")
+    upsells = gig.available_upsells
+    
+    projector_upsell = upsells.find { |u| u[:id] == :projector }
+    assert projector_upsell.present?
+    assert_equal "Proyector & Pantalla", projector_upsell[:title]
+    assert_equal 50.0, projector_upsell[:price]
+    assert_equal "🎬", projector_upsell[:emoji]
+  end
 end

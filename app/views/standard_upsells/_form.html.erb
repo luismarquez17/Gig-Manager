@@ -1,0 +1,57 @@
+<%= form_with model: @standard_upsell, local: true do |f| %>
+  <% if @standard_upsell.errors.any? %>
+    <div style="background: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 12px; margin-bottom: 20px; color: #991b1b;">
+      <h4 style="margin: 0 0 8px 0; font-size: 0.95em;"><%= pluralize(@standard_upsell.errors.count, "error") %> impidieron guardar este adicional:</h4>
+      <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+        <% @standard_upsell.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; display: flex; flex-direction: column; gap: 18px;">
+    
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <div style="width: 70px;">
+        <label style="display: block; font-size: 0.85em; font-weight: bold; color: #475569; margin-bottom: 6px;">Emoji</label>
+        <%= f.text_field :emoji, style: "width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1.2em; text-align: center; outline: none;", placeholder: "🚀" %>
+      </div>
+
+      <div style="flex: 1; min-width: 220px;">
+        <label style="display: block; font-size: 0.85em; font-weight: bold; color: #475569; margin-bottom: 6px;">Título del Adicional Estándar *</label>
+        <%= f.text_field :title, required: true, style: "width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; outline: none;", placeholder: "Ej. Proyector & Pantalla 100\"" %>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+      <div style="flex: 1; min-width: 150px;">
+        <label style="display: block; font-size: 0.85em; font-weight: bold; color: #475569; margin-bottom: 6px;">Precio Estándar (USD)</label>
+        <%= f.number_field :price, step: :any, style: "width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; outline: none;", placeholder: "50.00" %>
+      </div>
+
+      <div style="width: 100px;">
+        <label style="display: block; font-size: 0.85em; font-weight: bold; color: #475569; margin-bottom: 6px;">Moneda</label>
+        <%= f.text_field :currency, style: "width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; outline: none; text-transform: uppercase;", placeholder: "USD" %>
+      </div>
+    </div>
+
+    <div>
+      <label style="display: block; font-size: 0.85em; font-weight: bold; color: #475569; margin-bottom: 6px;">Descripción Recomendada para el Cliente</label>
+      <%= f.text_area :description, rows: 3, style: "width: 100%; box-sizing: border-box; padding: 10px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; outline: none; resize: vertical;", placeholder: "Describe los beneficios y características del servicio adicional..." %>
+    </div>
+
+    <div style="background: #f8fafc; padding: 12px 15px; border-radius: 10px; border: 1px solid #e2e8f0;">
+      <label style="display: inline-flex; align-items: center; gap: 8px; font-weight: bold; color: #334155; font-size: 0.9em; cursor: pointer;">
+        <%= f.check_box :active, style: "width: 18px; height: 18px; cursor: pointer;" %>
+        Activo por defecto en todos los nuevos eventos
+      </label>
+    </div>
+
+    <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+      <%= link_to "Cancelar", standard_upsells_path, style: "background: #f1f5f9; color: #475569; text-decoration: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; font-size: 0.9em;" %>
+      <%= f.submit "Guardar Adicional Estándar", style: "background: #4f46e5; color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 4px 6px rgba(79, 70, 229, 0.15);" %>
+    </div>
+
+  </div>
+<% end %>
