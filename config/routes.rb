@@ -41,6 +41,7 @@ Rails.application.routes.draw do
       delete :remove_staff
       patch :update_staff_pay
       get :print_contract
+      post :add_upsell
     end
     resources :gig_timeline_items, only: [:create, :destroy]
     resources :gig_items, only: [:create, :destroy]

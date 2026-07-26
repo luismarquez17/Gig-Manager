@@ -211,6 +211,73 @@
           Todos los adicionales del catálogo estándar están activos automáticamente para este toque. Desactiva los que no desees mostrar en el portal de este cliente o modifica su precio/título si este evento lo requiere.
         </p>
 
+        <% if current_user.leader? %>
+          <%# --- BARRA DE ACCIÓN RÁPIDA PARA LÍDERES: AÑADIR ADICIONAL AL EVENTO --- %>
+          <div style="background: #ffffff; border: 1px solid #c7d2fe; border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.05);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+              <div>
+                <h4 style="margin: 0; color: #1e293b; font-size: 1.02em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+                  ⚡ Añadir Adicional / Hora Extra al Evento
+                </h4>
+                <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.84em;">
+                  Haz clic en un botón para sumar el adicional cobrado. El presupuesto final aumentará automáticamente y si es una hora extra, se extenderá el horario.
+                </p>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
+              <% standard_catalog_list = StandardUpsell.all_with_defaults %>
+              <% custom_upsells_map = @gig.custom_upsells || {} %>
+              <% standard_catalog_list.each do |std| %>
+                <% 
+                  key_name = std.key.to_s
+                  c_data = custom_upsells_map[key_name] || custom_upsells_map[std.id.to_s] || {}
+                  card_active = std.active? && c_data['disabled'] != '1' && c_data['disabled'] != true
+                  next unless card_active
+                  item_title = c_data['title'].presence || std.title
+                  item_emoji = c_data['emoji'].presence || std.emoji || '🚀'
+                  item_price = c_data['price'].present? ? c_data['price'].to_f : std.price.to_f
+                  item_currency = c_data['currency'].presence || std.currency || @gig.currency || 'USD'
+                  is_time = key_name == 'extra_time' || key_name.include?('hora')
+                %>
+                <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "display: inline-block;" do |f| %>
+                  <%= hidden_field_tag :upsell_key, key_name %>
+                  <%= hidden_field_tag :price, item_price %>
+                  <%= hidden_field_tag :title, item_title %>
+                  <button type="submit" onclick="return confirm('¿Añadir \'<%= item_title %>\' (+ $ <%= number_with_precision(item_price, precision: 2) %> <%= item_currency %>) a este evento?<%= ' Se agregará 1 hora al horario final.' if is_time %>');" style="background: <%= is_time ? '#4f46e5' : '#059669' %>; color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 700; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); transition: transform 0.15s, opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                    <span><%= item_emoji %></span>
+                    <span>+ <%= item_title %> (+ $ <%= number_with_precision(item_price, precision: 0) %> <%= item_currency %>)</span>
+                  </button>
+                <% end %>
+              <% end %>
+            </div>
+
+            <%# Formulario para monto u hora extra personalizada a medida %>
+            <details style="margin-top: 10px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+              <summary style="font-weight: 700; font-size: 0.85em; color: #475569; cursor: pointer; user-select: none;">
+                ⚙️ Añadir adicional con monto u horas personalizadas...
+              </summary>
+              <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "margin-top: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;" do |f| %>
+                <div style="flex: 2; min-width: 180px;">
+                  <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">Concepto / Título del Adicional</label>
+                  <%= text_field_tag :title, nil, placeholder: "Ej: Hora Extra Especial, Tarima Extra...", required: true, style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em;" %>
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                  <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">Monto Adicional ($)</label>
+                  <%= number_field_tag :price, nil, step: :any, placeholder: "0.00", required: true, style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em;" %>
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                  <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">¿Sumar tiempo al horario?</label>
+                  <%= select_tag :hours, options_for_select([["No sumar tiempo", 0], ["+ 1 Hora de evento", 1], ["+ 2 Horas de evento", 2], ["+ 3 Horas de evento", 3]]), style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; background: white;" %>
+                </div>
+                <div>
+                  <%= f.submit "➕ Registrar Adicional", style: "background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer;" %>
+                </div>
+              <% end %>
+            </details>
+          </div>
+        <% end %>
+
         <%= form_with model: @gig, local: true do |f| %>
           <div id="upsells-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 20px;">
             <% 
@@ -293,8 +360,20 @@
       <h3 style="margin: 0 0 12px 0; font-size: 1.05em; font-weight: 800; color: #1e293b;">💰 Balance Financiero del Show</h3>
       <div style="display: grid; grid-template-columns: 1fr 220px; gap: 16px; align-items: start;">
         <div>
-          <p style="margin: 6px 0 0 0; color: #64748b; font-weight: 700;">Monto Acordado</p>
-          <p style="margin: 6px 0 12px 0; font-size: 1.2em; font-weight: 800; color: #10b981;"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size:0.7em; color:#94a3b8;"><%= @gig.currency %></span></p>
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <div>
+              <p style="margin: 6px 0 0 0; color: #64748b; font-weight: 700;">Monto Acordado</p>
+              <p style="margin: 6px 0 12px 0; font-size: 1.2em; font-weight: 800; color: #10b981;"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size:0.7em; color:#94a3b8;"><%= @gig.currency %></span></p>
+            </div>
+            <% if current_user.leader? %>
+              <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true do |f| %>
+                <%= hidden_field_tag :upsell_key, 'extra_time' %>
+                <button type="submit" onclick="return confirm('¿Añadir 1 Hora Extra a este evento? Se sumará la tarifa correspondiente al monto del toque y 1 hora al horario final.');" style="background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 6px 12px; border-radius: 10px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#c7d2fe'" onmouseout="this.style.background='#e0e7ff'">
+                  🎵 + Añadir Hora Extra
+                </button>
+              <% end %>
+            <% end %>
+          </div>
 
           <div style="margin: 8px 0 12px 0;">
             <div style="display:flex; justify-content:space-between; align-items:center; font-weight:700; color:#475569; margin-bottom:6px;">

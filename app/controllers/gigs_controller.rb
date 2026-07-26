@@ -155,6 +155,48 @@ class GigsController < ApplicationController
     render layout: false
   end
 
+  def add_upsell
+    @gig = Gig.find(params[:id])
+    upsell_key = params[:upsell_key].to_s
+
+    custom_map = @gig.custom_upsells || {}
+    custom_data = custom_map[upsell_key] || {}
+    std_upsell = StandardUpsell.find_by(key: upsell_key)
+
+    title = params[:title].presence || custom_data['title'].presence || std_upsell&.title || upsell_key.humanize
+    
+    if params[:price].present?
+      price = params[:price].to_s.tr(',', '.').to_f
+    elsif custom_data['price'].present?
+      price = custom_data['price'].to_f
+    else
+      price = std_upsell&.price.to_f
+    end
+
+    hours_to_add = (params[:hours].presence || 1).to_i
+
+    extended_time_msg = ""
+    is_extra_time = upsell_key == 'extra_time' || upsell_key.include?('time') || upsell_key.include?('hora') || title.downcase.include?('hora')
+
+    if is_extra_time && @gig.end_time.present?
+      @gig.end_time = @gig.end_time + hours_to_add.hours
+      extended_time_msg = " y se sumó #{hours_to_add} hora(s) al horario del evento"
+    end
+
+    @gig.amount = @gig.amount.to_f + price
+
+    timestamp = Time.current.strftime("%d/%m/%Y %I:%M %p")
+    price_formatted = helpers.number_with_precision(price, precision: 2)
+    note = "Adicional añadido (#{timestamp}): #{title} (+$#{price_formatted} #{@gig.currency || 'USD'})"
+    @gig.details = @gig.details.present? ? "#{@gig.details}\n• #{note}" : "• #{note}"
+
+    if @gig.save
+      redirect_to gig_path(@gig), notice: "Adicional '#{title}' añadido con éxito (+ $#{price_formatted} #{@gig.currency || 'USD'})#{extended_time_msg}."
+    else
+      redirect_to gig_path(@gig), alert: "No se pudo añadir el adicional: #{@gig.errors.full_messages.join(', ')}"
+    end
+  end
+
   def new
     @gig = Gig.new
   end
