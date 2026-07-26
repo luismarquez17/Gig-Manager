@@ -44,8 +44,9 @@
       <div style="font-size: 0.8em; color: #94a3b8; margin-top: 4px;">Saldo pendiente</div>
     </div>
 
-    <% paid_count = @employee_payments.select { |p| (p.expected_amount.to_f - p.amount.to_f) <= 0 }.count %>
-    <% pending_count = @employee_payments.count - paid_count %>
+    <% items = @worker_payment_items || [] %>
+    <% paid_count = items.count { |i| i[:pending_amount] <= 0 } %>
+    <% pending_count = items.count { |i| i[:pending_amount] > 0 } %>
     <div style="background: white; border-radius: 16px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03);">
       <div style="font-size: 0.8em; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Estado Shows</div>
       <div style="display: flex; gap: 12px; align-items: center; margin-top: 6px;">
@@ -67,50 +68,50 @@
   <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); overflow: hidden;">
     <div style="padding: 20px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">
       <h2 style="margin: 0; font-size: 1.1em; font-weight: 800; color: #0f172a;">Detalle por Show</h2>
-      <span style="font-size: 0.85em; color: #94a3b8;"><%= @employee_payments.count %> registro<%= @employee_payments.count == 1 ? '' : 's' %></span>
+      <span style="font-size: 0.85em; color: #94a3b8;"><%= items.count %> registro<%= items.count == 1 ? '' : 's' %></span>
     </div>
 
-    <% if @employee_payments.present? %>
+    <% if items.present? %>
       <div style="overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
           <thead>
             <tr style="background: #f8fafc; border-bottom: 1px solid #f1f5f9;">
               <th style="padding: 14px 20px; color: #64748b; font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">Evento / Show</th>
-              <th style="padding: 14px 12px; text-align: right; color: #64748b; font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">Esperado</th>
+              <th style="padding: 14px 12px; text-align: right; color: #64748b; font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">Acordado</th>
               <th style="padding: 14px 12px; text-align: right; color: #64748b; font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">Cobrado</th>
               <th style="padding: 14px 12px; text-align: right; color: #64748b; font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">Pendiente</th>
               <th style="padding: 14px 20px; text-align: center; color: #64748b; font-weight: 700; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.05em;">Estado</th>
             </tr>
           </thead>
           <tbody>
-            <% @employee_payments.each do |payment| %>
-              <% pending = payment.expected_amount.to_f - payment.amount.to_f %>
+            <% items.each do |item| %>
+              <% pending = item[:pending_amount] %>
               <tr style="border-bottom: 1px solid #f8fafc; transition: background 0.15s;" onmouseover="this.style.background='#fafbff'" onmouseout="this.style.background='transparent'">
                 <td style="padding: 16px 20px; font-weight: 600; color: #0f172a;">
-                  <% if payment.gig.present? %>
-                    <%= link_to gig_path(payment.gig), style: "color: #4f46e5; text-decoration: none; font-weight: 700; display: flex; flex-direction: column; gap: 2px;" do %>
-                      <span style="font-size: 1em;"><%= payment.gig.client&.name || 'Show sin cliente' %></span>
+                  <% if item[:gig].present? %>
+                    <%= link_to gig_path(item[:gig]), style: "color: #4f46e5; text-decoration: none; font-weight: 700; display: flex; flex-direction: column; gap: 2px;" do %>
+                      <span style="font-size: 1em;"><%= item[:title] %></span>
                       <span style="font-size: 0.8em; color: #94a3b8; font-weight: 500;">
-                        📅 <%= payment.gig.date&.strftime('%d de %B de %Y') rescue '' %>
-                        <% if payment.gig.location.present? %>
-                          &nbsp;·&nbsp; 📍 <%= truncate(payment.gig.location, length: 30) %>
+                        📅 <%= item[:date]&.strftime('%d de %B de %Y') rescue '' %>
+                        <% if item[:gig].location.present? %>
+                          &nbsp;·&nbsp; 📍 <%= truncate(item[:gig].location, length: 30) %>
                         <% end %>
                       </span>
                     <% end %>
                   <% else %>
-                    <span style="color: #475569;">Pago Directo</span>
+                    <span style="color: #475569;"><%= item[:title] %></span>
                     <span style="font-size: 0.8em; color: #94a3b8; font-weight: 500; display: block;">
-                      <%= payment.date_paid&.strftime('%d %b %Y') || payment.created_at.strftime('%d %b %Y') %>
+                      <%= item[:date]&.strftime('%d %b %Y') rescue '' %>
                     </span>
                   <% end %>
                 </td>
 
                 <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #475569;">
-                  <%= number_to_currency(payment.expected_amount, unit: '$') %>
+                  <%= number_to_currency(item[:expected_amount], unit: '$') %>
                 </td>
 
                 <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #16a34a;">
-                  <%= number_to_currency(payment.amount, unit: '$') %>
+                  <%= number_to_currency(item[:paid_amount], unit: '$') %>
                 </td>
 
                 <td style="padding: 16px 12px; text-align: right; font-weight: 800; color: <%= pending > 0 ? '#b45309' : '#16a34a' %>;">
@@ -120,7 +121,7 @@
                 <td style="padding: 16px 20px; text-align: center;">
                   <% if pending <= 0 %>
                     <span style="background: #dcfce7; color: #15803d; padding: 5px 12px; border-radius: 9999px; font-size: 0.78em; font-weight: 800; white-space: nowrap;">✓ Pagado</span>
-                  <% elsif payment.amount.to_f > 0 %>
+                  <% elsif item[:paid_amount] > 0 %>
                     <span style="background: #fef3c7; color: #b45309; padding: 5px 12px; border-radius: 9999px; font-size: 0.78em; font-weight: 800; white-space: nowrap;">⏳ Abonado</span>
                   <% else %>
                     <span style="background: #fee2e2; color: #b91c1c; padding: 5px 12px; border-radius: 9999px; font-size: 0.78em; font-weight: 800; white-space: nowrap;">⚠ Pendiente</span>

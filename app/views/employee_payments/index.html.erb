@@ -8,7 +8,7 @@
       <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
     </div>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto esperado</div>
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto acordado</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #1d4ed8; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:expected_amount] }, unit: 'USD') %></div>
     </div>
     <% total_balance_due = @worker_metrics.sum { |m| m[:balance_due] } %>
@@ -35,7 +35,7 @@
           </div>
           <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <span style="background: #ecfdf5; color: #065f46; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pagado: <%= number_to_currency(metric[:total_paid], unit: 'USD') %></span>
-            <span style="background: #eff6ff; color: #1d4ed8; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Esperado: <%= number_to_currency(metric[:expected_amount], unit: 'USD') %></span>
+            <span style="background: #eff6ff; color: #1d4ed8; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Acordado: <%= number_to_currency(metric[:expected_amount], unit: 'USD') %></span>
             <span style="background: #fff7ed; color: #b45309; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pendiente: <%= number_to_currency(metric[:balance_due], unit: 'USD') %></span>
             <%= link_to 'Ver historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
           </div>

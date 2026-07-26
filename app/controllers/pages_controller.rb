@@ -15,7 +15,7 @@ class PagesController < ApplicationController
       @total_payroll_spent = FundAllocation.joins(:fund_expenses).where(fund_type: 'payroll').sum('fund_expenses.amount').to_f
       @total_payroll_available = @total_payroll_reserved - @total_payroll_spent
       @total_funds_allocated = FundAllocation.sum(:amount).to_f
-      @total_pending_worker_payments = EmployeePayment.where('employee_payments.expected_amount > employee_payments.amount').sum('employee_payments.expected_amount - employee_payments.amount').to_f
+      @total_pending_worker_payments = User.workers.to_a.sum(&:pending_balance)
       @needed_payroll = [@total_pending_worker_payments - @total_payroll_available, 0].max
       @shows_with_payroll = Gig.joins(:fund_allocations).where(fund_allocations: { fund_type: 'payroll' }).distinct.count
     elsif current_user.staff?
@@ -33,7 +33,7 @@ class PagesController < ApplicationController
 
       # Pagos y deudas del staff
       @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
-      @total_owed = @employee_payments.sum("employee_payments.expected_amount - employee_payments.amount").to_f
+      @total_owed = current_user.pending_balance
     elsif current_user.musician?
       @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
       @proximos_gigs = current_user.assigned_gigs.includes(:client).where("date >= ?", Date.today).order(date: :asc)
@@ -41,7 +41,7 @@ class PagesController < ApplicationController
       
       # Pagos y deudas del músico
       @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
-      @total_owed = @employee_payments.sum("employee_payments.expected_amount - employee_payments.amount").to_f
+      @total_owed = current_user.pending_balance
     else
       # Client
       @proximos_gigs = current_user.client ? current_user.client.gigs.where("date >= ?", Date.today).order(date: :asc).limit(5) : []
@@ -197,9 +197,10 @@ class PagesController < ApplicationController
     end
 
     @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
-    @total_owed = @employee_payments.sum("employee_payments.expected_amount - employee_payments.amount").to_f
-    @total_expected = @employee_payments.sum("employee_payments.expected_amount").to_f
-    @total_paid = @employee_payments.sum("employee_payments.amount").to_f
+    @worker_payment_items = current_user.worker_payment_items
+    @total_expected = current_user.total_agreed_amount
+    @total_paid = current_user.total_paid_amount
+    @total_owed = current_user.pending_balance
   end
 
   def help

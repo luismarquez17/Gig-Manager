@@ -10,15 +10,33 @@ class EmployeePaymentsController < ApplicationController
       @selected_worker = User.find_by(id: params[:user_id])
     end
 
-    # Calculamos métricas en bloque para evitar N+1
-    payments = EmployeePayment.where(user_id: User.workers.select(:id))
+    # Calculamos métricas en bloque considerando StaffAssignments y EmployeePayments
+    workers = User.workers.order(:email)
+    worker_ids = workers.pluck(:id)
+
+    staff_agreed_sums = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
+
+    payments = EmployeePayment.where(user_id: worker_ids)
     paid_sums = payments.group(:user_id).sum(:amount)
-    expected_sums = payments.group(:user_id).sum(:expected_amount)
     counts = payments.group(:user_id).count
 
-    @worker_metrics = User.workers.order(:email).map do |worker|
+    user_gig_map = StaffAssignment.where(user_id: worker_ids).pluck(:user_id, :gig_id).each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |(u_id, g_id), hash|
+      hash[u_id].add(g_id)
+    end
+
+    unassigned_expected_sums = Hash.new(0.0)
+    payments.where("gig_id IS NULL OR expected_amount > 0").find_each do |p|
+      gigs_for_user = user_gig_map[p.user_id]
+      if p.gig_id.nil? || !gigs_for_user.include?(p.gig_id)
+        unassigned_expected_sums[p.user_id] += p.expected_amount.to_f
+      end
+    end
+
+    @worker_metrics = workers.map do |worker|
+      agreed_from_assignments = staff_agreed_sums[worker.id].to_f
+      agreed_from_unassigned = unassigned_expected_sums[worker.id].to_f
+      expected_total = agreed_from_assignments + agreed_from_unassigned
       paid_total = paid_sums[worker.id].to_f
-      expected_total = expected_sums[worker.id].to_f
 
       {
         worker: worker,
