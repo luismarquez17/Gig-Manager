@@ -18,9 +18,9 @@
     </div>
   </div>
 
-  <%# TARJETA DE RESUMEN %>
+  <%# TARJETA DE RESUMEN Y ESTADO FINANCIERO %>
   <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); border-left: 8px solid <%= color_prioridad(@client.priority) %>; margin-bottom: 20px;">
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
       <div>
         <p style="margin: 0; color: #7f8c8d; font-size: 0.85em; text-transform: uppercase;">Promedio por Show</p>
         <h2 style="margin: 5px 0; color: #27ae60;">$<%= number_with_precision(@client.average_budget, precision: 2) %></h2>
@@ -28,6 +28,14 @@
       <div>
         <p style="margin: 0; color: #7f8c8d; font-size: 0.85em; text-transform: uppercase;">Zona de Trabajo</p>
         <p style="margin: 5px 0; font-weight: bold; color: #34495e;">📍 <%= @client.resumen_ubicacion %></p>
+      </div>
+      <div>
+        <p style="margin: 0; color: #7f8c8d; font-size: 0.85em; text-transform: uppercase;">Deuda Total Pendiente</p>
+        <% if @client.has_debt? %>
+          <h2 style="margin: 5px 0; color: #dc2626;">🔴 $<%= number_with_precision(@client.total_debt, precision: 2) %></h2>
+        <% else %>
+          <h2 style="margin: 5px 0; color: #16a34a;">✅ $0.00</h2>
+        <% end %>
       </div>
     </div>
     <% if @client.email.present? %>
@@ -37,6 +45,63 @@
       </div>
     <% end %>
   </div>
+
+  <%# SECCIÓN DESTACADA DE DEUDA PENDIENTE SI TIENE CUENTAS ABIERTAS %>
+  <% if @client.has_debt? %>
+    <div style="background: #fef2f2; border: 1px solid #fecaca; padding: 25px; border-radius: 15px; margin-bottom: 25px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.05);">
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 15px;">
+        <div>
+          <h3 style="margin: 0; color: #991b1b; font-size: 1.15em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            💳 Cuentas por Cobrar a <%= @client.name %>
+          </h3>
+          <p style="margin: 4px 0 0 0; color: #7f1d1d; font-size: 0.9em;">
+            Este cliente tiene <strong><%= @client.unpaid_gigs.size %> <%= @client.unpaid_gigs.size == 1 ? 'evento' : 'eventos' %></strong> con un saldo acumulado de <strong style="color: #dc2626; font-size: 1.1em;">$<%= number_with_precision(@client.total_debt, precision: 2) %></strong>.
+          </p>
+        </div>
+        
+        <% if @client.debt_whatsapp_url.present? %>
+          <%= link_to @client.debt_whatsapp_url, target: "_blank", title: "Enviar desglose y cobro por WhatsApp", style: "background: #25d366; color: white; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);" do %>
+            <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white;" xmlns="http://www.w3.org/2000/svg">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+            </svg>
+            📲 Recordar Deuda por WhatsApp
+          <% end %>
+        <% end %>
+      </div>
+
+      <%# Tabla de Desglose de Shows Impagos %>
+      <div style="background: white; border-radius: 10px; border: 1px solid #fee2e2; overflow: hidden;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
+          <thead>
+            <tr style="background: #fef2f2; color: #991b1b;">
+              <th style="padding: 10px 15px;">Fecha</th>
+              <th style="padding: 10px 15px;">Lugar / Evento</th>
+              <th style="padding: 10px 15px; text-align: right;">Precio Acordado</th>
+              <th style="padding: 10px 15px; text-align: right;">Pagado</th>
+              <th style="padding: 10px 15px; text-align: right;">Saldo Pendiente</th>
+              <th style="padding: 10px 15px; text-align: center;">Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @client.unpaid_gigs.each do |gig| %>
+              <tr style="border-bottom: 1px solid #fee2e2;">
+                <td style="padding: 12px 15px; font-weight: 600;">📅 <%= gig.date&.strftime('%d/%m/%Y') || 'Sin fecha' %></td>
+                <td style="padding: 12px 15px; font-weight: 600;">📍 <%= gig.location.presence || "Evento sin nombrar" %></td>
+                <td style="padding: 12px 15px; text-align: right; color: #475569;">$ <%= number_with_precision(gig.amount, precision: 2) %></td>
+                <td style="padding: 12px 15px; text-align: right; color: #16a34a;">$ <%= number_with_precision(gig.total_received, precision: 2) %></td>
+                <td style="padding: 12px 15px; text-align: right; font-weight: 800; color: #dc2626;">$ <%= number_with_precision(gig.remaining_amount, precision: 2) %></td>
+                <td style="padding: 12px 15px; text-align: center;">
+                  <%= link_to new_gig_gig_payment_path(gig), style: "background: #10b981; color: white; text-decoration: none; padding: 6px 12px; border-radius: 6px; font-size: 0.82em; font-weight: bold; display: inline-block;" do %>
+                    💵 Registrar Pago
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
 
   <%# CINTA DE NOTAS (VISUALIZACIÓN RÁPIDA) %>
   <% if @client.notes.present? %>

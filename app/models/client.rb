@@ -107,6 +107,35 @@ class Client < ApplicationRecord
     url
   end
 
+  # --- Métodos de Control de Deuda y Saldos ---
+  def total_debt
+    gigs.to_a.sum { |g| [g.remaining_amount.to_f, 0.0].max }
+  end
+
+  def unpaid_gigs
+    gigs.to_a.select { |g| g.remaining_amount.to_f > 0 }
+  end
+
+  def has_debt?
+    total_debt > 0
+  end
+
+  def debt_whatsapp_url
+    return nil unless has_debt? && formatted_phone_for_whatsapp.present?
+
+    lines = ["Hola *#{name}*! 👋 Te escribimos para enviarte un cordial recordatorio sobre el saldo pendiente de tu(s) evento(s):\n"]
+    unpaid_gigs.each do |gig|
+      fecha_str = gig.date ? gig.date.strftime("%d/%m/%Y") : "Fecha no especificada"
+      loc_str = gig.location.presence || "Evento"
+      lines << "• *#{loc_str}* (#{fecha_str}): Monto Total $#{'%.2f' % gig.amount.to_f} | Pagado $#{'%.2f' % gig.total_received.to_f} | *Pendiente: $#{'%.2f' % gig.remaining_amount.to_f}*"
+    end
+
+    lines << "\n💰 *Deuda Total Pendiente: $#{'%.2f' % total_debt}*"
+    lines << "\nPor favor nos confirmas cuando realices el pago o si necesitas los datos bancarios. ¡Muchas gracias por tu atención! 🚀"
+
+    whatsapp_url(text: lines.join("\n"))
+  end
+
   private
 
   def set_default_priority

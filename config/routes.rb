@@ -18,6 +18,9 @@ Rails.application.routes.draw do
   get '/funds/:fund_type', to: 'funds#show', as: 'fund'
 
   resources :clients do
+    collection do
+      get :debts
+    end
     member do
       post :merge
     end

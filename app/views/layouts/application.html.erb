@@ -240,8 +240,12 @@
                 <span class="icon">🛒</span> <span>Lista de Compras</span>
               <% end %>
 
-              <%= link_to clients_path, class: "sidebar-link #{'active' if controller_name == 'clients'}" do %>
+              <%= link_to clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && action_name == 'index'}" do %>
                 <span class="icon">👥</span> <span>Clientes</span>
+              <% end %>
+
+              <%= link_to debts_clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && action_name == 'debts'}" do %>
+                <span class="icon">💳</span> <span>Cuentas por Cobrar</span>
               <% end %>
 
               <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>

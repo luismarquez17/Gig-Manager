@@ -23,4 +23,18 @@ class ClientTest < ActiveSupport::TestCase
     assert_not client.valid?
     assert_includes client.errors[:phone], "no puede contener letras"
   end
+
+  test "total_debt and unpaid_gigs calculation" do
+    client = Client.create!(name: "Cliente Deudor", phone: "04141234567")
+    gig1 = client.gigs.create!(amount: 500.0, date: Date.today)
+    gig2 = client.gigs.create!(amount: 300.0, date: Date.today + 1.day)
+    
+    # Registrar pago parcial de 200 en gig1
+    gig1.gig_payments.create!(amount: 200.0)
+
+    assert_equal 600.0, client.total_debt
+    assert_equal 2, client.unpaid_gigs.size
+    assert client.has_debt?
+    assert_includes CGI.unescape(client.debt_whatsapp_url), "Deuda Total Pendiente: $600.00"
+  end
 end

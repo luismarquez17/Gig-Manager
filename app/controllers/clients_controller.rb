@@ -2,10 +2,15 @@ class ClientsController < ApplicationController
   before_action :require_leader!
 
   def index
-    # Iniciamos con todos los clientes (cargamos de manera anticipada los gigs para evitar N+1 en average_budget)
-    @clients = Client.includes(:gigs).all
+    # Iniciamos con todos los clientes (cargamos de manera anticipada los gigs y sus pagos para evitar N+1)
+    @clients = Client.includes(gigs: :gig_payments).all
 
-    # 1. Buscador Inteligente por nombre o teléfono (insensible a acentos/tildes y tokenizado)
+    # Cálculo de métricas globales para la vista
+    @all_clients_list = Client.includes(gigs: :gig_payments).all
+    @total_debt_global = @all_clients_list.sum(&:total_debt)
+    @debtors_count = @all_clients_list.count(&:has_debt?)
+
+    # 1. Buscador Inteligente por nombre o teléfono
     if params[:query].present?
       terms = params[:query].split(/\s+/)
       terms.each do |term|
@@ -20,19 +25,31 @@ class ClientsController < ApplicationController
       @clients = @clients.where(priority: params[:priority].downcase)
     end
 
-    # 3. Ordenamiento Dinámico (Corregido para PostgreSQL)
-    case params[:sort]
-    when "presupuesto_desc", "presupuesto_asc"
+    # 3. Filtro por deudores
+    if params[:has_debt] == "true"
+      @clients = @clients.to_a.select(&:has_debt?)
+    end
+
+    # 4. Ordenamiento Dinámico
+    if params[:sort] == "deuda_desc"
+      @clients = @clients.to_a.sort_by { |c| -c.total_debt }
+    elsif params[:sort] == "presupuesto_desc" || params[:sort] == "presupuesto_asc"
       direction = params[:sort] == "presupuesto_desc" ? "DESC" : "ASC"
-      # Hacemos un JOIN con Gigs para sumar los montos y ordenar
       @clients = @clients.left_joins(:gigs)
                          .group("clients.id")
                          .order(Arel.sql("COALESCE(SUM(gigs.amount), 0) #{direction}"))
-    when "antiguedad_asc"
+    elsif params[:sort] == "antiguedad_asc"
       @clients = @clients.order(created_at: :asc)
     else
-      @clients = @clients.order(created_at: :desc)
+      @clients = @clients.is_a?(Array) ? @clients.sort_by { |c| -c.created_at.to_i } : @clients.order(created_at: :desc)
     end
+  end
+
+  def debts
+    all_clients = Client.includes(gigs: :gig_payments).all
+    @clients_with_debt = all_clients.select(&:has_debt?).sort_by { |c| -c.total_debt }
+    @total_debt_global = @clients_with_debt.sum(&:total_debt)
+    @total_unpaid_gigs_count = @clients_with_debt.sum { |c| c.unpaid_gigs.size }
   end
 
   def new

@@ -1,9 +1,28 @@
 <div style="max-width: 1200px; margin: 0 auto; font-family: 'Segoe UI', sans-serif;">
   
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
     <h1 style="color: #2c3e50; margin: 0;">👥 Directorio de Clientes</h1>
-    <%= link_to '➕ Añadir Nuevo Cliente', new_client_path, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <%= link_to debts_clients_path, style: "background: #{@total_debt_global.to_f > 0 ? '#dc2626' : '#64748b'}; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); display: inline-flex; align-items: center; gap: 8px;" do %>
+        💳 Apartado de Deudores <% if @total_debt_global.to_f > 0 %><span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 12px; font-size: 0.85em;">$ <%= number_with_precision(@total_debt_global, precision: 2) %></span><% end %>
+      <% end %>
+      <%= link_to '➕ Añadir Nuevo Cliente', new_client_path, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
+    </div>
   </div>
+
+  <%# --- BANNER RESUMEN DE DEUDA GLOBAL --- %>
+  <% if @total_debt_global.to_f > 0 %>
+    <div style="background: #fef2f2; border: 1px solid #fecaca; border-left: 6px solid #ef4444; padding: 16px 20px; border-radius: 10px; margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.5em;">⚠️</span>
+        <div>
+          <strong style="color: #991b1b; font-size: 1em;">Atención de Cuentas por Cobrar:</strong>
+          <span style="color: #7f1d1d; font-size: 0.95em;"> Hay <strong><%= @debtors_count %> <%= @debtors_count == 1 ? 'cliente que debe' : 'clientes que deben' %></strong> un total de <strong style="color: #dc2626;">$ <%= number_with_precision(@total_debt_global, precision: 2) %></strong>.</span>
+        </div>
+      </div>
+      <%= link_to "Ver Apartado de Deudores →", debts_clients_path, style: "background: #dc2626; color: white; text-decoration: none; padding: 8px 16px; border-radius: 6px; font-size: 0.85em; font-weight: bold;" %>
+    </div>
+  <% end %>
 
   <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN --- %>
   <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
@@ -16,16 +35,23 @@
       </div>
 
       <%# Filtro de Prioridad %>
-      <div style="flex-grow: 1; min-width: 150px; margin-bottom: 20px;">
+      <div style="flex-grow: 1; min-width: 130px; margin-bottom: 20px;">
         <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
         <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
       </div>
 
-      <%# Selector de Ordenamiento por Dinero %>
+      <%# Filtro por Estado de Deuda %>
+      <div style="flex-grow: 1; min-width: 160px; margin-bottom: 20px;">
+        <%= f.label :has_debt, "Estado de Deuda", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+        <%= f.select :has_debt, [["Todos los clientes", ""], ["🔴 Solo con Deuda", "true"]], { selected: params[:has_debt] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+      </div>
+
+      <%# Selector de Ordenamiento por Dinero / Deuda %>
       <div style="flex-grow: 1; min-width: 180px; margin-bottom: 20px;">
         <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
         <%= f.select :sort, 
             [["🆕 Más Recientes", "fecha_desc"], 
+             ["🔴 Mayor Deuda", "deuda_desc"],
              ["💰 Presupuesto (Mayor)", "presupuesto_desc"], 
              ["💸 Presupuesto (Menor)", "presupuesto_asc"],
              ["📅 Más Antiguos", "antiguedad_asc"]], 
@@ -50,6 +76,7 @@
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Nombre del Cliente</th>
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Prioridad</th>
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Presupuesto Prom.</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee;">Deuda Total</th>
             <th style="padding: 15px; border-bottom: 2px solid #eee; text-align: center;">Acciones</th>
           </tr>
         </thead>
@@ -82,6 +109,17 @@
               </td>
               <td style="padding: 15px; font-weight: bold; color: #2d3748;">
                 $ <%= number_with_precision(client.average_budget, precision: 2) %>
+              </td>
+              <td style="padding: 15px; font-weight: bold;">
+                <% if client.has_debt? %>
+                  <span style="background: #fee2e2; color: #dc2626; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 800; display: inline-block;">
+                    🔴 $ <%= number_with_precision(client.total_debt, precision: 2) %>
+                  </span>
+                <% else %>
+                  <span style="background: #dcfce7; color: #16a34a; padding: 6px 12px; border-radius: 20px; font-size: 0.85em; font-weight: 800; display: inline-block;">
+                    ✅ Al día
+                  </span>
+                <% end %>
               </td>
               <td style="padding: 15px; text-align: center;">
                 <%= link_to client, style: "text-decoration: none;" do %>
