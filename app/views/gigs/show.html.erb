@@ -636,10 +636,10 @@
 
   <%# --- CHECKLIST DE INVENTARIO (oculto para músicos) --- %>
   <% unless current_user.musician? %>
-  <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">
+  <div class="checklist-panel" style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">
     
     <%# CABECERA CHECKLIST %>
-    <div style="background: #f8fafc; padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+    <div class="checklist-header" style="background: #f8fafc; padding: 20px 25px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
       <div>
         <h2 style="margin: 0; color: #1e293b; font-size: 1.3em; font-weight: 800;">✅ Checklist de Equipos</h2>
         <p style="margin: 5px 0 0 0; color: #64748b; font-size: 0.9em;">Despacha tus equipos y verifica el retorno digitalmente para evitar pérdidas.</p>
@@ -650,7 +650,7 @@
     </div>
 
     <%# PESTAÑAS LOGÍSTICAS DE CARGA / RETORNO %>
-    <div style="display: flex; background: #f1f5f9; padding: 6px; border-radius: 14px; margin: 20px 25px; gap: 5px;">
+    <div class="checklist-tabs" style="display: flex; background: #f1f5f9; padding: 6px; border-radius: 14px; margin: 20px 25px; gap: 5px;">
       <button onclick="switchLogisticsMode('general')" id="btn-tab-general" class="logistics-tab" style="flex: 1; padding: 12px; border: none; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer; transition: all 0.2s; background: white; color: #1e293b; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
         📋 Checklist General
       </button>
@@ -739,7 +739,7 @@
 
               item_damaged = gi.item.status == "Dañado"
             %>
-            <li id="gig-item-<%= gi.id %>" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; <%= gi.checked ? 'background-color: #f8fafc; opacity: 0.8;' : 'background-color: #ffffff;' %>">
+            <li id="gig-item-<%= gi.id %>" class="checklist-item" style="display: flex; justify-content: space-between; align-items: center; padding: 18px 25px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; <%= gi.checked ? 'background-color: #f8fafc; opacity: 0.8;' : 'background-color: #ffffff;' %>">
               
               <div style="display: flex; align-items: center; gap: 20px; flex-grow: 1;">
                 
@@ -804,7 +804,7 @@
               </div>
 
               <%# CONTROLES GENERALES %>
-              <div class="col-mode col-general" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;">
+              <div class="col-mode col-general checklist-actions" style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; flex-wrap: wrap; justify-content: flex-end;">
                 <span style="font-size: 1.2em; font-weight: bold; color: <%= gi.checked ? '#cbd5e1' : '#3b82f6' %>; text-align: center; min-width: 40px; background: <%= gi.checked ? 'transparent' : '#eff6ff' %>; padding: 6px 12px; border-radius: 8px;">
                   x <%= gi.quantity %>
                 </span>
