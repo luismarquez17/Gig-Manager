@@ -45,9 +45,9 @@
     <div style="position: relative; z-index: 2;">
       <%# Avatar %>
       <div style="margin-bottom: 25px; display: flex; justify-content: center;">
-        <% if @worker.avatar.attached? %>
+        <% if @worker.avatar_attached? %>
           <div style="width: 130px; height: 130px; border-radius: 50%; overflow: hidden; border: 4px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 25px rgba(139, 92, 246, 0.35); display: flex; align-items: center; justify-content: center;">
-            <%= image_tag @worker.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+            <%= image_tag @worker.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
           </div>
         <% else %>
           <div style="width: 130px; height: 130px; border-radius: 50%; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 3.5em; font-weight: 800; color: white; border: 4px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 25px rgba(139, 92, 246, 0.35);">

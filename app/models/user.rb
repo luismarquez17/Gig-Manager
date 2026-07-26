@@ -18,6 +18,20 @@ class User < ApplicationRecord
 
   after_create :associate_and_claim_gigs
 
+  def avatar_attached?
+    avatar_base64.present? || avatar.attached?
+  end
+
+  def avatar_url_or_data
+    if avatar_base64.present?
+      avatar_base64
+    elsif avatar.attached?
+      avatar
+    else
+      nil
+    end
+  end
+
   def display_name
     name.presence || email.split('@').first.capitalize
   end

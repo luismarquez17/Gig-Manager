@@ -15,9 +15,9 @@
       
       <%# Avatar %>
       <div style="margin-bottom: 15px; display: flex; justify-content: center;">
-        <% if @user.avatar.attached? %>
+        <% if @user.avatar_attached? %>
           <div style="width: 110px; height: 110px; border-radius: 50%; overflow: hidden; border: 4px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center;">
-            <%= image_tag @user.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+            <%= image_tag @user.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
           </div>
         <% else %>
           <div style="width: 110px; height: 110px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); display: flex; align-items: center; justify-content: center; font-size: 2.5em; font-weight: 800; color: white; border: 4px solid rgba(255,255,255,0.2); box-shadow: 0 4px 15px rgba(0,0,0,0.2);">

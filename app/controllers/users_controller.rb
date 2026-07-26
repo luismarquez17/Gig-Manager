@@ -15,6 +15,14 @@ class UsersController < ApplicationController
   end
 
   def update
+    avatar_file = params.dig(:user, :avatar)
+    if avatar_file.respond_to?(:read)
+      content_type = avatar_file.content_type.presence || 'image/jpeg'
+      encoded = Base64.strict_encode64(avatar_file.read)
+      @user.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+      avatar_file.rewind if avatar_file.respond_to?(:rewind)
+    end
+
     if @user.update(user_params)
       # If client, also update the associated client's phone if provided
       if @user.client? && @user.client.present?

@@ -476,9 +476,9 @@
       <% @staff_members.each do |staff| %>
         <%= link_to user_path(staff), style: "text-decoration: none; display: block;" do %>
           <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 18px; text-align: center; transition: border-color 0.3s, transform 0.3s;" onmouseover="this.style.borderColor='rgba(139,92,246,0.3)'; this.style.transform='translateY(-3px)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.06)'; this.style.transform='translateY(0)';" onfocus="this.style.borderColor='rgba(139,92,246,0.3)';" onblur="this.style.borderColor='rgba(255,255,255,0.06)';">
-            <% if staff.avatar.attached? %>
+            <% if staff.avatar_attached? %>
               <div style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; overflow: hidden; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 12px rgba(139, 92, 246, 0.15); display: flex; align-items: center; justify-content: center;">
-                <%= image_tag staff.avatar, style: "width: 100%; height: 100%; object-fit: cover;" %>
+                <%= image_tag staff.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
               </div>
             <% else %>
               <div style="width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 10px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--portal-font-outfit); font-size: 1.5em; font-weight: 800; color: white; border: 3px solid rgba(139, 92, 246, 0.3); box-shadow: 0 0 12px rgba(139, 92, 246, 0.15);">
