@@ -21,4 +21,15 @@ class ClientsControllerTest < ActionDispatch::IntegrationTest
     get client_url(@client)
     assert_response :success
   end
+
+  test "should get debts with filters" do
+    get debts_clients_url
+    assert_response :success
+
+    get debts_clients_url(query: @client.name, date_status: "expired")
+    assert_response :success
+
+    get debts_clients_url(date_status: "upcoming")
+    assert_response :success
+  end
 end

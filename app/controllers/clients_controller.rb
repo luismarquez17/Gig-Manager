@@ -47,9 +47,41 @@ class ClientsController < ApplicationController
 
   def debts
     all_clients = Client.includes(gigs: :gig_payments).all
-    @clients_with_debt = all_clients.select(&:has_debt?).sort_by { |c| -c.total_debt }
-    @total_debt_global = @clients_with_debt.sum(&:total_debt)
-    @total_unpaid_gigs_count = @clients_with_debt.sum { |c| c.unpaid_gigs.size }
+
+    all_unpaid_gigs = Gig.includes(:client, :gig_payments).all.select { |g| g.remaining_amount.to_f > 0 }
+    @expired_unpaid_gigs = all_unpaid_gigs.select { |g| g.date.present? && g.date < Date.today }
+    @upcoming_unpaid_gigs = all_unpaid_gigs.select { |g| g.date.blank? || g.date >= Date.today }
+
+    @total_debt_global = all_unpaid_gigs.sum { |g| g.remaining_amount.to_f }
+    @expired_debt_total = @expired_unpaid_gigs.sum { |g| g.remaining_amount.to_f }
+    @total_unpaid_gigs_count = all_unpaid_gigs.size
+    @expired_unpaid_gigs_count = @expired_unpaid_gigs.size
+    @total_debtors_count = all_clients.count(&:has_debt?)
+
+    @clients_with_debt = all_clients.select(&:has_debt?)
+
+    # 1. Buscador por nombre, teléfono o email del cliente
+    if params[:query].present?
+      query_term = params[:query].downcase.strip
+      @clients_with_debt = @clients_with_debt.select do |c|
+        c.name.to_s.downcase.include?(query_term) ||
+        c.phone.to_s.downcase.include?(query_term) ||
+        c.email.to_s.downcase.include?(query_term)
+      end
+    end
+
+    # 2. Filtro por estado de fecha del evento (vencidos vs próximos)
+    if params[:date_status] == "expired"
+      @clients_with_debt = @clients_with_debt.select do |c|
+        c.unpaid_gigs.any? { |g| g.date.present? && g.date < Date.today }
+      end
+    elsif params[:date_status] == "upcoming"
+      @clients_with_debt = @clients_with_debt.select do |c|
+        c.unpaid_gigs.any? { |g| g.date.blank? || g.date >= Date.today }
+      end
+    end
+
+    @clients_with_debt = @clients_with_debt.sort_by { |c| -c.total_debt }
   end
 
   def new

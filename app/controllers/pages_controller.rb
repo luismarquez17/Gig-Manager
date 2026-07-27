@@ -7,6 +7,8 @@ class PagesController < ApplicationController
       @items_danados = InventoryItem.damaged.count
       @items_excelente = InventoryItem.available.count
 
+      @total_gigs = Gig.count
+      @upcoming_gigs_count = Gig.where("date >= ?", Date.today).count
       @proximos_gigs = Gig.where("date >= ?", Date.today).order(date: :asc).limit(5)
       @total_clients = Client.count
 
