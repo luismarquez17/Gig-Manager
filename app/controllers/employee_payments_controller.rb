@@ -164,6 +164,8 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def payment_params
-    params.require(:employee_payment).permit(:user_id, :gig_id, :amount, :currency, :date_paid, :payment_method, :notes, :expected_amount)
+    p_params = params.require(:employee_payment).permit(:user_id, :gig_id, :amount, :currency, :date_paid, :payment_method, :notes, :expected_amount)
+    p_params[:expected_amount] = 0.0 if p_params[:expected_amount].blank?
+    p_params
   end
 end

@@ -111,4 +111,37 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_match "excede el saldo disponible en el fondo universal de Nómina", flash[:alert]
   end
+
+  test "should update employee payment when expected_amount is empty string" do
+    FundAllocation.create!(
+      gig: @gig,
+      fund_type: "payroll",
+      amount: 500.0,
+      currency: "USD"
+    )
+
+    payment = EmployeePayment.create!(
+      user: @worker,
+      gig: @gig,
+      amount: 100.0,
+      expected_amount: 150.0,
+      currency: "USD",
+      date_paid: Date.today,
+      payment_method: "Efectivo"
+    )
+
+    patch employee_payment_url(payment), params: {
+      employee_payment: {
+        amount: 120.0,
+        expected_amount: "",
+        currency: "USD",
+        date_paid: Date.today
+      }
+    }
+
+    assert_redirected_to employee_payments_path(user_id: @worker.id)
+    payment.reload
+    assert_equal 120.0, payment.amount.to_f
+    assert_equal 0.0, payment.expected_amount.to_f
+  end
 end
