@@ -38,8 +38,38 @@ class Item < ApplicationRecord
     (CATEGORIES + Category.pluck(:name)).uniq
   end
 
-  # LISTA MAESTRA DE SUB-CABLES
-  CABLE_TYPES = ["Micrófono (XLR)", "RCA", "HDMI", "Plug (3.5mm)", "Plug (6.3mm)", "USB C", ]
+  # LISTA MAESTRA DE SUB-CABLES Y LUCES BASE
+  CABLE_TYPES = ["Micrófono (XLR)", "RCA", "HDMI", "Plug (3.5mm)", "Plug (6.3mm)", "USB C"]
+  LIGHT_TYPES = ["Cabezal Móvil", "Par Led", "Estrobo", "Láser", "Máquina de Humo"]
+
+  # Retorna todos los tipos de cable: base + custom (SubCategory + items guardados)
+  def self.cable_types
+    sub_categories_for("Cables")
+  end
+
+  # Retorna todos los tipos de luces: base + custom
+  def self.light_types
+    sub_categories_for("Luces")
+  end
+
+  def self.sub_categories_for(category_name)
+    return [] if category_name.blank?
+
+    base = case category_name
+           when "Cables" then CABLE_TYPES
+           when "Luces" then LIGHT_TYPES
+           else []
+           end
+    custom_subcats = SubCategory.where(category: category_name).pluck(:name)
+    item_subcats = Item.where(category: category_name).pluck(:sub_category)
+    (base + custom_subcats + item_subcats).compact.reject(&:blank?).uniq.sort
+  end
+
+  def self.sub_categories_grouped
+    categories.each_with_object({}) do |cat, hash|
+      hash[cat] = sub_categories_for(cat)
+    end
+  end
 
   # Verifica que los términos aquí coincidan EXACTAMENTE con los del formulario
   validates :status, presence: true, inclusion: { in: ["Excelente", "Operativo", "Dañado"] }

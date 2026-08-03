@@ -28,27 +28,34 @@
       </div>
     </div>
 
-    <%# 2. SUB-CATEGORÍA DINÁMICA %>
-    <%# Este contenedor cambiará de color y contenido según la categoría %>
-    <div id="sub-category-wrapper" style="display: none; margin-bottom: 20px; padding: 15px; border-radius: 12px; border-width: 1px; border-style: solid;">
-      <label id="sub-category-label" style="display: block; font-weight: bold; margin-bottom: 8px;"></label>
+    <%# 2. SUB-CATEGORÍA DINÁMICA DE CUALQUIER CATEGORÍA %>
+    <div id="sub-category-wrapper" style="display: none; margin-bottom: 20px; padding: 15px; border-radius: 12px; border: 1px solid #cbd5e1; background: #f8fafc;">
+      <label id="sub-category-label" style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155;">
+        🏷️ Sub-Categoría
+      </label>
       
-      <%# Select para Cables %>
-      <div id="cables-dropdown" style="display: none;">
-        <%= f.select :sub_category_cable, 
-            Item::CABLE_TYPES, 
-            { selected: (item.category == "Cables" ? item.sub_category : nil), prompt: "Selecciona tipo de cable..." }, 
-            { class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #3498db; background: white;" } 
-        %>
+      <%= f.select :sub_category, 
+          [], 
+          { include_blank: "--- Ninguna / Seleccionar Sub-categoría ---" }, 
+          { id: "sub-category-generic-select", class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e0; background: white;" } 
+      %>
+      
+      <div style="margin-top: 8px; font-size: 0.85em;">
+        ¿No ves la sub-categoría que necesitas? 
+        <a href="javascript:void(0);" onclick="toggleNewGenericSubCategoryForm();" style="color: #2563eb; font-weight: 600; text-decoration: none;" id="toggle-subcat-link-text">
+          Crear una nueva sub-categoría aquí
+        </a>
       </div>
-
-      <%# Select para Luces %>
-      <div id="lights-dropdown" style="display: none;">
-        <%= f.select :sub_category_light, 
-            ["Cabezal Móvil", "Par Led", "Estrobo", "Láser", "Máquina de Humo"], 
-            { selected: (item.category == "Luces" ? item.sub_category : nil), prompt: "Selecciona tipo de luz..." }, 
-            { class: "sub-select", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #a855f7; background: white;" } 
-        %>
+      
+      <div id="inline-generic-subcat-form-container" style="display: none; margin-top: 10px; padding: 12px; border-radius: 10px; background: #ffffff; border: 1px solid #cbd5e1;">
+        <p id="inline-generic-subcat-title" style="margin: 0 0 6px 0; font-size: 0.85em; font-weight: bold; color: #475569;">
+          Crear nueva sub-categoría:
+        </p>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="inline-generic-subcat-input" placeholder="Ej: Sparkulas, Controladores, Cables..." style="flex-grow: 1; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; outline: none;">
+          <button type="button" onclick="submitNewGenericSubCategory();" style="background: #2563eb; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;">Agregar</button>
+        </div>
+        <p id="inline-generic-subcat-error" style="display: none; margin: 5px 0 0 0; font-size: 0.8em; color: #ef4444; font-weight: bold;"></p>
       </div>
     </div>
 
@@ -85,39 +92,57 @@
 </div>
 
 <script>
+  window.subCategoriesMap = <%= Item.sub_categories_grouped.to_json.html_safe %>;
+  window.initialSubCategory = <%= item.sub_category.to_json.html_safe %>;
+
   function updateFormLogic() {
-    const category = document.getElementById('category-select').value;
-    const status = document.getElementById('status-select').value;
+    const categorySelect = document.getElementById('category-select');
+    const category = categorySelect ? categorySelect.value : '';
+    const statusSelect = document.getElementById('status-select');
+    const status = statusSelect ? statusSelect.value : '';
     
     const wrapper = document.getElementById('sub-category-wrapper');
     const label = document.getElementById('sub-category-label');
-    const cableDiv = document.getElementById('cables-dropdown');
-    const lightDiv = document.getElementById('lights-dropdown');
+    const subCatSelect = document.getElementById('sub-category-generic-select');
+    const toggleLinkText = document.getElementById('toggle-subcat-link-text');
     const damageNotice = document.getElementById('damage-notice');
 
-    // Reset de la sección dinámica
-    wrapper.style.display = "none";
-    cableDiv.style.display = "none";
-    lightDiv.style.display = "none";
+    if (!category) {
+      if (wrapper) wrapper.style.display = "none";
+    } else {
+      if (wrapper) wrapper.style.display = "block";
+      if (label) label.innerText = "🏷️ Sub-Categoría de " + category;
+      if (toggleLinkText) toggleLinkText.innerText = 'Crear nueva sub-categoría para "' + category + '" aquí';
 
-    if (category === "Cables") {
-      wrapper.style.display = "block";
-      wrapper.style.backgroundColor = "#f0f9ff";
-      wrapper.style.borderColor = "#bae6fd";
-      label.innerText = "🔌 Tipo de Cable";
-      label.style.color = "#0369a1";
-      cableDiv.style.display = "block";
-    } else if (category === "Luces") {
-      wrapper.style.display = "block";
-      wrapper.style.backgroundColor = "#faf5ff";
-      wrapper.style.borderColor = "#e9d5ff";
-      label.innerText = "💡 Tipo de Iluminación";
-      label.style.color = "#6b21a8";
-      lightDiv.style.display = "block";
+      let currentVal = (subCatSelect && subCatSelect.value) ? subCatSelect.value : (window.initialSubCategory || '');
+      const subcats = (window.subCategoriesMap && window.subCategoriesMap[category]) || [];
+      
+      if (subCatSelect) {
+        subCatSelect.innerHTML = '';
+        
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.text = subcats.length > 0 ? '--- Seleccionar Sub-categoría (Opcional) ---' : '--- Sin sub-categorías registradas aún ---';
+        subCatSelect.add(defaultOpt);
+
+        subcats.forEach(function(scName) {
+          const opt = document.createElement('option');
+          opt.value = scName;
+          opt.text = scName;
+          subCatSelect.add(opt);
+        });
+
+        if (currentVal && subcats.includes(currentVal)) {
+          subCatSelect.value = currentVal;
+        } else if (window.initialSubCategory && subcats.includes(window.initialSubCategory)) {
+          subCatSelect.value = window.initialSubCategory;
+        }
+      }
     }
 
-    // Aviso de Tirro
-    damageNotice.style.display = (status === "Dañado") ? "block" : "none";
+    if (damageNotice) {
+      damageNotice.style.display = (status === "Dañado") ? "block" : "none";
+    }
   }
 
   function toggleNewCategoryInlineForm() {
@@ -137,7 +162,6 @@
     if (!name) return;
 
     errorLabel.style.display = 'none';
-
     var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
     fetch('/categories', {
@@ -168,6 +192,73 @@
     })
     .catch(error => {
       errorLabel.innerText = 'Error al crear la categoría.';
+      errorLabel.style.display = 'block';
+      console.error(error);
+    });
+  }
+
+  function toggleNewGenericSubCategoryForm() {
+    var container = document.getElementById('inline-generic-subcat-form-container');
+    if (container.style.display === 'none') {
+      container.style.display = 'block';
+      document.getElementById('inline-generic-subcat-input').focus();
+    } else {
+      container.style.display = 'none';
+    }
+  }
+
+  function submitNewGenericSubCategory() {
+    var categorySelect = document.getElementById('category-select');
+    var category = categorySelect ? categorySelect.value : '';
+    if (!category) {
+      alert('Por favor selecciona primero una categoría principal.');
+      return;
+    }
+
+    var input = document.getElementById('inline-generic-subcat-input');
+    var name = input.value.trim();
+    var errorLabel = document.getElementById('inline-generic-subcat-error');
+    if (!name) return;
+
+    errorLabel.style.display = 'none';
+    var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+    fetch('/sub_categories', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ sub_category: { name: name, category: category } })
+    })
+    .then(response => response.json())
+    .then(data => {
+      if (data.success) {
+        var newSubCat = data.sub_category.name;
+        if (!window.subCategoriesMap) window.subCategoriesMap = {};
+        if (!window.subCategoriesMap[category]) window.subCategoriesMap[category] = [];
+        if (!window.subCategoriesMap[category].includes(newSubCat)) {
+          window.subCategoriesMap[category].push(newSubCat);
+        }
+
+        var select = document.getElementById('sub-category-generic-select');
+        var option = document.createElement('option');
+        option.value = newSubCat;
+        option.text = newSubCat;
+        select.add(option);
+        select.value = newSubCat;
+        window.initialSubCategory = newSubCat;
+
+        input.value = '';
+        toggleNewGenericSubCategoryForm();
+      } else {
+        errorLabel.innerText = data.errors.join(', ');
+        errorLabel.style.display = 'block';
+      }
+    })
+    .catch(error => {
+      errorLabel.innerText = 'Error al crear la sub-categoría.';
       errorLabel.style.display = 'block';
       console.error(error);
     });

@@ -67,6 +67,7 @@ Rails.application.routes.draw do
     resources :inventory_items, only: [:update]
   end
   resources :categories, only: [:create, :destroy]
+  resources :sub_categories, only: [:create, :destroy]
   resources :maintenance_records, only: [:index, :new, :create, :edit, :update]
 
   get '/investments/report', to: 'investments#report', as: 'investments_report'

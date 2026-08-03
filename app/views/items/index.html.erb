@@ -63,19 +63,39 @@
     <% end %>
   </div>
 
-  <%# --- CREAR NUEVA CATEGORÍA (Líderes) --- %>
+  <%# --- CREAR NUEVA CATEGORÍA Y SUB-CATEGORÍA (Líderes) --- %>
   <% if current_user.leader? %>
-    <div style="background: #ffffff; padding: 20px 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px;">
-      <div>
-        <h3 style="margin: 0; font-size: 1em; color: #0f172a; font-weight: bold; display: flex; align-items: center; gap: 8px;">
-          <span>📂</span> Administrar Categorías
-        </h3>
-        <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #64748b;">Agrega nuevas categorías personalizadas al inventario.</p>
+    <div style="background: #ffffff; padding: 20px 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+      
+      <%# 1. Crear Categoría Principal %>
+      <div style="display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #f1f5f9; padding-right: 15px;">
+        <div style="margin-bottom: 10px;">
+          <h3 style="margin: 0; font-size: 1em; color: #0f172a; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+            <span>📂</span> Categoría Principal
+          </h3>
+          <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #64748b;">Agrega nuevas categorías mayores al inventario.</p>
+        </div>
+        <%= form_with model: Category.new, url: categories_path, local: true, style: "display: flex; gap: 10px; align-items: center;" do |f| %>
+          <%= f.text_field :name, placeholder: "Ej: Cosas adicionales", required: true, style: "flex-grow: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; outline: none;" %>
+          <%= f.submit "＋ Categoría", style: "background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; transition: 0.2s;", onmouseover: "this.style.background='#059669'", onmouseout: "this.style.background='#10b981'" %>
+        <% end %>
       </div>
-      <%= form_with model: Category.new, url: categories_path, local: true, style: "display: flex; gap: 10px; align-items: center;" do |f| %>
-        <%= f.text_field :name, placeholder: "Ej: Cosas adicionales", required: true, style: "padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; outline: none;" %>
-        <%= f.submit "＋ Agregar Categoría", style: "background: #10b981; color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; transition: 0.2s;", onmouseover: "this.style.background='#059669'", onmouseout: "this.style.background='#10b981'" %>
-      <% end %>
+
+      <%# 2. Crear Sub-Categoría para cualquier categoría %>
+      <div style="display: flex; flex-direction: column; justify-content: space-between;">
+        <div style="margin-bottom: 10px;">
+          <h3 style="margin: 0; font-size: 1em; color: #0f172a; font-weight: bold; display: flex; align-items: center; gap: 8px;">
+            <span>🏷️</span> Sub-Categoría Específica
+          </h3>
+          <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #64748b;">Agrega sub-categorías asociadas a cualquier categoría (ej: Dispositivos DJ -> Sparkulas).</p>
+        </div>
+        <%= form_with model: SubCategory.new, url: sub_categories_path, local: true, style: "display: flex; gap: 10px; align-items: center; flex-wrap: wrap;" do |f| %>
+          <%= f.select :category, Item.categories.map { |c| ["📂 #{c}", c] }, { prompt: "--- Categoría ---" }, required: true, style: "padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; background: white; outline: none;" %>
+          <%= f.text_field :name, placeholder: "Ej: Sparkulas, Speakon...", required: true, style: "flex-grow: 1; min-width: 140px; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; outline: none;" %>
+          <%= f.submit "＋ Sub-Categoría", style: "background: #0284c7; color: white; border: none; padding: 10px 16px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; transition: 0.2s;", onmouseover: "this.style.background='#0369a1'", onmouseout: "this.style.background='#0284c7'" %>
+        <% end %>
+      </div>
+
     </div>
   <% end %>
 
