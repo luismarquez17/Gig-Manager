@@ -23,7 +23,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     get employee_payments_url
 
     assert_response :success
-    assert_select "h3", "Métricas de pagos a trabajadores"
+    assert_select "h3", "Resumen general de pagos y deudas"
     assert_match "Pendiente por pagar", response.body
     assert_match @worker.email, response.body
   end

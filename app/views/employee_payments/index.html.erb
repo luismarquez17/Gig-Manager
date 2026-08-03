@@ -1,43 +1,62 @@
 <h2 style="margin-bottom: 18px;">Pagos a trabajadores</h2>
 
 <div class="custom-card" style="margin-bottom: 20px;">
-  <h3 style="margin: 0 0 12px 0;">Métricas de pagos a trabajadores</h3>
+  <h3 style="margin: 0 0 12px 0;">Resumen general de pagos y deudas</h3>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
       <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Total pagado</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
     </div>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto acordado</div>
-      <div style="font-size: 1.15em; font-weight: 800; color: #1d4ed8; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:expected_amount] }, unit: 'USD') %></div>
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto acordado en shows</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #1d4ed8; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:agreed_amount] }, unit: 'USD') %></div>
     </div>
-    <% total_balance_due = @worker_metrics.sum { |m| m[:balance_due] } %>
+    <% 
+      total_pending_to_workers = @worker_metrics.sum { |m| m[:balance] > 0 ? m[:balance] : 0 } 
+      total_worker_owes_company = @worker_metrics.sum { |m| m[:balance] < 0 ? m[:balance].abs : 0 } 
+    %>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;"><%= total_balance_due >= 0 ? 'Pendiente por pagar' : 'A favor de la empresa' %></div>
-      <div style="font-size: 1.15em; font-weight: 800; color: <%= total_balance_due >= 0 ? '#b45309' : '#059669' %>; margin-top: 4px;"><%= number_to_currency(total_balance_due.abs, unit: 'USD') %></div>
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Pendiente por pagar a trabajadores</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #b45309; margin-top: 4px;"><%= number_to_currency(total_pending_to_workers, unit: 'USD') %></div>
     </div>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Trabajadores</div>
-      <div style="font-size: 1.15em; font-weight: 800; color: #334155; margin-top: 4px;"><%= @worker_metrics.size %></div>
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Le deben a la empresa (vueltos)</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #dc2626; margin-top: 4px;"><%= number_to_currency(total_worker_owes_company, unit: 'USD') %></div>
     </div>
   </div>
 </div>
 
 <div class="custom-card" style="margin-bottom: 20px;">
-  <h3 style="margin-top: 0;">Detalle por trabajador</h3>
+  <h3 style="margin-top: 0;">Estado por trabajador</h3>
   <div style="display: grid; gap: 10px;">
     <% @worker_metrics.each do |metric| %>
-      <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; background: #fff;">
+      <% balance = metric[:balance] %>
+      <div style="border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; background: #fff;">
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
           <div>
-            <div style="font-weight: 800; color: #1e293b;"><%= metric[:worker].email %></div>
-            <div style="font-size: 0.9em; color: #64748b;">Pagos registrados: <%= metric[:payment_count] %></div>
+            <div style="font-weight: 800; color: #1e293b; font-size: 1.05em;"><%= metric[:worker].display_name rescue metric[:worker].email %></div>
+            <div style="font-size: 0.85em; color: #64748b;"><%= metric[:worker].email %> • <%= metric[:payment_count] %> pago(s) registrado(s)</div>
           </div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <span style="background: #ecfdf5; color: #065f46; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pagado: <%= number_to_currency(metric[:total_paid], unit: 'USD') %></span>
-            <span style="background: #eff6ff; color: #1d4ed8; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Acordado: <%= number_to_currency(metric[:expected_amount], unit: 'USD') %></span>
-            <span style="background: #fff7ed; color: #b45309; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pendiente: <%= number_to_currency(metric[:balance_due], unit: 'USD') %></span>
-            <%= link_to 'Ver historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <span style="background: #eff6ff; color: #1d4ed8; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Acordado: <%= number_to_currency(metric[:agreed_amount], unit: 'USD') %></span>
+            <span style="background: #ecfdf5; color: #065f46; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pagado: <%= number_to_currency(metric[:total_paid], unit: 'USD') %></span>
+            
+            <% if balance > 0 %>
+              <span style="background: #fff7ed; color: #b45309; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #ffedd5;">
+                ⏳ Pendiente: <%= number_to_currency(balance, unit: 'USD') %>
+              </span>
+            <% elsif balance < 0 %>
+              <span style="background: #fffbe6; color: #b45309; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #fef08a;">
+                ⚠️ Le debe a la empresa: <%= number_to_currency(balance.abs, unit: 'USD') %> (Vuelto)
+              </span>
+            <% else %>
+              <span style="background: #f0fdf4; color: #15803d; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #bbf7d0;">
+                ✅ Al día
+              </span>
+            <% end %>
+
+            <%= link_to '👁️ Ver historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+            <%= link_to '💳 Registrar pago', new_employee_payment_path(user_id: metric[:worker].id), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
           </div>
         </div>
       </div>
@@ -47,9 +66,9 @@
 
 <div class="custom-card">
   <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
-    <h3 style="margin: 0;">Historial de pagos</h3>
+    <h3 style="margin: 0;">Historial de pagos registrados</h3>
     <% if @selected_worker.present? %>
-      <span style="background: #f1f5f9; color: #475569; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Mostrando: <%= @selected_worker.email %></span>
+      <span style="background: #f1f5f9; color: #475569; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Mostrando: <%= @selected_worker.display_name rescue @selected_worker.email %></span>
     <% end %>
   </div>
 
@@ -59,12 +78,10 @@
         <table class="table-custom">
           <thead>
             <tr>
-              <th>Trabajador</th>
-              <th>Monto pagado</th>
-              <th>Esperado</th>
-              <th>Pendiente</th>
               <th>Fecha</th>
-              <th>Show</th>
+              <th>Trabajador</th>
+              <th>Show relacionado</th>
+              <th>Monto pagado</th>
               <th>Método</th>
               <th>Notas</th>
               <th class="text-center">Acciones</th>
@@ -72,18 +89,20 @@
           </thead>
           <tbody>
             <% @payments.each do |p| %>
-              <% payment_state = p.expected_amount.to_f - p.amount.to_f %>
               <tr>
-                <td><%= p.user.email %></td>
-                <td><%= number_to_currency(p.amount, unit: p.currency) rescue p.amount %></td>
-                <td><%= number_to_currency(p.expected_amount, unit: p.currency) rescue p.expected_amount %></td>
-                <td style="font-weight: 700; color: <%= payment_state >= 0 ? '#b45309' : '#059669' %>;">
-                  <%= payment_state >= 0 ? 'Pendiente' : 'Pago extra' %>
-                  <%= number_to_currency(payment_state.abs, unit: p.currency) %>
+                <td><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
+                <td style="font-weight: 700; color: #1e293b;"><%= p.user.display_name rescue p.user.email %></td>
+                <td>
+                  <% if p.gig.present? %>
+                    <%= p.gig.client&.name %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
+                  <% else %>
+                    <span style="color: #94a3b8; font-style: italic;">Pago general / Sin show</span>
+                  <% end %>
                 </td>
-                <td><%= l(p.date_paid) rescue p.date_paid %></td>
-                <td><%= p.gig&.client&.name %> - <%= p.gig&.date %></td>
-                <td><%= p.payment_method %></td>
+                <td style="font-weight: 800; color: #059669;">
+                  +<%= number_to_currency(p.amount, unit: p.currency) %>
+                </td>
+                <td><%= p.payment_method.presence || "---" %></td>
                 <td><%= p.notes %></td>
                 <td class="text-center">
                   <div style="display: flex; gap: 8px; justify-content: center;">

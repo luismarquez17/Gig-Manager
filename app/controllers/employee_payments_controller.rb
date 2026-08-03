@@ -10,39 +10,23 @@ class EmployeePaymentsController < ApplicationController
       @selected_worker = User.find_by(id: params[:user_id])
     end
 
-    # Calculamos métricas en bloque considerando StaffAssignments y EmployeePayments
     workers = User.workers.order(:email)
     worker_ids = workers.pluck(:id)
 
     staff_agreed_sums = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
-
-    payments = EmployeePayment.where(user_id: worker_ids)
-    paid_sums = payments.group(:user_id).sum(:amount)
-    counts = payments.group(:user_id).count
-
-    user_gig_map = StaffAssignment.where(user_id: worker_ids).pluck(:user_id, :gig_id).each_with_object(Hash.new { |h, k| h[k] = Set.new }) do |(u_id, g_id), hash|
-      hash[u_id].add(g_id)
-    end
-
-    unassigned_expected_sums = Hash.new(0.0)
-    payments.where("gig_id IS NULL OR expected_amount > 0").find_each do |p|
-      gigs_for_user = user_gig_map[p.user_id]
-      if p.gig_id.nil? || !gigs_for_user.include?(p.gig_id)
-        unassigned_expected_sums[p.user_id] += p.expected_amount.to_f
-      end
-    end
+    paid_sums = EmployeePayment.where(user_id: worker_ids).group(:user_id).sum(:amount)
+    counts = EmployeePayment.where(user_id: worker_ids).group(:user_id).count
 
     @worker_metrics = workers.map do |worker|
-      agreed_from_assignments = staff_agreed_sums[worker.id].to_f
-      agreed_from_unassigned = unassigned_expected_sums[worker.id].to_f
-      expected_total = agreed_from_assignments + agreed_from_unassigned
+      agreed_total = staff_agreed_sums[worker.id].to_f
       paid_total = paid_sums[worker.id].to_f
+      balance = agreed_total - paid_total # positivo = empresa debe al trabajador, negativo = trabajador debe a empresa (vuelto)
 
       {
         worker: worker,
         total_paid: paid_total,
-        expected_amount: expected_total,
-        balance_due: expected_total - paid_total,
+        agreed_amount: agreed_total,
+        balance: balance,
         payment_count: counts[worker.id] || 0
       }
     end
@@ -50,17 +34,20 @@ class EmployeePaymentsController < ApplicationController
 
   def new
     @gig = Gig.find_by(id: params[:gig_id]) if params[:gig_id].present?
-    expected = 0.0
+    default_amount = nil
     if @gig.present? && params[:user_id].present?
       assignment = @gig.staff_assignments.find_by(user_id: params[:user_id])
-      expected = assignment&.agreed_amount.to_f if assignment.present?
+      if assignment.present?
+        default_amount = assignment.pending_balance.positive? ? assignment.pending_balance : assignment.agreed_amount.to_f
+      end
     end
 
     @payment = EmployeePayment.new(
       gig_id: params[:gig_id],
       user_id: params[:user_id],
-      currency: "USD",
-      expected_amount: expected
+      amount: default_amount,
+      currency: @gig&.currency.presence || "USD",
+      date_paid: Date.today
     )
     @payroll_balance = FundAllocation.total_payroll_remaining
     @gig_payroll_balance = @gig&.total_payroll_remaining.to_f

@@ -4,22 +4,20 @@ class StaffAssignment < ApplicationRecord
 
   validates :agreed_amount, numericality: { greater_than_or_equal_to: 0 }, allow_nil: true
 
-  after_save :sync_employee_payment_expected_amount
-
   def total_paid
     gig.employee_payments.where(user_id: user_id).sum(:amount).to_f
   end
 
-  def pending_balance
+  def balance
     agreed_amount.to_f - total_paid
   end
 
-  private
+  def pending_balance
+    [agreed_amount.to_f - total_paid, 0].max
+  end
 
-  def sync_employee_payment_expected_amount
-    payments = gig.employee_payments.where(user_id: user_id)
-    if payments.any?
-      payments.update_all(expected_amount: agreed_amount.to_f)
-    end
+  def worker_owes_company
+    diff = total_paid - agreed_amount.to_f
+    diff > 0 ? diff : 0.0
   end
 end
