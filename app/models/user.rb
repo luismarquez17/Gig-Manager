@@ -8,6 +8,19 @@ class User < ApplicationRecord
 
   scope :workers, -> { where(role: [:staff, :leader, :musician, :superadmin]) }
 
+  def leader?
+    super || superadmin?
+  end
+
+  def musician?
+    super || superadmin?
+  end
+
+  def staff?
+    super || superadmin?
+  end
+
+
 
   belongs_to :company, optional: true
   belongs_to :client, optional: true
