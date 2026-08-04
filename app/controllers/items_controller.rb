@@ -3,11 +3,10 @@ class ItemsController < ApplicationController
   before_action :set_item, only: [:show, :edit, :update, :destroy]
 
   def index
-    @items = Item.all
+    @items = current_company.items
 
     # 1. Búsqueda por Nombre O Subcategoría (Texto libre)
     if params[:query].present?
-      # El operador OR permite que si buscas "RCA" encuentre el equipo aunque el nombre sea "Cable 1"
       @items = @items.where("name ILIKE :q OR sub_category ILIKE :q", q: "%#{params[:query]}%")
     end
 
@@ -29,13 +28,14 @@ class ItemsController < ApplicationController
   end
 
   def new
-    @item = Item.new
+    @item = current_company.items.build
   end
 
   def create
     handle_sub_categories
-    @item = Item.new(item_params)
+    @item = current_company.items.build(item_params)
     @item.status ||= "Excelente"
+
 
     if @item.save
       if params[:from_shopping_item].present?
@@ -99,8 +99,9 @@ class ItemsController < ApplicationController
   private
 
   def set_item
-    @item = Item.find(params[:id])
+    @item = current_company.items.find(params[:id])
   end
+
 
   def handle_sub_categories
     return if params[:item].blank?

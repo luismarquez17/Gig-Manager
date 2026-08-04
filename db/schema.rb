@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_04_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -57,6 +57,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "notes"
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_clients_on_company_id"
+  end
+
+  create_table "companies", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "slug", null: false
+    t.integer "status", default: 0, null: false
+    t.decimal "monthly_fee", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD"
+    t.integer "billing_day", default: 1
+    t.string "invitation_token"
+    t.string "contact_email"
+    t.string "contact_phone"
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
+    t.index ["slug"], name: "index_companies_on_slug", unique: true
   end
 
   create_table "employee_payments", force: :cascade do |t|
@@ -70,6 +89,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.decimal "expected_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_employee_payments_on_company_id"
     t.index ["gig_id"], name: "index_employee_payments_on_gig_id"
     t.index ["user_id"], name: "index_employee_payments_on_user_id"
   end
@@ -78,6 +99,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.decimal "reinvest_rate", precision: 5, scale: 2, default: "0.0", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_finance_settings_on_company_id"
   end
 
   create_table "fund_allocations", force: :cascade do |t|
@@ -164,8 +187,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.time "start_time"
     t.time "end_time"
     t.jsonb "custom_upsells", default: {}
+    t.bigint "company_id"
     t.index ["client_email"], name: "index_gigs_on_client_email"
     t.index ["client_id"], name: "index_gigs_on_client_id"
+    t.index ["company_id"], name: "index_gigs_on_company_id"
     t.index ["portal_token"], name: "index_gigs_on_portal_token", unique: true
   end
 
@@ -190,6 +215,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.datetime "updated_at", null: false
     t.string "source"
     t.string "investor_name"
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_investments_on_company_id"
   end
 
   create_table "items", force: :cascade do |t|
@@ -201,6 +228,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.integer "quantity"
     t.text "notes"
     t.string "sub_category"
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_items_on_company_id"
   end
 
   create_table "kit_items", force: :cascade do |t|
@@ -218,6 +247,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.text "description"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_kits_on_company_id"
   end
 
   create_table "maintenance_records", force: :cascade do |t|
@@ -243,6 +274,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.string "currency", default: "USD"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_preset_budgets_on_company_id"
   end
 
   create_table "shopping_items", force: :cascade do |t|
@@ -257,6 +290,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_shopping_items_on_company_id"
     t.index ["priority"], name: "index_shopping_items_on_priority"
     t.index ["status"], name: "index_shopping_items_on_status"
   end
@@ -281,6 +316,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.boolean "active", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "company_id"
+    t.index ["company_id"], name: "index_standard_upsells_on_company_id"
     t.index ["key"], name: "index_standard_upsells_on_key", unique: true
   end
 
@@ -306,15 +343,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
     t.string "specialty"
     t.text "bio"
     t.text "avatar_base64"
+    t.bigint "company_id"
     t.index ["client_id"], name: "index_users_on_client_id"
+    t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "clients", "companies"
+  add_foreign_key "employee_payments", "companies"
   add_foreign_key "employee_payments", "gigs"
   add_foreign_key "employee_payments", "users"
+  add_foreign_key "finance_settings", "companies"
   add_foreign_key "fund_allocations", "gigs"
   add_foreign_key "fund_expenses", "employee_payments"
   add_foreign_key "fund_expenses", "fund_allocations"
@@ -324,13 +366,21 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_182500) do
   add_foreign_key "gig_payments", "gigs"
   add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
   add_foreign_key "gigs", "clients"
+  add_foreign_key "gigs", "companies"
   add_foreign_key "inventory_items", "items"
+  add_foreign_key "investments", "companies"
+  add_foreign_key "items", "companies"
   add_foreign_key "kit_items", "items"
   add_foreign_key "kit_items", "kits"
+  add_foreign_key "kits", "companies"
   add_foreign_key "maintenance_records", "gigs"
   add_foreign_key "maintenance_records", "inventory_items"
   add_foreign_key "maintenance_records", "items"
+  add_foreign_key "preset_budgets", "companies"
+  add_foreign_key "shopping_items", "companies"
   add_foreign_key "staff_assignments", "gigs"
   add_foreign_key "staff_assignments", "users"
+  add_foreign_key "standard_upsells", "companies"
   add_foreign_key "users", "clients"
+  add_foreign_key "users", "companies"
 end

@@ -1,0 +1,7 @@
+one:
+  name: "Empresa Principal"
+  slug: "principal"
+  monthly_fee: 0.0
+  currency: "USD"
+  status: 0
+  invitation_token: "token123456"

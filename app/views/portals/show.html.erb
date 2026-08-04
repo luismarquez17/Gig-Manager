@@ -405,8 +405,9 @@
   
   <%# --- HEADER DEL PORTAL --- %>
   <header class="portal-header">
-    <span class="badge">Portal Oficial del Cliente</span>
+    <span class="badge">Portal Oficial • <%= @gig.company&.name || "Gig Manager" %></span>
     <h1 class="title-accent">El Evento de <%= @gig.client&.name || "Cliente" %></h1>
+
     <p>
       <span>📅 <%= @gig.date&.strftime("%d/%m/%Y") || "Fecha por definir" %></span>
       <span>•</span>

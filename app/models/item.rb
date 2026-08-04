@@ -1,4 +1,6 @@
 class Item < ApplicationRecord
+  include TenantScoped
+
   has_many :gig_items, dependent: :destroy
   has_many :gigs, through: :gig_items
   has_many :maintenance_records, dependent: :destroy

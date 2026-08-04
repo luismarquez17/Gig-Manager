@@ -3,6 +3,24 @@ Rails.application.routes.draw do
   
   root "pages#dashboard"
 
+  # Superadmin Namespace
+  namespace :superadmin do
+    get '/', to: 'dashboard#index', as: :dashboard
+    resources :companies do
+      member do
+        patch :toggle_status
+        post :regenerate_token
+        post :switch_tenant
+      end
+    end
+    post '/switch_tenant', to: 'companies#switch_tenant', as: :switch_tenant_global
+  end
+
+  # Link de unión / onboarding de empresas
+  get '/join/:slug', to: 'onboarding#show', as: :join_company
+  post '/join/:slug', to: 'onboarding#process_join', as: :process_join_company
+
+
   resources :shopping_items do
     member do
       patch :toggle_purchased
@@ -14,6 +32,8 @@ Rails.application.routes.draw do
   get '/availability', to: 'pages#availability', as: 'availability_dashboard'
   get '/financials', to: 'pages#financials', as: 'financials_dashboard'
   get '/normativas', to: 'pages#normativas', as: 'normativas'
+  get '/suspended', to: 'pages#suspended', as: 'suspended_company'
+
 
   get '/funds/:fund_type', to: 'funds#show', as: 'fund'
 

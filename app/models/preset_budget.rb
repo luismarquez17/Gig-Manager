@@ -1,4 +1,6 @@
 class PresetBudget < ApplicationRecord
+  include TenantScoped
+
   has_one_attached :image
 
   validates :title, :description, :price, :currency, presence: true

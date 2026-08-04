@@ -1,4 +1,6 @@
 class EmployeePayment < ApplicationRecord
+  include TenantScoped
+
   belongs_to :user
   belongs_to :gig, optional: true
   has_many :fund_expenses, dependent: :destroy

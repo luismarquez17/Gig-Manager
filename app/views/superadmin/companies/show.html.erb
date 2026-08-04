@@ -1,0 +1,152 @@
+<div style="max-width: 1000px; margin: 0 auto;">
+  
+  <%# Breadcrumb %>
+  <div style="margin-bottom: 20px;">
+    <%= link_to "← Volver al Panel Superadmin", superadmin_dashboard_path, style: "color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.9rem;" %>
+  </div>
+
+  <%# Header de la Empresa %>
+  <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 6px;">
+        <h1 style="margin: 0; font-size: 1.8rem; font-weight: 800; color: #0f172a;"><%= @company.name %></h1>
+        
+        <% case @company.status.to_sym %>
+        <% when :active %>
+          <span style="background: #dcfce7; color: #15803d; font-weight: 700; font-size: 0.8rem; padding: 4px 12px; border-radius: 20px;">Activa</span>
+        <% when :suspended %>
+          <span style="background: #ffe4e6; color: #be123c; font-weight: 700; font-size: 0.8rem; padding: 4px 12px; border-radius: 20px;">Suspendida</span>
+        <% when :past_due %>
+          <span style="background: #fef3c7; color: #b45309; font-weight: 700; font-size: 0.8rem; padding: 4px 12px; border-radius: 20px;">Pago Vencido</span>
+        <% when :trial %>
+          <span style="background: #dbeafe; color: #1d4ed8; font-weight: 700; font-size: 0.8rem; padding: 4px 12px; border-radius: 20px;">Prueba</span>
+        <% end %>
+      </div>
+      <p style="margin: 0; color: #64748b; font-family: monospace; font-size: 0.9rem;">
+        Identificador Slug: <strong>/<%= @company.slug %></strong>
+      </p>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+      <% if @company.primary_leader.present? && @company.id != current_user.company_id %>
+        <span style="background: #f8fafc; border: 1px solid #cbd5e1; color: #64748b; padding: 10px 18px; border-radius: 10px; font-weight: 700;" title="Esta empresa es independiente. No es posible acceder a sus datos internos.">
+          🔒 Datos Privados (Jefe Asignado)
+        </span>
+      <% else %>
+        <%= button_to switch_tenant_superadmin_company_path(@company), method: :post, style: "background: #6366f1; color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px;" do %>
+          👁️ Conmutar Vista Inicial
+        <% end %>
+      <% end %>
+
+      <%= link_to edit_superadmin_company_path(@company), style: "background: #f1f5f9; color: #334155; padding: 10px 18px; border-radius: 10px; font-weight: 700; text-decoration: none;" do %>
+        ✏️ Editar Ajustes
+      <% end %>
+
+      <%= button_to toggle_status_superadmin_company_path(@company), method: :patch, style: "background: #{@company.active? ? '#fff1f2' : '#f0fdf4'}; color: #{@company.active? ? '#e11d48' : '#16a34a'}; border: 1px solid #{@company.active? ? '#fecdd3' : '#bbf7d0'}; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer;" do %>
+        <%= @company.active? ? '🚫 Suspender Acceso' : '✅ Activar Acceso' %>
+      <% end %>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px; margin-bottom: 28px;">
+    
+    <%# Enlace de Invitación y Registro de Jefe %>
+    <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <h3 style="margin: 0 0 12px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+        <span>🔗 Enlace de Acceso / Registro de Jefe</span>
+      </h3>
+      <p style="margin: 0 0 16px 0; font-size: 0.88rem; color: #64748b;">
+        Envía este link exclusivo al jefe de la empresa para que cree su cuenta y tome el control de la aplicación con rol de Leader.
+      </p>
+
+      <% join_url = join_company_url(slug: @company.slug, token: @company.invitation_token) %>
+      <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 0.82rem; word-break: break-all; color: #334155; margin-bottom: 16px;">
+        <%= join_url %>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <button onclick="navigator.clipboard.writeText('<%= join_url %>'); alert('¡Enlace copiado al portapapeles!');" style="background: #0f172a; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; flex: 1;">
+          📋 Copiar Link
+        </button>
+
+        <%= button_to regenerate_token_superadmin_company_path(@company), method: :post, style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer;", data: { confirm: "¿Regenerar token? El link anterior dejará de funcionar." } do %>
+          🔄 Regenerar
+        <% end %>
+      </div>
+    </div>
+
+    <%# Resumen de Suscripción & Cobros %>
+    <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">💳 Detalle de Mensualidad</h3>
+
+      <div style="margin-bottom: 16px;">
+        <span style="font-size: 0.85rem; color: #64748b; font-weight: 600; display: block; margin-bottom: 4px;">Cuota Mensual Pactada</span>
+        <div style="font-size: 1.8rem; font-weight: 800; color: #10b981;">
+          <%= number_to_currency(@company.monthly_fee, unit: @company.currency + " ", precision: 2) %>/mes
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding: 8px 0; border-top: 1px solid #f1f5f9;">
+        <span style="color: #64748b;">Día de cobro sugerido:</span>
+        <strong style="color: #0f172a;">Día <%= @company.billing_day || 1 %> de cada mes</strong>
+      </div>
+
+      <div style="display: flex; justify-content: space-between; font-size: 0.88rem; padding: 8px 0; border-top: 1px solid #f1f5f9;">
+        <span style="color: #64748b;">Contacto directo:</span>
+        <strong style="color: #0f172a;"><%= @company.contact_email.presence || "No registrado" %></strong>
+      </div>
+    </div>
+
+  </div>
+
+  <%# Tabla de Usuarios de la Empresa %>
+  <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 28px;">
+    <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">👥 Usuarios de esta Empresa</h3>
+
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+        <thead>
+          <tr style="background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0;">
+            <th style="padding: 12px 16px;">Nombre</th>
+            <th style="padding: 12px 16px;">Correo</th>
+            <th style="padding: 12px 16px;">Rol</th>
+            <th style="padding: 12px 16px; text-align: right;">Acciones de Rol</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @users.empty? %>
+            <tr>
+              <td colspan="4" style="padding: 24px; text-align: center; color: #94a3b8; font-style: italic;">
+                Aún no hay usuarios registrados en esta empresa. Comparte el enlace de invitación arriba.
+              </td>
+            </tr>
+          <% else %>
+            <% @users.each do |user| %>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px 16px; font-weight: 700; color: #0f172a;"><%= user.display_name %></td>
+                <td style="padding: 12px 16px; color: #475569;"><%= user.email %></td>
+                <td style="padding: 12px 16px;">
+                  <% if user.leader? %>
+                    <span style="background: #ede9fe; color: #6d28d9; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">👑 Jefe / Leader</span>
+                  <% else %>
+                    <span style="background: #f1f5f9; color: #475569; font-weight: 600; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;"><%= user.role.capitalize %></span>
+                  <% end %>
+                </td>
+                <td style="padding: 12px 16px; text-align: right;">
+                  <% unless user.leader? %>
+                    <%= button_to update_role_user_path(user, role: :leader), method: :patch, style: "background: #fdf4ff; color: #c026d3; border: 1px solid #f5d0fe; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.78rem; cursor: pointer;" do %>
+                      Otorgar Rol de Leader
+                    <% end %>
+                  <% else %>
+                    <span style="color: #10b981; font-weight: 600; font-size: 0.8rem;">✓ Jefe Principal</span>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

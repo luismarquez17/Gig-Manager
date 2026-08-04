@@ -4,7 +4,7 @@ class ShoppingItemsController < ApplicationController
 
 
   def index
-    @shopping_items = ShoppingItem.all
+    @shopping_items = current_company.shopping_items
 
     # Filtros
     @shopping_items = @shopping_items.where(status: params[:status]) if params[:status].present?
@@ -14,22 +14,23 @@ class ShoppingItemsController < ApplicationController
     @shopping_items = @shopping_items.pending_first
 
     # Stats
-    @total_count    = ShoppingItem.count
-    @pending_count  = ShoppingItem.pending.count
-    @purchased_count = ShoppingItem.purchased.count
-    @total_estimated = ShoppingItem.pending.where(currency: 'USD').sum(:estimated_price).to_f
-    @total_estimated_bs = ShoppingItem.pending.where(currency: 'BS').sum(:estimated_price).to_f
+    @total_count    = current_company.shopping_items.count
+    @pending_count  = current_company.shopping_items.pending.count
+    @purchased_count = current_company.shopping_items.purchased.count
+    @total_estimated = current_company.shopping_items.pending.where(currency: 'USD').sum(:estimated_price).to_f
+    @total_estimated_bs = current_company.shopping_items.pending.where(currency: 'BS').sum(:estimated_price).to_f
 
     @categories = ShoppingItem::CATEGORIES
   end
 
   def new
-    @shopping_item = ShoppingItem.new
+    @shopping_item = current_company.shopping_items.build
     @categories = ShoppingItem::CATEGORIES
   end
 
   def create
-    @shopping_item = ShoppingItem.new(shopping_item_params)
+    @shopping_item = current_company.shopping_items.build(shopping_item_params)
+
     if @shopping_item.save
       redirect_to shopping_items_path, notice: "✅ Ítem agregado a la lista de compras."
     else
@@ -96,8 +97,9 @@ class ShoppingItemsController < ApplicationController
   private
 
   def set_shopping_item
-    @shopping_item = ShoppingItem.find(params[:id])
+    @shopping_item = current_company.shopping_items.find(params[:id])
   end
+
 
   def shopping_item_params
     params.require(:shopping_item).permit(

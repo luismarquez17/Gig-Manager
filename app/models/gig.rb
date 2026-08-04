@@ -1,4 +1,6 @@
 class Gig < ApplicationRecord
+  include TenantScoped
+
   belongs_to :client, optional: true
   has_many :gig_items, dependent: :destroy
   has_many :items, through: :gig_items

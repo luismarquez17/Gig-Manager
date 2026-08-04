@@ -1,0 +1,54 @@
+<div style="min-height: 85vh; display: flex; align-items: center; justify-content: center; padding: 20px; box-sizing: border-box;">
+  <div style="max-width: 480px; width: 100%; background: white; border-radius: 24px; padding: 36px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0;">
+    
+    <div style="text-align: center; margin-bottom: 28px;">
+      <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border-radius: 16px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; font-weight: 800; margin-bottom: 16px; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3);">
+        G
+      </div>
+      <h1 style="margin: 0 0 6px 0; font-size: 1.6rem; font-weight: 800; color: #0f172a;">Únete a <%= @company.name %></h1>
+      <p style="margin: 0; color: #64748b; font-size: 0.92rem;">Crea tu cuenta para acceder al sistema de gestión de <%= @company.name %>.</p>
+    </div>
+
+    <%= form_with model: @user, url: process_join_company_path(slug: @company.slug, token: params[:token]), method: :post, local: true do |f| %>
+      
+      <% if @user.errors.any? %>
+        <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; padding: 14px; border-radius: 12px; margin-bottom: 20px; font-size: 0.88rem;">
+          <ul style="margin: 0; padding-left: 18px;">
+            <% @user.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div style="margin-bottom: 18px;">
+        <%= f.label :name, "Tu Nombre Completo", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+        <%= f.text_field :name, placeholder: "Ej: Juan Pérez", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" %>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <%= f.label :email, "Correo Electrónico", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+        <%= f.email_field :email, placeholder: "correo@ejemplo.com", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" %>
+      </div>
+
+      <div style="margin-bottom: 18px;">
+        <%= f.label :password, "Contraseña", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+        <%= f.password_field :password, placeholder: "Mínimo 6 caracteres", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" %>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <%= f.label :password_confirmation, "Confirmar Contraseña", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+        <%= f.password_field :password_confirmation, placeholder: "Repite tu contraseña", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" %>
+      </div>
+
+      <%= f.submit "🚀 Registrarse y Acceder", style: "width: 100%; padding: 14px; border-radius: 12px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; border: none; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);" %>
+
+    <% end %>
+
+    <div style="text-align: center; margin-top: 20px;">
+      <span style="font-size: 0.85rem; color: #64748b;">¿Ya tienes cuenta? </span>
+      <%= link_to "Iniciar Sesión", new_user_session_path, style: "color: #6366f1; font-weight: 700; font-size: 0.85rem; text-decoration: none;" %>
+    </div>
+
+  </div>
+</div>

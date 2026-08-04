@@ -1,9 +1,26 @@
-# This file should ensure the existence of records required to run the application in every environment (production,
-# development, test). The code here should be idempotent so that it can be executed at any point in every environment.
-# The data can then be loaded with the bin/rails db:seed command (or created alongside the database with db:setup).
-#
-# Example:
-#
-#   ["Action", "Comedy", "Drama", "Horror"].each do |genre_name|
-#     MovieGenre.find_or_create_by!(name: genre_name)
-#   end
+# Garantizar la empresa principal del dueño (Márquez Música)
+marquez_musica = Company.find_by(slug: 'marquez-musica') || Company.find_by(slug: 'principal')
+
+if marquez_musica.nil?
+  marquez_musica = Company.create!(
+    name: 'Márquez Música',
+    slug: 'marquez-musica',
+    monthly_fee: 0.0,
+    currency: 'USD',
+    status: :active,
+    invitation_token: SecureRandom.hex(12)
+  )
+else
+  marquez_musica.update!(name: 'Márquez Música', slug: 'marquez-musica')
+end
+
+# Garantizar usuario Superadmin y dueño de Márquez Música
+superadmin = User.find_or_initialize_by(email: 'luismarquezocando2006@gmail.com')
+superadmin.name ||= 'Luis Márquez'
+superadmin.password = '123456'
+superadmin.password_confirmation = '123456'
+superadmin.role = :superadmin
+superadmin.company = marquez_musica
+superadmin.save!
+
+puts "✅ Seed completado: Usuario Superadmin y dueño de Márquez Música asignado (#{superadmin.email})"

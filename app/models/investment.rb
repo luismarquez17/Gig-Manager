@@ -1,5 +1,8 @@
 class Investment < ApplicationRecord
+  include TenantScoped
+
   CATEGORIES = [
+
     "Equipo",
     "Transporte",
     "Taller / Reparación",

@@ -1,0 +1,66 @@
+<div style="max-width: 700px; margin: 0 auto;">
+  
+  <div style="margin-bottom: 20px;">
+    <%= link_to "← Volver a la Empresa", superadmin_company_path(@company), style: "color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.9rem;" %>
+  </div>
+
+  <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+    <h1 style="margin: 0 0 8px 0; font-size: 1.6rem; font-weight: 800; color: #0f172a;">⚙️ Editar Ajustes de <%= @company.name %></h1>
+    <p style="margin: 0 0 24px 0; color: #64748b; font-size: 0.9rem;">Modifica los parámetros de suscripción, cuotas o nombre.</p>
+
+    <%= form_with model: [:superadmin, @company], local: true do |f| %>
+      
+      <% if @company.errors.any? %>
+        <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; padding: 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem;">
+          <strong style="display: block; margin-bottom: 6px;">Corrige los siguientes errores:</strong>
+          <ul style="margin: 0; padding-left: 20px;">
+            <% @company.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div style="margin-bottom: 20px;">
+        <%= f.label :name, "Nombre de la Empresa *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+        <%= f.text_field :name, required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <%= f.label :monthly_fee, "Cuota Mensual ($) *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.number_field :monthly_fee, step: "0.01", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+
+        <div>
+          <%= f.label :currency, "Moneda", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.select :currency, [["USD - Dólares", "USD"], ["BS - Bolívares", "BS"]], {}, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <%= f.label :status, "Estado de Suscripción", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.select :status, Company.statuses.keys.map { |s| [s.capitalize, s] }, {}, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+
+        <div>
+          <%= f.label :contact_email, "Email de Contacto", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.email_field :contact_email, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 24px;">
+        <%= f.label :notes, "Notas Internas del Superadmin", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+        <%= f.text_area :notes, rows: 3, placeholder: "Comentarios sobre acuerdos de pago, condiciones especiales...", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" %>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <%= link_to "Cancelar", superadmin_company_path(@company), style: "padding: 12px 20px; border-radius: 10px; background: #f1f5f9; color: #475569; text-decoration: none; font-weight: 600;" %>
+        <%= f.submit "Guardar Cambios", style: "padding: 12px 24px; border-radius: 10px; background: #6366f1; color: white; border: none; font-weight: 700; cursor: pointer;" %>
+      </div>
+
+    <% end %>
+  </div>
+
+</div>

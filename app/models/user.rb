@@ -4,11 +4,14 @@ class User < ApplicationRecord
   devise :database_authenticatable, :registerable,
          :recoverable, :rememberable, :validatable
 
-  enum role: { client: 0, staff: 1, leader: 2, musician: 3 }
+  enum role: { client: 0, staff: 1, leader: 2, musician: 3, superadmin: 4 }
 
   scope :workers, -> { where(role: [:staff, :leader, :musician]) }
 
+  belongs_to :company, optional: true
   belongs_to :client, optional: true
+
+  before_validation :assign_default_company, on: :create
 
   has_one_attached :avatar
 
@@ -123,7 +126,8 @@ class User < ApplicationRecord
       new_client = Client.create!(
         email: email,
         name: email.split('@').first.capitalize,
-        phone: "0000000000" # Teléfono por defecto para pasar la validación
+        phone: "0000000000", # Teléfono por defecto para pasar la validación
+        company_id: company_id
       )
       self.update(client_id: new_client.id)
     end
@@ -137,4 +141,13 @@ class User < ApplicationRecord
       Gig.where(client_email: email).update_all(client_id: client_id)
     end
   end
+
+  private
+
+  def assign_default_company
+    return if superadmin? || company_id.present?
+
+    self.company_id = Current.company&.id || Company.first&.id
+  end
 end
+

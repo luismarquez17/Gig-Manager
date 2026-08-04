@@ -216,22 +216,41 @@
       <% if user_signed_in? %>
         <aside class="app-sidebar" id="app-sidebar">
           
-          <%# Logo + botón cerrar (sólo visible en móvil) %>
+          <%# Logo + nombre de empresa + botón cerrar (sólo visible en móvil) %>
           <div class="sidebar-brand" style="position: relative;">
             <h2>
               <span class="brand-logo">G</span>
               Gig Manager
             </h2>
+            <% if current_company.present? %>
+              <div style="font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                <span>🏢</span> <span><%= current_company.name %></span>
+              </div>
+            <% end %>
             <button id="sidebar-close-btn" aria-label="Cerrar menú">&times;</button>
           </div>
 
           <%# Navegación %>
           <nav class="sidebar-nav">
+            <% if current_user.superadmin? %>
+              <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 10px; margin-bottom: 12px;">
+                <div style="font-size: 0.75rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">👑 Superadmin</div>
+                <%= link_to superadmin_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'dashboard' && controller_path.start_with?('superadmin')}" do %>
+                  <span class="icon">📊</span> <span>Panel Universo</span>
+                <% end %>
+                <%= link_to superadmin_companies_path, class: "sidebar-link #{'active' if controller_name == 'companies' && controller_path.start_with?('superadmin')}" do %>
+                  <span class="icon">🏢</span> <span>Empresas</span>
+                <% end %>
+              </div>
+            <% end %>
+
+
             <%= link_to root_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'dashboard'}" do %>
               <span class="icon">🏠</span> <span>Inicio (Dashboard)</span>
             <% end %>
 
-            <% if current_user.leader? %>
+            <% if current_user.leader? || current_user.superadmin? %>
+
               <%= link_to items_path, class: "sidebar-link #{'active' if controller_name == 'items'}" do %>
                 <span class="icon">📦</span> <span>Inventario</span>
               <% end %>
@@ -388,9 +407,35 @@
       <%# --- CONTENIDO PRINCIPAL --- %>
       <main style="<%= user_signed_in? ? 'margin-left: 280px;' : 'margin-left: 0;' %> flex-grow: 1; min-height: 100vh; padding: 40px; box-sizing: border-box; overflow-x: auto;">
         <div style="max-width: 1200px; margin: 0 auto;">
+          
+          <% if user_signed_in? && current_user.superadmin? && session[:superadmin_company_id].present? %>
+            <div style="background: linear-gradient(135deg, #4338ca, #3730a3); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);">
+              <div style="display: flex; align-items: center; gap: 10px; font-size: 0.92rem; font-weight: 600;">
+                <span style="font-size: 1.2rem;">👁️</span>
+                <span>Modo Inspección Activo: Estás viendo la plataforma como <strong><%= current_company&.name %></strong>.</span>
+              </div>
+              <%= button_to switch_tenant_superadmin_company_path("all"), method: :post, style: "background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;" do %>
+                Volver a Modo Universo Superadmin
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if notice.present? %>
+            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
+              <span>✅</span> <span><%= notice %></span>
+            </div>
+          <% end %>
+
+          <% if alert.present? %>
+            <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
+              <span>⚠️</span> <span><%= alert %></span>
+            </div>
+          <% end %>
+
           <%= yield %>
         </div>
       </main>
+
 
     </div>
 

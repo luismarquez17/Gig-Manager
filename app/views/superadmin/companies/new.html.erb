@@ -1,0 +1,83 @@
+<div style="max-width: 700px; margin: 0 auto;">
+  
+  <div style="margin-bottom: 20px;">
+    <%= link_to "← Volver al Panel Superadmin", superadmin_dashboard_path, style: "color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.9rem;" %>
+  </div>
+
+  <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
+    <h1 style="margin: 0 0 8px 0; font-size: 1.6rem; font-weight: 800; color: #0f172a;">🏢 Registrar Nueva Empresa en el Universo</h1>
+    <p style="margin: 0 0 24px 0; color: #64748b; font-size: 0.9rem;">Crea una nueva organización aislada y configura su cuota de mensualidad.</p>
+
+    <%= form_with model: [:superadmin, @company], local: true do |f| %>
+      
+      <% if @company.errors.any? %>
+        <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; padding: 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem;">
+          <strong style="display: block; margin-bottom: 6px;">Corrige los siguientes errores:</strong>
+          <ul style="margin: 0; padding-left: 20px;">
+            <% @company.errors.full_messages.each do |msg| %>
+              <li><%= msg %></li>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
+
+      <div style="margin-bottom: 20px;">
+        <%= f.label :name, "Nombre de la Empresa / Agrupación *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+        <%= f.text_field :name, placeholder: "Ej: Mariachi Los Arrieros, Eventos VIP, etc.", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <%= f.label :monthly_fee, "Cuota Mensual Pactada ($) *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.number_field :monthly_fee, step: "0.01", placeholder: "50.00", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+
+        <div>
+          <%= f.label :currency, "Moneda de Cobro", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.select :currency, [["USD - Dólares", "USD"], ["BS - Bolívares", "BS"]], {}, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
+        <div>
+          <%= f.label :status, "Estado de Suscripción", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.select :status, Company.statuses.keys.map { |s| [s.capitalize, s] }, {}, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+
+        <div>
+          <%= f.label :contact_email, "Email de Contacto / Jefe", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <%= f.email_field :contact_email, placeholder: "jefe@empresa.com", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        </div>
+      </div>
+
+      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
+
+      <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">👤 Crear Cuenta Inicial del Jefe (Opcional)</h3>
+      <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: #64748b;">Si lo deseas, puedes crear directamente el usuario para el jefe de esta empresa. De lo contrario, puedes compartirle el link de registro más tarde.</p>
+
+      <div style="margin-bottom: 16px;">
+        <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Nombre del Jefe</label>
+        <input type="text" name="leader_name" placeholder="Ej: Carlos Pérez" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" />
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+        <div>
+          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Correo del Jefe</label>
+          <input type="email" name="leader_email" placeholder="carlos@empresa.com" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" />
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Contraseña Temporal</label>
+          <input type="password" name="leader_password" placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" />
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 12px;">
+        <%= link_to "Cancelar", superadmin_dashboard_path, style: "padding: 12px 20px; border-radius: 10px; background: #f1f5f9; color: #475569; text-decoration: none; font-weight: 600;" %>
+        <%= f.submit "✨ Crear Empresa", style: "padding: 12px 24px; border-radius: 10px; background: #6366f1; color: white; border: none; font-weight: 700; cursor: pointer;" %>
+      </div>
+
+    <% end %>
+  </div>
+
+</div>

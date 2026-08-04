@@ -1,0 +1,176 @@
+<div style="max-width: 1200px; margin: 0 auto;">
+  
+  <%# Banner Header %>
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-radius: 20px; padding: 32px; color: white; box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.3); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 32px; position: relative; overflow: hidden;">
+    <div style="position: absolute; right: -20px; top: -20px; font-size: 10rem; opacity: 0.05; pointer-events: none;">👑</div>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 20px;">
+      <div>
+        <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(99, 102, 241, 0.2); border: 1px solid rgba(99, 102, 241, 0.4); color: #818cf8; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; margin-bottom: 12px;">
+          <span>🌐 Control del Universo</span>
+        </div>
+        <h1 style="margin: 0; font-size: 2.2rem; font-weight: 800; tracking: -0.02em; color: white;">Panel Superadmin</h1>
+        <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 1rem;">Visión global, control de suscripciones y métricas en tiempo real de todas las empresas.</p>
+      </div>
+      <div>
+        <%= link_to new_superadmin_company_path, style: "display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #6366f1, #4f46e5); color: white; padding: 14px 24px; border-radius: 12px; font-weight: 700; text-decoration: none; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4); transition: transform 0.2s;" do %>
+          <span>✨ Crear Nueva Empresa</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# Tarjetas de Métricas del Universo %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
+    
+    <%# MRR %>
+    <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <span style="color: #64748b; font-weight: 600; font-size: 0.9rem;">MRR (Ingreso Mensual)</span>
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">💵</div>
+      </div>
+      <div style="font-size: 2rem; font-weight: 800; color: #0f172a;">
+        <%= number_to_currency(@total_mrr, unit: "USD ", precision: 2) %>
+      </div>
+      <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #10b981; font-weight: 600;">
+        De <%= @active_companies_count %> empresa(s) activa(s)
+      </p>
+    </div>
+
+    <%# Total Empresas %>
+    <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <span style="color: #64748b; font-weight: 600; font-size: 0.9rem;">Empresas Totales</span>
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🏢</div>
+      </div>
+      <div style="font-size: 2rem; font-weight: 800; color: #0f172a;">
+        <%= @companies_count %>
+      </div>
+      <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #64748b;">
+        <%= @active_companies_count %> activas | <%= @suspended_count %> suspendidas
+      </p>
+    </div>
+
+    <%# Shows en el Universo %>
+    <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <span style="color: #64748b; font-weight: 600; font-size: 0.9rem;">Shows Registrados</span>
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #faf5ff; color: #a855f7; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">🎸</div>
+      </div>
+      <div style="font-size: 2rem; font-weight: 800; color: #0f172a;">
+        <%= @total_universe_gigs %>
+      </div>
+      <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #a855f7; font-weight: 600;">
+        En todo el universo
+      </p>
+    </div>
+
+    <%# Usuarios en el Universo %>
+    <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+        <span style="color: #64748b; font-weight: 600; font-size: 0.9rem;">Usuarios Registrados</span>
+        <div style="width: 40px; height: 40px; border-radius: 10px; background: #fff7ed; color: #f97316; display: flex; align-items: center; justify-content: center; font-size: 1.2rem;">👥</div>
+      </div>
+      <div style="font-size: 2rem; font-weight: 800; color: #0f172a;">
+        <%= @total_universe_users %>
+      </div>
+      <p style="margin: 6px 0 0 0; font-size: 0.85rem; color: #64748b;">
+        Jefes, Staff, Músicos y Clientes
+      </p>
+    </div>
+
+  </div>
+
+  <%# Tabla de Empresas del Universo %>
+  <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); overflow: hidden;">
+    <div style="padding: 24px; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: #0f172a;">Directorio de Empresas</h2>
+        <p style="margin: 4px 0 0 0; font-size: 0.88rem; color: #64748b;">Gestiona las suscripciones, consulta sus datos o conmuta para inspeccionar su entorno.</p>
+      </div>
+      <%= link_to superadmin_companies_path, class: "btn-secondary", style: "font-size: 0.88rem; padding: 8px 16px; text-decoration: none; border-radius: 8px; background: #f1f5f9; color: #334155; font-weight: 600;" do %>
+        Ver Lista Completa →
+      <% end %>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9rem;">
+        <thead>
+          <tr style="background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0;">
+            <th style="padding: 14px 20px;">Empresa / Slug</th>
+            <th style="padding: 14px 20px;">Estado</th>
+            <th style="padding: 14px 20px;">Mensualidad</th>
+            <th style="padding: 14px 20px;">Jefe / Leader</th>
+            <th style="padding: 14px 20px;">Usuarios / Shows</th>
+            <th style="padding: 14px 20px; text-align: right;">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @companies.each do |company| %>
+            <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;">
+              <td style="padding: 16px 20px;">
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.95rem;">
+                  <%= company.name %>
+                </div>
+                <div style="color: #64748b; font-size: 0.8rem; font-family: monospace;">
+                  /<%= company.slug %>
+                </div>
+              </td>
+
+              <td style="padding: 16px 20px;">
+                <% case company.status.to_sym %>
+                <% when :active %>
+                  <span style="background: #dcfce7; color: #15803d; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; display: inline-block;">Activa</span>
+                <% when :suspended %>
+                  <span style="background: #ffe4e6; color: #be123c; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; display: inline-block;">Suspendida</span>
+                <% when :past_due %>
+                  <span style="background: #fef3c7; color: #b45309; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; display: inline-block;">Pago Vencido</span>
+                <% when :trial %>
+                  <span style="background: #dbeafe; color: #1d4ed8; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px; display: inline-block;">Prueba</span>
+                <% end %>
+              </td>
+
+              <td style="padding: 16px 20px; font-weight: 700; color: #0f172a;">
+                <%= number_to_currency(company.monthly_fee, unit: company.currency + " ", precision: 2) %>/mes
+              </td>
+
+              <td style="padding: 16px 20px;">
+                <% leader = company.primary_leader %>
+                <% if leader %>
+                  <div style="font-weight: 600; color: #334155;"><%= leader.display_name %></div>
+                  <div style="font-size: 0.78rem; color: #64748b;"><%= leader.email %></div>
+                <% else %>
+                  <span style="color: #94a3b8; font-style: italic; font-size: 0.85rem;">Sin asignación</span>
+                <% end %>
+              </td>
+
+              <td style="padding: 16px 20px; color: #475569;">
+                <span style="font-weight: 600; color: #0f172a;"><%= company.users.count %></span> usuarios |
+                <span style="font-weight: 600; color: #0f172a;"><%= company.gigs.count %></span> shows
+              </td>
+
+              <td style="padding: 16px 20px; text-align: right;">
+                <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;">
+                  <% if company.primary_leader.present? && company.id != current_user.company_id %>
+                    <span style="background: #f8fafc; border: 1px solid #e2e8f0; color: #64748b; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.78rem;" title="Esta empresa es privada. No es posible acceder a sus datos internos.">
+                      🔒 Privada
+                    </span>
+                  <% else %>
+                    <%= button_to switch_tenant_superadmin_company_path(company), method: :post, style: "background: #e0e7ff; color: #4338ca; border: none; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer;", title: "Inspeccionar vista inicial de esta empresa" do %>
+                      👁️ Ver como
+                    <% end %>
+                  <% end %>
+
+                  <%= link_to superadmin_company_path(company), style: "background: #f1f5f9; color: #334155; padding: 6px 12px; border-radius: 6px; font-weight: 600; font-size: 0.8rem; text-decoration: none;" do %>
+                    ⚙️ Gestionar
+                  <% end %>
+                </div>
+
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>

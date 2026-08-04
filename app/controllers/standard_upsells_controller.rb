@@ -3,17 +3,17 @@ class StandardUpsellsController < ApplicationController
   before_action :set_standard_upsell, only: [:edit, :update, :destroy]
 
   def index
-    @standard_upsells = StandardUpsell.all_with_defaults
+    @standard_upsells = current_company.standard_upsells.all_with_defaults
   end
 
   def new
-    @standard_upsell = StandardUpsell.new(currency: 'USD', active: true)
+    @standard_upsell = current_company.standard_upsells.build(currency: 'USD', active: true)
   end
 
   def create
-    @standard_upsell = StandardUpsell.new(standard_upsell_params)
+    @standard_upsell = current_company.standard_upsells.build(standard_upsell_params)
     if @standard_upsell.save
-      redirect_to standard_upsells_path, notice: "Adicional estándar '#{@standard_upsell.title}' creado exitosamente en el catálogo global."
+      redirect_to standard_upsells_path, notice: "Adicional estándar '#{@standard_upsell.title}' creado exitosamente."
     else
       render :new, status: :unprocessable_entity
     end
@@ -24,7 +24,7 @@ class StandardUpsellsController < ApplicationController
 
   def update
     if @standard_upsell.update(standard_upsell_params)
-      redirect_to standard_upsells_path, notice: "Adicional estándar '#{@standard_upsell.title}' actualizado en el catálogo global."
+      redirect_to standard_upsells_path, notice: "Adicional estándar '#{@standard_upsell.title}' actualizado."
     else
       render :edit, status: :unprocessable_entity
     end
@@ -33,13 +33,13 @@ class StandardUpsellsController < ApplicationController
   def destroy
     title = @standard_upsell.title
     @standard_upsell.destroy
-    redirect_to standard_upsells_path, notice: "Adicional '#{title}' eliminado del catálogo global."
+    redirect_to standard_upsells_path, notice: "Adicional '#{title}' eliminado."
   end
 
   private
 
   def set_standard_upsell
-    @standard_upsell = StandardUpsell.find(params[:id])
+    @standard_upsell = current_company.standard_upsells.find(params[:id])
   end
 
   def standard_upsell_params

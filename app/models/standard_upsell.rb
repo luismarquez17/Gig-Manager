@@ -1,4 +1,6 @@
 class StandardUpsell < ApplicationRecord
+  include TenantScoped
+
   validates :title, presence: true
 
   before_validation :ensure_key

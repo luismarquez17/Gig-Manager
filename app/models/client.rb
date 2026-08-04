@@ -1,4 +1,6 @@
 class Client < ApplicationRecord
+  include TenantScoped
+
   has_many :gigs, dependent: :destroy
   
   # Permite editar los datos del show desde el formulario del cliente

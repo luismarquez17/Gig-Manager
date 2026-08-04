@@ -4,15 +4,16 @@ class GigsController < ApplicationController
   before_action :check_gig_assignment, only: [:show, :load_in_checklist]
 
   def check_gig_assignment
-    @gig = Gig.find(params[:id])
-    unless current_user.leader? || current_user.assigned_gigs.include?(@gig)
+    @gig = current_company.gigs.find_by!(id: params[:id])
+    unless current_user.superadmin? || current_user.leader? || current_user.assigned_gigs.include?(@gig)
       redirect_to root_path, alert: "No tienes asignado este evento."
     end
   end
 
   def index
-    # 1. Unimos la tabla de clientes para poder buscar y filtrar
-    @gigs = Gig.left_joins(:client).includes(:client).all
+    # 1. Unimos la tabla de clientes para poder buscar y filtrar dentro de la empresa
+    @gigs = current_company.gigs.left_joins(:client).includes(:client)
+
 
     # 2. Buscador inteligente por nombre de cliente, teléfono, correo, ubicación o detalles del toque
     if params[:query].present?
@@ -212,11 +213,11 @@ class GigsController < ApplicationController
   end
 
   def edit
-    @gig = Gig.find(params[:id])
+    @gig = current_company.gigs.find(params[:id])
   end
 
   def update
-    @gig = Gig.find(params[:id])
+    @gig = current_company.gigs.find(params[:id])
     if @gig.update(gig_params)
       @gig.client.update_priority! if @gig.client
       redirect_to gig_path(@gig), notice: "Evento actualizado correctamente."
@@ -226,18 +227,17 @@ class GigsController < ApplicationController
   end
 
   def destroy
-    @gig = Gig.find(params[:id])
+    @gig = current_company.gigs.find(params[:id])
     @client = @gig.client
     
     if @gig.destroy
-      # Recalculamos la prioridad para que si el show borrado era grande, 
-      # el cliente cambie de color (ej: de verde a amarillo)
-      @client.update_priority!
+      @client.update_priority! if @client
       redirect_to gigs_path, notice: "Registro eliminado y prioridad actualizada."
     else
       redirect_to gigs_path, alert: "No se pudo eliminar el registro."
     end
   end
+
 
   private
 

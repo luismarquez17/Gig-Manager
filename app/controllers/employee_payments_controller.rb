@@ -3,24 +3,24 @@ class EmployeePaymentsController < ApplicationController
   before_action :set_payment, only: [:edit, :update, :destroy]
 
   def index
-    @payments = EmployeePayment.includes(:user, :gig).order(date_paid: :desc)
+    @payments = current_company.employee_payments.includes(:user, :gig).order(date_paid: :desc)
 
     if params[:user_id].present?
       @payments = @payments.where(user_id: params[:user_id])
-      @selected_worker = User.find_by(id: params[:user_id])
+      @selected_worker = current_company.users.find_by(id: params[:user_id])
     end
 
-    workers = User.workers.order(:email)
+    workers = current_company.users.workers.order(:email)
     worker_ids = workers.pluck(:id)
 
     staff_agreed_sums = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
-    paid_sums = EmployeePayment.where(user_id: worker_ids).group(:user_id).sum(:amount)
-    counts = EmployeePayment.where(user_id: worker_ids).group(:user_id).count
+    paid_sums = current_company.employee_payments.where(user_id: worker_ids).group(:user_id).sum(:amount)
+    counts = current_company.employee_payments.where(user_id: worker_ids).group(:user_id).count
 
     @worker_metrics = workers.map do |worker|
       agreed_total = staff_agreed_sums[worker.id].to_f
       paid_total = paid_sums[worker.id].to_f
-      balance = agreed_total - paid_total # positivo = empresa debe al trabajador, negativo = trabajador debe a empresa (vuelto)
+      balance = agreed_total - paid_total
 
       {
         worker: worker,
@@ -31,6 +31,7 @@ class EmployeePaymentsController < ApplicationController
       }
     end
   end
+
 
   def new
     @gig = Gig.find_by(id: params[:gig_id]) if params[:gig_id].present?
@@ -54,8 +55,9 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def create
-    @payment = EmployeePayment.new(payment_params)
+    @payment = current_company.employee_payments.build(payment_params)
     payroll_gig = @payment.gig
+
 
     total_payroll_available = FundAllocation.total_payroll_remaining
 
@@ -113,8 +115,9 @@ class EmployeePaymentsController < ApplicationController
   private
 
   def set_payment
-    @payment = EmployeePayment.find(params[:id])
+    @payment = current_company.employee_payments.find(params[:id])
   end
+
 
   def consume_payroll_funds(gig, amount, payment)
     remaining_amount = amount.to_f

@@ -1,4 +1,6 @@
 class ShoppingItem < ApplicationRecord
+  include TenantScoped
+
   enum priority: { low: 0, medium: 1, high: 2 }
   enum status: { pending: 0, purchased: 1 }
 

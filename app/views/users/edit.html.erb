@@ -88,7 +88,29 @@
         </div>
       <% end %>
 
+      <%# --- CAMBIO DE CONTRASEÑA --- %>
+
+      <div style="margin-top: 25px; margin-bottom: 25px; background: #f8fafc; padding: 20px; border-radius: 15px; border: 1px solid #e2e8f0;">
+        <h4 style="margin: 0 0 10px 0; color: #1e293b; font-weight: 700; font-size: 1.05em; display: flex; align-items: center; gap: 8px;">
+          <span>🔑 Cambiar Contraseña</span>
+        </h4>
+        <p style="margin: 0 0 15px 0; font-size: 0.85em; color: #64748b;">
+          Déjalo en blanco si no deseas cambiar tu contraseña actual.
+        </p>
+
+        <div style="margin-bottom: 15px;">
+          <%= f.label :password, "Nueva Contraseña", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 6px; font-size: 0.9em;" %>
+          <%= f.password_field :password, placeholder: "Mínimo 6 caracteres", style: "width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; box-sizing: border-box; font-size: 0.95em;" %>
+        </div>
+
+        <div>
+          <%= f.label :password_confirmation, "Confirmar Nueva Contraseña", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 6px; font-size: 0.9em;" %>
+          <%= f.password_field :password_confirmation, placeholder: "Repite la nueva contraseña", style: "width: 100%; padding: 10px; border: 1px solid #cbd5e0; border-radius: 8px; box-sizing: border-box; font-size: 0.95em;" %>
+        </div>
+      </div>
+
       <div style="display: flex; flex-direction: column; gap: 12px;">
+
         <%= f.submit "💾 Guardar Perfil", style: "width: 100%; background: #2563eb; color: white; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);" %>
         <%= link_to "🚫 Cancelar", back_path, style: "text-align: center; text-decoration: none; color: #64748b; font-weight: 600; font-size: 0.9em; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px;" %>
       </div>
