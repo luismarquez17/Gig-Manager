@@ -21,8 +21,9 @@ class Company < ApplicationRecord
   before_validation :generate_slug_and_token, on: :create
 
   def leaders
-    users.where(role: :leader)
+    users.where(role: [:leader, :superadmin])
   end
+
 
   def primary_leader
     leaders.first

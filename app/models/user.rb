@@ -6,7 +6,8 @@ class User < ApplicationRecord
 
   enum role: { client: 0, staff: 1, leader: 2, musician: 3, superadmin: 4 }
 
-  scope :workers, -> { where(role: [:staff, :leader, :musician]) }
+  scope :workers, -> { where(role: [:staff, :leader, :musician, :superadmin]) }
+
 
   belongs_to :company, optional: true
   belongs_to :client, optional: true
