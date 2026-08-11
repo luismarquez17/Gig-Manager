@@ -58,16 +58,20 @@ class User < ApplicationRecord
     assigned_gig_ids = staff_assignments.pluck(:gig_id)
 
     unassigned_payments_total = if assigned_gig_ids.empty?
-      employee_payments.sum(:expected_amount).to_f
+      employee_payments.approved.sum(:expected_amount).to_f
     else
-      employee_payments.where("gig_id IS NULL OR gig_id NOT IN (?)", assigned_gig_ids).sum(:expected_amount).to_f
+      employee_payments.approved.where("gig_id IS NULL OR gig_id NOT IN (?)", assigned_gig_ids).sum(:expected_amount).to_f
     end
 
     assignment_total + unassigned_payments_total
   end
 
   def total_paid_amount
-    employee_payments.sum(:amount).to_f
+    employee_payments.approved.sum(:amount).to_f
+  end
+
+  def total_pending_approval_amount
+    employee_payments.pending_approval.sum(:amount).to_f
   end
 
   def pending_balance
@@ -80,7 +84,8 @@ class User < ApplicationRecord
 
     # 1. Shows asignados vía StaffAssignment
     staff_assignments.includes(gig: :client).each do |sa|
-      paid = employee_payments.where(gig_id: sa.gig_id).sum(:amount).to_f
+      paid = employee_payments.approved.where(gig_id: sa.gig_id).sum(:amount).to_f
+      pending_approval = employee_payments.pending_approval.where(gig_id: sa.gig_id).sum(:amount).to_f
       expected = sa.agreed_amount.to_f
       items << {
         gig: sa.gig,
@@ -88,6 +93,7 @@ class User < ApplicationRecord
         date: sa.gig&.date,
         expected_amount: expected,
         paid_amount: paid,
+        pending_approval_amount: pending_approval,
         pending_amount: expected - paid,
         type: :assignment,
         assignment: sa
@@ -103,7 +109,8 @@ class User < ApplicationRecord
 
     standalone_payments.group_by(&:gig_id).each do |_gig_id, payments|
       gig = payments.first.gig
-      paid = payments.sum { |p| p.amount.to_f }
+      paid = payments.select(&:approved?).sum { |p| p.amount.to_f }
+      pending_approval = payments.select(&:pending_approval?).sum { |p| p.amount.to_f }
       expected = payments.map { |p| p.expected_amount.to_f }.max || paid
       items << {
         gig: gig,
@@ -111,6 +118,7 @@ class User < ApplicationRecord
         date: gig&.date || payments.first.date_paid || payments.first.created_at.to_date,
         expected_amount: expected,
         paid_amount: paid,
+        pending_approval_amount: pending_approval,
         pending_amount: expected - paid,
         type: :payment,
         payments: payments

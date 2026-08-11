@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_10_235613) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -92,8 +92,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_10_235613) do
     t.bigint "company_id"
     t.string "funding_source", default: "payroll_fund", null: false
     t.string "external_source_name"
+    t.string "status", default: "approved", null: false
+    t.boolean "reported_by_worker", default: false, null: false
+    t.string "rejection_reason"
+    t.datetime "approved_at"
     t.index ["company_id"], name: "index_employee_payments_on_company_id"
     t.index ["gig_id"], name: "index_employee_payments_on_gig_id"
+    t.index ["status"], name: "index_employee_payments_on_status"
     t.index ["user_id"], name: "index_employee_payments_on_user_id"
   end
 

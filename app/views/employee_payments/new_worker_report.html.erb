@@ -1,0 +1,117 @@
+<div style="max-width: 680px; margin: 0 auto; font-family: 'Inter', system-ui, -apple-system, sans-serif; color: #1e293b; padding-bottom: 40px;">
+
+  <%# --- HEADER --- %>
+  <div style="margin-bottom: 25px;">
+    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 8px;">
+      <%= link_to '⬅ Volver a Mis Pagos', my_payments_path, style: "color: #64748b; text-decoration: none; font-weight: 700; font-size: 0.9em;" %>
+    </div>
+    <h1 style="color: #0f172a; margin: 0; font-size: 1.85em; font-weight: 800; letter-spacing: -0.5px;">
+      📝 Reportar Pago Recibido
+    </h1>
+    <p style="color: #64748b; margin-top: 6px; font-size: 0.95em;">
+      Marca el pago que te fue entregado. Tu líder recibirá una notificación para confirmarlo y actualizar tus cuentas.
+    </p>
+  </div>
+
+  <%# --- FORMULARIO --- %>
+  <div class="custom-card" style="background: white; border-radius: 20px; padding: 26px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+
+    <% if @payment.errors.any? %>
+      <div style="background: #fef2f2; border: 1px solid #fecaca; color: #b91c1c; padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9em;">
+        <strong>⚠️ Por favor corrige los siguientes errores:</strong>
+        <ul style="margin: 6px 0 0 16px; padding: 0;">
+          <% @payment.errors.full_messages.each do |msg| %>
+            <li><%= msg %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @payment, url: create_worker_report_employee_payments_path, method: :post, local: true do |f| %>
+
+      <%# 1. Show / Evento %>
+      <div class="form-group-custom" style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+          🎸 ¿De cuál evento / show recibiste este pago?
+        </label>
+        
+        <% gig_options = @assigned_gigs.map { |g| 
+          label = "#{g.date&.strftime('%d/%m/%Y')} - #{g.client&.name || 'Show'} (#{g.location.presence || 'Lugar'})"
+          [label, g.id]
+        } %>
+        <% gig_options.unshift(["-- Pago General / Anticipo sin show específico --", ""]) %>
+
+        <%= f.select :gig_id, gig_options, { selected: @payment.gig_id }, { class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1em; background: white;" } %>
+        <small style="color: #94a3b8; font-size: 0.82em; display: block; margin-top: 4px;">
+          Selecciona el show correspondiente para que se descuente de tu saldo pendiente en ese evento.
+        </small>
+      </div>
+
+      <%# 2. Monto y Moneda %>
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 20px;">
+        <div class="form-group-custom" style="margin-bottom: 0;">
+          <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+            💵 Monto que recibiste:
+          </label>
+          <%= f.number_field :amount, step: :any, placeholder: "0.00", required: true, class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1.1em; font-weight: 800; color: #0f172a;" %>
+        </div>
+
+        <div class="form-group-custom" style="margin-bottom: 0;">
+          <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+            Moneda:
+          </label>
+          <%= f.select :currency, [["USD ($)", "USD"], ["BS (Bs)", "BS"]], { selected: @payment.currency || "USD" }, { class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1em; background: white; font-weight: 700;" } %>
+        </div>
+      </div>
+
+      <%# 3. Fecha de pago %>
+      <div class="form-group-custom" style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+          📅 ¿Cuándo te pagaron? (Fecha):
+        </label>
+        <%= f.date_field :date_paid, value: (@payment.date_paid || Date.today), required: true, class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1em;" %>
+      </div>
+
+      <%# 4. Método de pago %>
+      <div class="form-group-custom" style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+          💳 Método de pago recibido:
+        </label>
+        <%= f.select :payment_method, [
+          ["💵 Efectivo en mano", "Efectivo"],
+          ["📱 Pago Móvil", "Pago Móvil"],
+          ["🏦 Transferencia Bancaria", "Transferencia"],
+          ["🇺🇸 Zelle / Dólares Digitales", "Zelle"],
+          ["🪙 Binance / Cripto / USDT", "Binance / USDT"],
+          ["Otro", "Otro"]
+        ], { selected: @payment.payment_method || "Efectivo" }, { class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1em; background: white;" } %>
+      </div>
+
+      <%# 5. Notas o Referencia %>
+      <div class="form-group-custom" style="margin-bottom: 24px;">
+        <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+          📝 Notas o número de referencia (Opcional):
+        </label>
+        <%= f.text_area :notes, rows: 2, placeholder: "Ej: Transferencia Banco Mercantil ref #4592, o Efectivo al terminar el evento...", class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 0.95em;" %>
+      </div>
+
+      <%# Aviso informativo sobre confirmación %>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 14px 18px; margin-bottom: 24px; display: flex; gap: 12px; align-items: flex-start;">
+        <span style="font-size: 1.4em;">🔔</span>
+        <div style="font-size: 0.85em; color: #166534; line-height: 1.5;">
+          <strong>¿Cómo funciona la confirmación?</strong><br>
+          Al enviar este formulario, tu pago quedará marcado como <span style="background: #fef3c7; color: #92400e; padding: 2px 6px; border-radius: 4px; font-weight: 700;">⏳ Pendiente de Confirmación</span>. A tu líder le llegará un aviso para verificarlo y aceptarlo con un solo clic.
+        </div>
+      </div>
+
+      <%# Botones de Acción %>
+      <div style="display: flex; gap: 12px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+        <%= link_to 'Cancelar', my_payments_path, class: "btn-main btn-gray-custom", style: "padding: 12px 22px; font-weight: 700;" %>
+        <%= f.submit '💾 Enviar Reporte de Pago', class: "btn-main btn-primary-custom", style: "padding: 12px 26px; font-weight: 800;" %>
+      </div>
+
+    <% end %>
+
+  </div>
+
+</div>

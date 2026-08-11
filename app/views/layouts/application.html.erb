@@ -305,6 +305,14 @@
 
               <%= link_to employee_payments_path, class: "sidebar-link #{'active' if controller_name == 'employee_payments'}" do %>
                 <span class="icon">💰</span> <span>Pagos a trabajadores</span>
+                <% 
+                  pending_count = current_company&.employee_payments&.pending_approval&.count rescue 0 
+                %>
+                <% if pending_count.to_i > 0 %>
+                  <span style="background: #f59e0b; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                    <%= pending_count %>
+                  </span>
+                <% end %>
               <% end %>
 
               <%= link_to users_path, class: "sidebar-link #{'active' if controller_name == 'users'}" do %>
@@ -418,6 +426,19 @@
                 Volver a Modo Universo Superadmin
               <% end %>
             </div>
+          <% end %>
+
+          <% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && controller_name != 'employee_payments' %>
+            <% pending_worker_reports = current_company&.employee_payments&.pending_approval&.count rescue 0 %>
+            <% if pending_worker_reports.to_i > 0 %>
+              <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);">
+                <div style="display: flex; align-items: center; gap: 10px; color: #92400e; font-size: 0.92rem; font-weight: 600;">
+                  <span style="font-size: 1.3rem;">🔔</span>
+                  <span><strong>Notificación:</strong> Tienes <strong><%= pending_worker_reports %> pago(s) reportado(s)</strong> por trabajadores esperando tu confirmación.</span>
+                </div>
+                <%= link_to 'Revisar y Confirmar ➔', employee_payments_path, style: 'background: #f59e0b; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25); white-space: nowrap;' %>
+              </div>
+            <% end %>
           <% end %>
 
           <% if notice.present? %>

@@ -1,21 +1,26 @@
 class EmployeePaymentsController < ApplicationController
-  before_action :require_leader!
-  before_action :set_payment, only: [:edit, :update, :destroy]
+  before_action :require_leader!, except: [:new_worker_report, :create_worker_report]
+  before_action :set_payment, only: [:edit, :update, :destroy, :approve, :reject]
 
   def index
-    @payments = current_company.employee_payments.includes(:user, :gig).order(date_paid: :desc)
+    @payments = current_company.employee_payments.includes(:user, :gig).order(date_paid: :desc, created_at: :desc)
+    @pending_approvals = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc)
 
     if params[:user_id].present?
       @payments = @payments.where(user_id: params[:user_id])
       @selected_worker = current_company.users.find_by(id: params[:user_id])
     end
 
+    if params[:status].present?
+      @payments = @payments.where(status: params[:status])
+    end
+
     workers = current_company.users.workers.order(:email)
     worker_ids = workers.pluck(:id)
 
     staff_agreed_sums = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
-    paid_sums = current_company.employee_payments.where(user_id: worker_ids).group(:user_id).sum(:amount)
-    counts = current_company.employee_payments.where(user_id: worker_ids).group(:user_id).count
+    paid_sums = current_company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).sum(:amount)
+    counts = current_company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).count
 
     @worker_metrics = workers.map do |worker|
       agreed_total = staff_agreed_sums[worker.id].to_f
@@ -32,6 +37,75 @@ class EmployeePaymentsController < ApplicationController
     end
   end
 
+  def new_worker_report
+    @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+    @gig = current_company.gigs.find_by(id: params[:gig_id]) if params[:gig_id].present?
+    
+    default_amount = nil
+    if @gig.present?
+      assignment = @gig.staff_assignments.find_by(user_id: current_user.id)
+      if assignment.present?
+        default_amount = assignment.pending_balance.positive? ? assignment.pending_balance : assignment.agreed_amount.to_f
+      end
+    end
+
+    @payment = EmployeePayment.new(
+      user: current_user,
+      gig_id: @gig&.id,
+      amount: default_amount,
+      currency: @gig&.currency.presence || "USD",
+      date_paid: Date.today,
+      status: 'pending_approval',
+      reported_by_worker: true
+    )
+  end
+
+  def create_worker_report
+    @payment = current_company.employee_payments.build(worker_report_params)
+    @payment.user = current_user
+    @payment.status = 'pending_approval'
+    @payment.reported_by_worker = true
+    @payment.funding_source = 'payroll_fund' if @payment.funding_source.blank?
+
+    if @payment.save
+      redirect_to my_payments_path, notice: "✅ Tu reporte de pago por #{view_context.number_to_currency(@payment.amount, unit: @payment.currency)} ha sido registrado y enviado al líder para confirmación."
+    else
+      @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+      @gig = current_company.gigs.find_by(id: @payment.gig_id) if @payment.gig_id.present?
+      render :new_worker_report, status: :unprocessable_entity
+    end
+  end
+
+  def approve
+    ActiveRecord::Base.transaction do
+      if @payment.from_payroll_fund?
+        total_payroll_available = FundAllocation.total_payroll_remaining
+        if @payment.amount.to_f <= total_payroll_available
+          consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment)
+        else
+          # Si no alcanza el fondo de nómina al aprobar, pasa automáticamente a capital externo para no bloquear al trabajador
+          @payment.funding_source = 'external_capital'
+          @payment.external_source_name = 'Capital personal del leader (Aprobado sin fondos nómina)'
+        end
+      end
+
+      @payment.status = 'approved'
+      @payment.approved_at = Time.current
+      @payment.save!
+    end
+
+    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: @payment.currency)} a #{@payment.user.display_name} confirmado y aprobado exitosamente."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_back fallback_location: employee_payments_path, alert: "Error al aprobar pago: #{e.message}"
+  end
+
+  def reject
+    @payment.status = 'rejected'
+    @payment.rejection_reason = params[:rejection_reason].presence || 'Rechazado por el líder.'
+    @payment.save!
+
+    redirect_back fallback_location: employee_payments_path, alert: "❌ El reporte de pago de #{@payment.user.display_name} ha sido rechazado."
+  end
 
   def new
     @gig = Gig.find_by(id: params[:gig_id]) if params[:gig_id].present?
@@ -48,7 +122,8 @@ class EmployeePaymentsController < ApplicationController
       user_id: params[:user_id],
       amount: default_amount,
       currency: @gig&.currency.presence || "USD",
-      date_paid: Date.today
+      date_paid: Date.today,
+      status: 'approved'
     )
     @payroll_balance = FundAllocation.total_payroll_remaining
     @gig_payroll_balance = @gig&.total_payroll_remaining.to_f
@@ -56,6 +131,7 @@ class EmployeePaymentsController < ApplicationController
 
   def create
     @payment = current_company.employee_payments.build(payment_params)
+    @payment.status = 'approved'
     payroll_gig = @payment.gig
 
     if @payment.from_payroll_fund?
@@ -98,7 +174,7 @@ class EmployeePaymentsController < ApplicationController
 
       @payment.assign_attributes(payment_params)
 
-      if @payment.from_payroll_fund?
+      if @payment.from_payroll_fund? && @payment.approved?
         total_payroll_available = FundAllocation.total_payroll_remaining
 
         if @payment.amount.to_f > total_payroll_available
@@ -109,7 +185,7 @@ class EmployeePaymentsController < ApplicationController
       end
 
       @payment.save!
-      consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund?
+      consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund? && @payment.approved?
     end
 
     redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
@@ -130,7 +206,6 @@ class EmployeePaymentsController < ApplicationController
   def set_payment
     @payment = current_company.employee_payments.find(params[:id])
   end
-
 
   def consume_payroll_funds(gig, amount, payment)
     remaining_amount = amount.to_f
@@ -170,9 +245,17 @@ class EmployeePaymentsController < ApplicationController
     p_params = params.require(:employee_payment).permit(
       :user_id, :gig_id, :amount, :currency, :date_paid, 
       :payment_method, :notes, :expected_amount, 
-      :funding_source, :external_source_name
+      :funding_source, :external_source_name, :status
     )
     p_params[:expected_amount] = 0.0 if p_params[:expected_amount].blank?
+    p_params
+  end
+
+  def worker_report_params
+    p_params = params.require(:employee_payment).permit(
+      :gig_id, :amount, :currency, :date_paid, 
+      :payment_method, :notes
+    )
     p_params
   end
 end

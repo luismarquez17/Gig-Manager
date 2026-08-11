@@ -161,9 +161,9 @@ class PagesController < ApplicationController
                           .limit(5)
 
     # 8. Pagos a empleados
-    @total_employee_payments = current_company.employee_payments.sum(:amount).to_f
-    @total_external_worker_payments = current_company.employee_payments.where(funding_source: 'external_capital').sum(:amount).to_f
-    @total_payroll_worker_payments = current_company.employee_payments.where.not(funding_source: 'external_capital').sum(:amount).to_f
+    @total_employee_payments = current_company.employee_payments.approved.sum(:amount).to_f
+    @total_external_worker_payments = current_company.employee_payments.approved.where(funding_source: 'external_capital').sum(:amount).to_f
+    @total_payroll_worker_payments = current_company.employee_payments.approved.where.not(funding_source: 'external_capital').sum(:amount).to_f
 
     # 9. Tasa de reinversión configurada
     @reinvest_rate = FinanceSetting.instance.reinvest_rate.to_f

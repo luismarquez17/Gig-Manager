@@ -112,7 +112,16 @@ Rails.application.routes.draw do
       patch :update_role
     end
   end
-  resources :employee_payments, only: [:index, :new, :create, :edit, :update, :destroy]
+  resources :employee_payments, only: [:index, :new, :create, :edit, :update, :destroy] do
+    collection do
+      get :new_worker_report
+      post :create_worker_report
+    end
+    member do
+      post :approve
+      post :reject
+    end
+  end
   # Staff: view only their assigned gigs
   get '/my_gigs', to: 'gigs#my', as: 'my_gigs'
   # Staff & Musician: view their payments and balances

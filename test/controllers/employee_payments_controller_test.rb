@@ -170,4 +170,111 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 120.0, payment.amount.to_f
     assert_equal 0.0, payment.expected_amount.to_f
   end
+
+  test "worker can access new_worker_report and submit payment report in pending_approval state" do
+    sign_out @leader
+    sign_in @worker
+
+    get new_worker_report_employee_payments_url(gig_id: @gig.id)
+    assert_response :success
+    assert_match "Reportar Pago Recibido", response.body
+
+    assert_difference("EmployeePayment.count", 1) do
+      post create_worker_report_employee_payments_url, params: {
+        employee_payment: {
+          gig_id: @gig.id,
+          amount: 120.0,
+          currency: "USD",
+          date_paid: Date.today,
+          payment_method: "Pago Móvil",
+          notes: "Transferencia recibida por Luis"
+        }
+      }
+    end
+
+    payment = EmployeePayment.last
+    assert_equal @worker.id, payment.user_id
+    assert_equal @gig.id, payment.gig_id
+    assert_equal 120.0, payment.amount.to_f
+    assert payment.pending_approval?
+    assert payment.reported_by_worker?
+    assert_redirected_to my_payments_path
+  end
+
+  test "leader can approve worker payment report and consume payroll funds" do
+    FundAllocation.create!(
+      gig: @gig,
+      fund_type: "payroll",
+      amount: 300.0,
+      currency: "USD"
+    )
+
+    pending_payment = EmployeePayment.create!(
+      company: @leader.company,
+      user: @worker,
+      gig: @gig,
+      amount: 150.0,
+      currency: "USD",
+      date_paid: Date.today,
+      payment_method: "Efectivo",
+      status: "pending_approval",
+      reported_by_worker: true
+    )
+
+    assert pending_payment.pending_approval?
+    assert_equal 0, pending_payment.fund_expenses.count
+
+    # Leader logs in and approves
+    post approve_employee_payment_url(pending_payment)
+    assert_redirected_to employee_payments_path
+
+    pending_payment.reload
+    assert pending_payment.approved?
+    assert_not_nil pending_payment.approved_at
+    assert_equal 1, pending_payment.fund_expenses.count
+    assert_equal 150.0, pending_payment.fund_expenses.first.amount.to_f
+  end
+
+  test "leader can reject worker payment report" do
+    pending_payment = EmployeePayment.create!(
+      company: @leader.company,
+      user: @worker,
+      gig: @gig,
+      amount: 100.0,
+      currency: "USD",
+      date_paid: Date.today,
+      status: "pending_approval",
+      reported_by_worker: true
+    )
+
+    post reject_employee_payment_url(pending_payment), params: { rejection_reason: "Monto incorrecto" }
+    assert_redirected_to employee_payments_path
+
+    pending_payment.reload
+    assert pending_payment.rejected?
+    assert_equal "Monto incorrecto", pending_payment.rejection_reason
+    assert_equal 0, pending_payment.fund_expenses.count
+  end
+
+  test "worker cannot approve or reject payments" do
+    pending_payment = EmployeePayment.create!(
+      company: @leader.company,
+      user: @worker,
+      gig: @gig,
+      amount: 100.0,
+      currency: "USD",
+      date_paid: Date.today,
+      status: "pending_approval",
+      reported_by_worker: true
+    )
+
+    sign_out @leader
+    sign_in @worker
+
+    post approve_employee_payment_url(pending_payment)
+    assert_redirected_to root_path
+
+    pending_payment.reload
+    assert pending_payment.pending_approval?
+  end
 end

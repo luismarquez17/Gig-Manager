@@ -1,10 +1,100 @@
-<h2 style="margin-bottom: 18px;">Pagos a trabajadores</h2>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h1 style="color: #0f172a; margin: 0; font-size: 1.85em; font-weight: 800; letter-spacing: -0.5px;">
+      💼 Pagos a Trabajadores
+    </h1>
+    <p style="color: #64748b; margin: 4px 0 0 0; font-size: 0.95em;">
+      Control de nóminas, honorarios por show, capital externo y confirmación de pagos.
+    </p>
+  </div>
 
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <%= link_to '➕ Registrar Nuevo Pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
+  </div>
+</div>
+
+<%# --- SECCIÓN: NOTIFICACIÓN DE PAGOS REPORTADOS POR TRABAJADORES PENDIENTES DE APROBACIÓN --- %>
+<% if @pending_approvals.any? %>
+  <div style="background: #fffbeb; border: 2px solid #fde68a; border-radius: 18px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 2em; line-height: 1;">🔔</span>
+        <div>
+          <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #92400e;">
+            Notificación: <%= @pending_approvals.count %> pago(s) reportado(s) por trabajadores
+          </h3>
+          <p style="margin: 3px 0 0 0; font-size: 0.88em; color: #b45309;">
+            Un trabajador asignó que ya se le pagó. Confirma si es cierto para aprobarlo o rechazarlo:
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <% @pending_approvals.each do |p| %>
+        <div style="background: white; border-radius: 14px; padding: 16px 20px; border: 1px solid #fef3c7; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+          
+          <div>
+            <div style="font-size: 1.05em; font-weight: 800; color: #0f172a;">
+              👤 <%= p.user.display_name rescue p.user.email %> 
+              <span style="font-weight: 500; color: #64748b; font-size: 0.85em;">(<%= p.user.email %>)</span>
+            </div>
+            
+            <div style="margin-top: 4px; font-size: 0.9em; color: #334155;">
+              <strong>Evento / Show:</strong> 
+              <% if p.gig.present? %>
+                <%= link_to gig_path(p.gig), style: "color: #2563eb; text-decoration: none; font-weight: 700;" do %>
+                  <%= p.gig.client&.name || "Show" %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
+                <% end %>
+              <% else %>
+                <span style="color: #64748b; font-style: italic;">Pago general / Anticipo</span>
+              <% end %>
+              &nbsp;•&nbsp;
+              <strong>Fecha:</strong> <%= p.date_paid&.strftime("%d/%m/%Y") %>
+              &nbsp;•&nbsp;
+              <strong>Método:</strong> <%= p.payment_method.presence || "No especificado" %>
+            </div>
+
+            <% if p.notes.present? %>
+              <div style="margin-top: 4px; font-size: 0.84em; color: #64748b;">
+                📝 <em>"<%= p.notes %>"</em>
+              </div>
+            <% end %>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <div style="text-align: right;">
+              <span style="font-size: 1.35em; font-weight: 900; color: #059669; display: block;">
+                <%= number_to_currency(p.amount, unit: p.currency) %>
+              </span>
+              <span style="font-size: 0.75em; font-weight: 700; color: #b45309; text-transform: uppercase;">
+                Pendiente de Aprobación
+              </span>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <%= button_to approve_employee_payment_path(p), method: :post, data: { turbo_confirm: "¿Confirmas que el pago de #{number_to_currency(p.amount, unit: p.currency)} a #{p.user.display_name} es correcto y deseas aceptarlo?" }, class: "btn-main btn-success-custom", style: "padding: 8px 16px; font-size: 0.88em; font-weight: 800;" do %>
+                ✅ Aceptar y Confirmar
+              <% end %>
+
+              <%= button_to reject_employee_payment_path(p), method: :post, data: { turbo_confirm: "¿Estás seguro de rechazar este reporte de pago?" }, class: "btn-main btn-danger-custom", style: "padding: 8px 14px; font-size: 0.88em; font-weight: 700;" do %>
+                ❌ Rechazar
+              <% end %>
+            </div>
+          </div>
+
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<%# --- RESUMEN GENERAL DE PAGOS Y DEUDAS --- %>
 <div class="custom-card" style="margin-bottom: 20px;">
   <h3 style="margin: 0 0 12px 0;">Resumen general de pagos y deudas</h3>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Total pagado</div>
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Total pagado (Aprobado)</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
     </div>
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
@@ -26,6 +116,7 @@
   </div>
 </div>
 
+<%# --- ESTADO POR TRABAJADOR --- %>
 <div class="custom-card" style="margin-bottom: 20px;">
   <h3 style="margin-top: 0;">Estado por trabajador</h3>
   <div style="display: grid; gap: 10px;">
@@ -64,24 +155,35 @@
   </div>
 </div>
 
+<%# --- TABLA DE HISTORIAL DE PAGOS --- %>
 <div class="custom-card">
-  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 12px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;">
     <h3 style="margin: 0;">Historial de pagos registrados</h3>
-    <% if @selected_worker.present? %>
-      <span style="background: #f1f5f9; color: #475569; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Mostrando: <%= @selected_worker.display_name rescue @selected_worker.email %></span>
-    <% end %>
+    
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <% if @selected_worker.present? %>
+        <span style="background: #f1f5f9; color: #475569; padding: 6px 10px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">
+          Mostrando: <%= @selected_worker.display_name rescue @selected_worker.email %>
+        </span>
+      <% end %>
+
+      <%= link_to "Todos", employee_payments_path(user_id: params[:user_id]), class: "btn-main py-1 px-3 fs-7 #{params[:status].blank? ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
+      <%= link_to "⏳ Pendientes (#{@pending_approvals.count})", employee_payments_path(user_id: params[:user_id], status: 'pending_approval'), class: "btn-main py-1 px-3 fs-7 #{params[:status] == 'pending_approval' ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
+      <%= link_to "✅ Confirmados", employee_payments_path(user_id: params[:user_id], status: 'approved'), class: "btn-main py-1 px-3 fs-7 #{params[:status] == 'approved' ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
+    </div>
   </div>
 
   <div class="table-custom-wrapper">
     <div style="overflow-x: auto;">
       <% if @payments.any? %>
-        <table class="table-custom">
+        <table class="table-custom" style="min-width: 750px;">
           <thead>
             <tr>
               <th>Fecha</th>
               <th>Trabajador</th>
               <th>Show relacionado</th>
               <th>Monto pagado</th>
+              <th>Estado</th>
               <th>Origen de Fondos</th>
               <th>Método</th>
               <th>Notas</th>
@@ -90,18 +192,42 @@
           </thead>
           <tbody>
             <% @payments.each do |p| %>
-              <tr>
+              <tr style="<%= p.pending_approval? ? 'background: #fffdf5;' : '' %>">
                 <td><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
-                <td style="font-weight: 700; color: #1e293b;"><%= p.user.display_name rescue p.user.email %></td>
+                <td style="font-weight: 700; color: #1e293b;">
+                  <%= p.user.display_name rescue p.user.email %>
+                  <% if p.reported_by_worker? %>
+                    <span style="font-size: 0.72em; background: #f1f5f9; color: #64748b; padding: 2px 5px; border-radius: 4px; display: block; margin-top: 2px; font-weight: 600;">
+                      Reportado por trabajador
+                    </span>
+                  <% end %>
+                </td>
                 <td>
                   <% if p.gig.present? %>
-                    <%= p.gig.client&.name %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
+                    <%= link_to gig_path(p.gig), style: "color: #2563eb; text-decoration: none; font-weight: 600;" do %>
+                      <%= p.gig.client&.name %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
+                    <% end %>
                   <% else %>
                     <span style="color: #94a3b8; font-style: italic;">Pago general / Sin show</span>
                   <% end %>
                 </td>
                 <td style="font-weight: 800; color: #059669;">
                   +<%= number_to_currency(p.amount, unit: p.currency) %>
+                </td>
+                <td>
+                  <% if p.approved? %>
+                    <span style="background: #ecfdf5; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                      ✅ Confirmado
+                    </span>
+                  <% elsif p.pending_approval? %>
+                    <span style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                      ⏳ Pendiente
+                    </span>
+                  <% elsif p.rejected? %>
+                    <span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                      ❌ Rechazado
+                    </span>
+                  <% end %>
                 </td>
                 <td>
                   <% if p.from_external_capital? %>
@@ -117,7 +243,11 @@
                 <td><%= p.payment_method.presence || "---" %></td>
                 <td><%= p.notes %></td>
                 <td class="text-center">
-                  <div style="display: flex; gap: 8px; justify-content: center;">
+                  <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <% if p.pending_approval? %>
+                      <%= button_to '✅', approve_employee_payment_path(p), method: :post, data: { turbo_confirm: '¿Aprobar y confirmar este pago?' }, class: 'btn-main btn-success-custom py-1 px-2 fs-7', title: 'Aprobar pago' %>
+                      <%= button_to '❌', reject_employee_payment_path(p), method: :post, data: { turbo_confirm: '¿Rechazar este reporte de pago?' }, class: 'btn-main btn-danger-custom py-1 px-2 fs-7', title: 'Rechazar pago' %>
+                    <% end %>
                     <%= link_to '✏️', edit_employee_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', title: 'Editar' %>
                     <%= button_to '🗑️', employee_payment_path(p), method: :delete, data: { turbo_confirm: '¿Eliminar este pago? Esta acción no se puede deshacer.' }, class: 'btn-main py-1 px-2 fs-7', style: 'background:#fff1f2; color:#e11d48; border:1px solid #fecaca; cursor:pointer;', title: 'Eliminar' %>
                   </div>
@@ -127,15 +257,16 @@
           </tbody>
         </table>
       <% else %>
-        <p style="margin: 0; color: #64748b;">No hay pagos registrados para este trabajador todavía.</p>
+        <p style="margin: 0; color: #64748b; padding: 20px;">No hay pagos registrados con estos filtros.</p>
       <% end %>
     </div>
   </div>
 
-  <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
-    <%= link_to 'Registrar nuevo pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
-    <% if @selected_worker.present? %>
-      <%= link_to 'Ver vista general', employee_payments_path, class: 'btn-main btn-gray-custom' %>
+  <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <%= link_to '➕ Registrar nuevo pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
+    <% if @selected_worker.present? || params[:status].present? %>
+      <%= link_to 'Ver todos los pagos', employee_payments_path, class: 'btn-main btn-gray-custom' %>
     <% end %>
   </div>
 </div>
+
