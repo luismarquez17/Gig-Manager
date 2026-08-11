@@ -71,16 +71,23 @@
   </div>
 
   <%# --- TABLA DE RESULTADOS --- %>
-  <div class="table-custom-wrapper" style="background: white; border-radius: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 25px;">
+  <div class="d-md-none" style="display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 8px 14px; margin-bottom: 12px; color: #1e40af; font-size: 0.82em; font-weight: 700;">
+    <div style="display: flex; align-items: center; gap: 6px;">
+      <span>👈 Desliza hacia los lados 👉</span>
+    </div>
+    <span style="font-size: 0.85em; opacity: 0.85;">Ver tabla completa</span>
+  </div>
+
+  <div class="table-custom-wrapper" style="background: white; border-radius: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 25px; width: 100%; max-width: 100%;">
     <% if @gigs.any? %>
-      <table class="table-custom" style="width: 100%; border-collapse: collapse; text-align: left; min-width: 680px;">
+      <table class="table-custom" style="width: 100%; border-collapse: collapse; text-align: left; min-width: 860px;">
         <thead>
           <tr style="background-color: #f8f9fa; color: #333;">
-            <th style="padding: 15px; border-bottom: 2px solid #eee;">Fecha</th>
-            <th style="padding: 15px; border-bottom: 2px solid #eee;">Cliente (Prioridad)</th>
-            <th style="padding: 15px; border-bottom: 2px solid #eee;">Ubicación & Detalles</th>
-            <th style="padding: 15px; border-bottom: 2px solid #eee; min-width: 200px;">Monto & Fondos</th>
-            <th style="padding: 15px; border-bottom: 2px solid #eee; text-align: center;">Acciones</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; min-width: 110px;">Fecha</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; min-width: 180px;">Cliente (Prioridad)</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; min-width: 210px;">Ubicación & Detalles</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; min-width: 230px;">Monto & Fondos</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; text-align: center; min-width: 200px;">Acciones</th>
           </tr>
         </thead>
         <tbody>

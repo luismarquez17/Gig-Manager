@@ -112,9 +112,12 @@ body {
 .table-custom-wrapper {
   background: white;
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto !important;
+  -webkit-overflow-scrolling: touch !important;
   border: 1px solid #e2e8f0;
   box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+  width: 100%;
+  max-width: 100%;
 }
 
 .table-custom {
@@ -555,11 +558,17 @@ html, body {
   .table-responsive,
   div:has(> table) {
     overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: touch !important;
     max-width: 100% !important;
     width: 100% !important;
     box-sizing: border-box;
     border-radius: 14px;
+    touch-action: pan-x pan-y;
+  }
+
+  .table-custom {
+    min-width: 820px !important;
+    max-width: none !important;
   }
 
   table {
