@@ -79,4 +79,65 @@ class GigTest < ActiveSupport::TestCase
     assert_equal 50.0, projector_upsell[:price]
     assert_equal "🎬", projector_upsell[:emoji]
   end
+
+  test "payment_percentage and paid_in_full? calculation for unpaid, partial and full payments" do
+    gig = Gig.create!(amount: 200, client_email: "client@example.com")
+    
+    # 1. Unpaid state
+    assert_equal 0.0, gig.payment_percentage
+    assert_not gig.paid_in_full?
+    assert_equal :unpaid, gig.payment_status
+
+    # 2. Partial payment
+    gig.gig_payments.create!(amount: 100, date_paid: Date.today)
+    gig.reload
+    assert_equal 50.0, gig.payment_percentage
+    assert_not gig.paid_in_full?
+    assert_equal :partial, gig.payment_status
+
+    # 3. Fully paid state
+    gig.gig_payments.create!(amount: 100, date_paid: Date.today)
+    gig.reload
+    assert_equal 100.0, gig.payment_percentage
+    assert gig.paid_in_full?
+    assert_equal :paid, gig.payment_status
+  end
+
+  test "fund allocation scopes correctly filter unallocated vs fully allocated gigs" do
+    company = companies(:one)
+    
+    # Gig 1: Has payments of $300, but no fund allocations at all
+    gig1 = Gig.create!(company: company, amount: 500, client_email: "g1@example.com")
+    gig1.gig_payments.create!(amount: 300, date_paid: Date.today)
+
+    # Gig 2: Has payments of $400, and $200 allocated (partial allocation, $200 remaining unallocated)
+    gig2 = Gig.create!(company: company, amount: 600, client_email: "g2@example.com")
+    gig2.gig_payments.create!(amount: 400, date_paid: Date.today)
+    gig2.fund_allocations.create!(fund_type: "payroll", amount: 200)
+
+    # Gig 3: Has payments of $200, and $200 allocated (100% allocated)
+    gig3 = Gig.create!(company: company, amount: 400, client_email: "g3@example.com")
+    gig3.gig_payments.create!(amount: 200, date_paid: Date.today)
+    gig3.fund_allocations.create!(fund_type: "payroll", amount: 200)
+
+    # Gig 4: Has 0 payments
+    gig4 = Gig.create!(company: company, amount: 300, client_email: "g4@example.com")
+
+    # Scopes check:
+    unallocated_gigs = Gig.with_unallocated_funds
+    assert_includes unallocated_gigs, gig1
+    assert_includes unallocated_gigs, gig2
+    assert_not_includes unallocated_gigs, gig3
+    assert_not_includes unallocated_gigs, gig4
+
+    no_allocations_gigs = Gig.without_any_fund_allocations
+    assert_includes no_allocations_gigs, gig1
+    assert_not_includes no_allocations_gigs, gig2
+    assert_not_includes no_allocations_gigs, gig3
+
+    fully_allocated_gigs = Gig.fully_allocated_funds
+    assert_includes fully_allocated_gigs, gig3
+    assert_not_includes fully_allocated_gigs, gig1
+    assert_not_includes fully_allocated_gigs, gig2
+  end
 end

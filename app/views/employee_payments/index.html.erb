@@ -82,6 +82,7 @@
               <th>Trabajador</th>
               <th>Show relacionado</th>
               <th>Monto pagado</th>
+              <th>Origen de Fondos</th>
               <th>Método</th>
               <th>Notas</th>
               <th class="text-center">Acciones</th>
@@ -101,6 +102,17 @@
                 </td>
                 <td style="font-weight: 800; color: #059669;">
                   +<%= number_to_currency(p.amount, unit: p.currency) %>
+                </td>
+                <td>
+                  <% if p.from_external_capital? %>
+                    <span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="<%= p.funding_source_label %>">
+                      💼 <%= p.external_source_name.presence || "Capital Externo" %>
+                    </span>
+                  <% else %>
+                    <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
+                      🏢 Fondo Nómina
+                    </span>
+                  <% end %>
                 </td>
                 <td><%= p.payment_method.presence || "---" %></td>
                 <td><%= p.notes %></td>

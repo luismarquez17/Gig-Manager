@@ -58,21 +58,28 @@ class EmployeePaymentsController < ApplicationController
     @payment = current_company.employee_payments.build(payment_params)
     payroll_gig = @payment.gig
 
+    if @payment.from_payroll_fund?
+      total_payroll_available = FundAllocation.total_payroll_remaining
 
-    total_payroll_available = FundAllocation.total_payroll_remaining
-
-    if @payment.amount.to_f > total_payroll_available
-      formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
-      redirect_to new_employee_payment_path(gig_id: @payment.gig_id, user_id: @payment.user_id),
-                  alert: "El monto excede el saldo disponible en el fondo universal de Nómina / Agrupación (#{formatted_avail})." and return
+      if @payment.amount.to_f > total_payroll_available
+        formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
+        @payroll_balance = total_payroll_available
+        @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
+        flash.now[:alert] = "El monto excede el saldo disponible en el fondo de Nómina (#{formatted_avail}). Puedes cambiar el origen a 'Capital Externo (Dinero personal del leader)' para proceder."
+        render :new, status: :unprocessable_entity and return
+      end
     end
 
     ActiveRecord::Base.transaction do
       @payment.save!
-      consume_payroll_funds(payroll_gig, @payment.amount.to_f, @payment)
+      consume_payroll_funds(payroll_gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund?
     end
 
-    redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador registrado."
+    notice_msg = @payment.from_external_capital? ? 
+      "Pago a trabajador registrado con capital externo (#{@payment.funding_source_label})." : 
+      "Pago a trabajador registrado descontado de fondos de nómina."
+
+    redirect_to employee_payments_path(user_id: @payment.user_id), notice: notice_msg
   rescue ActiveRecord::RecordInvalid
     @payroll_balance = FundAllocation.total_payroll_remaining
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
@@ -80,6 +87,8 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def edit
+    @payroll_balance = FundAllocation.total_payroll_remaining
+    @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
   end
 
   def update
@@ -89,20 +98,24 @@ class EmployeePaymentsController < ApplicationController
 
       @payment.assign_attributes(payment_params)
 
-      total_payroll_available = FundAllocation.total_payroll_remaining
+      if @payment.from_payroll_fund?
+        total_payroll_available = FundAllocation.total_payroll_remaining
 
-      if @payment.amount.to_f > total_payroll_available
-        formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
-        @payment.errors.add(:amount, "excede el saldo disponible en el fondo universal de Nómina / Agrupación (#{formatted_avail})")
-        raise ActiveRecord::RecordInvalid.new(@payment)
+        if @payment.amount.to_f > total_payroll_available
+          formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
+          @payment.errors.add(:amount, "excede el saldo disponible en el fondo de Nómina (#{formatted_avail}). Puedes cambiar el origen a 'Capital Externo'.")
+          raise ActiveRecord::RecordInvalid.new(@payment)
+        end
       end
 
       @payment.save!
-      consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment)
+      consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund?
     end
 
     redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
   rescue ActiveRecord::RecordInvalid
+    @payroll_balance = FundAllocation.total_payroll_remaining
+    @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
     render :edit, status: :unprocessable_entity
   end
 
@@ -154,7 +167,11 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def payment_params
-    p_params = params.require(:employee_payment).permit(:user_id, :gig_id, :amount, :currency, :date_paid, :payment_method, :notes, :expected_amount)
+    p_params = params.require(:employee_payment).permit(
+      :user_id, :gig_id, :amount, :currency, :date_paid, 
+      :payment_method, :notes, :expected_amount, 
+      :funding_source, :external_source_name
+    )
     p_params[:expected_amount] = 0.0 if p_params[:expected_amount].blank?
     p_params
   end

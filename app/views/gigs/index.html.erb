@@ -5,6 +5,17 @@
     <%= link_to '➕ Registrar Nuevo Toque', new_gig_path, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
   </div>
 
+  <%# --- BANNER DE AVISO SI HAY FONDOS PENDIENTES POR ASIGNAR --- %>
+  <% if @unallocated_gigs_count.to_i > 0 && params[:funds_filter] != 'unallocated' %>
+    <div style="margin-bottom: 22px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);">
+      <div style="display: flex; align-items: center; gap: 10px; color: #92400e; font-size: 0.92em; font-weight: 600;">
+        <span style="font-size: 1.3em;">⚠️</span>
+        <span>Tienes <strong><%= @unallocated_gigs_count %> show(s)</strong> con dinero cobrado que aún no has asignado a fondos (Nómina, Capital, Ahorros, etc.).</span>
+      </div>
+      <%= link_to '🔍 Filtrar shows con fondos por asignar ➔', gigs_path(funds_filter: 'unallocated'), style: 'background: #f59e0b; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84em; text-decoration: none; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25); white-space: nowrap;' %>
+    </div>
+  <% end %>
+
   <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN --- %>
   <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
     <%= form_with url: gigs_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
@@ -16,19 +27,30 @@
       </div>
 
       <%# Filtro de Prioridad %>
-      <div style="flex-grow: 1; min-width: 150px; margin-bottom: 20px;">
+      <div style="flex-grow: 1; min-width: 130px; margin-bottom: 20px;">
         <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
         <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
       </div>
 
       <%# Filtro de Fecha %>
-      <div style="flex-grow: 1; min-width: 150px; margin-bottom: 20px;">
+      <div style="flex-grow: 1; min-width: 130px; margin-bottom: 20px;">
         <%= f.label :date_filter, "Fecha", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
         <%= f.select :date_filter, [["Todos", ""], ["Próximos 🔮", "upcoming"], ["Pasados ⏳", "past"]], { selected: params[:date_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
       </div>
 
+      <%# Filtro de Asignación de Fondos %>
+      <div style="flex-grow: 1; min-width: 210px; margin-bottom: 20px;">
+        <%= f.label :funds_filter, "💰 Asignación a Fondos", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+        <%= f.select :funds_filter, [
+          ["Todos los estados", ""],
+          ["⚠️ Con saldo por asignar a fondos", "unallocated"],
+          ["❌ Sin ninguna asignación (0 fondos)", "no_allocations"],
+          ["✅ Fondos 100% asignados", "fully_allocated"]
+        ], { selected: params[:funds_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+      </div>
+
       <%# Selector de Ordenamiento %>
-      <div style="flex-grow: 1; min-width: 180px; margin-bottom: 20px;">
+      <div style="flex-grow: 1; min-width: 160px; margin-bottom: 20px;">
         <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
         <%= f.select :sort, 
             [["📅 Fecha (Reciente)", "fecha_desc"], 
@@ -57,15 +79,14 @@
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Fecha</th>
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Cliente (Prioridad)</th>
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Ubicación & Detalles</th>
-            <th style="padding: 15px; border-bottom: 2px solid #eee;">Monto</th>
-            <th style="padding: 15px; border-bottom: 2px solid #eee;">Moneda</th>
+            <th style="padding: 15px; border-bottom: 2px solid #eee; min-width: 200px;">Monto & Fondos</th>
             <th style="padding: 15px; border-bottom: 2px solid #eee; text-align: center;">Acciones</th>
           </tr>
         </thead>
         <tbody>
           <% @gigs.each do |gig| %>
             <tr style="border-bottom: 1px solid #f1f1f1;" onmouseover="this.style.backgroundColor='#fdfdfd'" onmouseout="this.style.backgroundColor='transparent'">
-              <td style="padding: 15px; color: #666;"><%= gig.date.strftime("%d/%m/%Y") if gig.date %></td>
+              <td style="padding: 15px; color: #666; white-space: nowrap;"><%= gig.date.strftime("%d/%m/%Y") if gig.date %></td>
               <td style="padding: 15px;">
                 <div style="display: flex; align-items: center; gap: 10px;">
                   <% if gig.client %>
@@ -93,11 +114,31 @@
                   </div>
                 <% end %>
               </td>
-              <td style="padding: 15px; font-weight: bold; color: #2c3e50;"><%= number_with_precision(gig.amount, precision: 2) %></td>
-              <td style="padding: 15px;">
-                <span style="background: #eef2f7; padding: 4px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; color: #475569; border: 1px solid #e2e8f0;">
-                  <%= gig.currency %>
-                </span>
+              <td style="padding: 15px; vertical-align: middle;">
+                <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px;">
+                  <span style="font-weight: 800; color: #0f172a; font-size: 1.05em;">
+                    <%= number_with_precision(gig.amount, precision: 2) %>
+                  </span>
+                  <span style="background: #f1f5f9; padding: 2px 7px; border-radius: 6px; font-size: 0.75em; font-weight: 800; color: #475569; border: 1px solid #e2e8f0;">
+                    <%= gig.currency %>
+                  </span>
+                </div>
+                <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: false, show_footer: true %>
+                
+                <%# Estado de Asignación a Fondos %>
+                <% if gig.total_received.to_f > 0 %>
+                  <div style="margin-top: 6px;">
+                    <% if gig.remaining_balance.to_f > 0 %>
+                      <span style="background: #fffbeb; color: #b45309; border: 1px solid #fde68a; font-size: 0.72em; padding: 2px 7px; border-radius: 6px; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;" title="Dinero cobrado pendiente por asignar a fondos">
+                        ⚠️ Por asignar: <%= number_to_currency(gig.remaining_balance, unit: (gig.currency.presence || '$')) %>
+                      </span>
+                    <% else %>
+                      <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; font-size: 0.72em; padding: 2px 7px; border-radius: 6px; font-weight: 700;" title="Todos los fondos cobrados han sido asignados">
+                        ✅ Fondos 100% asignados
+                      </span>
+                    <% end %>
+                  </div>
+                <% end %>
               </td>
               <td style="padding: 15px; text-align: center;">
                 <div style="display: flex; justify-content: center; gap: 15px;">

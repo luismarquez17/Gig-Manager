@@ -160,6 +160,11 @@
               <% if gig_item.item.category.present? %>
                 <small style="color: #666; font-size: 14px;">(<%= gig_item.item.category %>)</small>
               <% end %>
+              <% if gig_item.item.name.to_s.downcase.include?('humo') || gig_item.item.name.to_s.downcase.include?('smoke') %>
+                <div style="font-size: 12px; color: #b45309; margin-top: 3px; font-weight: normal;">
+                  ⚠️ <em>Nota: No usar en lugares muy al aire libre porque el viento dispersa el humo y no se aprecia.</em>
+                </div>
+              <% end %>
             </td>
           </tr>
         <% end %>

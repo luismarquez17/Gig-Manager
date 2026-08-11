@@ -217,7 +217,7 @@
             <tr style="text-align: left; border-bottom: 2px solid #f8fafc;">
               <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Fecha</th>
               <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Ubicación</th>
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Monto</th>
+              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700; min-width: 170px;">Monto &amp; Estado de Pago</th>
               <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700; text-align: right;">Detalles</th>
             </tr>
           </thead>
@@ -226,8 +226,13 @@
               <tr style="border-bottom: 1px solid #f8fafc;">
                 <td style="padding: 15px 0; font-weight: 600; color: #1e293b;"><%= gig.date.strftime("%d/%m/%Y") %></td>
                 <td style="padding: 15px 0; color: #475569;"><%= gig.location.presence || "No especificada" %></td>
-                <td style="padding: 15px 0; font-weight: 700; color: #0f172a;"><%= number_with_precision(gig.amount, precision: 2) %> <%= gig.currency %></td>
-                <td style="padding: 15px 0; text-align: right;">
+                <td style="padding: 15px 0;">
+                  <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">
+                    <%= number_with_precision(gig.amount, precision: 2) %> <small style="color: #64748b;"><%= gig.currency %></small>
+                  </div>
+                  <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: false, show_footer: true %>
+                </td>
+                <td style="padding: 15px 0; text-align: right; vertical-align: middle;">
                   <%= link_to "Ver Detalles ➔", client_gig_path(gig), style: "background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 700; text-decoration: none;" %>
                 </td>
               </tr>

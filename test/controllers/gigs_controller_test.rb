@@ -55,4 +55,29 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "00:00", @gig.end_time.strftime("%H:%M") # 23:00 + 1 hr = 00:00 midnight
     assert_includes @gig.details, "Adicional añadido"
   end
+
+  test "should filter gigs by funds allocation status" do
+    company = companies(:one)
+
+    # Gig with unallocated funds
+    unallocated_gig = Gig.create!(company: company, amount: 500, client_email: "unalloc@example.com")
+    unallocated_gig.gig_payments.create!(amount: 200, date_paid: Date.today)
+
+    # Gig with fully allocated funds
+    fully_allocated_gig = Gig.create!(company: company, amount: 500, client_email: "fullyalloc@example.com")
+    fully_allocated_gig.gig_payments.create!(amount: 200, date_paid: Date.today)
+    fully_allocated_gig.fund_allocations.create!(fund_type: "payroll", amount: 200)
+
+    # Filter unallocated
+    get gigs_url, params: { funds_filter: "unallocated" }
+    assert_response :success
+    assert_match "unalloc@example.com", response.body
+    assert_no_match "fullyalloc@example.com", response.body
+
+    # Filter fully allocated
+    get gigs_url, params: { funds_filter: "fully_allocated" }
+    assert_response :success
+    assert_match "fullyalloc@example.com", response.body
+    assert_no_match "unalloc@example.com", response.body
+  end
 end

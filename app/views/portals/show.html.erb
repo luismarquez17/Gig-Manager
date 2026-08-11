@@ -727,6 +727,11 @@
               <p style="margin: 0; font-size: 0.85em; color: var(--text-muted); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; text-overflow: ellipsis; min-height: 3.6em;">
                 <%= upsell[:description] %>
               </p>
+              <% if upsell[:key].to_s.include?('smoke') || upsell[:title].to_s.downcase.include?('humo') %>
+                <div style="margin-top: 8px; padding: 6px 10px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 8px; font-size: 0.76em; color: #fbbf24; line-height: 1.35;">
+                  ⚠️ <strong>Nota:</strong> No se recomienda para lugares muy al aire libre porque el viento dispersa el humo y no se aprecia.
+                </div>
+              <% end %>
             </div>
             <div style="margin-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--font-outfit);">

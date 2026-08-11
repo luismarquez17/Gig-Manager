@@ -1,0 +1,82 @@
+<%# Shared Component: Payment Progress Bar %>
+<%
+  pct = gig.payment_percentage
+  is_full = gig.paid_in_full?
+  is_partial = !is_full && pct > 0
+  
+  if is_full
+    fill_gradient = "linear-gradient(90deg, #10b981 0%, #059669 100%)"
+    text_color = "#059669"
+    badge_bg = "#ecfdf5"
+    badge_border = "#a7f3d0"
+    glow = "0 0 10px rgba(16, 185, 129, 0.35)"
+  elsif is_partial
+    fill_gradient = "linear-gradient(90deg, #8b5cf6 0%, #06b6d4 100%)"
+    text_color = "#0284c7"
+    badge_bg = "#eff6ff"
+    badge_border = "#bae6fd"
+    glow = "0 0 10px rgba(6, 182, 212, 0.3)"
+  else
+    fill_gradient = "linear-gradient(90deg, #94a3b8 0%, #cbd5e1 100%)"
+    text_color = "#94a3b8"
+    badge_bg = "#f8fafc"
+    badge_border = "#e2e8f0"
+    glow = "none"
+  end
+  
+  size = local_assigns[:size] || :normal # :compact, :normal, :large
+  show_details = local_assigns.fetch(:show_details, true)
+  show_footer = local_assigns.fetch(:show_footer, false)
+  bar_height = size == :compact ? "6px" : (size == :large ? "10px" : "8px")
+%>
+
+<div class="gig-payment-progress-container" style="width: 100%; min-width: <%= size == :compact ? '120px' : '150px' %>; font-family: inherit;">
+  
+  <%# Top labels: Percentage / Status %>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; gap: 6px;">
+    <div style="display: inline-flex; align-items: center; gap: 4px;">
+      <% if is_full %>
+        <span style="display: inline-flex; align-items: center; justify-content: center; width: 14px; height: 14px; background: #10b981; color: white; border-radius: 50%; font-size: 9px; font-weight: 900; line-height: 1;">✓</span>
+        <span style="font-size: <%= size == :compact ? '0.78em' : '0.84em' %>; font-weight: 800; color: #059669; letter-spacing: -0.2px;">
+          100% Pagado
+        </span>
+      <% elsif is_partial %>
+        <span style="font-size: <%= size == :compact ? '0.78em' : '0.84em' %>; font-weight: 800; color: #0284c7; letter-spacing: -0.2px;">
+          <%= pct.to_i == pct ? pct.to_i : pct %>% Cobrado
+        </span>
+      <% else %>
+        <span style="font-size: <%= size == :compact ? '0.78em' : '0.84em' %>; font-weight: 700; color: #94a3b8; letter-spacing: -0.2px;">
+          0% Cobrado
+        </span>
+      <% end %>
+    </div>
+
+    <% if show_details %>
+      <div style="font-size: 0.72em; font-weight: 700; color: #64748b; white-space: nowrap;">
+        <% if is_full %>
+          <span style="color: #059669; font-weight: 700;">Total Cancelado</span>
+        <% else %>
+          <span><%= number_with_precision(gig.total_received, precision: 2) %> / <%= number_with_precision(gig.amount, precision: 2) %></span>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# Progress Track %>
+  <div style="background: rgba(226, 232, 240, 0.85); height: <%= bar_height %>; border-radius: 99px; overflow: hidden; position: relative; border: 1px solid rgba(0,0,0,0.04); box-shadow: inset 0 1px 2px rgba(0,0,0,0.04);">
+    <div style="height: 100%; width: <%= [pct, 100].min %>%; background: <%= fill_gradient %>; border-radius: 99px; box-shadow: <%= glow %>; transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+  </div>
+
+  <%# Optional bottom info: Received and Remaining breakdown %>
+  <% if show_footer %>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.72em; color: #64748b;">
+      <span>Abonado: <strong style="color: <%= is_full ? '#059669' : '#1e293b' %>;"><%= number_with_precision(gig.total_received, precision: 2) %> <%= gig.currency %></strong></span>
+      <% if gig.remaining_amount.positive? %>
+        <span style="color: #d97706; font-weight: 700;">Resta: <%= number_with_precision(gig.remaining_amount, precision: 2) %></span>
+      <% else %>
+        <span style="color: #059669; font-weight: 800;">¡Saldado! 🎉</span>
+      <% end %>
+    </div>
+  <% end %>
+
+</div>

@@ -166,6 +166,7 @@
                   <tr style="background: #f1f5f9; color: #475569;">
                     <th style="padding: 10px 12px; border-radius: 6px 0 0 6px;">Fecha / Estado</th>
                     <th style="padding: 10px 12px;">Lugar / Evento</th>
+                    <th style="padding: 10px 12px; min-width: 140px;">Progreso de Pago</th>
                     <th style="padding: 10px 12px; text-align: right;">Monto Acordado</th>
                     <th style="padding: 10px 12px; text-align: right;">Pagado</th>
                     <th style="padding: 10px 12px; text-align: right;">Saldo Pendiente</th>
@@ -178,7 +179,7 @@
                       is_past = gig.date.present? && gig.date < Date.today
                       is_today = gig.date.present? && gig.date == Date.today
                     %>
-                    <tr style="border-bottom: 1px solid #f1f5f9; background: <%= is_past ? '#fffafb' : 'transparent' %>;">
+                    <tr style="border-bottom: 1px solid #f1f1f1; background: <%= is_past ? '#fffafb' : 'transparent' %>;">
                       <td style="padding: 12px; font-weight: 600; color: #334155;">
                         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                           <span>📅 <%= gig.date&.strftime('%d/%m/%Y') || 'Sin fecha' %></span>
@@ -195,6 +196,9 @@
                       </td>
                       <td style="padding: 12px; font-weight: 600; color: #0f172a;">
                         📍 <%= gig.location.presence || "Evento sin especificar" %>
+                      </td>
+                      <td style="padding: 12px; vertical-align: middle;">
+                        <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: false, show_footer: false %>
                       </td>
                       <td style="padding: 12px; text-align: right; color: #475569; font-weight: 600;">
                         $ <%= number_with_precision(gig.amount, precision: 2) %>

@@ -14,7 +14,7 @@ class StandardUpsell < ApplicationRecord
       emoji: '💨',
       price: 40.0,
       currency: 'USD',
-      description: 'Añade una atmósfera espectacular con nuestra máquina de humo profesional. Ideal para resaltar los efectos de las luces y el láser.',
+      description: 'Añade una atmósfera espectacular con nuestra máquina de humo profesional. Ideal para resaltar los efectos de las luces y el láser. (Nota: No recomendada para lugares muy al aire libre ya que el viento disipa el humo y no se aprecia su efecto).',
       active: true
     },
     {

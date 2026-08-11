@@ -86,7 +86,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 350.0, FundAllocation.total_payroll_remaining
   end
 
-  test "should fail if payment exceeds total universal payroll remaining" do
+  test "should fail if payment exceeds total universal payroll remaining when using payroll fund" do
     FundAllocation.create!(
       gig: @gig,
       fund_type: "payroll",
@@ -102,14 +102,40 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
           amount: 250.0,
           currency: "USD",
           date_paid: Date.today,
-          payment_method: "Efectivo"
+          payment_method: "Efectivo",
+          funding_source: "payroll_fund"
         }
       }
     end
 
-    assert_redirected_to new_employee_payment_path(gig_id: @gig.id, user_id: @worker.id)
-    follow_redirect!
-    assert_match "excede el saldo disponible en el fondo universal de Nómina", flash[:alert]
+    assert_response :unprocessable_entity
+    assert_match "excede el saldo disponible en el fondo de Nómina", flash[:alert]
+  end
+
+  test "should create employee payment using external capital even when payroll fund is zero" do
+    FundAllocation.where(fund_type: "payroll").destroy_all
+
+    assert_difference("EmployeePayment.count", 1) do
+      post employee_payments_url, params: {
+        employee_payment: {
+          user_id: @worker.id,
+          gig_id: @gig.id,
+          amount: 300.0,
+          currency: "USD",
+          date_paid: Date.today,
+          payment_method: "Transferencia",
+          funding_source: "external_capital",
+          external_source_name: "Dinero personal del leader"
+        }
+      }
+    end
+
+    payment = EmployeePayment.last
+    assert_equal 300.0, payment.amount.to_f
+    assert payment.from_external_capital?
+    assert_equal "Dinero personal del leader", payment.external_source_name
+    assert_equal 0, payment.fund_expenses.count
+    assert_redirected_to employee_payments_path(user_id: @worker.id)
   end
 
   test "should update employee payment when expected_amount is empty string" do

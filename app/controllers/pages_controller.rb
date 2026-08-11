@@ -162,6 +162,8 @@ class PagesController < ApplicationController
 
     # 8. Pagos a empleados
     @total_employee_payments = current_company.employee_payments.sum(:amount).to_f
+    @total_external_worker_payments = current_company.employee_payments.where(funding_source: 'external_capital').sum(:amount).to_f
+    @total_payroll_worker_payments = current_company.employee_payments.where.not(funding_source: 'external_capital').sum(:amount).to_f
 
     # 9. Tasa de reinversión configurada
     @reinvest_rate = FinanceSetting.instance.reinvest_rate.to_f
@@ -179,9 +181,9 @@ class PagesController < ApplicationController
     @spent_by_type = company_fund_allocations.joins(:fund_expenses).group('fund_allocations.fund_type').sum('fund_expenses.amount')
 
     total_received = company_gig_payments.sum(:amount)
-    total_paid_employees = current_company.employee_payments.sum(:amount)
+    total_paid_employees_from_funds = @total_payroll_worker_payments
     total_allocated = company_fund_allocations.sum(:amount)
-    @unallocated_surplus = total_received - total_paid_employees - total_allocated
+    @unallocated_surplus = total_received - total_paid_employees_from_funds - total_allocated
 
     # ROI / Ganancia Neta por moneda
     @net_gain_usd = @total_received_usd - @total_invested_usd

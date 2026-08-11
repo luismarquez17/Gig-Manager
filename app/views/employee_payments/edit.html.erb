@@ -1,8 +1,11 @@
-<h2 style="margin-bottom:18px;">✏️ Editar Pago a Trabajador</h2>
+<div style="max-width: 800px; margin: 0 auto;">
+  <div style="margin-bottom: 22px;">
+    <%= link_to '← Volver a Pagos a Trabajadores', employee_payments_path(user_id: @payment.user_id), style: "text-decoration: none; color: #64748b; font-weight: 700; font-size: 0.9em;" %>
+    <h2 style="margin: 8px 0 0 0; color: #0f172a; font-weight: 800; font-size: 1.8em;">✏️ Editar Pago a Trabajador</h2>
+  </div>
 
-<div class="custom-card">
   <% if @payment.errors.any? %>
-    <div style="margin-bottom: 12px; padding: 10px; border-radius: 6px; background: #fff1f2; color: #981b1b; border: 1px solid #fecaca;">
+    <div style="margin-bottom: 20px; padding: 14px 18px; border-radius: 12px; background: #fff1f2; color: #991b1b; border: 1px solid #fecaca;">
       <strong>No se pudo actualizar el pago:</strong>
       <ul style="margin: 6px 0 0 16px;">
         <% @payment.errors.full_messages.each do |msg| %>
@@ -12,49 +15,130 @@
     </div>
   <% end %>
 
-  <%= form_with model: @payment, local: true do |f| %>
-    <div class="form-group-custom">
-      <%= f.label :user_id, 'Trabajador' %>
-      <%= f.collection_select :user_id, User.workers.order(:email), :id, :display_name, { include_blank: true }, { class: 'form-input-custom' } %>
-    </div>
+  <div class="custom-card">
+    <%= form_with model: @payment, local: true do |f| %>
+      <div class="form-group-custom">
+        <%= f.label :user_id, 'Trabajador / Músico / Staff' %>
+        <%= f.collection_select :user_id, User.workers.order(:email), :id, :display_name, { include_blank: "-- Selecciona un trabajador --" }, { class: 'form-input-custom', required: true } %>
+      </div>
 
-    <div class="form-group-custom">
-      <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
-      <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client.name} - #{g.date}" }, { include_blank: true }, { class: 'form-input-custom' } %>
-      <small style="color: #64748b; font-size: 0.85em;">Los fondos de nómina se descontarán del pozo universal (priorizando el show seleccionado si tiene fondos asignados).</small>
-    </div>
+      <%# --- ORIGEN DE LOS FONDOS (CAPITAL EXTERNO VS FONDO DE NÓMINA) --- %>
+      <div class="form-group-custom" style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 22px;">
+        <label style="display: block; font-weight: 800; color: #0f172a; margin-bottom: 10px; font-size: 0.95em;">
+          💰 Origen del Dinero / Fondos:
+        </label>
 
-    <div class="form-group-custom">
-      <%= f.label :amount, 'Monto pagado' %>
-      <%= f.text_field :amount,
-        inputmode: 'decimal',
-        class: 'form-input-custom',
-        placeholder: '0.00' %>
-    </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; margin-bottom: 12px;">
+          
+          <%# Opción 1: Fondo de Nómina %>
+          <label class="funding-source-card" style="cursor: pointer; display: block; background: white; padding: 14px 16px; border-radius: 12px; border: 2px solid <%= @payment.from_payroll_fund? ? '#2563eb' : '#cbd5e1' %>; transition: 0.2s;" id="label-payroll-fund">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <%= f.radio_button :funding_source, 'payroll_fund', checked: @payment.from_payroll_fund?, onchange: 'toggleFundingSource(this.value)', style: 'margin-top: 4px;' %>
+              <div>
+                <div style="font-weight: 800; color: #1e293b; font-size: 0.95em;">🏢 Fondo de Nómina / Eventos</div>
+                <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">Descuenta del saldo acumulado de shows.</div>
+                <div style="font-size: 0.82em; font-weight: 700; color: <%= @payroll_balance.to_f > 0 ? '#059669' : '#dc2626' %>; margin-top: 4px;">
+                  Disponible: <%= number_to_currency(@payroll_balance.to_f, unit: 'USD') %>
+                </div>
+              </div>
+            </div>
+          </label>
 
-    <div class="form-group-custom">
-      <%= f.label :currency %>
-      <%= f.text_field :currency, class: 'form-input-custom' %>
-    </div>
+          <%# Opción 2: Capital Externo %>
+          <label class="funding-source-card" style="cursor: pointer; display: block; background: white; padding: 14px 16px; border-radius: 12px; border: 2px solid <%= @payment.from_external_capital? ? '#2563eb' : '#cbd5e1' %>; transition: 0.2s;" id="label-external-capital">
+            <div style="display: flex; align-items: flex-start; gap: 10px;">
+              <%= f.radio_button :funding_source, 'external_capital', checked: @payment.from_external_capital?, onchange: 'toggleFundingSource(this.value)', style: 'margin-top: 4px;' %>
+              <div>
+                <div style="font-weight: 800; color: #1e293b; font-size: 0.95em;">💼 Capital Externo (Leader)</div>
+                <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">Dinero personal / fuera de los fondos de shows.</div>
+                <div style="font-size: 0.82em; font-weight: 700; color: #0284c7; margin-top: 4px;">
+                  ✓ Sin restricciones de nómina
+                </div>
+              </div>
+            </div>
+          </label>
 
-    <div class="form-group-custom">
-      <%= f.label :date_paid %>
-      <%= f.date_field :date_paid, class: 'form-input-custom' %>
-    </div>
+        </div>
 
-    <div class="form-group-custom">
-      <%= f.label :payment_method %>
-      <%= f.text_field :payment_method, class: 'form-input-custom' %>
-    </div>
+        <%# Campo de detalle para capital externo %>
+        <div id="external-capital-details" style="display: <%= @payment.from_external_capital? ? 'block' : 'none' %>; margin-top: 12px; padding: 14px; background: #eff6ff; border-radius: 12px; border: 1px solid #bfdbfe;">
+          <label style="display: block; font-weight: 700; color: #1e40af; font-size: 0.85em; margin-bottom: 6px;">
+            🏷️ Detalle del Capital Externo:
+          </label>
+          <%= f.text_field :external_source_name, value: @payment.external_source_name.presence || "Dinero personal del leader", placeholder: "Ej. Dinero personal del leader, Aporte de socio, etc.", class: "form-input-custom", style: "background: white;" %>
+        </div>
 
-    <div class="form-group-custom">
-      <%= f.label :notes %>
-      <%= f.text_area :notes, class: 'form-input-custom', rows: 4 %>
-    </div>
+      </div>
 
-    <div style="margin-top:12px; display: flex; gap: 10px;">
-      <%= link_to 'Cancelar', employee_payments_path(user_id: @payment.user_id), class: 'btn-main btn-gray-custom' %>
-      <%= f.submit '💾 Guardar Cambios', class: 'btn-main btn-primary-custom' %>
-    </div>
-  <% end %>
+      <div class="form-group-custom">
+        <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
+        <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client&.name || 'Sin cliente'} - #{g.date&.strftime('%d/%m/%Y')}" }, { include_blank: "-- Ninguno / Pago General --" }, { class: 'form-input-custom' } %>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
+        <div class="form-group-custom">
+          <%= f.label :amount, 'Monto pagado' %>
+          <%= f.text_field :amount,
+            inputmode: 'decimal',
+            data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+            class: 'form-input-custom',
+            placeholder: '0.00',
+            required: true %>
+        </div>
+
+        <div class="form-group-custom">
+          <%= f.label :currency, 'Moneda' %>
+          <%= f.select :currency, [['USD ($)', 'USD'], ['BS (Bs)', 'BS']], {}, { class: 'form-input-custom' } %>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <div class="form-group-custom">
+          <%= f.label :date_paid, 'Fecha de Pago' %>
+          <%= f.date_field :date_paid, class: 'form-input-custom', required: true %>
+        </div>
+
+        <div class="form-group-custom">
+          <%= f.label :payment_method, 'Método de Pago' %>
+          <%= f.select :payment_method, [
+            ['Transferencia Bancaria', 'Transferencia Bancaria'],
+            ['Efectivo / Cash', 'Efectivo'],
+            ['Zelle', 'Zelle'],
+            ['Pago Móvil', 'Pago Móvil'],
+            ['PayPal / Binance', 'Digital'],
+            ['Otro', 'Otro']
+          ], { prompt: '-- Selecciona método --' }, { class: 'form-input-custom' } %>
+        </div>
+      </div>
+
+      <div class="form-group-custom">
+        <%= f.label :notes, 'Notas / Observaciones' %>
+        <%= f.text_area :notes, class: 'form-input-custom', rows: 3 %>
+      </div>
+
+      <div style="margin-top: 20px; display: flex; gap: 12px;">
+        <%= link_to 'Cancelar', employee_payments_path(user_id: @payment.user_id), class: 'btn-main btn-gray-custom' %>
+        <%= f.submit '💾 Guardar Cambios', class: 'btn-main btn-primary-custom' %>
+      </div>
+    <% end %>
+  </div>
 </div>
+
+<script>
+  function toggleFundingSource(val) {
+    const extDetails = document.getElementById('external-capital-details');
+    const cardPayroll = document.getElementById('label-payroll-fund');
+    const cardExternal = document.getElementById('label-external-capital');
+
+    if (val === 'external_capital') {
+      if (extDetails) extDetails.style.display = 'block';
+      if (cardExternal) cardExternal.style.borderColor = '#2563eb';
+      if (cardPayroll) cardPayroll.style.borderColor = '#cbd5e1';
+    } else {
+      if (extDetails) extDetails.style.display = 'none';
+      if (cardPayroll) cardPayroll.style.borderColor = '#2563eb';
+      if (cardExternal) cardExternal.style.borderColor = '#cbd5e1';
+    }
+  }
+</script>
+

@@ -20,9 +20,37 @@ class Gig < ApplicationRecord
   after_save :refresh_client_priority
   after_destroy :refresh_client_priority
 
+  # Scopes de filtrado por asignación de fondos
+  scope :with_unallocated_funds, -> {
+    where(
+      "(SELECT COALESCE(SUM(amount), 0) FROM gig_payments WHERE gig_payments.gig_id = gigs.id) > 0 AND " \
+      "(SELECT COALESCE(SUM(amount), 0) FROM gig_payments WHERE gig_payments.gig_id = gigs.id) > " \
+      "(SELECT COALESCE(SUM(amount), 0) FROM fund_allocations WHERE fund_allocations.gig_id = gigs.id)"
+    )
+  }
+
+  scope :without_any_fund_allocations, -> {
+    where(
+      "(SELECT COALESCE(SUM(amount), 0) FROM gig_payments WHERE gig_payments.gig_id = gigs.id) > 0 AND " \
+      "NOT EXISTS (SELECT 1 FROM fund_allocations WHERE fund_allocations.gig_id = gigs.id)"
+    )
+  }
+
+  scope :fully_allocated_funds, -> {
+    where(
+      "(SELECT COALESCE(SUM(amount), 0) FROM gig_payments WHERE gig_payments.gig_id = gigs.id) > 0 AND " \
+      "(SELECT COALESCE(SUM(amount), 0) FROM gig_payments WHERE gig_payments.gig_id = gigs.id) <= " \
+      "(SELECT COALESCE(SUM(amount), 0) FROM fund_allocations WHERE fund_allocations.gig_id = gigs.id)"
+    )
+  }
+
   # Financial helpers
   def total_received
-    gig_payments.sum(:amount)
+    if gig_payments.loaded?
+      gig_payments.sum { |p| p.amount.to_f }
+    else
+      gig_payments.sum(:amount).to_f
+    end
   end
 
   def total_employee_payouts
@@ -42,7 +70,16 @@ class Gig < ApplicationRecord
   end
 
   def remaining_amount
-    amount.to_f - total_received.to_f
+    [amount.to_f - total_received, 0.0].max
+  end
+
+  def payment_percentage
+    return 0.0 if amount.to_f <= 0
+    [((total_received / amount.to_f) * 100.0).round(1), 100.0].min
+  end
+
+  def paid_in_full?
+    amount.to_f > 0 && total_received >= amount.to_f
   end
 
   def event_duration

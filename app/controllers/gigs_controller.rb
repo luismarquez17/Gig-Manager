@@ -12,8 +12,10 @@ class GigsController < ApplicationController
 
   def index
     # 1. Unimos la tabla de clientes para poder buscar y filtrar dentro de la empresa
-    @gigs = current_company.gigs.left_joins(:client).includes(:client)
+    @gigs = current_company.gigs.left_joins(:client).includes(:client, :gig_payments, :fund_allocations)
 
+    # Conteo global de shows con fondos por asignar
+    @unallocated_gigs_count = current_company.gigs.with_unallocated_funds.count
 
     # 2. Buscador inteligente por nombre de cliente, teléfono, correo, ubicación o detalles del toque
     if params[:query].present?
@@ -42,6 +44,16 @@ class GigsController < ApplicationController
       @gigs = @gigs.where("gigs.date >= ?", Date.today)
     elsif params[:date_filter] == "past"
       @gigs = @gigs.where("gigs.date < ?", Date.today)
+    end
+
+    # Filtro por Asignación de Fondos (ej. fondos cobrados pero no asignados a nada)
+    case params[:funds_filter]
+    when "unallocated"
+      @gigs = @gigs.with_unallocated_funds
+    when "no_allocations"
+      @gigs = @gigs.without_any_fund_allocations
+    when "fully_allocated"
+      @gigs = @gigs.fully_allocated_funds
     end
 
     # 4. Lógica de Ordenamiento Dinámico

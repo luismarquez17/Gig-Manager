@@ -248,14 +248,10 @@
                 </div>
               <% end %>
 
-              <div class="ci-event-info">
+              <div class="ci-event-info" style="flex: 1; min-width: 220px;">
                 <p class="ci-event-location">📍 <%= gig.location.presence || "Ubicación por confirmar" %></p>
-                <div class="ci-event-meta">
-                  <span>💰 <%= number_with_precision(gig.amount, precision: 2) %> <%= gig.currency %></span>
-                  <span>✅ Abonado: <%= number_with_precision(gig.total_received, precision: 2) %> <%= gig.currency %></span>
-                  <% if gig.remaining_amount.positive? %>
-                    <span style="color:#ef4444;">⚠️ Pendiente: <%= number_with_precision(gig.remaining_amount, precision: 2) %></span>
-                  <% end %>
+                <div style="margin-top: 8px; max-width: 360px;">
+                  <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: true, show_footer: true %>
                 </div>
               </div>
 
