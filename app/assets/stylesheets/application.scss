@@ -450,9 +450,10 @@ body {
    no se modifica aquí — el CSS de desktop está intacto arriba.
    ============================================================ */
 
-/* ─── 1. Prevenir scroll horizontal global ─────────────────── */
+/* ─── 1. Prevenir scroll horizontal global y optimizar viewport ─── */
 html, body {
   overflow-x: hidden;
+  max-width: 100vw;
 }
 
 @media (max-width: 991px) {
@@ -477,32 +478,108 @@ html, body {
     transform: translateX(0);
   }
 
-  // El main en móvil: quita margin-left (el inline style lo pone)
-  // y añade espacio para el topbar fijo
+  // El main en móvil: quita margin-left y añade padding táctil equilibrado
   main {
     margin-left: 0 !important;
     padding-top: 78px !important;
-    padding-left: 12px !important;
-    padding-right: 12px !important;
-    padding-bottom: 30px !important;
+    padding-left: 14px !important;
+    padding-right: 14px !important;
+    padding-bottom: 35px !important;
     overflow-x: hidden !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
   }
 
-  // Contenedor interno del main
-  main > div {
+  // Contenedores internos: evitar que se desborden
+  main > div,
+  .main-content,
+  .container,
+  .container-fluid {
     max-width: 100% !important;
     overflow-x: hidden;
+    box-sizing: border-box !important;
   }
 
-  // Inputs sin auto-zoom en iOS Safari
+  /* ── 2. BOTONES EN MOBILE: TAMAÑO MEJORADO Y ÁREA TÁCTIL CÓMODA ── */
+  .btn-main,
+  .btn,
+  button:not(#sidebar-close-btn):not(#mobile-topbar button):not(.navbar-toggler),
+  input[type="submit"],
+  .btn-portal,
+  a.btn-main,
+  a[style*="border-radius"][style*="padding"]:not(aside a):not(#mobile-topbar a) {
+    min-height: 46px;
+    font-size: 15px !important;
+    padding-left: 18px !important;
+    padding-right: 18px !important;
+    border-radius: 12px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-sizing: border-box;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease;
+
+    &:active {
+      transform: scale(0.97) !important;
+    }
+  }
+
+  // Botones compactos dentro de celdas de tablas o listas
+  td .btn-main,
+  td button,
+  td a.btn-main,
+  td a[style*="padding"],
+  .btn-main.py-1,
+  .btn-main.fs-7 {
+    min-height: 38px !important;
+    min-width: 38px !important;
+    padding: 8px 14px !important;
+    font-size: 13.5px !important;
+  }
+
+  // Grupos de botones: permitir flex-wrap para que nunca se salgan de pantalla
+  .btn-group,
+  .actions-wrapper,
+  div[style*="display: flex"],
+  div[style*="display:flex"] {
+    flex-wrap: wrap;
+  }
+
+  /* ── 3. TABLAS Y CONTENEDORES CON SCROLL SUAVE ── */
+  .table-custom-wrapper,
+  .table-wrapper,
+  .table-responsive,
+  div:has(> table) {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box;
+    border-radius: 14px;
+  }
+
+  table {
+    max-width: none;
+  }
+
+  // Inputs sin auto-zoom en iOS Safari (mínimo 16px)
   input[type="text"],
   input[type="email"],
   input[type="password"],
   input[type="number"],
   input[type="date"],
+  input[type="time"],
+  input[type="tel"],
   select,
   textarea {
     font-size: 16px !important;
+    min-height: 46px;
+    border-radius: 10px;
+    box-sizing: border-box;
   }
 
   // Cards/grids de métricas — 2 columnas en tablet
@@ -510,19 +587,17 @@ html, body {
     grid-template-columns: repeat(2, 1fr) !important;
   }
 
-  /* ── 2. El contenedor del checklist permite scroll horizontal interno ── */
+  /* ── 4. Checklist y Paneles Logísticos en Móvil ── */
   .checklist-panel {
     overflow-x: auto !important;
     overflow-y: visible !important;
     -webkit-overflow-scrolling: touch;
   }
 
-  // Tablas dentro del checklist: scroll independiente
   .checklist-panel table {
     min-width: 480px;
   }
 
-  /* ── 3. Cabecera del checklist: columna en móvil ─────────── */
   .checklist-header {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -530,21 +605,18 @@ html, body {
     padding: 16px 16px !important;
   }
 
-  /* ── 4. Pestañas Checklist General / Carga / Retorno ────────
-     En móvil van en columna y ocupan ancho completo            */
   .checklist-tabs {
     flex-direction: column !important;
     margin: 14px 14px !important;
-    gap: 4px !important;
+    gap: 6px !important;
   }
 
   .checklist-tabs .logistics-tab {
     text-align: left !important;
-    padding: 13px 16px !important;
+    padding: 14px 16px !important;
+    font-size: 15px !important;
   }
 
-  /* ── 5. Fila del checklist: apilada verticalmente ───────────
-     Los botones de eliminar/reportar quedan visibles abajo      */
   .checklist-item {
     flex-direction: column !important;
     align-items: flex-start !important;
@@ -563,7 +635,6 @@ html, body {
     gap: 8px !important;
   }
 
-  /* ── 6. Formulario añadir equipo: columna en móvil ──────────*/
   .checklist-panel form {
     flex-direction: column !important;
     align-items: stretch !important;
@@ -580,20 +651,34 @@ html, body {
   }
 }
 
-@media (max-width: 600px) {
+/* ─── PANTALLAS PEQUEÑAS / SMARTPHONES (≤ 640px) ─── */
+@media (max-width: 640px) {
   .info-grid {
     grid-template-columns: 1fr !important;
   }
 
-  // Botones anchos en pantallas muy chicas
-  .btn-main {
-    width: 100%;
+  // Botones principales en formularios: ocupan ancho completo para tocar fácil con el pulgar
+  form input[type="submit"],
+  form button[type="submit"],
+  form .btn-main[type="submit"],
+  .btn-block-mobile {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 16px !important;
     justify-content: center;
   }
 
+  // Tarjetas con padding optimizado
+  .custom-card {
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+    margin-bottom: 20px !important;
+  }
+
   // Pestañas de Checklist General / Carga / Retorno: columna vertical
-  div[style*="display: flex"][style*="background: #f1f5f9"][style*="border-radius: 14px"] {
+  div[style*="display: flex"][style*="background: #f1f5f9"][style*="border-radius: 14px"],
+  div[style*="display:flex"][style*="background:#f1f5f9"][style*="border-radius:14px"] {
     flex-direction: column !important;
-    gap: 4px !important;
+    gap: 6px !important;
   }
 }

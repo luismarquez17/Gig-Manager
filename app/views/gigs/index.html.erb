@@ -71,9 +71,9 @@
   </div>
 
   <%# --- TABLA DE RESULTADOS --- %>
-  <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee;">
+  <div class="table-custom-wrapper" style="background: white; border-radius: 14px; overflow-x: auto; -webkit-overflow-scrolling: touch; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee; margin-bottom: 25px;">
     <% if @gigs.any? %>
-      <table style="width: 100%; border-collapse: collapse; text-align: left;">
+      <table class="table-custom" style="width: 100%; border-collapse: collapse; text-align: left; min-width: 680px;">
         <thead>
           <tr style="background-color: #f8f9fa; color: #333;">
             <th style="padding: 15px; border-bottom: 2px solid #eee;">Fecha</th>
