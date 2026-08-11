@@ -172,6 +172,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "worker can access new_worker_report and submit payment report in pending_approval state" do
+    StaffAssignment.create!(gig: @gig, user: @worker, agreed_amount: 150.0)
     sign_out @leader
     sign_in @worker
 
@@ -276,5 +277,100 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
 
     pending_payment.reload
     assert pending_payment.pending_approval?
+  end
+
+  test "worker cannot report payment for gig they are not assigned to" do
+    unassigned_gig = Gig.create!(company: @leader.company, amount: 500, date: Date.today, client_email: "unassigned@example.com")
+    sign_out @leader
+    sign_in @worker
+
+    assert_no_difference("EmployeePayment.count") do
+      post create_worker_report_employee_payments_url, params: {
+        employee_payment: {
+          gig_id: unassigned_gig.id,
+          amount: 100.0,
+          currency: "USD",
+          date_paid: Date.today
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "no estás asignado a este evento", response.body
+  end
+
+  test "worker cannot report amount greater than agreed amount for assigned gig" do
+    StaffAssignment.create!(gig: @gig, user: @worker, agreed_amount: 100.0)
+    sign_out @leader
+    sign_in @worker
+
+    assert_no_difference("EmployeePayment.count") do
+      post create_worker_report_employee_payments_url, params: {
+        employee_payment: {
+          gig_id: @gig.id,
+          amount: 500.0,
+          currency: "USD",
+          date_paid: Date.today
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "no puede exceder el monto acordado", response.body
+  end
+
+  test "worker cannot submit duplicate report for gig that already has pending approval report" do
+    StaffAssignment.create!(gig: @gig, user: @worker, agreed_amount: 150.0)
+    EmployeePayment.create!(
+      company: @leader.company,
+      user: @worker,
+      gig: @gig,
+      amount: 100.0,
+      status: "pending_approval",
+      reported_by_worker: true
+    )
+
+    sign_out @leader
+    sign_in @worker
+
+    assert_no_difference("EmployeePayment.count") do
+      post create_worker_report_employee_payments_url, params: {
+        employee_payment: {
+          gig_id: @gig.id,
+          amount: 50.0,
+          currency: "USD",
+          date_paid: Date.today
+        }
+      }
+    end
+
+    assert_response :unprocessable_entity
+    assert_match "Ya tienes un reporte de pago en revisión", response.body
+  end
+
+  test "leader approval automatically falls back to external capital when payroll fund is zero" do
+    FundAllocation.where(fund_type: "payroll").destroy_all
+
+    pending_payment = EmployeePayment.create!(
+      company: @leader.company,
+      user: @worker,
+      gig: @gig,
+      amount: 200.0,
+      currency: "USD",
+      date_paid: Date.today,
+      status: "pending_approval",
+      reported_by_worker: true,
+      funding_source: "payroll_fund"
+    )
+
+    # Leader approves
+    post approve_employee_payment_url(pending_payment)
+    assert_redirected_to employee_payments_path
+
+    pending_payment.reload
+    assert pending_payment.approved?
+    assert pending_payment.from_external_capital?
+    assert_equal 0, pending_payment.fund_expenses.count
+    assert_includes pending_payment.external_source_name, "Capital personal del leader"
   end
 end

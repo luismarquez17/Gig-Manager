@@ -45,7 +45,10 @@ class EmployeePaymentsController < ApplicationController
     if @gig.present?
       assignment = @gig.staff_assignments.find_by(user_id: current_user.id)
       if assignment.present?
-        default_amount = assignment.pending_balance.positive? ? assignment.pending_balance : assignment.agreed_amount.to_f
+        agreed = assignment.agreed_amount.to_f
+        paid = current_user.employee_payments.approved.where(gig_id: @gig.id).sum(:amount).to_f
+        pending_gig_bal = agreed - paid
+        default_amount = pending_gig_bal.positive? ? pending_gig_bal : agreed
       end
     end
 
@@ -61,32 +64,100 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def create_worker_report
-    @payment = current_company.employee_payments.build(worker_report_params)
-    @payment.user = current_user
-    @payment.status = 'pending_approval'
-    @payment.reported_by_worker = true
-    @payment.funding_source = 'payroll_fund' if @payment.funding_source.blank?
+    report_params = worker_report_params
+    amount = report_params[:amount].to_f
+
+    # 1. Validación de monto positivo
+    if amount <= 0
+      @payment = current_company.employee_payments.build(report_params)
+      @payment.user = current_user
+      @payment.errors.add(:amount, "debe ser mayor a 0")
+      @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+      @gig = current_company.gigs.find_by(id: report_params[:gig_id]) if report_params[:gig_id].present?
+      render :new_worker_report, status: :unprocessable_entity and return
+    end
+
+    # 2. Validación de asignación y límite del show (Anti-trampa / Hermético)
+    gig = nil
+    if report_params[:gig_id].present?
+      gig = current_company.gigs.find_by(id: report_params[:gig_id])
+      assignment = gig&.staff_assignments&.find_by(user_id: current_user.id)
+
+      if assignment.nil?
+        @payment = current_company.employee_payments.build(report_params)
+        @payment.user = current_user
+        @payment.errors.add(:gig_id, "no estás asignado a este evento.")
+        @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+        render :new_worker_report, status: :unprocessable_entity and return
+      end
+
+      # No permitir reportar más de lo acordado para ese show
+      agreed = assignment.agreed_amount.to_f
+      already_paid = current_user.employee_payments.approved.where(gig_id: gig.id).sum(:amount).to_f
+      max_pending = [agreed - already_paid, agreed].max
+
+      if amount > max_pending && max_pending > 0
+        @payment = current_company.employee_payments.build(report_params)
+        @payment.user = current_user
+        @payment.errors.add(:amount, "no puede exceder el monto acordado para este show (#{view_context.number_to_currency(max_pending, unit: (gig.currency.presence || '$'))})")
+        @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+        @gig = gig
+        render :new_worker_report, status: :unprocessable_entity and return
+      end
+
+      # Evitar reportes duplicados pendientes de aprobación para el mismo show
+      if current_user.employee_payments.pending_approval.where(gig_id: gig.id).exists?
+        @payment = current_company.employee_payments.build(report_params)
+        @payment.user = current_user
+        @payment.errors.add(:base, "Ya tienes un reporte de pago en revisión por el líder para este show.")
+        @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+        @gig = gig
+        render :new_worker_report, status: :unprocessable_entity and return
+      end
+    end
+
+    # 3. Construcción hermética obligatoria (el trabajador no puede manipular estado ni origen)
+    @payment = current_company.employee_payments.build(
+      user: current_user,
+      gig: gig,
+      amount: amount,
+      currency: report_params[:currency].presence || gig&.currency.presence || "USD",
+      date_paid: report_params[:date_paid].presence || Date.today,
+      payment_method: report_params[:payment_method].presence || "Efectivo",
+      notes: report_params[:notes],
+      status: 'pending_approval',
+      reported_by_worker: true,
+      funding_source: 'payroll_fund'
+    )
 
     if @payment.save
-      redirect_to my_payments_path, notice: "✅ Tu reporte de pago por #{view_context.number_to_currency(@payment.amount, unit: @payment.currency)} ha sido registrado y enviado al líder para confirmación."
+      redirect_to my_payments_path, notice: "✅ Tu reporte de pago por #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} ha sido registrado y enviado al líder para confirmación."
     else
       @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
-      @gig = current_company.gigs.find_by(id: @payment.gig_id) if @payment.gig_id.present?
+      @gig = gig
       render :new_worker_report, status: :unprocessable_entity
     end
   end
 
   def approve
     ActiveRecord::Base.transaction do
-      if @payment.from_payroll_fund?
-        total_payroll_available = FundAllocation.total_payroll_remaining
-        if @payment.amount.to_f <= total_payroll_available
-          consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment)
-        else
-          # Si no alcanza el fondo de nómina al aprobar, pasa automáticamente a capital externo para no bloquear al trabajador
-          @payment.funding_source = 'external_capital'
-          @payment.external_source_name = 'Capital personal del leader (Aprobado sin fondos nómina)'
-        end
+      total_payroll_available = FundAllocation.total_payroll_remaining
+      payment_amount = @payment.amount.to_f
+
+      if total_payroll_available >= payment_amount
+        # Todo cubierto del fondo de nómina
+        @payment.funding_source = 'payroll_fund'
+        consume_payroll_funds(@payment.gig, payment_amount, @payment)
+      elsif total_payroll_available > 0
+        # Parcialmente cubierto de nómina y el resto capital externo automático
+        consumed_from_payroll = total_payroll_available
+        consume_payroll_funds(@payment.gig, consumed_from_payroll, @payment)
+        @payment.funding_source = 'external_capital'
+        @payment.external_source_name = "Nómina ($#{consumed_from_payroll}) + Capital personal del leader ($#{payment_amount - consumed_from_payroll})"
+      else
+        # 0 en fondo de nómina: pasa 100% automáticamente a capital externo del líder
+        @payment.funding_source = 'external_capital'
+        @payment.external_source_name = 'Capital personal del leader (Fondos nómina en $0)'
       end
 
       @payment.status = 'approved'
@@ -94,7 +165,8 @@ class EmployeePaymentsController < ApplicationController
       @payment.save!
     end
 
-    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: @payment.currency)} a #{@payment.user.display_name} confirmado y aprobado exitosamente."
+    funding_info = @payment.from_external_capital? ? "(#{@payment.funding_source_label})" : "(Fondo Nómina)"
+    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} a #{@payment.user.display_name} confirmado y aprobado exitosamente #{funding_info}."
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path, alert: "Error al aprobar pago: #{e.message}"
   end

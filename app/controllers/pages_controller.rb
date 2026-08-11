@@ -20,6 +20,7 @@ class PagesController < ApplicationController
       @total_pending_worker_payments = current_company.users.workers.to_a.sum(&:pending_balance)
       @needed_payroll = [@total_pending_worker_payments - @total_payroll_available, 0].max
       @shows_with_payroll = current_company.gigs.joins(:fund_allocations).where(fund_allocations: { fund_type: 'payroll' }).distinct.count
+      @pending_worker_reports = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc)
     elsif current_user.staff?
       @proximos_gigs = current_user.assigned_gigs.includes(:gig_items, :client).where("date >= ?", Date.today).order(date: :asc).limit(10)
       gig_ids = @proximos_gigs.pluck(:id)
