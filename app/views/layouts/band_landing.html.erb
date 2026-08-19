@@ -41,8 +41,8 @@
         padding: 0;
         background-color: var(--bg-dark);
         background-image: 
-          radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
-          radial-gradient(circle at 85% 65%, rgba(6, 182, 212, 0.09) 0%, transparent 50%),
+          radial-gradient(circle at 15% 15%, var(--primary-glow) 0%, transparent 45%),
+          radial-gradient(circle at 85% 65%, var(--accent-glow) 0%, transparent 50%),
           radial-gradient(circle at 50% 90%, rgba(244, 63, 94, 0.06) 0%, transparent 40%);
         background-attachment: fixed;
         color: var(--text-main);
@@ -98,7 +98,7 @@
       }
 
       .btn-nav-cta {
-        background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent-cyan) 100%);
         color: white;
         text-decoration: none;
         padding: 9px 20px;
@@ -142,7 +142,7 @@
 
       /* Typography */
       .gradient-title {
-        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #a78bfa 100%);
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, var(--primary) 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         font-family: var(--font-outfit);
@@ -151,9 +151,9 @@
       }
 
       .section-badge {
-        background: rgba(139, 92, 246, 0.12);
-        border: 1px solid rgba(139, 92, 246, 0.3);
-        color: #c084fc;
+        background: var(--primary-glow);
+        border: 1px solid var(--card-border-hover);
+        color: var(--text-main);
         padding: 6px 16px;
         border-radius: 99px;
         font-size: 0.8em;
@@ -209,8 +209,8 @@
       /* Scrollbar */
       ::-webkit-scrollbar { width: 8px; height: 8px; }
       ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.2); }
-      ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
+      ::-webkit-scrollbar-thumb { background: var(--primary-glow); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
     </style>
   </head>
   <body>
@@ -222,12 +222,29 @@
       </a>
 
       <div class="nav-links">
-        <a href="#paquetes" class="nav-link">Paquetes</a>
-        <a href="#cotizador" class="nav-link">Simulador en Vivo</a>
-        <a href="#galeria" class="nav-link">Videos &amp; Tarima</a>
-        <a href="#equipo" class="nav-link">Músicos</a>
-        <a href="#resenas" class="nav-link">Reseñas</a>
-        <a href="#cotizador" class="btn-nav-cta">⚡ Cotizar Ahora</a>
+        <% if @company.landing_section_visible?(:show_packages) %>
+          <a href="#paquetes" class="nav-link">Paquetes</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_calculator) %>
+          <a href="#cotizador" class="nav-link">Simulador</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_media) %>
+          <a href="#galeria" class="nav-link">Videos &amp; Tarima</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_team) && @staff_members.present? && @staff_members.any? %>
+          <a href="#equipo" class="nav-link">Músicos</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_reviews) %>
+          <a href="#resenas" class="nav-link">Reseñas</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_faq) %>
+          <a href="#faq" class="nav-link">FAQ</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_calculator) %>
+          <a href="#cotizador" class="btn-nav-cta">⚡ Cotizar Ahora</a>
+        <% elsif @company.contact_phone.present? || @company.whatsapp_number.present? %>
+          <a href="https://wa.me/<%= (@company.whatsapp_number.presence || @company.contact_phone).gsub(/[^0-9]/, '') %>" target="_blank" class="btn-nav-cta">💬 WhatsApp</a>
+        <% end %>
       </div>
     </nav>
 

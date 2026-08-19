@@ -136,12 +136,23 @@
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
         <div>
-          <%= f.label :landing_hero_title, "Título Principal del Hero (Opcional)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.label :landing_hero_title, "Título Principal del Hero (Cabecera)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
           <%= f.text_field :landing_hero_title, placeholder: "Ej: La Mejor Música en Vivo para tu Boda o Evento", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
         </div>
         <div>
+          <%= f.label :landing_hero_subtitle, "Subtítulo / Bajada del Hero", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.text_field :landing_hero_subtitle, placeholder: "Ej: Transformamos tu celebración con sonido profesional y puesta en escena única...", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 15px;">
+        <div>
           <%= f.label :whatsapp_number, "Número de WhatsApp para Cotizaciones *", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
           <%= f.text_field :whatsapp_number, placeholder: "Ej: +584141234567 (con código de país sin espacios)", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+        </div>
+        <div>
+          <%= f.label :tagline, "Eslogan Corto de Marca (Opcional)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.text_field :tagline, placeholder: "Ej: Música en Vivo de Alto Nivel", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
         </div>
       </div>
 

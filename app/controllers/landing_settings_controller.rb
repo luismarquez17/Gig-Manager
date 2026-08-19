@@ -9,16 +9,17 @@ class LandingSettingsController < ApplicationController
   end
 
   def update
-    # Procesar configuración de secciones
-    if params[:company][:landing_sections_config].present?
+    # 1. Procesar configuración de secciones (checkboxes booleanos)
+    if params[:company][:landing_sections_config].present? || params[:company].key?(:landing_sections_config)
       sections_data = {}
+      cfg = params[:company][:landing_sections_config] || {}
       %w[show_metrics show_packages show_calculator show_media show_team show_reviews show_faq].each do |sec|
-        sections_data[sec] = params[:company][:landing_sections_config][sec] == "1" || params[:company][:landing_sections_config][sec] == true
+        sections_data[sec] = cfg[sec] == "1" || cfg[sec] == true || cfg[sec] == "true"
       end
       @company.landing_sections_config = sections_data
     end
 
-    # Procesar FAQs si se enviaron
+    # 2. Procesar FAQs si se enviaron
     if params[:company][:landing_faqs].present?
       faqs_array = []
       params[:company][:landing_faqs].each do |_idx, item|
@@ -29,11 +30,15 @@ class LandingSettingsController < ApplicationController
       @company.landing_faqs = faqs_array if faqs_array.any?
     end
 
-    if @company.update(company_landing_params)
-      redirect_to landing_settings_path, notice: "¡Configuración y diseño de tu Landing Page guardados con éxito!"
+    # 3. Asignar todos los parámetros de personalización
+    @company.assign_attributes(company_landing_params)
+
+    if @company.save
+      redirect_to landing_settings_path, notice: "¡Diseño, colores, secciones y textos de tu Landing Page guardados con éxito!"
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @company.company_media_items.build
+      flash.now[:alert] = "Error al guardar cambios: #{@company.errors.full_messages.join(', ')}"
       render :show, status: :unprocessable_entity
     end
   end
@@ -61,7 +66,7 @@ class LandingSettingsController < ApplicationController
   def toggle_media_active
     @media_item = @company.company_media_items.find(params[:media_id])
     @media_item.update(active: !@media_item.active)
-    redirect_to landing_settings_path, notice: "Visibilidad del video '#{@media_item.title}' actualizada: #{@media_item.active? ? 'Visible' : 'Oculto'}."
+    redirect_to landing_settings_path, notice: "Visibilidad de '#{@media_item.title}': #{@media_item.active? ? 'Visible en la Web' : 'Oculto'}."
   end
 
   private

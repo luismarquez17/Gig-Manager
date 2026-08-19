@@ -4,15 +4,15 @@
   <section id="hero" style="text-align: center; padding: 60px 0 80px; position: relative;">
     <div class="section-badge">✨ Experiencia Musical de Alto Nivel</div>
     <h1 class="gradient-title" style="font-size: clamp(2.4em, 6vw, 4.2em); line-height: 1.1; margin: 0 0 20px 0; max-width: 900px; margin-left: auto; margin-right: auto;">
-      <%= @company.tagline.presence || "La Mejor Música en Vivo para tu Boda o Evento" %>
+      <%= @company.landing_hero_title.presence || @company.tagline.presence || "La Mejor Música en Vivo para tu Boda o Evento" %>
     </h1>
     <p style="font-size: clamp(1.05em, 2.5vw, 1.25em); color: var(--text-muted); max-width: 680px; margin: 0 auto 35px; line-height: 1.6;">
-      <%= @company.bio.presence || "Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en #{@company.name}." %>
+      <%= @company.landing_hero_subtitle.presence || @company.bio.presence || "Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en #{@company.name}." %>
     </p>
 
     <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
       <a href="#cotizador" class="btn-cta-primary">
-        <span>⚡</span> Simular Mi Presupuesto en Vivo
+        <span>⚡</span> <%= @company.landing_hero_cta_text.presence || "Simular Mi Presupuesto en Vivo" %>
       </a>
       <a href="#paquetes" class="btn-cta-secondary">
         <span>📦</span> Ver Paquetes Base
@@ -31,7 +31,7 @@
           <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Puntualidad &amp; Show</div>
         </div>
         <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #c084fc;">Top Live</div>
+          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: var(--primary);">Top Live</div>
           <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Show Enérgico &amp; Pro</div>
         </div>
       </div>
@@ -50,7 +50,7 @@
     <% if @preset_budgets.any? %>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
         <% @preset_budgets.each do |preset| %>
-          <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(139, 92, 246, 0.2); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(139,92,246,0.5)';" onmouseout="this.style.transform='none'; this.style.borderColor='rgba(139,92,246,0.2)';">
+          <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between; border-color: var(--card-border-hover); transition: transform 0.3s ease, border-color 0.3s ease;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
                 <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800; color: var(--text-main);">
@@ -100,9 +100,9 @@
           <button onclick="selectAndScrollToFormat('acoustic', 400, 'Acústico (2 Músicos)')" class="btn-cta-primary" style="justify-content: center; width: 100%;">⚡ Cotizar Este Formato</button>
         </div>
 
-        <div class="glass-box" style="border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 0 30px rgba(139, 92, 246, 0.2); display: flex; flex-direction: column; justify-content: space-between;">
+        <div class="glass-box" style="border-color: var(--primary); box-shadow: 0 0 30px var(--primary-glow); display: flex; flex-direction: column; justify-content: space-between;">
           <div>
-            <span style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; text-transform: uppercase;">Más Popular</span>
+            <span style="background: var(--primary-glow); color: var(--text-main); font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; text-transform: uppercase; border: 1px solid var(--card-border-hover);">Más Popular</span>
             <h3 style="margin: 8px 0 0 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Banda Completa Fiesta</h3>
             <div style="margin: 15px 0 20px 0;">
               <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$750</span>
@@ -142,7 +142,7 @@
   <%# --- 3. SIMULADOR / COTIZADOR VISUAL EN VIVO --- %>
   <% if @company.landing_section_visible?(:show_calculator) %>
   <section id="cotizador" style="padding: 40px 0 80px;">
-    <div class="glass-box" style="border: 2px solid rgba(139, 92, 246, 0.35); box-shadow: 0 12px 50px rgba(139, 92, 246, 0.15);">
+    <div class="glass-box" style="border: 2px solid var(--card-border-hover); box-shadow: 0 12px 50px var(--primary-glow);">
       <div style="text-align: center; margin-bottom: 35px;">
         <span class="section-badge">Calculadora en Vivo</span>
         <h2 class="gradient-title" style="font-size: 2.4em; margin: 0;">Simula tu Presupuesto al Instante</h2>
@@ -155,7 +155,7 @@
         <div>
           <%# 1. Formato de Banda %>
           <div style="margin-bottom: 25px;">
-            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;">
+            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
               1. Selecciona el Formato de la Agrupación
             </label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
@@ -179,7 +179,7 @@
 
           <%# 2. Horas de Show %>
           <div style="margin-bottom: 25px;">
-            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;">
+            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
               2. Duración del Show: <span id="hours-display" style="color: white; font-size: 1.1em;">2 Horas</span>
             </label>
             <input type="range" id="hours-slider" min="1" max="5" value="2" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateHours(this.value)">
@@ -194,7 +194,7 @@
 
           <%# 3. Efectos y Adicionales %>
           <div style="margin-bottom: 25px;">
-            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;">
+            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
               3. Añade Efectos Especiales &amp; Producción
             </label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
@@ -328,7 +328,7 @@
                 <h4 style="margin: 0; font-family: var(--font-outfit); font-size: 1.15em; font-weight: 800; color: white;">
                   <%= item.title %>
                 </h4>
-                <span style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #c084fc; font-size: 0.72em; padding: 2px 8px; border-radius: 99px; font-weight: 700; white-space: nowrap;">
+                <span style="background: var(--primary-glow); border: 1px solid var(--card-border-hover); color: var(--primary); font-size: 0.72em; padding: 2px 8px; border-radius: 99px; font-weight: 700; white-space: nowrap;">
                   <%= item.category_label %>
                 </span>
               </div>
@@ -346,7 +346,7 @@
       <%# Showcase Placeholder demostrativo %>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
         <div class="glass-box" style="padding: 20px;">
-          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="border-radius: 12px; background: linear-gradient(135deg, var(--primary-glow) 0%, var(--accent-glow) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid var(--card-border);">
             <span style="font-size: 3em; margin-bottom: 6px;">🥁</span>
             <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Backline de Batería &amp; Microfonía</span>
           </div>
@@ -355,7 +355,7 @@
         </div>
 
         <div class="glass-box" style="padding: 20px;">
-          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid var(--card-border);">
             <span style="font-size: 3em; margin-bottom: 6px;">✨</span>
             <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Chispas Frías &amp; Iluminación Robótica</span>
           </div>
@@ -364,7 +364,7 @@
         </div>
 
         <div class="glass-box" style="padding: 20px;">
-          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(59,130,246,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(59,130,246,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid var(--card-border);">
             <span style="font-size: 3em; margin-bottom: 6px;">🎸</span>
             <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Guitarras, Bajo &amp; Teclados en Vivo</span>
           </div>
@@ -388,17 +388,17 @@
         <% @staff_members.each do |staff| %>
           <div class="glass-box" style="text-align: center; padding: 24px;">
             <% if staff.avatar_attached? %>
-              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; overflow: hidden; border: 3px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 18px rgba(139, 92, 246, 0.2);">
+              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; overflow: hidden; border: 3px solid var(--card-border-hover); box-shadow: 0 0 18px var(--primary-glow);">
                 <%= image_tag staff.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
               </div>
             <% else %>
-              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 1.8em; font-weight: 800; color: white; border: 3px solid rgba(139, 92, 246, 0.4);">
+              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent-cyan) 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 1.8em; font-weight: 800; color: white; border: 3px solid var(--card-border-hover);">
                 <%= staff.display_name[0].upcase %>
               </div>
             <% end %>
             <h4 style="margin: 0 0 4px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 700; color: white;"><%= staff.display_name %></h4>
             <% if staff.specialty.present? %>
-              <span style="display: inline-block; background: rgba(139, 92, 246, 0.15); color: #c084fc; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 800; text-transform: uppercase;">
+              <span style="display: inline-block; background: var(--primary-glow); color: var(--primary); padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 800; text-transform: uppercase;">
                 <%= staff.specialty %>
               </span>
             <% end %>
@@ -499,10 +499,10 @@
     transition: all 0.2s ease;
   }
   .sim-pill:hover {
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: var(--card-border-hover);
   }
   .sim-pill.active {
-    background: rgba(139, 92, 246, 0.15);
+    background: var(--primary-glow);
     border-color: var(--primary);
     box-shadow: 0 0 15px var(--primary-glow);
   }
@@ -519,10 +519,10 @@
     transition: all 0.2s ease;
   }
   .sim-addon-card:hover {
-    border-color: rgba(139, 92, 246, 0.3);
+    border-color: var(--card-border-hover);
   }
   .sim-addon-card.active {
-    background: rgba(139, 92, 246, 0.12);
+    background: var(--primary-glow);
     border-color: var(--primary);
   }
 
@@ -539,7 +539,7 @@
     transition: all 0.2s ease;
   }
   .media-filter-btn:hover {
-    border-color: rgba(139, 92, 246, 0.4);
+    border-color: var(--card-border-hover);
     color: white;
   }
   .media-filter-btn.active {
