@@ -5,6 +5,11 @@ class BandLandingController < ApplicationController
   before_action :set_company
 
   def show
+    unless @company.landing_enabled?
+      render :landing_disabled, status: :ok
+      return
+    end
+
     @preset_budgets = @company.preset_budgets.order(:price)
     @staff_members = @company.users.where(role: [:leader, :musician, :staff])
     @reviews = @company.approved_reviews.order(pinned: :desc, created_at: :desc).limit(12)
@@ -13,6 +18,7 @@ class BandLandingController < ApplicationController
     @rating = @company.average_rating
     @reviews_count = @reviews.count
     @whatsapp_number = @company.whatsapp_number.presence || @company.contact_phone.presence || "584140000000"
+    @faqs = @company.effective_faqs
   end
 
   def quote

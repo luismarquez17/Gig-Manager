@@ -11,17 +11,17 @@
 
     <style>
       :root {
-        --primary: #8b5cf6;
-        --primary-hover: #7c3aed;
-        --primary-glow: rgba(139, 92, 246, 0.35);
-        --accent-cyan: #06b6d4;
-        --accent-glow: rgba(6, 182, 212, 0.25);
+        --primary: <%= @company.theme_hex %>;
+        --primary-hover: <%= @company.theme_hex %>;
+        --primary-glow: <%= @company.theme_hex %>55;
+        --accent-cyan: <%= @company.accent_hex %>;
+        --accent-glow: <%= @company.accent_hex %>40;
         --success: #10b981;
         --warning: #f59e0b;
-        --bg-dark: #07090e;
+        --bg-dark: <%= @company.landing_bg_style == "carbon" ? "#09090b" : (@company.landing_bg_style == "royal" ? "#050814" : "#07090e") %>;
         --card-bg: rgba(15, 23, 42, 0.65);
         --card-border: rgba(255, 255, 255, 0.08);
-        --card-border-hover: rgba(139, 92, 246, 0.4);
+        --card-border-hover: <%= @company.theme_hex %>66;
         --text-main: #f8fafc;
         --text-muted: #94a3b8;
         --font-outfit: 'Outfit', sans-serif;

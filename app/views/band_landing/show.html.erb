@@ -20,23 +20,26 @@
     </div>
 
     <%# Métricas / Social Proof %>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; max-width: 800px; margin: 0 auto;">
-      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #fbbf24;">★ <%= @rating %></div>
-        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Calificación de Clientes</div>
+    <% if @company.landing_section_visible?(:show_metrics) %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; max-width: 800px; margin: 0 auto;">
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
+          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #fbbf24;">★ <%= @rating %></div>
+          <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Calificación de Clientes</div>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
+          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #34d399;">100%</div>
+          <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Puntualidad &amp; Show</div>
+        </div>
+        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
+          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #c084fc;">Top Live</div>
+          <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Show Enérgico &amp; Pro</div>
+        </div>
       </div>
-      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #34d399;">100%</div>
-        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Puntualidad &amp; Show</div>
-      </div>
-      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #c084fc;">Top Live</div>
-        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Show Enérgico &amp; Pro</div>
-      </div>
-    </div>
+    <% end %>
   </section>
 
   <%# --- 2. PAQUETES DESTACADOS (PRESET BUDGETS) --- %>
+  <% if @company.landing_section_visible?(:show_packages) %>
   <section id="paquetes" style="padding: 40px 0 70px;">
     <div style="text-align: center; margin-bottom: 40px;">
       <span class="section-badge">Nuestros Paquetes</span>
@@ -134,8 +137,10 @@
       </div>
     <% end %>
   </section>
+  <% end %>
 
   <%# --- 3. SIMULADOR / COTIZADOR VISUAL EN VIVO --- %>
+  <% if @company.landing_section_visible?(:show_calculator) %>
   <section id="cotizador" style="padding: 40px 0 80px;">
     <div class="glass-box" style="border: 2px solid rgba(139, 92, 246, 0.35); box-shadow: 0 12px 50px rgba(139, 92, 246, 0.15);">
       <div style="text-align: center; margin-bottom: 35px;">
@@ -274,8 +279,10 @@
       </div>
     </div>
   </section>
+  <% end %>
 
   <%# --- 4. GALERÍA AUDIOVISUAL & VIDEOS EN TARIMA --- %>
+  <% if @company.landing_section_visible?(:show_media) %>
   <section id="galeria" style="padding: 40px 0 80px;">
     <div style="text-align: center; margin-bottom: 35px;">
       <span class="section-badge">Showcase Audiovisual</span>
@@ -367,9 +374,10 @@
       </div>
     <% end %>
   </section>
+  <% end %>
 
   <%# --- 5. EQUIPO DE MÚSICOS & TALENTO --- %>
-  <% if @staff_members.any? %>
+  <% if @company.landing_section_visible?(:show_team) && @staff_members.any? %>
     <section id="equipo" style="padding: 40px 0 70px;">
       <div style="text-align: center; margin-bottom: 35px;">
         <span class="section-badge">Músicos &amp; Producción</span>
@@ -406,6 +414,7 @@
   <% end %>
 
   <%# --- 6. TESTIMONIOS & RESEÑAS 5 ESTRELLAS --- %>
+  <% if @company.landing_section_visible?(:show_reviews) %>
   <section id="resenas" style="padding: 40px 0 80px;">
     <div style="text-align: center; margin-bottom: 35px;">
       <span class="section-badge">Opiniones Reales</span>
@@ -447,6 +456,34 @@
       <% end %>
     </div>
   </section>
+  <% end %>
+
+  <%# --- 7. PREGUNTAS FRECUENTES (FAQS) --- %>
+  <% if @company.landing_section_visible?(:show_faq) && @faqs.any? %>
+    <section id="faq" style="padding: 40px 0 80px;">
+      <div style="text-align: center; margin-bottom: 35px;">
+        <span class="section-badge">Dudas &amp; Respuestas</span>
+        <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Preguntas Frecuentes</h2>
+        <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Todo lo que necesitas saber antes de contratar a <%= @company.name %>.</p>
+      </div>
+
+      <div style="max-width: 800px; margin: 0 auto; display: grid; gap: 14px;">
+        <% @faqs.each_with_index do |faq, idx| %>
+          <div class="glass-box" style="padding: 20px; cursor: pointer; transition: all 0.2s ease;" onclick="toggleFaqAccordion(<%= idx %>)">
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <h4 style="margin: 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px;">
+                <span>💬</span> <%= faq['q'] %>
+              </h4>
+              <span id="faq-arrow-<%= idx %>" style="font-size: 1.1em; color: var(--primary); transition: transform 0.3s ease;">▼</span>
+            </div>
+            <div id="faq-ans-<%= idx %>" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
+              <%= faq['a'] %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
 
 </div>
 
@@ -625,6 +662,20 @@
         card.style.display = 'none';
       }
     });
+  }
+
+  // Acordeón de FAQs
+  function toggleFaqAccordion(idx) {
+    const ans = document.getElementById(`faq-ans-${idx}`);
+    const arrow = document.getElementById(`faq-arrow-${idx}`);
+    if (!ans) return;
+    if (ans.style.display === 'block') {
+      ans.style.display = 'none';
+      if (arrow) arrow.textContent = '▼';
+    } else {
+      ans.style.display = 'block';
+      if (arrow) arrow.textContent = '▲';
+    }
   }
 
   // Inicializar cálculo

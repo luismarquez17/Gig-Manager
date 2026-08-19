@@ -9,8 +9,28 @@ class LandingSettingsController < ApplicationController
   end
 
   def update
+    # Procesar configuración de secciones
+    if params[:company][:landing_sections_config].present?
+      sections_data = {}
+      %w[show_metrics show_packages show_calculator show_media show_team show_reviews show_faq].each do |sec|
+        sections_data[sec] = params[:company][:landing_sections_config][sec] == "1" || params[:company][:landing_sections_config][sec] == true
+      end
+      @company.landing_sections_config = sections_data
+    end
+
+    # Procesar FAQs si se enviaron
+    if params[:company][:landing_faqs].present?
+      faqs_array = []
+      params[:company][:landing_faqs].each do |_idx, item|
+        if item[:q].present? && item[:a].present?
+          faqs_array << { "q" => item[:q].to_s.strip, "a" => item[:a].to_s.strip }
+        end
+      end
+      @company.landing_faqs = faqs_array if faqs_array.any?
+    end
+
     if @company.update(company_landing_params)
-      redirect_to landing_settings_path, notice: "¡Identidad y enlaces de la Landing Page actualizados con éxito!"
+      redirect_to landing_settings_path, notice: "¡Configuración y diseño de tu Landing Page guardados con éxito!"
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @company.company_media_items.build
@@ -20,9 +40,10 @@ class LandingSettingsController < ApplicationController
 
   def create_media
     @media_item = @company.company_media_items.build(media_item_params)
+    @media_item.active = true if @media_item.active.nil?
     
     if @media_item.save
-      redirect_to landing_settings_path, notice: "¡Material multimedia agregado a tu Landing con éxito!"
+      redirect_to landing_settings_path, notice: "¡Material multimedia publicado en tu Landing con éxito!"
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @media_item
@@ -40,7 +61,7 @@ class LandingSettingsController < ApplicationController
   def toggle_media_active
     @media_item = @company.company_media_items.find(params[:media_id])
     @media_item.update(active: !@media_item.active)
-    redirect_to landing_settings_path, notice: "Estado del material actualizado."
+    redirect_to landing_settings_path, notice: "Visibilidad del video '#{@media_item.title}' actualizada: #{@media_item.active? ? 'Visible' : 'Oculto'}."
   end
 
   private
@@ -60,6 +81,14 @@ class LandingSettingsController < ApplicationController
 
   def company_landing_params
     params.require(:company).permit(
+      :landing_enabled,
+      :landing_plan,
+      :landing_theme_color,
+      :landing_accent_color,
+      :landing_bg_style,
+      :landing_hero_title,
+      :landing_hero_subtitle,
+      :landing_hero_cta_text,
       :tagline,
       :bio,
       :whatsapp_number,

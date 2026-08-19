@@ -63,6 +63,48 @@ class Company < ApplicationRecord
     (reviews.average(:rating) || 5.0).to_f.round(1)
   end
 
+  def landing_section_visible?(key)
+    return true unless landing_sections_config.is_a?(Hash)
+    landing_sections_config[key.to_s] != false && landing_sections_config[key.to_s] != "false"
+  end
+
+  def theme_hex
+    landing_theme_color.presence || "#8b5cf6"
+  end
+
+  def accent_hex
+    landing_accent_color.presence || "#06b6d4"
+  end
+
+  def effective_faqs
+    if landing_faqs.present? && landing_faqs.is_a?(Array) && landing_faqs.any?
+      landing_faqs
+    else
+      default_faqs
+    end
+  end
+
+  def default_faqs
+    [
+      {
+        "q" => "¿Con cuánta anticipación debo reservar la fecha?",
+        "a" => "Recomendamos apartar con al menos 3 a 6 semanas de antelación para garantizar la disponibilidad del equipo y músicos en tu fecha deseada."
+      },
+      {
+        "q" => "¿El presupuesto incluye sonido e iluminación profesional?",
+        "a" => "¡Sí! Nuestros paquetes incluyen el sistema de sonido profesional ajustado al tamaño de tu evento, consolas y operadores técnicos dedicados."
+      },
+      {
+        "q" => "¿Realizan presentaciones fuera de la ciudad?",
+        "a" => "Por supuesto. Nos trasladamos a nivel nacional. Solo se calcula un viático adicional de transporte y logística según la ubicación."
+      },
+      {
+        "q" => "¿Cómo es el proceso de contratación y pagos?",
+        "a" => "Se formaliza mediante contrato digital seguro con un 50% de anticipo para congelar la fecha, y el saldo restante se liquida el día del show."
+      }
+    ]
+  end
+
   private
 
   def generate_slug_and_token

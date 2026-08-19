@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_19_231023) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_19_231626) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -80,6 +80,16 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_231023) do
     t.string "instagram_url"
     t.string "youtube_url"
     t.string "tiktok_url"
+    t.boolean "landing_enabled", default: true, null: false
+    t.string "landing_plan", default: "pro"
+    t.string "landing_theme_color", default: "#8b5cf6"
+    t.string "landing_accent_color", default: "#06b6d4"
+    t.string "landing_bg_style", default: "midnight"
+    t.string "landing_hero_title"
+    t.string "landing_hero_subtitle"
+    t.string "landing_hero_cta_text", default: "Simular Mi Presupuesto en Vivo"
+    t.jsonb "landing_sections_config", default: {"show_faq"=>true, "show_team"=>true, "show_media"=>true, "show_metrics"=>true, "show_reviews"=>true, "show_packages"=>true, "show_calculator"=>true}
+    t.jsonb "landing_faqs", default: []
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
   end
