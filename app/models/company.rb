@@ -13,6 +13,10 @@ class Company < ApplicationRecord
   has_many :finance_settings, dependent: :destroy
   has_many :employee_payments, dependent: :destroy
   has_many :gig_reviews, through: :gigs
+  has_many :company_media_items, dependent: :destroy
+
+  has_one_attached :landing_logo
+  has_one_attached :landing_hero_video
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true

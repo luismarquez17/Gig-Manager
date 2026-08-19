@@ -1,0 +1,226 @@
+<div style="max-width: 1100px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+  
+  <%# --- HEADER --- %>
+  <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <%= link_to '⬅ Volver al Panel', root_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em; margin-bottom: 8px; display: inline-block;" %>
+      <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+        <span>🌐</span> Mi Landing Page &amp; Galería de Videos
+      </h1>
+      <p style="color: #64748b; margin: 5px 0 0 0; font-size: 0.95em;">
+        Personaliza la identidad pública de <strong><%= @company.name %></strong> y gestiona los videos de tus instrumentos, shows y tarima.
+      </p>
+    </div>
+    
+    <div>
+      <%= link_to band_landing_path(slug: @company.slug), target: "_blank", style: "background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.95em; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); display: inline-flex; align-items: center; gap: 8px; transition: transform 0.2s;" do %>
+        <span>🚀</span> Ver mi Landing en Vivo ↗
+      <% end %>
+    </div>
+  </div>
+
+  <%# --- ALERTAS FLASH --- %>
+  <% if notice.present? %>
+    <div style="background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+      ✓ <%= notice %>
+    </div>
+  <% end %>
+  <% if alert.present? %>
+    <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
+      ⚠️ <%= alert %>
+    </div>
+  <% end %>
+
+  <div style="display: grid; grid-template-columns: 1fr 1.3fr; gap: 25px; align-items: start;">
+    
+    <%# --- COLUMNA 1: CONFIGURACIÓN DE MARCA & CONTACTO --- %>
+    <div>
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+        <h2 style="margin: 0 0 16px 0; font-size: 1.2em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>🎨</span> Identidad &amp; Contacto de la Landing
+        </h2>
+        
+        <%= form_with(model: @company, url: landing_settings_path, method: :patch, local: true) do |f| %>
+          <div style="margin-bottom: 15px;">
+            <%= f.label :tagline, "Eslogan / Frase Principal (Hero)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+            <%= f.text_field :tagline, placeholder: "Ej: Música en Vivo de Alto Nivel para Bodas y Eventos Exclusivos", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <%= f.label :whatsapp_number, "Número de WhatsApp para Cotizaciones", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+            <%= f.text_field :whatsapp_number, placeholder: "Ej: +58 414 1234567 (con código de país)", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+            <small style="color: #94a3b8; font-size: 0.78em;">Las cotizaciones del simulador llegarán directamente a este número.</small>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <%= f.label :bio, "Sobre la Agrupación / Trayectoria", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+            <%= f.text_area :bio, rows: 3, placeholder: "Breve historia, años de trayectoria y propuesta artística...", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em; resize: vertical;" %>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <label style="display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;">Redes Sociales (Opcional)</label>
+            <div style="display: grid; gap: 8px;">
+              <%= f.text_field :instagram_url, placeholder: "Instagram URL (ej: https://instagram.com/tu_banda)", style: "width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85em;" %>
+              <%= f.text_field :youtube_url, placeholder: "Canal de YouTube URL", style: "width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85em;" %>
+              <%= f.text_field :tiktok_url, placeholder: "TikTok URL", style: "width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85em;" %>
+            </div>
+          </div>
+
+          <div style="text-align: right; margin-top: 20px;">
+            <%= f.submit "💾 Guardar Identidad", style: "background: #0f172a; color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em;" %>
+          </div>
+        <% end %>
+      </div>
+
+      <%# Enlace y QR público %>
+      <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; padding: 20px; text-align: center;">
+        <h4 style="margin: 0 0 6px 0; color: #334155; font-size: 0.95em;">🔗 Tu Enlace Público Único</h4>
+        <code style="background: #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 0.88em; color: #6366f1; word-break: break-all; display: block; margin-bottom: 10px;">
+          <%= band_landing_url(slug: @company.slug) %>
+        </code>
+        <p style="margin: 0; color: #64748b; font-size: 0.8em;">
+          Puedes compartir este link en tu biografía de Instagram, WhatsApp Business o cotizaciones.
+        </p>
+      </div>
+    </div>
+
+    <%# --- COLUMNA 2: GESTIÓN DE VIDEOS & SHOWCASE --- %>
+    <div>
+      
+      <%# Formulario para agregar nuevo video/multimedia %>
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+        <h2 style="margin: 0 0 16px 0; font-size: 1.2em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>➕</span> Agregar Video o Material al Showcase
+        </h2>
+
+        <%= form_with(model: @new_media_item, url: create_landing_media_path, method: :post, local: true) do |f| %>
+          
+          <div style="margin-bottom: 12px;">
+            <%= f.label :title, "Título del Video o Contenido *", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 4px;" %>
+            <%= f.text_field :title, placeholder: "Ej: Setup de Batería y Microfonía / Show en Boda Caracas", required: true, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+            <div>
+              <%= f.label :category, "Categoría *", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 4px;" %>
+              <%= f.select :category, CompanyMediaItem::CATEGORIES.map { |k, v| [v, k] }, {}, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em; background: white;" %>
+            </div>
+            <div>
+              <%= f.label :media_type, "Tipo de Fuente *", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 4px;" %>
+              <%= f.select :media_type, CompanyMediaItem::MEDIA_TYPES.map { |k, v| [v, k] }, {}, { id: "media_type_select", onchange: "toggleMediaInputType(this.value)", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em; background: white;" } %>
+            </div>
+          </div>
+
+          <%# Input para archivo de video / foto %>
+          <div id="file_upload_wrapper" style="margin-bottom: 12px;">
+            <%= f.label :media_file, "Subir Archivo de Video MP4 o Fotografía", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 4px;" %>
+            <%= f.file_field :media_file, accept: "video/mp4,video/webm,video/quicktime,image/*", style: "width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 10px; border: 1px dashed #cbd5e1; background: #f8fafc; font-size: 0.85em;" %>
+            <small style="color: #94a3b8; font-size: 0.78em;">Formato recomendado: MP4 optimizado (3 a 15 MB) o imagen JPG/PNG.</small>
+          </div>
+
+          <%# Input para link externo / YouTube %>
+          <div id="youtube_url_wrapper" style="margin-bottom: 12px; display: none;">
+            <%= f.label :video_url, "Enlace de YouTube o Video Externo", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 4px;" %>
+            <%= f.text_field :video_url, placeholder: "https://www.youtube.com/watch?v=...", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+          </div>
+
+          <div style="margin-bottom: 15px;">
+            <%= f.label :description, "Descripción corta (Opcional)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 4px;" %>
+            <%= f.text_field :description, placeholder: "Ej: Set de batería acústica Ludwig con micrófonos Shure...", style: "width: 100%; box-sizing: border-box; padding: 8px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.88em;" %>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label style="display: flex; align-items: center; gap: 8px; font-size: 0.85em; font-weight: 600; color: #475569; cursor: pointer;">
+              <%= f.check_box :featured, style: "accent-color: #8b5cf6;" %>
+              <span>⭐ Destacar en primera posición</span>
+            </label>
+            
+            <%= f.submit "📤 Publicar en la Landing", style: "background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.25);" %>
+          </div>
+
+        <% end %>
+      </div>
+
+      <%# Listado de videos y fotos cargados %>
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: #0f172a;">
+            🎬 Material Publicado en tu Galería (<%= @media_items.count %>)
+          </h3>
+        </div>
+
+        <% if @media_items.any? %>
+          <div style="display: grid; gap: 14px;">
+            <% @media_items.each do |item| %>
+              <div style="border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; background: <%= item.active? ? '#ffffff' : '#f8fafc' %>; <%= 'border-color: #c4b5fd;' if item.featured? %>">
+                
+                <div style="display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0;">
+                  <%# Icono o miniatura %>
+                  <div style="width: 48px; height: 48px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; font-size: 1.4em; flex-shrink: 0;">
+                    <% if item.video? %>
+                      📹
+                    <% elsif item.youtube? %>
+                      ▶️
+                    <% else %>
+                      📸
+                    <% end %>
+                  </div>
+
+                  <div style="min-width: 0;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 2px;">
+                      <strong style="color: #0f172a; font-size: 0.95em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= item.title %></strong>
+                      <% if item.featured? %>
+                        <span style="background: #fef3c7; color: #b45309; font-size: 0.7em; padding: 2px 6px; border-radius: 6px; font-weight: 800;">Destacado</span>
+                      <% end %>
+                      <span style="background: #ede9fe; color: #6d28d9; font-size: 0.7em; padding: 2px 6px; border-radius: 6px; font-weight: 700;"><%= item.category_label %></span>
+                    </div>
+                    <p style="margin: 0; font-size: 0.8em; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      <%= item.description.presence || (item.media_file.attached? ? item.media_file.filename.to_s : item.video_url) %>
+                    </p>
+                  </div>
+                </div>
+
+                <%# Acciones %>
+                <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+                  <%= button_to toggle_landing_media_path(media_id: item.id), method: :patch, style: "background: #{item.active? ? '#dcfce7' : '#f1f5f9'}; color: #{item.active? ? '#166534' : '#64748b'}; border: 1px solid #{item.active? ? '#86efac' : '#cbd5e1'}; padding: 6px 12px; border-radius: 8px; font-size: 0.78em; font-weight: bold; cursor: pointer;" do %>
+                    <%= item.active? ? "✓ Activo" : "Oculto" %>
+                  <% end %>
+
+                  <%= button_to destroy_landing_media_path(media_id: item.id), method: :delete, data: { turbo_confirm: "¿Seguro de eliminar este video/foto de tu Landing?" }, style: "background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; border-radius: 8px; width: 32px; height: 32px; font-size: 0.85em; cursor: pointer; display: flex; align-items: center; justify-content: center;" do %>
+                    🗑️
+                  <% end %>
+                </div>
+
+              </div>
+            <% end %>
+          </div>
+        <% else %>
+          <div style="text-align: center; padding: 35px 20px; color: #94a3b8; border: 1px dashed #cbd5e1; border-radius: 14px;">
+            <div style="font-size: 2.2em; margin-bottom: 8px;">🎬</div>
+            <p style="margin: 0 0 4px 0; font-weight: 700; color: #475569;">Aún no has agregado videos o fotos a tu Landing.</p>
+            <p style="margin: 0; font-size: 0.85em;">Sube tu primer video en el formulario de arriba para que tu vitrina empiece a lucir profesional.</p>
+          </div>
+        <% end %>
+
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  function toggleMediaInputType(type) {
+    const fileWrapper = document.getElementById('file_upload_wrapper');
+    const youtubeWrapper = document.getElementById('youtube_url_wrapper');
+
+    if (type === 'youtube') {
+      fileWrapper.style.display = 'none';
+      youtubeWrapper.style.display = 'block';
+    } else {
+      fileWrapper.style.display = 'block';
+      youtubeWrapper.style.display = 'none';
+    }
+  }
+</script>

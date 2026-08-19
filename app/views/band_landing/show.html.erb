@@ -4,10 +4,10 @@
   <section id="hero" style="text-align: center; padding: 60px 0 80px; position: relative;">
     <div class="section-badge">✨ Experiencia Musical de Alto Nivel</div>
     <h1 class="gradient-title" style="font-size: clamp(2.4em, 6vw, 4.2em); line-height: 1.1; margin: 0 0 20px 0; max-width: 900px; margin-left: auto; margin-right: auto;">
-      La Mejor Música en Vivo para tu Boda o Evento
+      <%= @company.tagline.presence || "La Mejor Música en Vivo para tu Boda o Evento" %>
     </h1>
     <p style="font-size: clamp(1.05em, 2.5vw, 1.25em); color: var(--text-muted); max-width: 680px; margin: 0 auto 35px; line-height: 1.6;">
-      Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en <strong><%= @company.name %></strong>.
+      <%= @company.bio.presence || "Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en #{@company.name}." %>
     </p>
 
     <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
@@ -275,7 +275,100 @@
     </div>
   </section>
 
-  <%# --- 4. EQUIPO DE MÚSICOS & TALENTO --- %>
+  <%# --- 4. GALERÍA AUDIOVISUAL & VIDEOS EN TARIMA --- %>
+  <section id="galeria" style="padding: 40px 0 80px;">
+    <div style="text-align: center; margin-bottom: 35px;">
+      <span class="section-badge">Showcase Audiovisual</span>
+      <h2 class="gradient-title" style="font-size: 2.4em; margin: 0;">Instrumentos, Producción &amp; Show en Vivo</h2>
+      <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Conoce de cerca la calidad de nuestros instrumentos, backline profesional y la energía en tarima.</p>
+      
+      <%# Filtros de Categoría %>
+      <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px;" id="media-filter-buttons">
+        <button onclick="filterMediaCategory('all')" class="media-filter-btn active" data-cat="all">Todos</button>
+        <button onclick="filterMediaCategory('live_show')" class="media-filter-btn" data-cat="live_show">🔥 En Vivo &amp; Tarima</button>
+        <button onclick="filterMediaCategory('instruments')" class="media-filter-btn" data-cat="instruments">🎸 Instrumentos &amp; Backline</button>
+        <button onclick="filterMediaCategory('effects')" class="media-filter-btn" data-cat="effects">✨ Efectos &amp; Iluminación</button>
+        <button onclick="filterMediaCategory('backstage')" class="media-filter-btn" data-cat="backstage">🎬 Montaje &amp; Backstage</button>
+      </div>
+    </div>
+
+    <% if @media_items.any? %>
+      <div id="media-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+        <% @media_items.each do |item| %>
+          <div class="glass-box media-card" data-category="<%= item.category %>" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div>
+              <%# Reproductor o Imagen %>
+              <div style="border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 14px; position: relative; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
+                <% if item.video? && item.media_file.attached? %>
+                  <video controls playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover;">
+                    <source src="<%= url_for(item.media_file) %>" type="<%= item.media_file.content_type %>">
+                    Tu navegador no soporta reproducción de video.
+                  </video>
+                <% elsif item.youtube? && item.video_url.present? %>
+                  <iframe src="<%= item.youtube_embed_url %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%; border: none;"></iframe>
+                <% elsif item.photo? && item.media_file.attached? %>
+                  <%= image_tag item.media_file, style: "width: 100%; height: 100%; object-fit: cover;" %>
+                <% else %>
+                  <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                    <span style="font-size: 2.5em; display: block; margin-bottom: 4px;">🎬</span>
+                    <span style="font-size: 0.85em;"><%= item.title %></span>
+                  </div>
+                <% end %>
+              </div>
+
+              <%# Encabezado del contenido %>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
+                <h4 style="margin: 0; font-family: var(--font-outfit); font-size: 1.15em; font-weight: 800; color: white;">
+                  <%= item.title %>
+                </h4>
+                <span style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #c084fc; font-size: 0.72em; padding: 2px 8px; border-radius: 99px; font-weight: 700; white-space: nowrap;">
+                  <%= item.category_label %>
+                </span>
+              </div>
+
+              <% if item.description.present? %>
+                <p style="margin: 0; color: #cbd5e1; font-size: 0.88em; line-height: 1.4;">
+                  <%= item.description %>
+                </p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <%# Showcase Placeholder demostrativo %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
+        <div class="glass-box" style="padding: 20px;">
+          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(139,92,246,0.2) 0%, rgba(6,182,212,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-size: 3em; margin-bottom: 6px;">🥁</span>
+            <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Backline de Batería &amp; Microfonía</span>
+          </div>
+          <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 800; color: white;">Set Acústico &amp; Cajas Profesionales</h4>
+          <p style="margin: 0; color: var(--text-muted); font-size: 0.85em;">Microfonía Shure y consolas digitales para un sonido nítido y balanceado.</p>
+        </div>
+
+        <div class="glass-box" style="padding: 20px;">
+          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-size: 3em; margin-bottom: 6px;">✨</span>
+            <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Chispas Frías &amp; Iluminación Robótica</span>
+          </div>
+          <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 800; color: white;">Efectos Especiales de Tarima</h4>
+          <p style="margin: 0; color: var(--text-muted); font-size: 0.85em;">Chispas seguras para interiores y exteriores para momentos cumbre y primer baile.</p>
+        </div>
+
+        <div class="glass-box" style="padding: 20px;">
+          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(59,130,246,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-size: 3em; margin-bottom: 6px;">🎸</span>
+            <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Guitarras, Bajo &amp; Teclados en Vivo</span>
+          </div>
+          <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 800; color: white;">Instrumentación de Alta Gama</h4>
+          <p style="margin: 0; color: var(--text-muted); font-size: 0.85em;">Amplificadores y pedaleras de última generación para fidelidad de estudio en vivo.</p>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <%# --- 5. EQUIPO DE MÚSICOS & TALENTO --- %>
   <% if @staff_members.any? %>
     <section id="equipo" style="padding: 40px 0 70px;">
       <div style="text-align: center; margin-bottom: 35px;">
@@ -395,9 +488,32 @@
     background: rgba(139, 92, 246, 0.12);
     border-color: var(--primary);
   }
+
+  /* Media Filter Buttons */
+  .media-filter-btn {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 99px;
+    font-size: 0.85em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .media-filter-btn:hover {
+    border-color: rgba(139, 92, 246, 0.4);
+    color: white;
+  }
+  .media-filter-btn.active {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    border-color: var(--primary);
+    color: white;
+    box-shadow: 0 2px 10px var(--primary-glow);
+  }
 </style>
 
-<%# --- JAVASCRIPT DEL SIMULADOR EN VIVO --- %>
+<%# --- JAVASCRIPT DEL SIMULADOR EN VIVO & GALERÍA --- %>
 <script>
   let baseFormatPrice = 400;
   let baseFormatName = "Acústico (2 Músicos)";
@@ -447,7 +563,7 @@
     document.getElementById('sum-format-name').textContent = baseFormatName;
     document.getElementById('sum-format-price').textContent = `$${baseFormatPrice} USD`;
 
-    // Cálculo por horas extra (si pasa de 2 horas se añade suplemento de $100/hora extra)
+    // Cálculo por horas extra
     let extraHoursCost = 0;
     if (selectedHours > 2) {
       extraHoursCost = (selectedHours - 2) * 120;
@@ -491,8 +607,24 @@
       `• Presupuesto estimado: $${total} USD\n\n` +
       `¿Tienen disponibilidad para esta fecha?`;
 
+    const waNumber = '<%= @whatsapp_number.gsub(/[^0-9]/, "") %>';
     const waBtn = document.getElementById('btn-whatsapp-quote');
-    waBtn.href = `https://wa.me/584140000000?text=${encodeURIComponent(waMsg)}`;
+    waBtn.href = `https://wa.me/${waNumber}?text=${encodeURIComponent(waMsg)}`;
+  }
+
+  // Filtrado de Galería Audiovisual
+  function filterMediaCategory(category) {
+    document.querySelectorAll('.media-filter-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelector(`.media-filter-btn[data-cat="${category}"]`)?.classList.add('active');
+
+    const cards = document.querySelectorAll('.media-card');
+    cards.forEach(card => {
+      if (category === 'all' || card.getAttribute('data-category') === category) {
+        card.style.display = 'flex';
+      } else {
+        card.style.display = 'none';
+      }
+    });
   }
 
   // Inicializar cálculo

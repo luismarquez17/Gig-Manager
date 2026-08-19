@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_19_181500) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_19_231023) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -74,8 +74,31 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_181500) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "tagline"
+    t.text "bio"
+    t.string "whatsapp_number"
+    t.string "instagram_url"
+    t.string "youtube_url"
+    t.string "tiktok_url"
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
+  end
+
+  create_table "company_media_items", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "title", null: false
+    t.string "category", default: "live_show", null: false
+    t.string "media_type", default: "video", null: false
+    t.string "video_url"
+    t.text "description"
+    t.integer "position", default: 0
+    t.boolean "featured", default: false
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "category"], name: "index_company_media_items_on_company_id_and_category"
+    t.index ["company_id", "position"], name: "index_company_media_items_on_company_id_and_position"
+    t.index ["company_id"], name: "index_company_media_items_on_company_id"
   end
 
   create_table "employee_payments", force: :cascade do |t|
@@ -398,6 +421,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_181500) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "clients", "companies"
+  add_foreign_key "company_media_items", "companies"
   add_foreign_key "employee_payments", "companies"
   add_foreign_key "employee_payments", "gigs"
   add_foreign_key "employee_payments", "users"
