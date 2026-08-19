@@ -9,17 +9,6 @@ class PortalsController < ApplicationController
     @gig_payments = @gig.gig_payments.order(date_paid: :desc)
     @timeline_items = @gig.gig_timeline_items.for_client.order(:position, :time)
     @staff_members = @gig.staff_members.with_attached_avatar
-    
-    # Canciones disponibles de la agrupación / empresa
-    @available_songs = @gig.company ? @gig.company.songs.active.order(:genre, :title) : Song.none
-    @genres = @available_songs.map(&:genre).uniq
-
-    # Preferencias musicales seleccionadas
-    @music_preferences = @gig.music_preferences || {}
-    @must_play_ids = @gig.must_play_ids.map(&:to_i)
-    @do_not_play_ids = @gig.do_not_play_ids.map(&:to_i)
-    @special_moments = @gig.special_moments
-    @custom_requests = @gig.custom_song_requests
 
     # Muro de recuerdos y reseñas
     @gig_reviews = @gig.gig_reviews.approved.pinned_first
@@ -53,37 +42,6 @@ class PortalsController < ApplicationController
       }
     else
       render json: { success: false, error: "No se pudo registrar la firma." }, status: :unprocessable_entity
-    end
-  end
-
-  def update_music_preferences
-    prefs = @gig.music_preferences || {}
-
-    if params[:must_play].present?
-      prefs['must_play'] = Array(params[:must_play]).map(&:to_i).uniq
-    end
-
-    if params[:do_not_play].present?
-      prefs['do_not_play'] = Array(params[:do_not_play]).map(&:to_i).uniq
-    end
-
-    if params[:special_moments].present?
-      prefs['special_moments'] = params[:special_moments].permit!.to_h rescue params[:special_moments]
-    end
-
-    if params[:custom_requests].present?
-      prefs['custom_requests'] = Array(params[:custom_requests]).reject(&:blank?)
-    end
-
-    if @gig.update(music_preferences: prefs)
-      render json: { 
-        success: true, 
-        message: "¡Preferencias de repertorio guardadas con éxito!",
-        must_play_count: prefs['must_play']&.size || 0,
-        do_not_play_count: prefs['do_not_play']&.size || 0
-      }
-    else
-      render json: { success: false, error: "No se pudieron guardar las preferencias." }, status: :unprocessable_entity
     end
   end
 

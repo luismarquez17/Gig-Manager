@@ -200,23 +200,6 @@ class Gig < ApplicationRecord
     upsells
   end
 
-  # Helpers para el Repertorio Musical del Evento
-  def must_play_ids
-    (music_preferences || {})['must_play'] || []
-  end
-
-  def do_not_play_ids
-    (music_preferences || {})['do_not_play'] || []
-  end
-
-  def special_moments
-    (music_preferences || {})['special_moments'] || {}
-  end
-
-  def custom_song_requests
-    (music_preferences || {})['custom_requests'] || []
-  end
-
   def average_review_rating
     approved = gig_reviews.approved
     return 0 if approved.empty?

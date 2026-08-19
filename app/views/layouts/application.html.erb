@@ -275,10 +275,6 @@
                 <span class="icon">🚀</span> <span>Adicionales (Upsells)</span>
               <% end %>
 
-              <%= link_to songs_path, class: "sidebar-link #{'active' if controller_name == 'songs'}" do %>
-                <span class="icon">🎵</span> <span>Repertorio Musical</span>
-              <% end %>
-
               <% if current_company.present? %>
                 <%= link_to band_landing_path(slug: current_company.slug), target: "_blank", class: "sidebar-link" do %>
                   <span class="icon">🌐</span> <span>Mi Landing Pública ↗</span>

@@ -30,8 +30,8 @@
         <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Puntualidad &amp; Show</div>
       </div>
       <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #c084fc;">+<%= @sample_songs.count > 0 ? @sample_songs.count : 50 %></div>
-        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Canciones en Repertorio</div>
+        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #c084fc;">Top Live</div>
+        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Show Enérgico &amp; Pro</div>
       </div>
     </div>
   </section>
@@ -275,35 +275,7 @@
     </div>
   </section>
 
-  <%# --- 4. REPERTORIO DESTACADO --- %>
-  <section id="repertorio" style="padding: 40px 0 70px;">
-    <div style="text-align: center; margin-bottom: 35px;">
-      <span class="section-badge">Canciones &amp; Estilos</span>
-      <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Repertorio para Todos los Gustos</h2>
-      <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Desde baladas para tu primer baile hasta los éxitos más bailables de la fiesta.</p>
-    </div>
-
-    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 900px; margin: 0 auto;">
-      <% if @sample_songs.any? %>
-        <% @sample_songs.each do |song| %>
-          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 16px; border-radius: 99px; font-size: 0.88em; display: flex; align-items: center; gap: 8px;">
-            <span>🎵</span>
-            <strong><%= song.title %></strong>
-            <span style="color: var(--text-muted); font-size: 0.8em;">• <%= song.artist.presence || song.genre %></span>
-          </div>
-        <% end %>
-      <% else %>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 De Música Ligera • Soda Stereo</div>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Uptown Funk • Bruno Mars</div>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Vivir Mi Vida • Marc Anthony</div>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Perfect • Ed Sheeran</div>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Danza Kuduro • Don Omar</div>
-        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Sweet Child O' Mine • Guns N' Roses</div>
-      <% end %>
-    </div>
-  </section>
-
-  <%# --- 5. EQUIPO DE MÚSICOS & TALENTO --- %>
+  <%# --- 4. EQUIPO DE MÚSICOS & TALENTO --- %>
   <% if @staff_members.any? %>
     <section id="equipo" style="padding: 40px 0 70px;">
       <div style="text-align: center; margin-bottom: 35px;">

@@ -12,7 +12,6 @@ class Company < ApplicationRecord
   has_many :shopping_items, dependent: :destroy
   has_many :finance_settings, dependent: :destroy
   has_many :employee_payments, dependent: :destroy
-  has_many :songs, dependent: :destroy
   has_many :gig_reviews, through: :gigs
 
   validates :name, presence: true
