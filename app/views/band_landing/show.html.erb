@@ -1,0 +1,517 @@
+<div class="landing-container">
+
+  <%# --- 1. HERO SECTION --- %>
+  <section id="hero" style="text-align: center; padding: 60px 0 80px; position: relative;">
+    <div class="section-badge">✨ Experiencia Musical de Alto Nivel</div>
+    <h1 class="gradient-title" style="font-size: clamp(2.4em, 6vw, 4.2em); line-height: 1.1; margin: 0 0 20px 0; max-width: 900px; margin-left: auto; margin-right: auto;">
+      La Mejor Música en Vivo para tu Boda o Evento
+    </h1>
+    <p style="font-size: clamp(1.05em, 2.5vw, 1.25em); color: var(--text-muted); max-width: 680px; margin: 0 auto 35px; line-height: 1.6;">
+      Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en <strong><%= @company.name %></strong>.
+    </p>
+
+    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
+      <a href="#cotizador" class="btn-cta-primary">
+        <span>⚡</span> Simular Mi Presupuesto en Vivo
+      </a>
+      <a href="#paquetes" class="btn-cta-secondary">
+        <span>📦</span> Ver Paquetes Base
+      </a>
+    </div>
+
+    <%# Métricas / Social Proof %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; max-width: 800px; margin: 0 auto;">
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
+        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #fbbf24;">★ <%= @rating %></div>
+        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Calificación de Clientes</div>
+      </div>
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
+        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #34d399;">100%</div>
+        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Puntualidad &amp; Show</div>
+      </div>
+      <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
+        <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #c084fc;">+<%= @sample_songs.count > 0 ? @sample_songs.count : 50 %></div>
+        <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Canciones en Repertorio</div>
+      </div>
+    </div>
+  </section>
+
+  <%# --- 2. PAQUETES DESTACADOS (PRESET BUDGETS) --- %>
+  <section id="paquetes" style="padding: 40px 0 70px;">
+    <div style="text-align: center; margin-bottom: 40px;">
+      <span class="section-badge">Nuestros Paquetes</span>
+      <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Opciones Listas para Celebrar</h2>
+      <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Elige una configuración prediseñada o personaliza cada detalle en nuestro cotizador.</p>
+    </div>
+
+    <% if @preset_budgets.any? %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+        <% @preset_budgets.each do |preset| %>
+          <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between; border-color: rgba(139, 92, 246, 0.2); transition: transform 0.3s ease, border-color 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)'; this.style.borderColor='rgba(139,92,246,0.5)';" onmouseout="this.style.transform='none'; this.style.borderColor='rgba(139,92,246,0.2)';">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+                <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800; color: var(--text-main);">
+                  <%= preset.title %>
+                </h3>
+              </div>
+
+              <div style="margin: 15px 0 20px 0;">
+                <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">
+                  <%= number_to_currency(preset.price, unit: preset.currency == "USD" ? "$" : "Bs. ", precision: 0) %>
+                </span>
+                <span style="color: var(--text-muted); font-size: 0.9em;"><%= preset.currency %></span>
+              </div>
+
+              <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6; margin: 0 0 20px 0; white-space: pre-line;">
+                <%= preset.description %>
+              </p>
+            </div>
+
+            <% 
+              wa_text = "Hola! Me interesa el paquete \"#{preset.title}\" por #{preset.price.to_i} #{preset.currency} para mi evento. ¿Tienen disponibilidad?"
+              wa_link = "https://wa.me/584140000000?text=#{ERB::Util.url_encode(wa_text)}"
+            %>
+            <a href="<%= wa_link %>" target="_blank" class="btn-cta-primary" style="width: 100%; justify-content: center; text-decoration: none; margin-top: 15px;">
+              <span>💬</span> Consultar Disponibilidad
+            </a>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <%# Paquetes de demostración por defecto %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
+        <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Formato Acústico / Íntimo</h3>
+            <div style="margin: 15px 0 20px 0;">
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$450</span>
+              <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
+            </div>
+            <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
+              • Dúo / Trío Acústico (Voz, Guitarra/Piano, Percusión)<br>
+              • 2 Horas de Música en Vivo<br>
+              • Sonido para hasta 80 personas<br>
+              • Ideal para recepciones, cócteles o cenas.
+            </p>
+          </div>
+          <a href="#cotizador" class="btn-cta-primary" style="justify-content: center; text-decoration: none;">Cotizar Este Formato</a>
+        </div>
+
+        <div class="glass-box" style="border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 0 30px rgba(139, 92, 246, 0.2); display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <span style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; text-transform: uppercase;">Más Popular</span>
+            <h3 style="margin: 8px 0 0 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Banda Completa Fiesta</h3>
+            <div style="margin: 15px 0 20px 0;">
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$850</span>
+              <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
+            </div>
+            <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
+              • Banda Completa 5 integrantes (Vocalistas, Bajo, Batería, Teclados, Guitarra)<br>
+              • 3 Horas de Show Bailable &amp; Pop/Rock<br>
+              • Sonido e Iluminación LED Automatizada<br>
+              • Repertorio 100% interactivo.
+            </p>
+          </div>
+          <a href="#cotizador" class="btn-cta-primary" style="justify-content: center; text-decoration: none;">Cotizar Este Formato</a>
+        </div>
+
+        <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Show Premium Big Band</h3>
+            <div style="margin: 15px 0 20px 0;">
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$1,400</span>
+              <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
+            </div>
+            <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
+              • Banda 8+ músicos (Incluye sección de Metales: Trompeta &amp; Saxo)<br>
+              • 4 Horas de Show Continuo<br>
+              • Efectos Especiales (Chispas Frías &amp; Humo)<br>
+              • Experiencia VIP de boda y gala corporativa.
+            </p>
+          </div>
+          <a href="#cotizador" class="btn-cta-primary" style="justify-content: center; text-decoration: none;">Cotizar Este Formato</a>
+        </div>
+      </div>
+    <% end %>
+  </section>
+
+  <%# --- 3. SIMULADOR / COTIZADOR VISUAL EN VIVO --- %>
+  <section id="cotizador" style="padding: 40px 0 80px;">
+    <div class="glass-box" style="border: 2px solid rgba(139, 92, 246, 0.35); box-shadow: 0 12px 50px rgba(139, 92, 246, 0.15);">
+      <div style="text-align: center; margin-bottom: 35px;">
+        <span class="section-badge">Calculadora en Vivo</span>
+        <h2 class="gradient-title" style="font-size: 2.4em; margin: 0;">Simula tu Presupuesto al Instante</h2>
+        <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Juega con las opciones y calcula el valor estimado de tu evento en tiempo real.</p>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 35px; align-items: start;">
+        
+        <%# Controles del Simulador %>
+        <div>
+          <%# 1. Formato de Banda %>
+          <div style="margin-bottom: 25px;">
+            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;">
+              1. Selecciona el Formato de la Agrupación
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
+              <div class="sim-pill active" onclick="selectBandFormat('acoustic', 400, 'Acústico (2 Músicos)', this)">
+                <div style="font-size: 1.4em;">🎻</div>
+                <strong>Acústico</strong>
+                <span style="font-size: 0.75em; color: var(--text-muted); display: block;">Dúo / Trío</span>
+              </div>
+              <div class="sim-pill" onclick="selectBandFormat('full_band', 750, 'Banda Completa (5 Músicos)', this)">
+                <div style="font-size: 1.4em;">🎸</div>
+                <strong>Banda Completa</strong>
+                <span style="font-size: 0.75em; color: var(--text-muted); display: block;">5 Músicos</span>
+              </div>
+              <div class="sim-pill" onclick="selectBandFormat('big_band', 1200, 'Big Band con Metales (8+ Músicos)', this)">
+                <div style="font-size: 1.4em;">🎺</div>
+                <strong>Big Band</strong>
+                <span style="font-size: 0.75em; color: var(--text-muted); display: block;">Metales &amp; Show</span>
+              </div>
+            </div>
+          </div>
+
+          <%# 2. Horas de Show %>
+          <div style="margin-bottom: 25px;">
+            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;">
+              2. Duración del Show: <span id="hours-display" style="color: white; font-size: 1.1em;">2 Horas</span>
+            </label>
+            <input type="range" id="hours-slider" min="1" max="5" value="2" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateHours(this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-muted); font-weight: 700; margin-top: 6px;">
+              <span>1 Hora</span>
+              <span>2 Horas</span>
+              <span>3 Horas</span>
+              <span>4 Horas</span>
+              <span>5 Horas</span>
+            </div>
+          </div>
+
+          <%# 3. Efectos y Adicionales %>
+          <div style="margin-bottom: 25px;">
+            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: #a78bfa; margin-bottom: 12px;">
+              3. Añade Efectos Especiales &amp; Producción
+            </label>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
+              <div class="sim-addon-card" onclick="toggleAddon(this, 'Chispas Frías (Pirotecnia Fría)', 120)">
+                <input type="checkbox" style="accent-color: var(--primary);">
+                <div>
+                  <strong style="display: block; font-size: 0.9em;">✨ Chispas Frías</strong>
+                  <span style="font-size: 0.8em; color: #34d399;">+$120 USD</span>
+                </div>
+              </div>
+              <div class="sim-addon-card" onclick="toggleAddon(this, 'Máquina de Humo / Geiser', 60)">
+                <input type="checkbox" style="accent-color: var(--primary);">
+                <div>
+                  <strong style="display: block; font-size: 0.9em;">💨 Máquina de Humo</strong>
+                  <span style="font-size: 0.8em; color: #34d399;">+$60 USD</span>
+                </div>
+              </div>
+              <div class="sim-addon-card" onclick="toggleAddon(this, 'Subwoofers / Refuerzo Sonoro', 100)">
+                <input type="checkbox" style="accent-color: var(--primary);">
+                <div>
+                  <strong style="display: block; font-size: 0.9em;">🔊 Subwoofers Extra</strong>
+                  <span style="font-size: 0.8em; color: #34d399;">+$100 USD</span>
+                </div>
+              </div>
+              <div class="sim-addon-card" onclick="toggleAddon(this, 'Luces Robóticas / Cabezas Móviles', 150)">
+                <input type="checkbox" style="accent-color: var(--primary);">
+                <div>
+                  <strong style="display: block; font-size: 0.9em;">💡 Iluminación Robótica</strong>
+                  <span style="font-size: 0.8em; color: #34d399;">+$150 USD</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <%# Fecha y Ubicación Opcionales %>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Fecha Tentativa</label>
+              <input type="date" id="sim-date" class="form-input" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;" onchange="updateSummary()">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Ciudad o Lugar</label>
+              <input type="text" id="sim-location" placeholder="Ej: Caracas / San Cristóbal" class="form-input" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;" oninput="updateSummary()">
+            </div>
+          </div>
+        </div>
+
+        <%# Resumen de Cotización en Vivo %>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 20px; padding: 25px; position: sticky; top: 90px;">
+          <h3 style="margin: 0 0 15px 0; font-family: var(--font-outfit); font-size: 1.2em; font-weight: 800; color: white;">
+            📋 Resumen de tu Presupuesto
+          </h3>
+
+          <div style="display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 15px; margin-bottom: 15px; font-size: 0.92em;">
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);" id="sum-format-name">Acústico (2 Músicos)</span>
+              <strong id="sum-format-price">$400 USD</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);" id="sum-hours-name">2 Horas de Música</span>
+              <strong id="sum-hours-price">Incluidas</strong>
+            </div>
+            <div id="sum-addons-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
+            <span style="font-size: 1em; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Estimado:</span>
+            <div style="text-align: right;">
+              <span style="font-family: var(--font-outfit); font-size: 2.4em; font-weight: 900; color: #34d399;" id="sim-total-price">$400</span>
+              <span style="font-size: 0.9em; color: var(--text-muted);">USD</span>
+            </div>
+          </div>
+
+          <a id="btn-whatsapp-quote" href="#" target="_blank" class="btn-cta-primary" style="width: 100%; justify-content: center; text-decoration: none; padding: 14px; background: linear-gradient(135deg, #25d366 0%, #128c7e 100%);">
+            <span>💬</span> Reservar por WhatsApp
+          </a>
+          <p style="text-align: center; font-size: 0.75em; color: var(--text-muted); margin: 10px 0 0 0;">
+            Te atenderemos de inmediato para confirmar disponibilidad.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <%# --- 4. REPERTORIO DESTACADO --- %>
+  <section id="repertorio" style="padding: 40px 0 70px;">
+    <div style="text-align: center; margin-bottom: 35px;">
+      <span class="section-badge">Canciones &amp; Estilos</span>
+      <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Repertorio para Todos los Gustos</h2>
+      <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Desde baladas para tu primer baile hasta los éxitos más bailables de la fiesta.</p>
+    </div>
+
+    <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 900px; margin: 0 auto;">
+      <% if @sample_songs.any? %>
+        <% @sample_songs.each do |song| %>
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 8px 16px; border-radius: 99px; font-size: 0.88em; display: flex; align-items: center; gap: 8px;">
+            <span>🎵</span>
+            <strong><%= song.title %></strong>
+            <span style="color: var(--text-muted); font-size: 0.8em;">• <%= song.artist.presence || song.genre %></span>
+          </div>
+        <% end %>
+      <% else %>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 De Música Ligera • Soda Stereo</div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Uptown Funk • Bruno Mars</div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Vivir Mi Vida • Marc Anthony</div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Perfect • Ed Sheeran</div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Danza Kuduro • Don Omar</div>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); padding: 10px 18px; border-radius: 99px;">🎵 Sweet Child O' Mine • Guns N' Roses</div>
+      <% end %>
+    </div>
+  </section>
+
+  <%# --- 5. EQUIPO DE MÚSICOS & TALENTO --- %>
+  <% if @staff_members.any? %>
+    <section id="equipo" style="padding: 40px 0 70px;">
+      <div style="text-align: center; margin-bottom: 35px;">
+        <span class="section-badge">Músicos &amp; Producción</span>
+        <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Conoce a los Artistas en Tarima</h2>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
+        <% @staff_members.each do |staff| %>
+          <div class="glass-box" style="text-align: center; padding: 24px;">
+            <% if staff.avatar_attached? %>
+              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; overflow: hidden; border: 3px solid rgba(139, 92, 246, 0.4); box-shadow: 0 0 18px rgba(139, 92, 246, 0.2);">
+                <%= image_tag staff.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
+              </div>
+            <% else %>
+              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 1.8em; font-weight: 800; color: white; border: 3px solid rgba(139, 92, 246, 0.4);">
+                <%= staff.display_name[0].upcase %>
+              </div>
+            <% end %>
+            <h4 style="margin: 0 0 4px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 700; color: white;"><%= staff.display_name %></h4>
+            <% if staff.specialty.present? %>
+              <span style="display: inline-block; background: rgba(139, 92, 246, 0.15); color: #c084fc; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 800; text-transform: uppercase;">
+                <%= staff.specialty %>
+              </span>
+            <% end %>
+            <% if staff.bio.present? %>
+              <p style="margin: 10px 0 0 0; font-size: 0.85em; color: var(--text-muted); line-height: 1.4;">
+                <%= staff.bio %>
+              </p>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </section>
+  <% end %>
+
+  <%# --- 6. TESTIMONIOS & RESEÑAS 5 ESTRELLAS --- %>
+  <section id="resenas" style="padding: 40px 0 80px;">
+    <div style="text-align: center; margin-bottom: 35px;">
+      <span class="section-badge">Opiniones Reales</span>
+      <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Lo que Dicen Quienes ya Celebraron con Nosotros</h2>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+      <% if @reviews.any? %>
+        <% @reviews.each do |review| %>
+          <div class="glass-box" style="padding: 24px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+              <strong style="color: white; font-size: 1.05em;"><%= review.client_name %></strong>
+              <span style="color: #fbbf24;"><%= review.stars_display %></span>
+            </div>
+            <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5; font-style: italic;">
+              "<%= review.comment %>"
+            </p>
+          </div>
+        <% end %>
+      <% else %>
+        <div class="glass-box" style="padding: 24px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: white; font-size: 1.05em;">María &amp; Carlos (Boda)</strong>
+            <span style="color: #fbbf24;">★★★★★</span>
+          </div>
+          <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5; font-style: italic;">
+            "¡Increíble la energía de la banda! Todos nuestros invitados bailaron hasta el final. La puntualidad y el sonido fueron perfectos."
+          </p>
+        </div>
+        <div class="glass-box" style="padding: 24px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: white; font-size: 1.05em;">Alejandro G. (Corporativo)</strong>
+            <span style="color: #fbbf24;">★★★★★</span>
+          </div>
+          <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5; font-style: italic;">
+            "Excelente repertorio y sonido impecable para nuestro evento de fin de año. 100% recomendados."
+          </p>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
+</div>
+
+<%# --- ESTILOS DEL SIMULADOR --- %>
+<style>
+  .sim-pill {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 14px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .sim-pill:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+  .sim-pill.active {
+    background: rgba(139, 92, 246, 0.15);
+    border-color: var(--primary);
+    box-shadow: 0 0 15px var(--primary-glow);
+  }
+
+  .sim-addon-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .sim-addon-card:hover {
+    border-color: rgba(139, 92, 246, 0.3);
+  }
+  .sim-addon-card.active {
+    background: rgba(139, 92, 246, 0.12);
+    border-color: var(--primary);
+  }
+</style>
+
+<%# --- JAVASCRIPT DEL SIMULADOR EN VIVO --- %>
+<script>
+  let baseFormatPrice = 400;
+  let baseFormatName = "Acústico (2 Músicos)";
+  let selectedHours = 2;
+  let activeAddons = [];
+
+  function selectBandFormat(key, price, name, element) {
+    document.querySelectorAll('.sim-pill').forEach(el => el.classList.remove('active'));
+    element.classList.add('active');
+    baseFormatPrice = price;
+    baseFormatName = name;
+    updateSummary();
+  }
+
+  function updateHours(hours) {
+    selectedHours = parseInt(hours);
+    document.getElementById('hours-display').textContent = `${hours} ${hours === '1' ? 'Hora' : 'Horas'}`;
+    updateSummary();
+  }
+
+  function toggleAddon(element, addonName, addonPrice) {
+    const checkbox = element.querySelector('input[type="checkbox"]');
+    checkbox.checked = !checkbox.checked;
+    
+    if (checkbox.checked) {
+      element.classList.add('active');
+      activeAddons.push({ name: addonName, price: addonPrice });
+    } else {
+      element.classList.remove('active');
+      activeAddons = activeAddons.filter(a => a.name !== addonName);
+    }
+    updateSummary();
+  }
+
+  function updateSummary() {
+    document.getElementById('sum-format-name').textContent = baseFormatName;
+    document.getElementById('sum-format-price').textContent = `$${baseFormatPrice} USD`;
+
+    // Cálculo por horas extra (si pasa de 2 horas se añade suplemento de $100/hora extra)
+    let extraHoursCost = 0;
+    if (selectedHours > 2) {
+      extraHoursCost = (selectedHours - 2) * 120;
+      document.getElementById('sum-hours-name').textContent = `${selectedHours} Horas (+${selectedHours - 2}h extra)`;
+      document.getElementById('sum-hours-price').textContent = `+$${extraHoursCost} USD`;
+    } else {
+      document.getElementById('sum-hours-name').textContent = `${selectedHours} ${selectedHours === 1 ? 'Hora' : 'Horas'}`;
+      document.getElementById('sum-hours-price').textContent = selectedHours === 1 ? "-$50 USD" : "Incluidas";
+      if (selectedHours === 1) extraHoursCost = -50;
+    }
+
+    // Adicionales
+    const addonsContainer = document.getElementById('sum-addons-list');
+    addonsContainer.innerHTML = '';
+    let addonsTotal = 0;
+
+    activeAddons.forEach(addon => {
+      addonsTotal += addon.price;
+      const row = document.createElement('div');
+      row.style.display = 'flex';
+      row.style.justifyContent = 'space-between';
+      row.innerHTML = `<span style="color: var(--text-muted);">${addon.name}</span><strong>+$${addon.price} USD</strong>`;
+      addonsContainer.appendChild(row);
+    });
+
+    const total = baseFormatPrice + extraHoursCost + addonsTotal;
+    document.getElementById('sim-total-price').textContent = `$${total}`;
+
+    // Construir mensaje de WhatsApp
+    const dateVal = document.getElementById('sim-date').value || "Por definir";
+    const locVal = document.getElementById('sim-location').value || "Por confirmar";
+    
+    let addonsText = activeAddons.length > 0 ? activeAddons.map(a => a.name).join(", ") : "Ninguno";
+    
+    let waMsg = `¡Hola <%= @company.name %>! Estuve calculando en su cotizador web y me gustaría reservar:\n` +
+      `• Formato: ${baseFormatName}\n` +
+      `• Duración: ${selectedHours} horas\n` +
+      `• Efectos/Adicionales: ${addonsText}\n` +
+      `• Fecha tentativa: ${dateVal}\n` +
+      `• Ciudad/Lugar: ${locVal}\n` +
+      `• Presupuesto estimado: $${total} USD\n\n` +
+      `¿Tienen disponibilidad para esta fecha?`;
+
+    const waBtn = document.getElementById('btn-whatsapp-quote');
+    waBtn.href = `https://wa.me/584140000000?text=${encodeURIComponent(waMsg)}`;
+  }
+
+  // Inicializar cálculo
+  updateSummary();
+</script>

@@ -174,6 +174,128 @@
       }
     </script>
 
+    <%# --- PREFERENCIAS DE REPERTORIO MUSICAL & RESEÑAS DEL EVENTO --- %>
+    <%
+      must_play_songs = Song.where(id: @gig.must_play_ids)
+      do_not_play_songs = Song.where(id: @gig.do_not_play_ids)
+      special_moments = @gig.special_moments
+      custom_requests = @gig.custom_song_requests
+      has_music_prefs = must_play_songs.any? || do_not_play_songs.any? || special_moments.values.any?(&:present?) || custom_requests.any?
+      gig_reviews = @gig.gig_reviews.approved
+    %>
+    <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; padding: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
+        <h3 style="margin: 0; color: #1e293b; font-size: 1.15em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>🎵</span> Preferencias de Repertorio del Cliente
+        </h3>
+        <% if has_music_prefs %>
+          <span style="background: #dcfce7; color: #166534; font-size: 0.78em; padding: 4px 12px; border-radius: 99px; font-weight: 800;">
+            ✓ Cliente ha seleccionado temas
+          </span>
+        <% else %>
+          <span style="background: #f1f5f9; color: #64748b; font-size: 0.78em; padding: 4px 12px; border-radius: 99px; font-weight: 700;">
+            Pendiente de selección por cliente
+          </span>
+        <% end %>
+      </div>
+
+      <% if has_music_prefs %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+          
+          <%# Must-Play %>
+          <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 14px; padding: 16px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 0.95em; font-weight: 800; color: #b45309; display: flex; align-items: center; gap: 6px;">
+              <span>⭐️</span> Canciones Favoritas (Must-Play) - <%= must_play_songs.count %>
+            </h4>
+            <% if must_play_songs.any? %>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <% must_play_songs.each do |s| %>
+                  <div style="background: white; border-radius: 8px; padding: 6px 10px; font-size: 0.88em; font-weight: 700; color: #0f172a; border: 1px solid #fde68a;">
+                    🎵 <%= s.title %> <span style="font-size: 0.8em; color: #64748b; font-weight: normal;">• <%= s.artist %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <p style="margin: 0; font-size: 0.85em; color: #92400e; font-style: italic;">No seleccionó favoritas aún.</p>
+            <% end %>
+          </div>
+
+          <%# Do Not Play %>
+          <div style="background: #fff1f2; border: 1px solid #ffe4e6; border-radius: 14px; padding: 16px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 0.95em; font-weight: 800; color: #be123c; display: flex; align-items: center; gap: 6px;">
+              <span>🚫</span> Canciones Vetadas (Do Not Play) - <%= do_not_play_songs.count %>
+            </h4>
+            <% if do_not_play_songs.any? %>
+              <div style="display: flex; flex-direction: column; gap: 6px;">
+                <% do_not_play_songs.each do |s| %>
+                  <div style="background: white; border-radius: 8px; padding: 6px 10px; font-size: 0.88em; font-weight: 700; color: #0f172a; border: 1px solid #fecdd3;">
+                    🚫 <%= s.title %> <span style="font-size: 0.8em; color: #64748b; font-weight: normal;">• <%= s.artist %></span>
+                  </div>
+                <% end %>
+              </div>
+            <% else %>
+              <p style="margin: 0; font-size: 0.85em; color: #9f1239; font-style: italic;">No vetó ninguna canción.</p>
+            <% end %>
+          </div>
+
+          <%# Momentos Especiales & Sugerencias %>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
+            <h4 style="margin: 0 0 10px 0; font-size: 0.95em; font-weight: 800; color: #334155; display: flex; align-items: center; gap: 6px;">
+              <span>💍</span> Momentos &amp; Pedidos Especiales
+            </h4>
+            <div style="display: grid; gap: 8px; font-size: 0.88em;">
+              <% if special_moments['entrance'].present? %>
+                <div><strong>Entrada:</strong> <%= special_moments['entrance'] %></div>
+              <% end %>
+              <% if special_moments['first_dance'].present? %>
+                <div><strong>Primer Baile:</strong> <%= special_moments['first_dance'] %></div>
+              <% end %>
+              <% if special_moments['peak'].present? %>
+                <div><strong>Hora Loca / Cumbre:</strong> <%= special_moments['peak'] %></div>
+              <% end %>
+              <% if custom_requests.any? %>
+                <div style="margin-top: 6px; border-top: 1px dashed #cbd5e1; padding-top: 6px;">
+                  <strong>✍️ Temas Adicionales Pedidos:</strong>
+                  <div style="display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px;">
+                    <% custom_requests.each do |req| %>
+                      <span style="background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 6px; font-size: 0.82em; font-weight: 600;"><%= req %></span>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+        </div>
+      <% else %>
+        <p style="color: #64748b; font-size: 0.92em; margin: 0;">
+          El cliente aún no ha completado sus preferencias musicales en el portal. Al ingresar, sus elecciones aparecerán aquí automáticamente.
+        </p>
+      <% end %>
+
+      <%# Reseñas del evento %>
+      <% if gig_reviews.any? %>
+        <div style="margin-top: 25px; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
+          <h4 style="margin: 0 0 12px 0; font-size: 1em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span>📸</span> Reseñas Recibidas en el Muro (<%= gig_reviews.count %>)
+          </h4>
+          <div style="display: grid; gap: 10px;">
+            <% gig_reviews.each do |r| %>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <strong style="color: #0f172a; font-size: 0.95em;"><%= r.client_name %></strong>
+                  <span style="color: #f59e0b; font-size: 1em;"><%= r.stars_display %></span>
+                </div>
+                <p style="margin: 0; color: #475569; font-size: 0.9em; font-style: italic;">
+                  "<%= r.comment %>"
+                </p>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
     <%# --- PERSONALIZACIÓN Y ACTIVACIÓN DE ADICIONALES (UPSELLS) PARA ESTE EVENTO (DESPLEGABLE) --- %>
     <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; overflow: hidden;">
       

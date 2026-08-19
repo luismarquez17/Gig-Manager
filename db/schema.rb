@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_19_181500) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -52,11 +52,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   create_table "clients", force: :cascade do |t|
     t.string "name"
     t.string "phone"
-    t.string "email"
+    t.string "notes"
     t.integer "priority"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "notes"
+    t.string "email"
     t.bigint "company_id"
     t.index ["company_id"], name: "index_clients_on_company_id"
   end
@@ -139,8 +139,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   create_table "gig_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.bigint "item_id", null: false
-    t.integer "quantity"
-    t.boolean "checked"
+    t.integer "quantity", default: 1
+    t.boolean "checked", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "loaded_quantity", default: 0, null: false
@@ -162,6 +162,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
+  end
+
+  create_table "gig_reviews", force: :cascade do |t|
+    t.bigint "gig_id", null: false
+    t.string "client_name"
+    t.integer "rating", default: 5, null: false
+    t.text "comment"
+    t.boolean "is_client", default: false, null: false
+    t.boolean "approved", default: true, null: false
+    t.boolean "pinned", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id", "approved"], name: "index_gig_reviews_on_gig_id_and_approved"
+    t.index ["gig_id"], name: "index_gig_reviews_on_gig_id"
   end
 
   create_table "gig_timeline_items", force: :cascade do |t|
@@ -195,10 +209,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.time "end_time"
     t.jsonb "custom_upsells", default: {}
     t.bigint "company_id"
+    t.jsonb "music_preferences", default: {}
     t.index ["client_email"], name: "index_gigs_on_client_email"
     t.index ["client_id"], name: "index_gigs_on_client_id"
     t.index ["company_id"], name: "index_gigs_on_company_id"
     t.index ["portal_token"], name: "index_gigs_on_portal_token", unique: true
+  end
+
+  create_table "inquiries", force: :cascade do |t|
+    t.string "name"
+    t.string "email"
+    t.string "phone"
+    t.text "message"
+    t.bigint "preset_budget_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["preset_budget_id"], name: "index_inquiries_on_preset_budget_id"
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -303,6 +329,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.index ["status"], name: "index_shopping_items_on_status"
   end
 
+  create_table "songs", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "title", null: false
+    t.string "artist"
+    t.string "genre", default: "General"
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "genre"], name: "index_songs_on_company_id_and_genre"
+    t.index ["company_id"], name: "index_songs_on_company_id"
+  end
+
   create_table "staff_assignments", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "gig_id", null: false
@@ -371,9 +409,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   add_foreign_key "gig_items", "gigs"
   add_foreign_key "gig_items", "items"
   add_foreign_key "gig_payments", "gigs"
+  add_foreign_key "gig_reviews", "gigs"
   add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
   add_foreign_key "gigs", "clients"
   add_foreign_key "gigs", "companies"
+  add_foreign_key "inquiries", "preset_budgets"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "investments", "companies"
   add_foreign_key "items", "companies"
@@ -385,6 +425,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   add_foreign_key "maintenance_records", "items"
   add_foreign_key "preset_budgets", "companies"
   add_foreign_key "shopping_items", "companies"
+  add_foreign_key "songs", "companies"
   add_foreign_key "staff_assignments", "gigs"
   add_foreign_key "staff_assignments", "users"
   add_foreign_key "standard_upsells", "companies"

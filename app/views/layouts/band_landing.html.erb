@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= @company.name %> | Música en Vivo &amp; Producción para Eventos</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Contrata a <%= @company.name %> para tu boda, fiesta corporativa o evento especial. Cotiza en línea en menos de 1 minuto.">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --primary: #8b5cf6;
+        --primary-hover: #7c3aed;
+        --primary-glow: rgba(139, 92, 246, 0.35);
+        --accent-cyan: #06b6d4;
+        --accent-glow: rgba(6, 182, 212, 0.25);
+        --success: #10b981;
+        --warning: #f59e0b;
+        --bg-dark: #07090e;
+        --card-bg: rgba(15, 23, 42, 0.65);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-border-hover: rgba(139, 92, 246, 0.4);
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --font-outfit: 'Outfit', sans-serif;
+        --font-body: 'Plus Jakarta Sans', sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--bg-dark);
+        background-image: 
+          radial-gradient(circle at 15% 15%, rgba(139, 92, 246, 0.12) 0%, transparent 45%),
+          radial-gradient(circle at 85% 65%, rgba(6, 182, 212, 0.09) 0%, transparent 50%),
+          radial-gradient(circle at 50% 90%, rgba(244, 63, 94, 0.06) 0%, transparent 40%);
+        background-attachment: fixed;
+        color: var(--text-main);
+        font-family: var(--font-body);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      /* Navbar */
+      .landing-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 70px;
+        background: rgba(7, 9, 14, 0.75);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 30px;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: white;
+        font-family: var(--font-outfit);
+        font-size: 1.3em;
+        font-weight: 800;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .nav-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.92em;
+        transition: color 0.2s ease;
+      }
+      .nav-link:hover {
+        color: white;
+      }
+
+      .btn-nav-cta {
+        background: linear-gradient(135deg, var(--primary) 0%, #06b6d4 100%);
+        color: white;
+        text-decoration: none;
+        padding: 9px 20px;
+        border-radius: 99px;
+        font-weight: 700;
+        font-size: 0.88em;
+        box-shadow: 0 4px 15px var(--primary-glow);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn-nav-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--primary-glow);
+      }
+
+      @media (max-width: 768px) {
+        .landing-nav {
+          padding: 0 16px;
+        }
+        .nav-links .nav-link {
+          display: none;
+        }
+      }
+
+      /* Container */
+      .landing-container {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 100px 20px 60px;
+      }
+
+      /* Glass Cards */
+      .glass-box {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Typography */
+      .gradient-title {
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, #a78bfa 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-family: var(--font-outfit);
+        font-weight: 900;
+        letter-spacing: -1px;
+      }
+
+      .section-badge {
+        background: rgba(139, 92, 246, 0.12);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        color: #c084fc;
+        padding: 6px 16px;
+        border-radius: 99px;
+        font-size: 0.8em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+
+      /* Buttons */
+      .btn-cta-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 1.05em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 6px 20px var(--primary-glow);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn-cta-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 26px var(--primary-glow);
+      }
+
+      .btn-cta-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 14px 26px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1.05em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+      }
+      .btn-cta-secondary:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.2); }
+      ::-webkit-scrollbar-thumb { background: rgba(139, 92, 246, 0.3); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: rgba(139, 92, 246, 0.5); }
+    </style>
+  </head>
+  <body>
+    <%# Navigation %>
+    <nav class="landing-nav">
+      <a href="#hero" class="nav-brand">
+        <span style="font-size: 1.3em;">🎸</span>
+        <span><%= @company.name %></span>
+      </a>
+
+      <div class="nav-links">
+        <a href="#paquetes" class="nav-link">Paquetes</a>
+        <a href="#cotizador" class="nav-link">Simulador en Vivo</a>
+        <a href="#repertorio" class="nav-link">Repertorio</a>
+        <a href="#equipo" class="nav-link">Músicos</a>
+        <a href="#resenas" class="nav-link">Reseñas</a>
+        <a href="#cotizador" class="btn-nav-cta">⚡ Cotizar Ahora</a>
+      </div>
+    </nav>
+
+    <%= yield %>
+
+    <%# Footer %>
+    <footer style="border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 0.9em; background: rgba(0,0,0,0.3);">
+      <p style="margin: 0 0 8px 0;">
+        © <%= Date.today.year %> <strong><%= @company.name %></strong>. Todos los derechos reservados.
+      </p>
+      <p style="margin: 0; font-size: 0.8em; opacity: 0.7;">
+        Potenciado por <strong>Gig Manager</strong> • Gestión Inteligente para la Industria Musical
+      </p>
+    </footer>
+  </body>
+</html>

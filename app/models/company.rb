@@ -12,6 +12,8 @@ class Company < ApplicationRecord
   has_many :shopping_items, dependent: :destroy
   has_many :finance_settings, dependent: :destroy
   has_many :employee_payments, dependent: :destroy
+  has_many :songs, dependent: :destroy
+  has_many :gig_reviews, through: :gigs
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
@@ -46,6 +48,16 @@ class Company < ApplicationRecord
     else
       "bg-slate-500/10 text-slate-400 border-slate-500/20"
     end
+  end
+
+  def approved_reviews
+    gig_reviews.where(gig_reviews: { approved: true })
+  end
+
+  def average_rating
+    reviews = approved_reviews
+    return 5.0 if reviews.empty?
+    (reviews.average(:rating) || 5.0).to_f.round(1)
   end
 
   private

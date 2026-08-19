@@ -10,6 +10,7 @@ class Gig < ApplicationRecord
   has_many :employee_payments, dependent: :nullify
   has_many :fund_allocations, dependent: :destroy
   has_many :gig_timeline_items, dependent: :destroy
+  has_many :gig_reviews, dependent: :destroy
   
   validates :amount, presence: true
   validates :client_email, presence: true, if: -> { client_id.blank? }
@@ -197,6 +198,29 @@ class Gig < ApplicationRecord
     end
 
     upsells
+  end
+
+  # Helpers para el Repertorio Musical del Evento
+  def must_play_ids
+    (music_preferences || {})['must_play'] || []
+  end
+
+  def do_not_play_ids
+    (music_preferences || {})['do_not_play'] || []
+  end
+
+  def special_moments
+    (music_preferences || {})['special_moments'] || {}
+  end
+
+  def custom_song_requests
+    (music_preferences || {})['custom_requests'] || []
+  end
+
+  def average_review_rating
+    approved = gig_reviews.approved
+    return 0 if approved.empty?
+    (approved.average(:rating) || 0).to_f.round(1)
   end
 
   private

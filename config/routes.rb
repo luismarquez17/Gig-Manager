@@ -55,6 +55,18 @@ Rails.application.routes.draw do
   get '/portal/:token', to: 'portals#show', as: 'public_portal'
   get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
+  post '/portal/:token/music_preferences', to: 'portals#update_music_preferences', as: 'update_public_portal_music_preferences'
+  post '/portal/:token/submit_review', to: 'portals#submit_review', as: 'submit_public_portal_review'
+
+  # Micrositio Público y Cotizador Interactivo de la Agrupación
+  get '/b/:slug', to: 'band_landing#show', as: 'band_landing'
+  get '/b/:slug/quote', to: 'band_landing#quote', as: 'band_quote'
+
+  resources :songs, only: [:index, :create, :destroy] do
+    collection do
+      post :seed_defaults
+    end
+  end
 
   resources :gigs, only: [:index, :new, :create, :destroy, :show, :edit, :update] do
     member do
