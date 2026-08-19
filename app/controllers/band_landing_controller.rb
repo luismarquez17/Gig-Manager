@@ -14,8 +14,8 @@ class BandLandingController < ApplicationController
   end
 
   def quote
-    @preset_budgets = @company.preset_budgets.order(:price)
-    @standard_upsells = StandardUpsell.where(company: @company).presence || StandardUpsell.all_with_defaults.select(&:active)
+    # Redirige de forma transparente a la sección del cotizador dentro de la Landing Page
+    redirect_to band_landing_path(slug: @company.slug, anchor: 'cotizador')
   end
 
   private

@@ -84,7 +84,7 @@
           <div>
             <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Formato Acústico / Íntimo</h3>
             <div style="margin: 15px 0 20px 0;">
-              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$450</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$400</span>
               <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
@@ -94,7 +94,7 @@
               • Ideal para recepciones, cócteles o cenas.
             </p>
           </div>
-          <a href="#cotizador" class="btn-cta-primary" style="justify-content: center; text-decoration: none;">Cotizar Este Formato</a>
+          <button onclick="selectAndScrollToFormat('acoustic', 400, 'Acústico (2 Músicos)')" class="btn-cta-primary" style="justify-content: center; width: 100%;">⚡ Cotizar Este Formato</button>
         </div>
 
         <div class="glass-box" style="border-color: rgba(139, 92, 246, 0.4); box-shadow: 0 0 30px rgba(139, 92, 246, 0.2); display: flex; flex-direction: column; justify-content: space-between;">
@@ -102,34 +102,34 @@
             <span style="background: rgba(139, 92, 246, 0.2); color: #c084fc; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; text-transform: uppercase;">Más Popular</span>
             <h3 style="margin: 8px 0 0 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Banda Completa Fiesta</h3>
             <div style="margin: 15px 0 20px 0;">
-              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$850</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$750</span>
               <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
               • Banda Completa 5 integrantes (Vocalistas, Bajo, Batería, Teclados, Guitarra)<br>
-              • 3 Horas de Show Bailable &amp; Pop/Rock<br>
+              • 2 Horas de Show Bailable &amp; Pop/Rock<br>
               • Sonido e Iluminación LED Automatizada<br>
-              • Repertorio 100% interactivo.
+              • Montaje profesional completo.
             </p>
           </div>
-          <a href="#cotizador" class="btn-cta-primary" style="justify-content: center; text-decoration: none;">Cotizar Este Formato</a>
+          <button onclick="selectAndScrollToFormat('full_band', 750, 'Banda Completa (5 Músicos)')" class="btn-cta-primary" style="justify-content: center; width: 100%;">⚡ Cotizar Este Formato</button>
         </div>
 
         <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between;">
           <div>
             <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Show Premium Big Band</h3>
             <div style="margin: 15px 0 20px 0;">
-              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$1,400</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$1,200</span>
               <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
               • Banda 8+ músicos (Incluye sección de Metales: Trompeta &amp; Saxo)<br>
-              • 4 Horas de Show Continuo<br>
-              • Efectos Especiales (Chispas Frías &amp; Humo)<br>
-              • Experiencia VIP de boda y gala corporativa.
+              • 2 Horas de Show Continuo de Alto Impacto<br>
+              • Sonido para grandes aforos<br>
+              • Experiencia VIP para bodas y galas.
             </p>
           </div>
-          <a href="#cotizador" class="btn-cta-primary" style="justify-content: center; text-decoration: none;">Cotizar Este Formato</a>
+          <button onclick="selectAndScrollToFormat('big_band', 1200, 'Big Band con Metales (8+ Músicos)')" class="btn-cta-primary" style="justify-content: center; width: 100%;">⚡ Cotizar Este Formato</button>
         </div>
       </div>
     <% end %>
@@ -154,17 +154,17 @@
               1. Selecciona el Formato de la Agrupación
             </label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-              <div class="sim-pill active" onclick="selectBandFormat('acoustic', 400, 'Acústico (2 Músicos)', this)">
+              <div class="sim-pill active" data-format="acoustic" onclick="selectBandFormat('acoustic', 400, 'Acústico (2 Músicos)', this)">
                 <div style="font-size: 1.4em;">🎻</div>
                 <strong>Acústico</strong>
                 <span style="font-size: 0.75em; color: var(--text-muted); display: block;">Dúo / Trío</span>
               </div>
-              <div class="sim-pill" onclick="selectBandFormat('full_band', 750, 'Banda Completa (5 Músicos)', this)">
+              <div class="sim-pill" data-format="full_band" onclick="selectBandFormat('full_band', 750, 'Banda Completa (5 Músicos)', this)">
                 <div style="font-size: 1.4em;">🎸</div>
                 <strong>Banda Completa</strong>
                 <span style="font-size: 0.75em; color: var(--text-muted); display: block;">5 Músicos</span>
               </div>
-              <div class="sim-pill" onclick="selectBandFormat('big_band', 1200, 'Big Band con Metales (8+ Músicos)', this)">
+              <div class="sim-pill" data-format="big_band" onclick="selectBandFormat('big_band', 1200, 'Big Band con Metales (8+ Músicos)', this)">
                 <div style="font-size: 1.4em;">🎺</div>
                 <strong>Big Band</strong>
                 <span style="font-size: 0.75em; color: var(--text-muted); display: block;">Metales &amp; Show</span>
@@ -410,6 +410,17 @@
     baseFormatPrice = price;
     baseFormatName = name;
     updateSummary();
+  }
+
+  function selectAndScrollToFormat(key, price, name) {
+    const pill = document.querySelector(`.sim-pill[data-format="${key}"]`);
+    if (pill) {
+      selectBandFormat(key, price, name, pill);
+    }
+    const cotizadorSection = document.getElementById('cotizador');
+    if (cotizadorSection) {
+      cotizadorSection.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   function updateHours(hours) {
