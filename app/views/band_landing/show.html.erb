@@ -145,8 +145,12 @@
     <div class="glass-box" style="border: 2px solid var(--card-border-hover); box-shadow: 0 12px 50px var(--primary-glow);">
       <div style="text-align: center; margin-bottom: 35px;">
         <span class="section-badge">Calculadora en Vivo</span>
-        <h2 class="gradient-title" style="font-size: 2.4em; margin: 0;">Simula tu Presupuesto al Instante</h2>
-        <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Juega con las opciones y calcula el valor estimado de tu evento en tiempo real.</p>
+        <h2 class="gradient-title" style="font-size: 2.4em; margin: 0;">
+          <%= @company.landing_calculator_title.presence || "Simula tu Presupuesto al Instante" %>
+        </h2>
+        <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">
+          <%= @company.landing_calculator_subtitle.presence || "Juega con las opciones y calcula el valor estimado de tu evento en tiempo real." %>
+        </p>
       </div>
 
       <div style="display: grid; grid-template-columns: 1.3fr 1fr; gap: 35px; align-items: start;">
@@ -159,74 +163,52 @@
               1. Selecciona el Formato de la Agrupación
             </label>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px;">
-              <div class="sim-pill active" data-format="acoustic" onclick="selectBandFormat('acoustic', 400, 'Acústico (2 Músicos)', this)">
-                <div style="font-size: 1.4em;">🎻</div>
-                <strong>Acústico</strong>
-                <span style="font-size: 0.75em; color: var(--text-muted); display: block;">Dúo / Trío</span>
-              </div>
-              <div class="sim-pill" data-format="full_band" onclick="selectBandFormat('full_band', 750, 'Banda Completa (5 Músicos)', this)">
-                <div style="font-size: 1.4em;">🎸</div>
-                <strong>Banda Completa</strong>
-                <span style="font-size: 0.75em; color: var(--text-muted); display: block;">5 Músicos</span>
-              </div>
-              <div class="sim-pill" data-format="big_band" onclick="selectBandFormat('big_band', 1200, 'Big Band con Metales (8+ Músicos)', this)">
-                <div style="font-size: 1.4em;">🎺</div>
-                <strong>Big Band</strong>
-                <span style="font-size: 0.75em; color: var(--text-muted); display: block;">Metales &amp; Show</span>
-              </div>
+              <% @calculator_formats.each_with_index do |fmt, idx| %>
+                <div class="sim-pill <%= 'active' if idx == 0 %>" data-format="<%= fmt['key'] %>" onclick="selectBandFormat('<%= fmt['key'] %>', <%= fmt['price'] %>, '<%= fmt['name'] %> (<%= fmt['musicians'] %>)', this)">
+                  <div style="font-size: 1.4em;"><%= fmt['emoji'] %></div>
+                  <strong><%= fmt['name'] %></strong>
+                  <span style="font-size: 0.75em; color: var(--text-muted); display: block;"><%= fmt['musicians'] %></span>
+                </div>
+              <% end %>
             </div>
           </div>
 
           <%# 2. Horas de Show %>
           <div style="margin-bottom: 25px;">
             <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
-              2. Duración del Show: <span id="hours-display" style="color: white; font-size: 1.1em;">2 Horas</span>
+              2. Duración del Show: <span id="hours-display" style="color: white; font-size: 1.1em;"><%= @company.landing_calculator_base_hours %> Horas</span>
             </label>
-            <input type="range" id="hours-slider" min="1" max="5" value="2" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateHours(this.value)">
+            <input type="range" id="hours-slider" min="1" max="6" value="<%= @company.landing_calculator_base_hours %>" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateHours(this.value)">
             <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-muted); font-weight: 700; margin-top: 6px;">
               <span>1 Hora</span>
               <span>2 Horas</span>
               <span>3 Horas</span>
               <span>4 Horas</span>
               <span>5 Horas</span>
+              <span>6 Horas</span>
             </div>
           </div>
 
-          <%# 3. Efectos y Adicionales %>
+          <%# 3. Efectos y Adicionales Reales de la Empresa %>
           <div style="margin-bottom: 25px;">
             <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
               3. Añade Efectos Especiales &amp; Producción
             </label>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
-              <div class="sim-addon-card" onclick="toggleAddon(this, 'Chispas Frías (Pirotecnia Fría)', 120)">
-                <input type="checkbox" style="accent-color: var(--primary);">
-                <div>
-                  <strong style="display: block; font-size: 0.9em;">✨ Chispas Frías</strong>
-                  <span style="font-size: 0.8em; color: #34d399;">+$120 USD</span>
-                </div>
+            <% if @standard_upsells.any? %>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
+                <% @standard_upsells.each do |upsell| %>
+                  <div class="sim-addon-card" onclick="toggleAddon(this, '<%= upsell.emoji %> <%= upsell.title %>', <%= upsell.price %>)">
+                    <input type="checkbox" style="accent-color: var(--primary);">
+                    <div>
+                      <strong style="display: block; font-size: 0.9em;"><%= upsell.emoji %> <%= upsell.title %></strong>
+                      <span style="font-size: 0.8em; color: #34d399;">+$<%= upsell.price.to_i %> <%= upsell.currency %></span>
+                    </div>
+                  </div>
+                <% end %>
               </div>
-              <div class="sim-addon-card" onclick="toggleAddon(this, 'Máquina de Humo / Geiser', 60)">
-                <input type="checkbox" style="accent-color: var(--primary);">
-                <div>
-                  <strong style="display: block; font-size: 0.9em;">💨 Máquina de Humo</strong>
-                  <span style="font-size: 0.8em; color: #34d399;">+$60 USD</span>
-                </div>
-              </div>
-              <div class="sim-addon-card" onclick="toggleAddon(this, 'Subwoofers / Refuerzo Sonoro', 100)">
-                <input type="checkbox" style="accent-color: var(--primary);">
-                <div>
-                  <strong style="display: block; font-size: 0.9em;">🔊 Subwoofers Extra</strong>
-                  <span style="font-size: 0.8em; color: #34d399;">+$100 USD</span>
-                </div>
-              </div>
-              <div class="sim-addon-card" onclick="toggleAddon(this, 'Luces Robóticas / Cabezas Móviles', 150)">
-                <input type="checkbox" style="accent-color: var(--primary);">
-                <div>
-                  <strong style="display: block; font-size: 0.9em;">💡 Iluminación Robótica</strong>
-                  <span style="font-size: 0.8em; color: #34d399;">+$150 USD</span>
-                </div>
-              </div>
-            </div>
+            <% else %>
+              <p style="color: var(--text-muted); font-size: 0.85em;">No hay adicionales configurados para la landing.</p>
+            <% end %>
           </div>
 
           <%# Fecha y Ubicación Opcionales %>
@@ -250,11 +232,11 @@
 
           <div style="display: flex; flex-direction: column; gap: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 15px; margin-bottom: 15px; font-size: 0.92em;">
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-muted);" id="sum-format-name">Acústico (2 Músicos)</span>
-              <strong id="sum-format-price">$400 USD</strong>
+              <span style="color: var(--text-muted);" id="sum-format-name"><%= @calculator_formats.first['name'] rescue 'Acústico' %></span>
+              <strong id="sum-format-price">$<%= @calculator_formats.first['price'].to_i rescue 400 %> USD</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-muted);" id="sum-hours-name">2 Horas de Música</span>
+              <span style="color: var(--text-muted);" id="sum-hours-name"><%= @company.landing_calculator_base_hours %> Horas de Música</span>
               <strong id="sum-hours-price">Incluidas</strong>
             </div>
             <div id="sum-addons-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
@@ -263,8 +245,8 @@
           <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
             <span style="font-size: 1em; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Estimado:</span>
             <div style="text-align: right;">
-              <span style="font-family: var(--font-outfit); font-size: 2.4em; font-weight: 900; color: #34d399;" id="sim-total-price">$400</span>
-              <span style="font-size: 0.9em; color: var(--text-muted);">USD</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.4em; font-weight: 900; color: #34d399;" id="sim-total-price">$<%= @calculator_formats.first['price'].to_i rescue 400 %></span>
+              <span style="font-size: 0.9em; color: var(--text-muted);"><%= @company.landing_calculator_currency.presence || "USD" %></span>
             </div>
           </div>
 
@@ -552,9 +534,14 @@
 
 <%# --- JAVASCRIPT DEL SIMULADOR EN VIVO & GALERÍA --- %>
 <script>
-  let baseFormatPrice = 400;
-  let baseFormatName = "Acústico (2 Músicos)";
-  let selectedHours = 2;
+  const baseIncludedHours = <%= @company.landing_calculator_base_hours %>;
+  const extraHourRate = <%= @company.landing_calculator_extra_hour_price %>;
+  const defaultCurrency = '<%= @company.landing_calculator_currency.presence || "USD" %>';
+
+  <% first_fmt = @calculator_formats.first || { 'price' => 400, 'name' => 'Acústico', 'musicians' => 'Dúo' } %>
+  let baseFormatPrice = <%= first_fmt['price'].to_f %>;
+  let baseFormatName = "<%= first_fmt['name'] %> (<%= first_fmt['musicians'] %>)";
+  let selectedHours = baseIncludedHours;
   let activeAddons = [];
 
   function selectBandFormat(key, price, name, element) {
@@ -598,18 +585,21 @@
 
   function updateSummary() {
     document.getElementById('sum-format-name').textContent = baseFormatName;
-    document.getElementById('sum-format-price').textContent = `$${baseFormatPrice} USD`;
+    document.getElementById('sum-format-price').textContent = `$${baseFormatPrice} ${defaultCurrency}`;
 
     // Cálculo por horas extra
     let extraHoursCost = 0;
-    if (selectedHours > 2) {
-      extraHoursCost = (selectedHours - 2) * 120;
-      document.getElementById('sum-hours-name').textContent = `${selectedHours} Horas (+${selectedHours - 2}h extra)`;
-      document.getElementById('sum-hours-price').textContent = `+$${extraHoursCost} USD`;
-    } else {
+    if (selectedHours > baseIncludedHours) {
+      extraHoursCost = (selectedHours - baseIncludedHours) * extraHourRate;
+      document.getElementById('sum-hours-name').textContent = `${selectedHours} Horas (+${selectedHours - baseIncludedHours}h extra)`;
+      document.getElementById('sum-hours-price').textContent = `+$${extraHoursCost} ${defaultCurrency}`;
+    } else if (selectedHours < baseIncludedHours) {
+      extraHoursCost = (selectedHours - baseIncludedHours) * (extraHourRate * 0.5);
       document.getElementById('sum-hours-name').textContent = `${selectedHours} ${selectedHours === 1 ? 'Hora' : 'Horas'}`;
-      document.getElementById('sum-hours-price').textContent = selectedHours === 1 ? "-$50 USD" : "Incluidas";
-      if (selectedHours === 1) extraHoursCost = -50;
+      document.getElementById('sum-hours-price').textContent = `-$${Math.abs(extraHoursCost).toFixed(0)} ${defaultCurrency}`;
+    } else {
+      document.getElementById('sum-hours-name').textContent = `${selectedHours} Horas`;
+      document.getElementById('sum-hours-price').textContent = "Incluidas";
     }
 
     // Adicionales
@@ -622,12 +612,12 @@
       const row = document.createElement('div');
       row.style.display = 'flex';
       row.style.justifyContent = 'space-between';
-      row.innerHTML = `<span style="color: var(--text-muted);">${addon.name}</span><strong>+$${addon.price} USD</strong>`;
+      row.innerHTML = `<span style="color: var(--text-muted);">${addon.name}</span><strong>+$${addon.price} ${defaultCurrency}</strong>`;
       addonsContainer.appendChild(row);
     });
 
     const total = baseFormatPrice + extraHoursCost + addonsTotal;
-    document.getElementById('sim-total-price').textContent = `$${total}`;
+    document.getElementById('sim-total-price').textContent = `$${Math.round(total)}`;
 
     // Construir mensaje de WhatsApp
     const dateVal = document.getElementById('sim-date').value || "Por definir";

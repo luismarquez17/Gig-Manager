@@ -14,7 +14,8 @@ class BandLandingController < ApplicationController
     @staff_members = @company.users.where(role: [:leader, :musician, :staff])
     @reviews = @company.approved_reviews.order(pinned: :desc, created_at: :desc).limit(12)
     @media_items = @company.company_media_items.active.ordered
-    @standard_upsells = StandardUpsell.where(company: @company).presence || StandardUpsell.all_with_defaults.select(&:active)
+    @standard_upsells = @company.landing_upsells.presence || @company.standard_upsells.where(active: true).presence || StandardUpsell.where(company: @company).presence || StandardUpsell.all_with_defaults.select(&:active)
+    @calculator_formats = @company.effective_calculator_formats
     @rating = @company.average_rating
     @reviews_count = @reviews.count
     @whatsapp_number = @company.whatsapp_number.presence || @company.contact_phone.presence || "584140000000"

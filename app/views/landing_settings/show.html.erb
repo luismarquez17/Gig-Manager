@@ -8,7 +8,7 @@
         <span>🎨</span> Studio de Personalización de Landing Page
       </h1>
       <p style="color: #64748b; margin: 5px 0 0 0; font-size: 0.95em;">
-        Diseña, personaliza y gestiona la vitrina web pública de <strong><%= @company.name %></strong> con tus propios colores, videos y secciones.
+        Diseña, personaliza y gestiona la vitrina web pública de <strong><%= @company.name %></strong> con tus propios colores, cotizador en vivo, adicionales y videos.
       </p>
     </div>
     
@@ -128,7 +128,132 @@
 
     </div>
 
-    <%# --- 4. IDENTIDAD, TEXTOS & CONTACTO --- %>
+    <%# --- 4. CONFIGURADOR DE LA CALCULADORA / COTIZADOR EN VIVO --- %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> Configurador del Cotizador / Calculadora en Vivo
+        </h2>
+        <span style="font-size: 0.8em; background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 99px; font-weight: 700;">
+          Datos Reales en Tiempo Real
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+        <div>
+          <%= f.label :landing_calculator_title, "Título del Cotizador", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.text_field :landing_calculator_title, placeholder: "Ej: Simula tu Presupuesto al Instante", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+        </div>
+        <div>
+          <%= f.label :landing_calculator_base_hours, "Horas Base Incluidas", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.number_field :landing_calculator_base_hours, min: 1, max: 6, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+        </div>
+        <div>
+          <%= f.label :landing_calculator_extra_hour_price, "Precio por Hora Extra (USD)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.number_field :landing_calculator_extra_hour_price, step: 5, min: 0, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 20px;">
+        <%= f.label :landing_calculator_subtitle, "Subtítulo / Instrucción para el Cliente", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+        <%= f.text_field :landing_calculator_subtitle, placeholder: "Ej: Juega con las opciones y calcula el valor estimado de tu evento en tiempo real.", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+      </div>
+
+      <%# Editor de Formatos de Banda en la Calculadora %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; margin-bottom: 15px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <h4 style="margin: 0; font-size: 0.95em; font-weight: 800; color: #1e293b;">
+            🎼 Formatos Musicales del Cotizador (Paso 1 del Simulador)
+          </h4>
+          <span style="font-size: 0.78em; color: #64748b;">Ajusta nombres, integrantes y precios base</span>
+        </div>
+
+        <div id="calculator_formats_container" style="display: grid; gap: 10px;">
+          <% @calculator_formats.each_with_index do |fmt, idx| %>
+            <div class="calculator-format-row" style="display: grid; grid-template-columns: 60px 1.5fr 1.5fr 1fr; gap: 10px; align-items: center; background: white; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px;">
+              <div>
+                <input type="text" name="company[landing_calculator_formats][<%= idx %>][emoji]" value="<%= fmt['emoji'] %>" placeholder="Emoji" style="width: 100%; text-align: center; font-size: 1.2em; padding: 6px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;">
+              </div>
+              <div>
+                <input type="text" name="company[landing_calculator_formats][<%= idx %>][name]" value="<%= fmt['name'] %>" placeholder="Nombre (Ej: Acústico)" style="width: 100%; font-weight: 700; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
+              </div>
+              <div>
+                <input type="text" name="company[landing_calculator_formats][<%= idx %>][musicians]" value="<%= fmt['musicians'] %>" placeholder="Integrantes (Ej: 5 Músicos)" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
+              </div>
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #64748b; font-weight: bold;">$</span>
+                <input type="number" name="company[landing_calculator_formats][<%= idx %>][price]" value="<%= fmt['price'] %>" step="10" placeholder="Precio" style="width: 100%; font-weight: 800; color: #15803d; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
+                <input type="hidden" name="company[landing_calculator_formats][<%= idx %>][key]" value="<%= fmt['key'] %>">
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <%# --- 5. GESTIÓN DE ADICIONALES & UPSELLS REALES EN LA LANDING --- %>
+    <div id="adicionales" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>✨</span> Adicionales &amp; Efectos Especiales (Upsells Reales)
+          </h2>
+          <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.88em;">
+            Elige cuáles de tus servicios adicionales y equipos aparecen como opciones en la calculadora interactiva de la Landing.
+          </p>
+        </div>
+        <div>
+          <span style="font-size: 0.85em; font-weight: 700; color: #64748b;">
+            <%= @upsells.select(&:show_on_landing?).count %> de <%= @upsells.count %> visibles en la web
+          </span>
+        </div>
+      </div>
+
+      <% if @upsells.any? %>
+        <div style="display: grid; gap: 12px; margin-bottom: 15px;">
+          <% @upsells.each do |upsell| %>
+            <div style="display: grid; grid-template-columns: 50px 1.5fr 1fr 140px 120px; gap: 12px; align-items: center; background: <%= upsell.show_on_landing? ? '#f0fdf4' : '#f8fafc' %>; border: 1px solid <%= upsell.show_on_landing? ? '#bbf7d0' : '#e2e8f0' %>; border-radius: 12px; padding: 12px 16px;">
+              <div style="text-align: center;">
+                <input type="text" name="upsells[<%= upsell.id %>][emoji]" value="<%= upsell.emoji %>" style="width: 38px; height: 38px; text-align: center; font-size: 1.2em; border: 1px solid #cbd5e1; border-radius: 8px; background: white;">
+              </div>
+
+              <div>
+                <input type="text" name="upsells[<%= upsell.id %>][title]" value="<%= upsell.title %>" style="width: 100%; font-weight: 700; font-size: 0.9em; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white;">
+                <p style="margin: 4px 0 0 0; font-size: 0.78em; color: #64748b; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                  <%= upsell.description.presence || "Sin descripción adicional" %>
+                </p>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span style="color: #64748b; font-weight: 700; font-size: 0.85em;">Precio: $</span>
+                <input type="number" name="upsells[<%= upsell.id %>][price]" value="<%= upsell.price %>" step="5" style="width: 90px; font-weight: 800; color: #15803d; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; background: white;">
+                <span style="color: #64748b; font-size: 0.8em;"><%= upsell.currency %></span>
+              </div>
+
+              <div>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: 700; color: <%= upsell.show_on_landing? ? '#15803d' : '#64748b' %>; cursor: pointer;">
+                  <%= check_box_tag "upsells[#{upsell.id}][show_on_landing]", "1", upsell.show_on_landing?, style: "accent-color: #10b981; width: 16px; height: 16px;" %>
+                  <span><%= upsell.show_on_landing? ? "✓ En Landing" : "Oculto" %></span>
+                </label>
+              </div>
+
+              <div style="text-align: right;">
+                <%= button_to toggle_landing_upsell_path(upsell_id: upsell.id), method: :patch, style: "background: #{upsell.show_on_landing? ? '#fee2e2' : '#dcfce7'}; color: #{upsell.show_on_landing? ? '#ef4444' : '#15803d'}; border: 1px solid #{upsell.show_on_landing? ? '#fca5a5' : '#86efac'}; padding: 5px 10px; border-radius: 6px; font-size: 0.75em; font-weight: bold; cursor: pointer;" do %>
+                  <%= upsell.show_on_landing? ? "Ocultar" : "Mostrar" %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p style="text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9em; margin: 0;">
+          No tienes adicionales registrados en tu empresa.
+        </p>
+      <% end %>
+    </div>
+
+    <%# --- 6. IDENTIDAD, TEXTOS & CONTACTO --- %>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
       <h2 style="margin: 0 0 16px 0; font-size: 1.2em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
         <span>✍️</span> Textos de Cabecera, Biografía &amp; Contacto
@@ -183,7 +308,7 @@
 
   <% end %>
 
-  <%# --- 5. GESTIÓN DE VIDEOS & SHOWCASE MULTIMEDIA --- %>
+  <%# --- 7. GESTIÓN DE VIDEOS & SHOWCASE MULTIMEDIA --- %>
   <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 35px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
       <div>

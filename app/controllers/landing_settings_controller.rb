@@ -6,6 +6,8 @@ class LandingSettingsController < ApplicationController
   def show
     @media_items = @company.company_media_items.ordered
     @new_media_item = @company.company_media_items.build
+    @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
+    @calculator_formats = @company.effective_calculator_formats
   end
 
   def update
@@ -19,7 +21,24 @@ class LandingSettingsController < ApplicationController
       @company.landing_sections_config = sections_data
     end
 
-    # 2. Procesar FAQs si se enviaron
+    # 2. Procesar formatos de la calculadora en vivo
+    if params[:company][:landing_calculator_formats].present?
+      formats_array = []
+      params[:company][:landing_calculator_formats].each do |_idx, fmt|
+        if fmt[:name].present? && fmt[:price].present?
+          formats_array << {
+            "key" => fmt[:key].presence || fmt[:name].to_s.parameterize.underscore,
+            "name" => fmt[:name].to_s.strip,
+            "musicians" => fmt[:musicians].to_s.strip,
+            "price" => fmt[:price].to_f,
+            "emoji" => fmt[:emoji].presence || "🎵"
+          }
+        end
+      end
+      @company.landing_calculator_formats = formats_array if formats_array.any?
+    end
+
+    # 3. Procesar FAQs si se enviaron
     if params[:company][:landing_faqs].present?
       faqs_array = []
       params[:company][:landing_faqs].each do |_idx, item|
@@ -30,14 +49,31 @@ class LandingSettingsController < ApplicationController
       @company.landing_faqs = faqs_array if faqs_array.any?
     end
 
-    # 3. Asignar todos los parámetros de personalización
+    # 4. Actualización en lote de adicionales/upsells para la landing
+    if params[:upsells].present?
+      params[:upsells].each do |upsell_id, upsell_params|
+        upsell = @company.standard_upsells.find_by(id: upsell_id)
+        if upsell
+          upsell.update(
+            show_on_landing: upsell_params[:show_on_landing] == "1",
+            price: upsell_params[:price].presence || upsell.price,
+            emoji: upsell_params[:emoji].presence || upsell.emoji,
+            title: upsell_params[:title].presence || upsell.title
+          )
+        end
+      end
+    end
+
+    # 5. Asignar todos los parámetros de personalización
     @company.assign_attributes(company_landing_params)
 
     if @company.save
-      redirect_to landing_settings_path, notice: "¡Diseño, colores, secciones y textos de tu Landing Page guardados con éxito!"
+      redirect_to landing_settings_path, notice: "¡Diseño, calculadora, adicionales y textos de tu Landing guardados con éxito!"
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @company.company_media_items.build
+      @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
+      @calculator_formats = @company.effective_calculator_formats
       flash.now[:alert] = "Error al guardar cambios: #{@company.errors.full_messages.join(', ')}"
       render :show, status: :unprocessable_entity
     end
@@ -52,6 +88,8 @@ class LandingSettingsController < ApplicationController
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @media_item
+      @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
+      @calculator_formats = @company.effective_calculator_formats
       flash.now[:alert] = "Error al agregar multimedia: #{@media_item.errors.full_messages.join(', ')}"
       render :show, status: :unprocessable_entity
     end
@@ -67,6 +105,12 @@ class LandingSettingsController < ApplicationController
     @media_item = @company.company_media_items.find(params[:media_id])
     @media_item.update(active: !@media_item.active)
     redirect_to landing_settings_path, notice: "Visibilidad de '#{@media_item.title}': #{@media_item.active? ? 'Visible en la Web' : 'Oculto'}."
+  end
+
+  def toggle_upsell_landing
+    @upsell = @company.standard_upsells.find(params[:upsell_id])
+    @upsell.update(show_on_landing: !@upsell.show_on_landing)
+    redirect_to landing_settings_path, notice: "Visibilidad del adicional '#{@upsell.title}' en la Landing: #{@upsell.show_on_landing? ? 'Visible' : 'Oculto'}."
   end
 
   private
@@ -94,6 +138,11 @@ class LandingSettingsController < ApplicationController
       :landing_hero_title,
       :landing_hero_subtitle,
       :landing_hero_cta_text,
+      :landing_calculator_title,
+      :landing_calculator_subtitle,
+      :landing_calculator_base_hours,
+      :landing_calculator_extra_hour_price,
+      :landing_calculator_currency,
       :tagline,
       :bio,
       :whatsapp_number,

@@ -105,6 +105,26 @@ class Company < ApplicationRecord
     ]
   end
 
+  def effective_calculator_formats
+    if landing_calculator_formats.present? && landing_calculator_formats.is_a?(Array) && landing_calculator_formats.any?
+      landing_calculator_formats
+    else
+      default_calculator_formats
+    end
+  end
+
+  def default_calculator_formats
+    [
+      { "key" => "acoustic", "name" => "Acústico", "musicians" => "Dúo / Trío", "price" => 400, "emoji" => "🎻" },
+      { "key" => "full_band", "name" => "Banda Completa", "musicians" => "5 Músicos", "price" => 750, "emoji" => "🎸" },
+      { "key" => "big_band", "name" => "Big Band", "musicians" => "Metales & Show (8+ Músicos)", "price" => 1200, "emoji" => "🎺" }
+    ]
+  end
+
+  def landing_upsells
+    standard_upsells.where(active: true, show_on_landing: true).order(landing_position: :asc, created_at: :asc)
+  end
+
   private
 
   def generate_slug_and_token

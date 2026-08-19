@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_19_231626) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_19_233556) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -90,6 +90,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_231626) do
     t.string "landing_hero_cta_text", default: "Simular Mi Presupuesto en Vivo"
     t.jsonb "landing_sections_config", default: {"show_faq"=>true, "show_team"=>true, "show_media"=>true, "show_metrics"=>true, "show_reviews"=>true, "show_packages"=>true, "show_calculator"=>true}
     t.jsonb "landing_faqs", default: []
+    t.string "landing_calculator_title", default: "Simula tu Presupuesto al Instante"
+    t.string "landing_calculator_subtitle", default: "Juega con las opciones y calcula el valor estimado de tu evento en tiempo real."
+    t.integer "landing_calculator_base_hours", default: 2
+    t.decimal "landing_calculator_extra_hour_price", precision: 10, scale: 2, default: "100.0"
+    t.string "landing_calculator_currency", default: "USD"
+    t.jsonb "landing_calculator_formats", default: [{"key"=>"acoustic", "name"=>"Acústico", "emoji"=>"🎻", "price"=>400, "musicians"=>"Dúo / Trío"}, {"key"=>"full_band", "name"=>"Banda Completa", "emoji"=>"🎸", "price"=>750, "musicians"=>"5 Músicos"}, {"key"=>"big_band", "name"=>"Big Band", "emoji"=>"🎺", "price"=>1200, "musicians"=>"Metales & Show (8+ Músicos)"}]
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
   end
@@ -395,6 +401,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_231626) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_id"
+    t.boolean "show_on_landing", default: true, null: false
+    t.integer "landing_position", default: 0
     t.index ["company_id"], name: "index_standard_upsells_on_company_id"
     t.index ["key"], name: "index_standard_upsells_on_key", unique: true
   end
