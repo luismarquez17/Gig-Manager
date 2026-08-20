@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_20_173855) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -74,8 +74,55 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "tagline"
+    t.text "bio"
+    t.string "whatsapp_number"
+    t.string "instagram_url"
+    t.string "youtube_url"
+    t.string "tiktok_url"
+    t.boolean "landing_enabled", default: true, null: false
+    t.string "landing_plan", default: "pro"
+    t.string "landing_theme_color", default: "#8b5cf6"
+    t.string "landing_accent_color", default: "#06b6d4"
+    t.string "landing_bg_style", default: "midnight"
+    t.string "landing_hero_title"
+    t.string "landing_hero_subtitle"
+    t.string "landing_hero_cta_text", default: "Simular Mi Presupuesto en Vivo"
+    t.jsonb "landing_sections_config", default: {"show_faq"=>true, "show_team"=>true, "show_media"=>true, "show_metrics"=>true, "show_reviews"=>true, "show_packages"=>true, "show_calculator"=>true}
+    t.jsonb "landing_faqs", default: []
+    t.string "landing_calculator_title", default: "Simula tu Presupuesto al Instante"
+    t.string "landing_calculator_subtitle", default: "Juega con las opciones y calcula el valor estimado de tu evento en tiempo real."
+    t.integer "landing_calculator_base_hours", default: 2
+    t.decimal "landing_calculator_extra_hour_price", precision: 10, scale: 2, default: "100.0"
+    t.string "landing_calculator_currency", default: "USD"
+    t.jsonb "landing_calculator_formats", default: [{"key"=>"acoustic", "name"=>"Acústico", "emoji"=>"🎻", "price"=>400, "musicians"=>"Dúo / Trío"}, {"key"=>"full_band", "name"=>"Banda Completa", "emoji"=>"🎸", "price"=>750, "musicians"=>"5 Músicos"}, {"key"=>"big_band", "name"=>"Big Band", "emoji"=>"🎺", "price"=>1200, "musicians"=>"Metales & Show (8+ Músicos)"}]
+    t.integer "landing_calculator_base_shows", default: 1
+    t.decimal "landing_calculator_extra_show_price", precision: 10, scale: 2, default: "250.0"
+    t.integer "landing_calculator_base_sound_hours", default: 6
+    t.decimal "landing_calculator_extra_sound_hour_price", precision: 10, scale: 2, default: "60.0"
+    t.string "landing_template", default: "classic_stage"
+    t.string "landing_gradient_style", default: "linear_neon"
+    t.string "landing_font_family", default: "default"
+    t.jsonb "landing_template_prices", default: {"royal_gala"=>29, "classic_stage"=>0, "neon_festival"=>15, "minimal_acoustic"=>19}
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
+  end
+
+  create_table "company_media_items", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "title", null: false
+    t.string "category", default: "live_show", null: false
+    t.string "media_type", default: "video", null: false
+    t.string "video_url"
+    t.text "description"
+    t.integer "position", default: 0
+    t.boolean "featured", default: false
+    t.boolean "active", default: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "category"], name: "index_company_media_items_on_company_id_and_category"
+    t.index ["company_id", "position"], name: "index_company_media_items_on_company_id_and_position"
+    t.index ["company_id"], name: "index_company_media_items_on_company_id"
   end
 
   create_table "employee_payments", force: :cascade do |t|
@@ -164,6 +211,20 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
   end
 
+  create_table "gig_reviews", force: :cascade do |t|
+    t.bigint "gig_id", null: false
+    t.string "client_name"
+    t.integer "rating", default: 5, null: false
+    t.text "comment"
+    t.boolean "is_client", default: false, null: false
+    t.boolean "approved", default: true, null: false
+    t.boolean "pinned", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["gig_id", "approved"], name: "index_gig_reviews_on_gig_id_and_approved"
+    t.index ["gig_id"], name: "index_gig_reviews_on_gig_id"
+  end
+
   create_table "gig_timeline_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.string "time"
@@ -195,6 +256,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.time "end_time"
     t.jsonb "custom_upsells", default: {}
     t.bigint "company_id"
+    t.jsonb "music_preferences", default: {}
     t.index ["client_email"], name: "index_gigs_on_client_email"
     t.index ["client_id"], name: "index_gigs_on_client_id"
     t.index ["company_id"], name: "index_gigs_on_company_id"
@@ -282,6 +344,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_id"
+    t.boolean "show_on_landing", default: true
+    t.boolean "featured", default: false
+    t.string "badge_text"
+    t.integer "position", default: 0
     t.index ["company_id"], name: "index_preset_budgets_on_company_id"
   end
 
@@ -301,6 +367,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.index ["company_id"], name: "index_shopping_items_on_company_id"
     t.index ["priority"], name: "index_shopping_items_on_priority"
     t.index ["status"], name: "index_shopping_items_on_status"
+  end
+
+  create_table "songs", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "title", null: false
+    t.string "artist"
+    t.string "genre", default: "General"
+    t.boolean "active", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id", "genre"], name: "index_songs_on_company_id_and_genre"
+    t.index ["company_id"], name: "index_songs_on_company_id"
   end
 
   create_table "staff_assignments", force: :cascade do |t|
@@ -324,6 +402,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_id"
+    t.boolean "show_on_landing", default: true, null: false
+    t.integer "landing_position", default: 0
     t.index ["company_id"], name: "index_standard_upsells_on_company_id"
     t.index ["key"], name: "index_standard_upsells_on_key", unique: true
   end
@@ -351,6 +431,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
     t.text "bio"
     t.text "avatar_base64"
     t.bigint "company_id"
+    t.boolean "show_on_landing", default: true, null: false
+    t.integer "landing_position", default: 0
     t.index ["client_id"], name: "index_users_on_client_id"
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
@@ -360,6 +442,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "clients", "companies"
+  add_foreign_key "company_media_items", "companies"
   add_foreign_key "employee_payments", "companies"
   add_foreign_key "employee_payments", "gigs"
   add_foreign_key "employee_payments", "users"
@@ -371,6 +454,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   add_foreign_key "gig_items", "gigs"
   add_foreign_key "gig_items", "items"
   add_foreign_key "gig_payments", "gigs"
+  add_foreign_key "gig_reviews", "gigs"
   add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
   add_foreign_key "gigs", "clients"
   add_foreign_key "gigs", "companies"
@@ -385,6 +469,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_11_043112) do
   add_foreign_key "maintenance_records", "items"
   add_foreign_key "preset_budgets", "companies"
   add_foreign_key "shopping_items", "companies"
+  add_foreign_key "songs", "companies"
   add_foreign_key "staff_assignments", "gigs"
   add_foreign_key "staff_assignments", "users"
   add_foreign_key "standard_upsells", "companies"

@@ -1,0 +1,292 @@
+class LandingSettingsController < ApplicationController
+  before_action :authenticate_user!
+  before_action :ensure_leader_or_admin!
+  before_action :set_company
+
+  def show
+    @media_items = @company.company_media_items.ordered
+    @new_media_item = @company.company_media_items.build
+    @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
+    @calculator_formats = @company.effective_calculator_formats
+    @staff_members = @company.all_staff_members
+    @preset_budgets = @company.all_preset_budgets
+  end
+
+  def update
+    # 1. Procesar configuración de secciones (checkboxes booleanos y nombre de marca personalizado)
+    if params[:company] && params[:company][:landing_sections_config].present?
+      sections_data = @company.landing_sections_config.is_a?(Hash) ? @company.landing_sections_config.dup : {}
+      cfg = params[:company][:landing_sections_config]
+      cfg = cfg.to_unsafe_h if cfg.respond_to?(:to_unsafe_h)
+
+      %w[show_metrics show_packages show_calculator show_media show_team show_reviews show_faq show_brand_name_with_logo].each do |sec|
+        if cfg.key?(sec)
+          sections_data[sec] = (cfg[sec] == "1" || cfg[sec] == true || cfg[sec] == "true")
+        end
+      end
+
+      if cfg.key?("custom_brand_name") || cfg.key?(:custom_brand_name)
+        sections_data["custom_brand_name"] = (cfg[:custom_brand_name] || cfg["custom_brand_name"]).to_s.strip
+      end
+
+      if cfg.key?("logo_height") || cfg.key?(:logo_height)
+        val = (cfg[:logo_height] || cfg["logo_height"]).to_i
+        sections_data["logo_height"] = val if val > 0
+      end
+
+      if cfg.key?("use_custom_theme") || cfg.key?(:use_custom_theme)
+        val = cfg[:use_custom_theme] || cfg["use_custom_theme"]
+        sections_data["use_custom_theme"] = (val == "1" || val == true || val == "true")
+      end
+
+      if cfg.key?("hero_image_blur") || cfg.key?(:hero_image_blur)
+        sections_data["hero_image_blur"] = (cfg[:hero_image_blur] || cfg["hero_image_blur"]).to_i
+      end
+
+      if cfg.key?("hero_image_opacity") || cfg.key?(:hero_image_opacity)
+        sections_data["hero_image_opacity"] = (cfg[:hero_image_opacity] || cfg["hero_image_opacity"]).to_i
+      end
+
+      @company.landing_sections_config = sections_data
+    end
+
+    # 2. Procesar formatos de la calculadora en vivo
+    if params[:company][:landing_calculator_formats].present?
+      formats_array = []
+      params[:company][:landing_calculator_formats].each do |_idx, fmt|
+        if fmt[:name].present? && fmt[:price].present?
+          formats_array << {
+            "key" => fmt[:key].presence || fmt[:name].to_s.parameterize.underscore,
+            "name" => fmt[:name].to_s.strip,
+            "musicians" => fmt[:musicians].to_s.strip,
+            "price" => fmt[:price].to_f,
+            "emoji" => fmt[:emoji].presence || "🎵"
+          }
+        end
+      end
+      @company.landing_calculator_formats = formats_array if formats_array.any?
+    end
+
+    # 3. Procesar FAQs si se enviaron
+    if params[:company][:landing_faqs].present?
+      faqs_array = []
+      params[:company][:landing_faqs].each do |_idx, item|
+        if item[:q].present? && item[:a].present?
+          faqs_array << { "q" => item[:q].to_s.strip, "a" => item[:a].to_s.strip }
+        end
+      end
+      @company.landing_faqs = faqs_array if faqs_array.any?
+    end
+
+    # 4. Actualización en lote de adicionales/upsells para la landing
+    if params[:upsells].present?
+      params[:upsells].each do |upsell_id, upsell_params|
+        upsell = @company.standard_upsells.find_by(id: upsell_id)
+        if upsell
+          upsell.update(
+            show_on_landing: upsell_params[:show_on_landing] == "1",
+            price: upsell_params[:price].presence || upsell.price,
+            emoji: upsell_params[:emoji].presence || upsell.emoji,
+            title: upsell_params[:title].presence || upsell.title
+          )
+        end
+      end
+    end
+
+    # 5. Actualización en lote de Combos & Paquetes Destacados (PresetBudgets)
+    if params[:preset_budgets].present?
+      params[:preset_budgets].each do |budget_id, b_params|
+        budget = @company.preset_budgets.find_by(id: budget_id)
+        if budget
+          budget.update(
+            title: b_params[:title].presence || budget.title,
+            price: b_params[:price].presence || budget.price,
+            currency: b_params[:currency].presence || budget.currency,
+            description: b_params[:description].presence || budget.description,
+            badge_text: b_params[:badge_text],
+            featured: b_params[:featured] == "1",
+            show_on_landing: b_params[:show_on_landing] == "1"
+          )
+        end
+      end
+    end
+
+    # 6. Actualización de Trabajadores / Músicos (Fotos, roles, bio y visibilidad en landing)
+    if params[:staff_members].present?
+      params[:staff_members].each do |user_id, staff_params|
+        user = @company.users.find_by(id: user_id)
+        if user
+          avatar_file = params.dig(:staff_avatars, user_id.to_s)
+          if avatar_file.respond_to?(:read)
+            content_type = avatar_file.content_type.presence || 'image/jpeg'
+            encoded = Base64.strict_encode64(avatar_file.read)
+            user.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+            user.avatar.attach(avatar_file)
+            avatar_file.rewind if avatar_file.respond_to?(:rewind)
+          end
+
+          user.update(
+            name: staff_params[:name].presence || user.name,
+            specialty: staff_params[:specialty].presence || user.specialty,
+            bio: staff_params[:bio].presence || user.bio,
+            show_on_landing: staff_params[:show_on_landing] == "1"
+          )
+        end
+      end
+    end
+
+    # 7. Asignar todos los parámetros de personalización
+    @company.assign_attributes(company_landing_params)
+
+    if @company.save
+      redirect_to landing_settings_path, notice: "¡Combos, paquetes destacados, diseño y personalizaciones guardados con éxito!"
+    else
+      @media_items = @company.company_media_items.ordered
+      @new_media_item = @company.company_media_items.build
+      @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
+      @calculator_formats = @company.effective_calculator_formats
+      @staff_members = @company.all_staff_members
+      @preset_budgets = @company.all_preset_budgets
+      flash.now[:alert] = "Error al guardar cambios: #{@company.errors.full_messages.join(', ')}"
+      render :show, status: :unprocessable_entity
+    end
+  end
+
+  def create_preset_budget
+    budget = @company.preset_budgets.build(
+      title: params[:title].presence || "Nuevo Combo / Paquete",
+      price: params[:price].to_f > 0 ? params[:price].to_f : 500.0,
+      currency: params[:currency].presence || "USD",
+      description: params[:description].presence || "Incluye show en vivo, sistema de sonido profesional y puesta en escena.",
+      badge_text: params[:badge_text].presence || "🔥 Más Popular",
+      featured: params[:featured] == "1",
+      show_on_landing: true
+    )
+
+    if budget.save
+      redirect_to landing_settings_path(anchor: 'combos'), notice: "¡Combo / Paquete '#{budget.title}' agregado con éxito a la Landing!"
+    else
+      redirect_to landing_settings_path(anchor: 'combos'), alert: "Error al crear el paquete: #{budget.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def destroy_preset_budget
+    budget = @company.preset_budgets.find_by(id: params[:budget_id])
+    if budget&.destroy
+      redirect_to landing_settings_path(anchor: 'combos'), notice: "¡Combo / Paquete eliminado correctamente!"
+    else
+      redirect_to landing_settings_path(anchor: 'combos'), alert: "No se pudo eliminar el combo."
+    end
+  end
+
+  def create_media
+    @media_item = @company.company_media_items.build(media_item_params)
+    @media_item.active = true if @media_item.active.nil?
+    
+    if @media_item.save
+      redirect_to landing_settings_path, notice: "¡Material multimedia publicado en tu Landing con éxito!"
+    else
+      @media_items = @company.company_media_items.ordered
+      @new_media_item = @media_item
+      @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
+      @calculator_formats = @company.effective_calculator_formats
+      @staff_members = @company.all_staff_members
+      flash.now[:alert] = "Error al agregar multimedia: #{@media_item.errors.full_messages.join(', ')}"
+      render :show, status: :unprocessable_entity
+    end
+  end
+
+  def destroy_media
+    @media_item = @company.company_media_items.find(params[:media_id])
+    @media_item.destroy
+    redirect_to landing_settings_path, notice: "Material eliminado de la Landing."
+  end
+
+  def toggle_media_active
+    @media_item = @company.company_media_items.find(params[:media_id])
+    @media_item.update(active: !@media_item.active)
+    redirect_to landing_settings_path, notice: "Visibilidad de '#{@media_item.title}': #{@media_item.active? ? 'Visible en la Web' : 'Oculto'}."
+  end
+
+  def toggle_upsell_landing
+    @upsell = @company.standard_upsells.find(params[:upsell_id])
+    @upsell.update(show_on_landing: !@upsell.show_on_landing)
+    redirect_to landing_settings_path, notice: "Visibilidad del adicional '#{@upsell.title}' en la Landing: #{@upsell.show_on_landing? ? 'Visible' : 'Oculto'}."
+  end
+
+  def toggle_staff_landing
+    @user = @company.users.find(params[:user_id])
+    @user.update(show_on_landing: !@user.show_on_landing)
+    redirect_to landing_settings_path(anchor: 'integrantes'), notice: "Visibilidad de #{@user.display_name} en la Landing: #{@user.show_on_landing? ? 'Visible' : 'Oculto'}."
+  end
+
+  def reset_template_defaults
+    target_key = params[:template_key].presence || @company.landing_template
+    @company.reset_template_defaults!(target_key)
+    redirect_to landing_settings_path, notice: "¡Colores, tipografía y estilo de la plantilla '#{@company.template_data[:name]}' restablecidos a sus valores originales de fábrica!"
+  end
+
+  private
+
+  def set_company
+    @company = current_company
+    unless @company
+      redirect_to root_path, alert: "No se encontró la empresa actual."
+    end
+  end
+
+  def ensure_leader_or_admin!
+    unless current_user.leader? || current_user.superadmin?
+      redirect_to root_path, alert: "Acceso reservado para administradores o líderes."
+    end
+  end
+
+  def company_landing_params
+    params.require(:company).permit(
+      :landing_enabled,
+      :landing_plan,
+      :landing_template,
+      :landing_font_family,
+      :landing_theme_color,
+      :landing_accent_color,
+      :landing_gradient_style,
+      :landing_bg_style,
+      :landing_hero_title,
+      :landing_hero_subtitle,
+      :landing_hero_cta_text,
+      :landing_calculator_title,
+      :landing_calculator_subtitle,
+      :landing_calculator_base_shows,
+      :landing_calculator_extra_show_price,
+      :landing_calculator_base_sound_hours,
+      :landing_calculator_extra_sound_hour_price,
+      :landing_calculator_base_hours,
+      :landing_calculator_extra_hour_price,
+      :landing_calculator_currency,
+      :tagline,
+      :bio,
+      :whatsapp_number,
+      :instagram_url,
+      :youtube_url,
+      :tiktok_url,
+      :landing_logo,
+      :landing_hero_video,
+      :landing_hero_image,
+      landing_template_prices: {}
+    )
+  end
+
+  def media_item_params
+    params.require(:company_media_item).permit(
+      :title,
+      :category,
+      :media_type,
+      :video_url,
+      :description,
+      :media_file,
+      :thumbnail,
+      :featured,
+      :active
+    )
+  end
+end

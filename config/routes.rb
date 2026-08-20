@@ -55,6 +55,23 @@ Rails.application.routes.draw do
   get '/portal/:token', to: 'portals#show', as: 'public_portal'
   get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
+  post '/portal/:token/submit_review', to: 'portals#submit_review', as: 'submit_public_portal_review'
+
+  # Micrositio Público y Cotizador Interactivo de la Agrupación
+  get '/b/:slug', to: 'band_landing#show', as: 'band_landing'
+  get '/b/:slug/quote', to: 'band_landing#quote', as: 'band_quote'
+
+  # Configuración y Multimedia de la Landing Page por Agrupación (Panel de Líder)
+  get '/landing_settings', to: 'landing_settings#show', as: 'landing_settings'
+  patch '/landing_settings', to: 'landing_settings#update'
+  post '/landing_settings/media', to: 'landing_settings#create_media', as: 'create_landing_media'
+  delete '/landing_settings/media/:media_id', to: 'landing_settings#destroy_media', as: 'destroy_landing_media'
+  patch '/landing_settings/media/:media_id/toggle', to: 'landing_settings#toggle_media_active', as: 'toggle_landing_media'
+  patch '/landing_settings/upsells/:upsell_id/toggle', to: 'landing_settings#toggle_upsell_landing', as: 'toggle_landing_upsell'
+  patch '/landing_settings/staff/:user_id/toggle', to: 'landing_settings#toggle_staff_landing', as: 'toggle_landing_staff'
+  post '/landing_settings/reset_colors', to: 'landing_settings#reset_template_defaults', as: 'reset_landing_template_colors'
+  post '/landing_settings/preset_budgets', to: 'landing_settings#create_preset_budget', as: 'create_landing_preset_budget'
+  delete '/landing_settings/preset_budgets/:budget_id', to: 'landing_settings#destroy_preset_budget', as: 'destroy_landing_preset_budget'
 
   resources :gigs, only: [:index, :new, :create, :destroy, :show, :edit, :update] do
     member do

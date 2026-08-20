@@ -399,6 +399,18 @@
     align-items: center;
     gap: 10px;
   }
+
+  /* Review card styles */
+  .review-card {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 16px 18px;
+    transition: border-color 0.2s ease;
+  }
+  .review-card:hover {
+    border-color: rgba(255, 255, 255, 0.12);
+  }
 </style>
 
 <div class="portal-container">
@@ -747,6 +759,102 @@
     </section>
   <% end %>
 
+  <%# --- SECCIÓN: MURO DE RECUERDOS & RESEÑAS POST-EVENTO --- %>
+  <section class="glass-card" id="reviews-section">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px;">
+      <h2 class="section-title" style="margin: 0;">
+        <span class="icon">📸</span>
+        Muro de Recuerdos &amp; Reseñas
+      </h2>
+      <% if @gig_reviews.any? %>
+        <div style="display: flex; align-items: center; gap: 6px; background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 12px; border-radius: 99px; color: #fbbf24; font-weight: 800; font-size: 0.9em;">
+          <span>★ <%= @gig.average_review_rating %></span>
+          <span style="font-size: 0.8em; color: var(--text-muted);">(<%= @gig_reviews.size %> reseñas)</span>
+        </div>
+      <% end %>
+    </div>
+
+    <p style="color: var(--text-muted); font-size: 0.92em; line-height: 1.5; margin: 0 0 25px 0;">
+      Comparte cómo viviste la experiencia del evento, deja tu calificación o dedica un mensaje al equipo y a tus invitados.
+    </p>
+
+    <%# Formulario para dejar reseña %>
+    <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 18px; padding: 22px; margin-bottom: 30px;">
+      <h3 style="margin: 0 0 14px 0; font-size: 1.05em; font-weight: 700; color: var(--text-main); font-family: var(--font-outfit);">
+        ✍️ Déjanos tu Calificación y Comentario
+      </h3>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Tu Calificación</label>
+        <div id="star-rating-picker" style="display: flex; gap: 8px; font-size: 2em; cursor: pointer; color: #fbbf24;">
+          <span onclick="setRating(1)" onmouseover="hoverRating(1)" onmouseout="resetRatingHover()" class="star-pick" data-val="1">★</span>
+          <span onclick="setRating(2)" onmouseover="hoverRating(2)" onmouseout="resetRatingHover()" class="star-pick" data-val="2">★</span>
+          <span onclick="setRating(3)" onmouseover="hoverRating(3)" onmouseout="resetRatingHover()" class="star-pick" data-val="3">★</span>
+          <span onclick="setRating(4)" onmouseover="hoverRating(4)" onmouseout="resetRatingHover()" class="star-pick" data-val="4">★</span>
+          <span onclick="setRating(5)" onmouseover="hoverRating(5)" onmouseout="resetRatingHover()" class="star-pick" data-val="5">★</span>
+        </div>
+        <input type="hidden" id="review-rating-val" value="5">
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+        <div>
+          <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Tu Nombre</label>
+          <input type="text" id="review-name" value="<%= @gig.client&.name %>" placeholder="Tu nombre..." class="form-input" style="margin-bottom: 0;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">¿Eres el cliente o invitado?</label>
+          <select id="review-is-client" class="form-input" style="margin-bottom: 0; background: rgba(0,0,0,0.3);">
+            <option value="true">Cliente Contratante</option>
+            <option value="false">Invitado del Evento</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Tu Mensaje o Reseña del Show</label>
+        <textarea id="review-comment" rows="3" placeholder="¿Qué tal estuvo la música, la puntualidad y el show? Cuéntanos tu experiencia..." class="form-input" style="margin-bottom: 0; resize: vertical;"></textarea>
+      </div>
+
+      <button id="btn-submit-review" onclick="submitReview()" class="btn-portal" style="width: auto; padding: 12px 28px;">
+        🌟 Publicar Reseña en el Muro
+      </button>
+    </div>
+
+    <%# Listado de reseñas en el muro %>
+    <h3 style="font-family: var(--font-outfit); font-size: 1.1em; font-weight: 700; margin: 0 0 15px 0; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px;">
+      Recuerdos y Reseñas Publicadas
+    </h3>
+
+    <div id="reviews-feed" style="display: grid; gap: 14px;">
+      <% if @gig_reviews.any? %>
+        <% @gig_reviews.each do |review| %>
+          <div class="review-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+              <div>
+                <strong style="color: var(--text-main); font-size: 1.02em;"><%= review.client_name %></strong>
+                <% if review.is_client? %>
+                  <span style="background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.3); color: #c084fc; font-size: 0.75em; padding: 2px 8px; border-radius: 99px; font-weight: 700; margin-left: 6px;">Cliente</span>
+                <% end %>
+              </div>
+              <div style="text-align: right;">
+                <span style="color: #fbbf24; font-size: 1.1em; letter-spacing: 2px;"><%= review.stars_display %></span>
+                <span style="display: block; font-size: 0.75em; color: var(--text-muted);"><%= review.created_at.strftime("%d/%m/%Y") %></span>
+              </div>
+            </div>
+            <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5;">
+              "<%= review.comment %>"
+            </p>
+          </div>
+        <% end %>
+      <% else %>
+        <div id="empty-reviews-placeholder" style="text-align: center; padding: 25px; color: var(--text-muted); background: rgba(255,255,255,0.01); border-radius: 16px; border: 1px dashed rgba(255,255,255,0.06);">
+          <p style="margin: 0 0 5px 0; font-size: 1.5em;">💬</p>
+          <p style="margin: 0; font-size: 0.9em;">Sé el primero en compartir tu experiencia en el muro.</p>
+        </div>
+      <% end %>
+    </div>
+  </section>
+
   <%# --- FOOTER --- %>
   <footer style="text-align: center; color: var(--text-muted); font-size: 0.85em; margin-top: 50px; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 20px;">
     <p style="margin: 0;">Generado por <strong>Gig Manager</strong>. Todos los derechos reservados.</p>
@@ -866,6 +974,110 @@
       alert("Error de red. Intenta de nuevo.");
       btn.disabled = false;
       btn.textContent = "✍️ Aceptar Términos y Firmar Contrato";
+    });
+  }
+
+  // 3. Muro de Recuerdos y Reseñas
+  let currentRating = 5;
+
+  function setRating(val) {
+    currentRating = val;
+    document.getElementById('review-rating-val').value = val;
+    renderRatingStars(val);
+  }
+
+  function hoverRating(val) {
+    renderRatingStars(val);
+  }
+
+  function resetRatingHover() {
+    renderRatingStars(currentRating);
+  }
+
+  function renderRatingStars(val) {
+    document.querySelectorAll('.star-pick').forEach(star => {
+      const starVal = parseInt(star.getAttribute('data-val'));
+      star.style.opacity = (starVal <= val) ? '1' : '0.3';
+    });
+  }
+
+  function submitReview() {
+    const nameInput = document.getElementById('review-name');
+    const commentInput = document.getElementById('review-comment');
+    const isClientSelect = document.getElementById('review-is-client');
+    const btn = document.getElementById('btn-submit-review');
+
+    const name = nameInput.value.trim();
+    const comment = commentInput.value.trim();
+
+    if (!comment) {
+      alert("Por favor escribe tu reseña o comentario.");
+      commentInput.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = "Publicando...";
+
+    const token = '<%= params[:token] %>';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    fetch(`/portal/${token}/submit_review`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        client_name: name,
+        rating: currentRating,
+        comment: comment,
+        is_client: isClientSelect.value
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        commentInput.value = '';
+        btn.disabled = false;
+        btn.textContent = "🌟 Publicar Reseña en el Muro";
+
+        // Quitar placeholder si existe
+        const emptyPlaceholder = document.getElementById('empty-reviews-placeholder');
+        if (emptyPlaceholder) emptyPlaceholder.remove();
+
+        // Agregar la nueva reseña al feed
+        const feed = document.getElementById('reviews-feed');
+        const newCard = document.createElement('div');
+        newCard.className = 'review-card';
+        newCard.style.animation = 'scaleIn 0.35s ease';
+        newCard.innerHTML = `
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+            <div>
+              <strong style="color: var(--text-main); font-size: 1.02em;">${data.review.name}</strong>
+              <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); color: #34d399; font-size: 0.75em; padding: 2px 8px; border-radius: 99px; font-weight: 700; margin-left: 6px;">Nueva</span>
+            </div>
+            <div style="text-align: right;">
+              <span style="color: #fbbf24; font-size: 1.1em; letter-spacing: 2px;">${data.review.stars}</span>
+              <span style="display: block; font-size: 0.75em; color: var(--text-muted);">${data.review.date}</span>
+            </div>
+          </div>
+          <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5;">
+            "${data.review.comment}"
+          </p>
+        `;
+        feed.prepend(newCard);
+      } else {
+        alert("Error al publicar: " + (data.error || "Ocurrió un error."));
+        btn.disabled = false;
+        btn.textContent = "🌟 Publicar Reseña en el Muro";
+      }
+    })
+    .catch(() => {
+      alert("Error de red al publicar reseña.");
+      btn.disabled = false;
+      btn.textContent = "🌟 Publicar Reseña en el Muro";
     });
   }
 </script>

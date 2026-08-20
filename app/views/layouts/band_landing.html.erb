@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <title><%= @company.name %> | Música en Vivo &amp; Producción para Eventos</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="Contrata a <%= @company.name %> para tu boda, fiesta corporativa o evento especial. Cotiza en línea en menos de 1 minuto.">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400&family=Space+Grotesk:wght@400;600;700&family=Syne:wght@500;700;800&family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --primary: <%= @company.theme_hex %>;
+        --primary-hover: <%= @company.theme_hex %>;
+        --primary-glow: <%= @company.theme_hex %>55;
+        --accent-cyan: <%= @company.accent_hex %>;
+        --accent-glow: <%= @company.accent_hex %>40;
+        --primary-gradient: <%= @company.gradient_css %>;
+        --success: #10b981;
+        --warning: #f59e0b;
+        --bg-dark: <%= @company.landing_bg_style == "carbon" ? "#09090b" : (@company.landing_bg_style == "royal" ? "#050814" : "#07090e") %>;
+        --card-bg: rgba(15, 23, 42, 0.65);
+        --card-border: rgba(255, 255, 255, 0.08);
+        --card-border-hover: <%= @company.theme_hex %>66;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --font-heading: <%= @company.font_css %>;
+        --font-outfit: <%= @company.font_css %>;
+        --font-body: 'Plus Jakarta Sans', sans-serif;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: <%= @company.bg_style_css[:color] %>;
+        background-image: <%= @company.bg_style_css[:image] %>;
+        background-size: <%= @company.bg_style_css[:size] %>;
+        background-attachment: fixed;
+        color: var(--text-main);
+        font-family: var(--font-body);
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      /* Navbar */
+      .landing-nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        min-height: <%= [@company.logo_height_px + 20, 70].max %>px;
+        height: auto;
+        background: rgba(7, 9, 14, 0.85);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 30px;
+      }
+
+      .nav-brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        text-decoration: none;
+        color: white;
+        font-family: var(--font-outfit);
+        font-size: 1.3em;
+        font-weight: 800;
+      }
+
+      .nav-links {
+        display: flex;
+        align-items: center;
+        gap: 24px;
+      }
+
+      .nav-link {
+        color: var(--text-muted);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.92em;
+        transition: color 0.2s ease;
+      }
+      .nav-link:hover {
+        color: white;
+      }
+
+      .btn-nav-cta {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--accent-cyan) 100%);
+        color: white;
+        text-decoration: none;
+        padding: 9px 20px;
+        border-radius: 99px;
+        font-weight: 700;
+        font-size: 0.88em;
+        box-shadow: 0 4px 15px var(--primary-glow);
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn-nav-cta:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px var(--primary-glow);
+      }
+
+      @media (max-width: 768px) {
+        .landing-nav {
+          padding: 0 16px;
+        }
+        .nav-links .nav-link {
+          display: none;
+        }
+      }
+
+      /* Container */
+      .landing-container {
+        max-width: 1160px;
+        margin: 0 auto;
+        padding: 100px 20px 60px;
+      }
+
+      /* Glass Cards */
+      .glass-box {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 24px;
+        padding: 35px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      /* Typography */
+      .gradient-title {
+        background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 50%, var(--primary) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        font-family: var(--font-outfit);
+        font-weight: 900;
+        letter-spacing: -1px;
+      }
+
+      .section-badge {
+        background: var(--primary-glow);
+        border: 1px solid var(--card-border-hover);
+        color: var(--text-main);
+        padding: 6px 16px;
+        border-radius: 99px;
+        font-size: 0.8em;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        display: inline-block;
+        margin-bottom: 12px;
+      }
+
+      /* Buttons */
+      .btn-cta-primary {
+        background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+        color: white;
+        border: none;
+        padding: 14px 30px;
+        border-radius: 14px;
+        font-weight: 800;
+        font-size: 1.05em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        box-shadow: 0 6px 20px var(--primary-glow);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      }
+      .btn-cta-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 26px var(--primary-glow);
+      }
+
+      .btn-cta-secondary {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        color: white;
+        padding: 14px 26px;
+        border-radius: 14px;
+        font-weight: 700;
+        font-size: 1.05em;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        transition: all 0.2s ease;
+      }
+      .btn-cta-secondary:hover {
+        background: rgba(255, 255, 255, 0.09);
+        border-color: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar { width: 8px; height: 8px; }
+      ::-webkit-scrollbar-track { background: rgba(15, 23, 42, 0.2); }
+      ::-webkit-scrollbar-thumb { background: var(--primary-glow); border-radius: 4px; }
+      ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+    </style>
+  </head>
+  <body class="<%= @company.template_data[:style_class] %>">
+    <%# Navigation %>
+    <nav class="landing-nav">
+      <a href="#hero" class="nav-brand">
+        <% if @company.landing_logo.attached? %>
+          <%= image_tag url_for(@company.landing_logo), style: "height: #{@company.logo_height_px}px; max-width: 320px; object-fit: contain; border-radius: 6px;" rescue nil %>
+          <% if @company.show_brand_name_with_logo? %>
+            <span style="font-family: var(--font-heading); font-size: 1.25em; font-weight: 800; color: white; letter-spacing: -0.5px;">
+              <%= @company.brand_name_for_landing %>
+            </span>
+          <% end %>
+        <% else %>
+          <span style="font-size: 1.3em;">🎸</span>
+          <span style="font-family: var(--font-heading); font-size: 1.25em; font-weight: 800; color: white; letter-spacing: -0.5px;">
+            <%= @company.brand_name_for_landing %>
+          </span>
+        <% end %>
+      </a>
+
+      <div class="nav-links">
+        <% if @company.landing_section_visible?(:show_packages) %>
+          <a href="#paquetes" class="nav-link">Paquetes</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_calculator) %>
+          <a href="#cotizador" class="nav-link">Simulador</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_media) %>
+          <a href="#galeria" class="nav-link">Videos &amp; Tarima</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_team) && @staff_members.present? && @staff_members.any? %>
+          <a href="#equipo" class="nav-link">Músicos</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_reviews) %>
+          <a href="#resenas" class="nav-link">Reseñas</a>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_faq) %>
+          <a href="#faq" class="nav-link">FAQ</a>
+        <% end %>
+        <% if user_signed_in? %>
+          <%= link_to "🏠 Mi Panel App", root_path, class: "nav-link", style: "color: #38bdf8; font-weight: 700;" %>
+        <% else %>
+          <%= link_to "🔐 Iniciar Sesión App", new_user_session_path, class: "nav-link", style: "color: #cbd5e1;" %>
+        <% end %>
+        <% if @company.landing_section_visible?(:show_calculator) %>
+          <a href="#cotizador" class="btn-nav-cta">⚡ Cotizar Ahora</a>
+        <% elsif @company.contact_phone.present? || @company.whatsapp_number.present? %>
+          <a href="https://wa.me/<%= (@company.whatsapp_number.presence || @company.contact_phone).gsub(/[^0-9]/, '') %>" target="_blank" class="btn-nav-cta">💬 WhatsApp</a>
+        <% end %>
+      </div>
+    </nav>
+
+    <%= yield %>
+
+    <%# Footer %>
+    <footer style="border-top: 1px solid rgba(255,255,255,0.06); padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 0.9em; background: rgba(0,0,0,0.3);">
+      <p style="margin: 0 0 8px 0;">
+        © <%= Date.today.year %> <strong><%= @company.name %></strong>. Todos los derechos reservados.
+        <% if user_signed_in? %>
+          <%= link_to "🏠 Acceso a la App (Mi Panel)", root_path, style: "color: #38bdf8; text-decoration: none; font-weight: 700; margin-left: 15px;" %>
+        <% else %>
+          <%= link_to "🔐 Iniciar Sesión en la App", new_user_session_path, style: "color: #94a3b8; text-decoration: none; margin-left: 15px;" %>
+        <% end %>
+      </p>
+      </p>
+      <p style="margin: 0; font-size: 0.8em; opacity: 0.7;">
+        Potenciado por <strong>Gig Manager</strong> • Gestión Inteligente para la Industria Musical
+      </p>
+    </footer>
+  </body>
+</html>

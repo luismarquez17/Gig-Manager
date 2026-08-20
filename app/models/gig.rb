@@ -10,6 +10,7 @@ class Gig < ApplicationRecord
   has_many :employee_payments, dependent: :nullify
   has_many :fund_allocations, dependent: :destroy
   has_many :gig_timeline_items, dependent: :destroy
+  has_many :gig_reviews, dependent: :destroy
   
   validates :amount, presence: true
   validates :client_email, presence: true, if: -> { client_id.blank? }
@@ -197,6 +198,12 @@ class Gig < ApplicationRecord
     end
 
     upsells
+  end
+
+  def average_review_rating
+    approved = gig_reviews.approved
+    return 0 if approved.empty?
+    (approved.average(:rating) || 0).to_f.round(1)
   end
 
   private

@@ -24,48 +24,70 @@
     </div>
   <% end %>
 
-  <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN --- %>
-  <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
-    <%= form_with url: clients_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
-      
-      <%# Buscador %>
-      <div style="flex-grow: 2; min-width: 200px; margin-bottom: 20px;">
-        <%= f.label :query, "🔍 Buscar Cliente o Teléfono", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.text_field :query, value: params[:query], placeholder: "Nombre o 0414...", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" %>
+  <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN (DESPLEGABLE) --- %>
+  <% 
+    has_active_client_filters = params[:query].present? || params[:priority].present? || params[:has_debt].present? || (params[:sort].present? && params[:sort] != 'fecha_desc')
+    active_client_filters_count = [params[:query], params[:priority], params[:has_debt]].select(&:present?).count
+  %>
+  
+  <details style="background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 25px; border: 1px solid #e2e8f0; overflow: hidden;" <%= 'open' if has_active_client_filters %>>
+    <summary style="cursor: pointer; padding: 14px 20px; font-weight: 700; font-size: 0.95em; color: #1e293b; display: flex; justify-content: space-between; align-items: center; user-select: none; background: #f8fafc;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.1em;">🔍</span>
+        <span>Buscador &amp; Filtros de Clientes</span>
+        <% if active_client_filters_count > 0 %>
+          <span style="background: #2563eb; color: white; padding: 2px 10px; border-radius: 99px; font-size: 0.78em; font-weight: 800;">
+            <%= active_client_filters_count %> filtro(s) activo(s)
+          </span>
+        <% else %>
+          <span style="color: #94a3b8; font-size: 0.82em; font-weight: normal;">(Haz clic para desplegar u ocultar)</span>
+        <% end %>
       </div>
+      <span style="font-size: 0.8em; color: #64748b; font-weight: bold;">🔽 Desplegar / Contraer</span>
+    </summary>
 
-      <%# Filtro de Prioridad %>
-      <div style="flex-grow: 1; min-width: 130px; margin-bottom: 20px;">
-        <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
+    <div style="padding: 20px; border-top: 1px solid #f1f5f9;">
+      <%= form_with url: clients_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
+        
+        <%# Buscador %>
+        <div style="flex-grow: 2; min-width: 200px; margin-bottom: 15px;">
+          <%= f.label :query, "🔍 Buscar Cliente o Teléfono", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.text_field :query, value: params[:query], placeholder: "Nombre o 0414...", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" %>
+        </div>
 
-      <%# Filtro por Estado de Deuda %>
-      <div style="flex-grow: 1; min-width: 160px; margin-bottom: 20px;">
-        <%= f.label :has_debt, "Estado de Deuda", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :has_debt, [["Todos los clientes", ""], ["🔴 Solo con Deuda", "true"]], { selected: params[:has_debt] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
+        <%# Filtro de Prioridad %>
+        <div style="flex-grow: 1; min-width: 130px; margin-bottom: 15px;">
+          <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
 
-      <%# Selector de Ordenamiento por Dinero / Deuda %>
-      <div style="flex-grow: 1; min-width: 180px; margin-bottom: 20px;">
-        <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :sort, 
-            [["🆕 Más Recientes", "fecha_desc"], 
-             ["🔴 Mayor Deuda", "deuda_desc"],
-             ["💰 Presupuesto (Mayor)", "presupuesto_desc"], 
-             ["💸 Presupuesto (Menor)", "presupuesto_asc"],
-             ["📅 Más Antiguos", "antiguedad_asc"]], 
-            { selected: params[:sort] }, 
-            { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
+        <%# Filtro por Estado de Deuda %>
+        <div style="flex-grow: 1; min-width: 160px; margin-bottom: 15px;">
+          <%= f.label :has_debt, "Estado de Deuda", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :has_debt, [["Todos los clientes", ""], ["🔴 Solo con Deuda", "true"]], { selected: params[:has_debt] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
 
-      <%# Botones de Acción %>
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
-        <%= f.submit "Aplicar", style: "background: #007bff; color: white; border: none; padding: 0 25px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px;" %>
-        <%= link_to "Limpiar", clients_path, style: "background: #4a5568; color: white; border: none; padding: 0 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 40px; font-weight: bold;" %>
-      </div>
-    <% end %>
-  </div>
+        <%# Selector de Ordenamiento por Dinero / Deuda %>
+        <div style="flex-grow: 1; min-width: 180px; margin-bottom: 15px;">
+          <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :sort, 
+              [["🆕 Más Recientes", "fecha_desc"], 
+               ["🔴 Mayor Deuda", "deuda_desc"],
+               ["💰 Presupuesto (Mayor)", "presupuesto_desc"], 
+               ["💸 Presupuesto (Menor)", "presupuesto_asc"],
+               ["📅 Más Antiguos", "antiguedad_asc"]], 
+              { selected: params[:sort] }, 
+              { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
+
+        <%# Botones de Acción %>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;">
+          <%= f.submit "Aplicar", style: "background: #007bff; color: white; border: none; padding: 0 25px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px;" %>
+          <%= link_to "Limpiar", clients_path, style: "background: #4a5568; color: white; border: none; padding: 0 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 40px; font-weight: bold;" %>
+        </div>
+      <% end %>
+    </div>
+  </details>
 
   <%# --- TABLA DE RESULTADOS --- %>
   <div style="background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #eee;">

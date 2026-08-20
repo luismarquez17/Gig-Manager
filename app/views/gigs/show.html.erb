@@ -21,6 +21,12 @@
           <span style="color: #cbd5e1;">|</span>
           <%= link_to '✏️ Editar Evento', edit_gig_path(@gig), style: "color: #2563eb; text-decoration: none; font-weight: bold; font-size: 0.9em;" %>
         <% end %>
+        <% if @gig.company&.landing_enabled? %>
+          <span style="color: #cbd5e1;">|</span>
+          <%= link_to band_landing_path(slug: @gig.company.slug), target: "_blank", title: "Ver la Landing Page pública de la empresa", style: "color: #0f172a; text-decoration: none; font-weight: bold; font-size: 0.9em;" do %>
+            🌐 Web Pública de <%= @gig.company.name %> ➔
+          <% end %>
+        <% end %>
       </div>
       <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
     </div>
@@ -173,6 +179,36 @@
         });
       }
     </script>
+
+    <%# --- RESEÑAS Y RECUERDOS DEL EVENTO --- %>
+    <%
+      gig_reviews = @gig.gig_reviews.approved
+    %>
+    <% if gig_reviews.any? %>
+      <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; padding: 25px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+          <h3 style="margin: 0; color: #1e293b; font-size: 1.15em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            <span>📸</span> Reseñas Recibidas en el Muro (<%= gig_reviews.count %>)
+          </h3>
+          <span style="background: #fef3c7; color: #b45309; font-size: 0.85em; padding: 4px 12px; border-radius: 99px; font-weight: 800;">
+            ★ <%= @gig.average_review_rating %> Promedio
+          </span>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px;">
+          <% gig_reviews.each do |r| %>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 18px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <strong style="color: #0f172a; font-size: 0.95em;"><%= r.client_name %></strong>
+                <span style="color: #f59e0b; font-size: 1em;"><%= r.stars_display %></span>
+              </div>
+              <p style="margin: 0; color: #475569; font-size: 0.9em; font-style: italic; line-height: 1.4;">
+                "<%= r.comment %>"
+              </p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
 
     <%# --- PERSONALIZACIÓN Y ACTIVACIÓN DE ADICIONALES (UPSELLS) PARA ESTE EVENTO (DESPLEGABLE) --- %>
     <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; overflow: hidden;">
