@@ -101,7 +101,7 @@
             </div>
 
             <div style="border-top: 1px dashed #cbd5e1; padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.82em; color: #475569;">
-              <span>Tipografía: <strong style="color: #1e293b;"><%= tpl[:font].split(',').first %></strong></span>
+              <span>Tipografía: <strong style="color: #1e293b;"><%= (tpl[:font] || "Outfit").split(',').first %></strong></span>
               <div style="display: flex; align-items: center; gap: 4px;" onclick="event.stopPropagation();">
                 <span style="font-weight: 800; font-size: 0.8em; color: #64748b;">Precio Add-on ($):</span>
                 <input type="number" name="company[landing_template_prices][<%= key %>]" value="<%= @company.template_price(key).to_i %>" step="1" min="0" style="width: 65px; font-weight: 800; color: #15803d; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85em; text-align: right; background: white;">

@@ -98,6 +98,7 @@ class Company < ApplicationRecord
       badge: "STUDIO MINIMAL ($19/mes)",
       price: "$19 / mes",
       description: "Estética minimalista de estudio de grabación, fondo azabache mate, líneas ultra finas y foco absoluto en los precios.",
+      font: "'Inter', sans-serif",
       style_class: "template-minimal-acoustic"
     }
   }.freeze
