@@ -545,18 +545,18 @@
   }
 
   .gradient-title {
-    font-family: var(--font-outfit);
+    font-family: var(--font-heading);
     font-weight: 900;
-    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    background: var(--primary-gradient);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     letter-spacing: -0.5px;
   }
 
   .btn-cta-primary {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    background: var(--primary-gradient);
     color: white;
-    font-family: var(--font-outfit);
+    font-family: var(--font-heading);
     font-weight: 800;
     font-size: 1.05em;
     padding: 14px 28px;
@@ -572,6 +572,25 @@
   .btn-cta-primary:hover {
     transform: translateY(-2px);
     box-shadow: 0 8px 30px var(--primary-glow);
+  }
+
+  /* Estilos Dinámicos según Plantilla Activa */
+  .template-neon-festival .glass-box {
+    border-color: var(--primary);
+    box-shadow: 0 0 25px var(--primary-glow);
+  }
+
+  .template-royal-gala .gradient-title {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  .template-minimal-acoustic .glass-box {
+    background: rgba(10, 10, 12, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
   }
 
   .btn-cta-secondary {

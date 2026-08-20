@@ -68,6 +68,68 @@ class Company < ApplicationRecord
     landing_sections_config[key.to_s] != false && landing_sections_config[key.to_s] != "false"
   end
 
+  TEMPLATES_CATALOG = {
+    "classic_stage" => {
+      name: "Clásica Escenario",
+      badge: "INCLUIDO ($0/mes)",
+      price: "$0 / mes",
+      description: "Diseño elegante en modo oscuro con efecto cristal (glassmorphism), tipografía moderna y tarjetas balanceadas.",
+      font: "'Outfit', sans-serif",
+      style_class: "template-classic-stage"
+    },
+    "neon_festival" => {
+      name: "Neón Festival Cyberpunk",
+      badge: "PRO FESTIVAL ($15/mes)",
+      price: "$15 / mes",
+      description: "Bordes fosforescentes de neón, gradientes de alto contraste, tipografía Cyber Grotesk y animaciones dinámicas.",
+      font: "'Space Grotesk', sans-serif",
+      style_class: "template-neon-festival"
+    },
+    "royal_gala" => {
+      name: "Royal Gala Luxury & Bodas VIP",
+      badge: "VIP ROYAL ($29/mes)",
+      price: "$29 / mes",
+      description: "Diseño suntuoso de alta gala para bodas de lujo, tipografía serif dorada, acentos champagne y estética aristocrática.",
+      font: "'Playfair Display', serif",
+      style_class: "template-royal-gala"
+    },
+    "minimal_acoustic" => {
+      name: "Minimal Studio & Acústico Refinado",
+      badge: "STUDIO MINIMAL ($19/mes)",
+      price: "$19 / mes",
+      description: "Estética minimalista de estudio de grabación, fondo azabache mate, líneas ultra finas y foco absoluto en los precios.",
+      font: "'Inter', sans-serif",
+      style_class: "template-minimal-acoustic"
+    }
+  }.freeze
+
+  GRADIENT_STYLES = {
+    "linear_neon" => "Degradado Lineal Neón (Primario ➔ Secundario)",
+    "radial_glow" => "Resplandor Radial Centrado (Glow)",
+    "triple_mesh" => "Degradado Múltiple Neón (Primario ➔ Secundario ➔ Esmeralda)",
+    "solid_bold" => "Color Sólido Puro (Sin Degradado)"
+  }.freeze
+
+  def template_data
+    TEMPLATES_CATALOG[landing_template] || TEMPLATES_CATALOG["classic_stage"]
+  end
+
+  def gradient_css
+    p_hex = landing_theme_color.presence || "#8b5cf6"
+    s_hex = landing_accent_color.presence || "#06b6d4"
+
+    case landing_gradient_style
+    when "radial_glow"
+      "radial-gradient(circle at 50% 50%, #{p_hex} 0%, #{s_hex} 100%)"
+    when "triple_mesh"
+      "linear-gradient(135deg, #{p_hex} 0%, #{s_hex} 50%, #10b981 100%)"
+    when "solid_bold"
+      p_hex
+    else # linear_neon
+      "linear-gradient(135deg, #{p_hex} 0%, #{s_hex} 100%)"
+    end
+  end
+
   def theme_hex
     landing_theme_color.presence || "#8b5cf6"
   end

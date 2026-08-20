@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_20_024934) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_20_163254) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -100,6 +100,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_024934) do
     t.decimal "landing_calculator_extra_show_price", precision: 10, scale: 2, default: "250.0"
     t.integer "landing_calculator_base_sound_hours", default: 4
     t.decimal "landing_calculator_extra_sound_hour_price", precision: 10, scale: 2, default: "60.0"
+    t.string "landing_template", default: "classic_stage"
+    t.string "landing_gradient_style", default: "linear_neon"
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
   end

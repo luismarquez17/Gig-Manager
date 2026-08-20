@@ -60,27 +60,45 @@
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
       
-      <%# --- 2. PERSONALIZADOR DE TEMA, COLORES & ESTILOS --- %>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 25px; margin-bottom: 25px;">
+      
+      <%# --- 2. PERSONALIZADOR DE TEMA, COLORES PRIMARIOS, SECUNDARIOS & DEGRADADOS --- %>
       <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
         <h2 style="margin: 0 0 16px 0; font-size: 1.2em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-          <span>🎨</span> Colores &amp; Tema Visual
+          <span>🎨</span> Paleta de Colores &amp; Degradados Multitono
         </h2>
 
-        <div style="margin-bottom: 18px;">
-          <label style="display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 8px;">Color Primario de la Marca</label>
-          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px;">
-            <button type="button" onclick="setThemeColor('#8b5cf6')" style="background: #8b5cf6; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Púrpura Neón"></button>
-            <button type="button" onclick="setThemeColor('#06b6d4')" style="background: #06b6d4; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Cyan Eléctrico"></button>
-            <button type="button" onclick="setThemeColor('#f59e0b')" style="background: #f59e0b; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Dorado VIP"></button>
-            <button type="button" onclick="setThemeColor('#ec4899')" style="background: #ec4899; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Rosa Glam"></button>
-            <button type="button" onclick="setThemeColor('#10b981')" style="background: #10b981; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Esmeralda"></button>
-            <button type="button" onclick="setThemeColor('#3b82f6')" style="background: #3b82f6; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Azul Royal"></button>
-            <button type="button" onclick="setThemeColor('#f43f5e')" style="background: #f43f5e; width: 32px; height: 32px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 6px rgba(0,0,0,0.2); cursor: pointer;" title="Rojo Pasión"></button>
+        <%# Color Primario %>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;">Color Primario de la Marca</label>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <%= f.color_field :landing_theme_color, id: "landing_theme_color_picker", style: "width: 40px; height: 38px; padding: 0; border: none; border-radius: 8px; cursor: pointer;", onchange: "updateGradientPreview()" %>
+            <%= f.text_field :landing_theme_color, id: "landing_theme_color_input", placeholder: "#8b5cf6", style: "width: 120px; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.9em;", oninput: "updateGradientPreview()" %>
+            <span style="font-size: 0.8em; color: #64748b;">Tono principal del sitio</span>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px;">
-            <%= f.color_field :landing_theme_color, id: "landing_theme_color_picker", style: "width: 40px; height: 38px; padding: 0; border: none; border-radius: 8px; cursor: pointer;" %>
-            <%= f.text_field :landing_theme_color, id: "landing_theme_color_input", placeholder: "#8b5cf6", style: "width: 120px; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.9em;" %>
-            <span style="font-size: 0.8em; color: #64748b;">Código HEX del color</span>
+        </div>
+
+        <%# Color Secundario / Acento %>
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;">Color Secundario / Acento (Complementario)</label>
+          <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+            <%= f.color_field :landing_accent_color, id: "landing_accent_color_picker", style: "width: 40px; height: 38px; padding: 0; border: none; border-radius: 8px; cursor: pointer;", onchange: "updateGradientPreview()" %>
+            <%= f.text_field :landing_accent_color, id: "landing_accent_color_input", placeholder: "#06b6d4", style: "width: 120px; box-sizing: border-box; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.9em;", oninput: "updateGradientPreview()" %>
+            <span style="font-size: 0.8em; color: #64748b;">Tono secundario del degradado</span>
+          </div>
+        </div>
+
+        <%# Estilo de Degradado %>
+        <div style="margin-bottom: 16px;">
+          <%= f.label :landing_gradient_style, "Estilo de Degradado (Gradient Mode)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.select :landing_gradient_style, Company::GRADIENT_STYLES.map { |k, v| [v, k] }, {}, { id: "landing_gradient_style_select", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.88em; background: white;", onchange: "updateGradientPreview()" } %>
+        </div>
+
+        <%# Vista Previa en Vivo del Degradado %>
+        <div style="margin-bottom: 18px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
+          <span style="display: block; font-size: 0.78em; font-weight: 700; color: #64748b; margin-bottom: 6px;">VISTA PREVIA DEL DEGRADADO:</span>
+          <div id="live_gradient_preview" style="height: 38px; border-radius: 10px; background: <%= @company.gradient_css %>; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 0.85em; text-shadow: 0 1px 3px rgba(0,0,0,0.5);">
+            Degradado de Marca Activo
           </div>
         </div>
 
@@ -126,6 +144,49 @@
         </div>
       </div>
 
+    </div>
+
+    <%# --- 3.5 CATÁLOGO DE PLANTILLAS WEB (TEMPLATES SAAS LISTOS PARA USAR) --- %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>🏛️</span> Catálogo de Plantillas Web (Templates SaaS Exclusivos)
+          </h2>
+          <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.88em;">
+            Elige el estilo visual que mejor defina a tu negocio para diferenciarte de otras agrupaciones en tu ciudad.
+          </p>
+        </div>
+        <div>
+          <span style="font-size: 0.82em; background: #ede9fe; color: #6d28d9; padding: 5px 14px; border-radius: 99px; font-weight: 800;">
+            Plantilla Actual: <%= @company.template_data[:name] %>
+          </span>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+        <% Company::TEMPLATES_CATALOG.each do |key, tpl| %>
+          <% is_selected = (@company.landing_template == key) %>
+          <label style="background: <%= is_selected ? '#f5f3ff' : '#f8fafc' %>; border: 2px solid <%= is_selected ? '#8b5cf6' : '#e2e8f0' %>; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; cursor: pointer; transition: all 0.2s; position: relative;">
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <span style="font-size: 0.72em; font-weight: 900; background: <%= is_selected ? '#8b5cf6' : '#0f172a' %>; color: white; padding: 3px 10px; border-radius: 99px;">
+                  <%= tpl[:badge] %>
+                </span>
+                <input type="radio" name="company[landing_template]" value="<%= key %>" <%= 'checked' if is_selected %> style="accent-color: #8b5cf6; width: 18px; height: 18px;">
+              </div>
+
+              <h3 style="margin: 0 0 4px 0; font-size: 1.08em; font-weight: 800; color: #0f172a;"><%= tpl[:name] %></h3>
+              <p style="margin: 0 0 10px 0; font-size: 0.82em; color: #64748b; line-height: 1.4;"><%= tpl[:description] %></p>
+            </div>
+
+            <div style="border-top: 1px dashed #cbd5e1; padding-top: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 0.78em; color: #475569;">
+              <span>Tipografía: <strong><%= tpl[:font].split(',').first %></strong></span>
+              <strong style="color: <%= is_selected ? '#6d28d9' : '#0f172a' %>;"><%= tpl[:price] %></strong>
+            </div>
+          </label>
+        <% end %>
+      </div>
     </div>
 
     <%# --- 4. CONFIGURADOR DE LA CALCULADORA / COTIZADOR EN VIVO (LÓGICA SEPARADA SHOW VS SONIDO) --- %>
@@ -502,18 +563,47 @@
 </div>
 
 <script>
-  function setThemeColor(hex) {
-    document.getElementById('landing_theme_color_picker').value = hex;
-    document.getElementById('landing_theme_color_input').value = hex;
+  function updateGradientPreview() {
+    const pHex = document.getElementById('landing_theme_color_input')?.value || '#8b5cf6';
+    const sHex = document.getElementById('landing_accent_color_input')?.value || '#06b6d4';
+    const style = document.getElementById('landing_gradient_style_select')?.value || 'linear_neon';
+    const preview = document.getElementById('live_gradient_preview');
+
+    if (!preview) return;
+
+    let bgCss = `linear-gradient(135deg, ${pHex} 0%, ${sHex} 100%)`;
+    if (style === 'radial_glow') {
+      bgCss = `radial-gradient(circle at 50% 50%, ${pHex} 0%, ${sHex} 100%)`;
+    } else if (style === 'triple_mesh') {
+      bgCss = `linear-gradient(135deg, ${pHex} 0%, ${sHex} 50%, #10b981 100%)`;
+    } else if (style === 'solid_bold') {
+      bgCss = pHex;
+    }
+
+    preview.style.background = bgCss;
   }
 
   document.getElementById('landing_theme_color_picker')?.addEventListener('input', function(e) {
     document.getElementById('landing_theme_color_input').value = e.target.value;
+    updateGradientPreview();
   });
 
   document.getElementById('landing_theme_color_input')?.addEventListener('input', function(e) {
     if (e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) {
       document.getElementById('landing_theme_color_picker').value = e.target.value;
+      updateGradientPreview();
+    }
+  });
+
+  document.getElementById('landing_accent_color_picker')?.addEventListener('input', function(e) {
+    document.getElementById('landing_accent_color_input').value = e.target.value;
+    updateGradientPreview();
+  });
+
+  document.getElementById('landing_accent_color_input')?.addEventListener('input', function(e) {
+    if (e.target.value.match(/^#[0-9A-Fa-f]{6}$/)) {
+      document.getElementById('landing_accent_color_picker').value = e.target.value;
+      updateGradientPreview();
     }
   });
 

@@ -166,8 +166,10 @@ class LandingSettingsController < ApplicationController
     params.require(:company).permit(
       :landing_enabled,
       :landing_plan,
+      :landing_template,
       :landing_theme_color,
       :landing_accent_color,
+      :landing_gradient_style,
       :landing_bg_style,
       :landing_hero_title,
       :landing_hero_subtitle,
