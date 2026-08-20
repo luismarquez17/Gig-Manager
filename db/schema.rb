@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_20_173855) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_20_184000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -104,8 +104,18 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_173855) do
     t.string "landing_gradient_style", default: "linear_neon"
     t.string "landing_font_family", default: "default"
     t.jsonb "landing_template_prices", default: {"royal_gala"=>29, "classic_stage"=>0, "neon_festival"=>15, "minimal_acoustic"=>19}
+    t.datetime "trial_started_at"
+    t.datetime "trial_ends_at"
+    t.string "stripe_customer_id"
+    t.string "stripe_subscription_id"
+    t.string "stripe_price_id"
+    t.string "subscription_status", default: "trialing", null: false
+    t.string "plan_tier", default: "starter", null: false
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
+    t.index ["stripe_customer_id"], name: "index_companies_on_stripe_customer_id"
+    t.index ["stripe_subscription_id"], name: "index_companies_on_stripe_subscription_id"
+    t.index ["subscription_status"], name: "index_companies_on_subscription_status"
   end
 
   create_table "company_media_items", force: :cascade do |t|
@@ -416,6 +426,24 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_173855) do
     t.index ["category", "name"], name: "index_sub_categories_on_category_and_name", unique: true
   end
 
+  create_table "subscription_payments", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.bigint "user_id", null: false
+    t.decimal "amount", precision: 10, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD"
+    t.string "payment_method", null: false
+    t.string "reference_number", null: false
+    t.string "plan_tier", default: "starter", null: false
+    t.string "status", default: "pending", null: false
+    t.text "notes"
+    t.datetime "approved_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_subscription_payments_on_company_id"
+    t.index ["status"], name: "index_subscription_payments_on_status"
+    t.index ["user_id"], name: "index_subscription_payments_on_user_id"
+  end
+
   create_table "users", force: :cascade do |t|
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -473,6 +501,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_173855) do
   add_foreign_key "staff_assignments", "gigs"
   add_foreign_key "staff_assignments", "users"
   add_foreign_key "standard_upsells", "companies"
+  add_foreign_key "subscription_payments", "companies"
+  add_foreign_key "subscription_payments", "users"
   add_foreign_key "users", "clients"
   add_foreign_key "users", "companies"
 end

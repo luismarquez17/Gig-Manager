@@ -12,6 +12,7 @@ class Company < ApplicationRecord
   has_many :shopping_items, dependent: :destroy
   has_many :finance_settings, dependent: :destroy
   has_many :employee_payments, dependent: :destroy
+  has_many :subscription_payments, dependent: :destroy
   has_many :gig_reviews, through: :gigs
   has_many :company_media_items, dependent: :destroy
 
@@ -25,6 +26,40 @@ class Company < ApplicationRecord
   validates :monthly_fee, numericality: { greater_than_or_equal_to: 0 }
 
   before_validation :generate_slug_and_token, on: :create
+  before_create :set_default_trial_period
+
+  def set_default_trial_period
+    self.trial_started_at ||= Time.current
+    self.trial_ends_at ||= 30.days.from_now
+    self.subscription_status ||= "trialing"
+    self.plan_tier ||= "starter"
+  end
+
+  def trial_active?
+    subscription_status == "trialing" && trial_ends_at.present? && trial_ends_at > Time.current
+  end
+
+  def trial_expired?
+    subscription_status == "trialing" && trial_ends_at.present? && trial_ends_at <= Time.current
+  end
+
+  def days_left_in_trial
+    return 0 unless trial_ends_at.present? && trial_ends_at > Time.current
+    ((trial_ends_at - Time.current) / 1.day).ceil
+  end
+
+  def active_subscription?
+    subscription_status == "active"
+  end
+
+  def access_granted?
+    return true if active_subscription? || trial_active?
+    false
+  end
+
+  def landing_page_enabled_by_plan?
+    plan_tier == "pro" || (trial_active? && landing_enabled?)
+  end
 
   def leaders
     users.where(role: [:leader, :superadmin])

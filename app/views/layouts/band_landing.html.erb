@@ -255,7 +255,7 @@
         <% if user_signed_in? %>
           <%= link_to "🏠 Mi Panel App", root_path, class: "nav-link", style: "color: #38bdf8; font-weight: 700;" %>
         <% else %>
-          <%= link_to "🔐 Iniciar Sesión App", new_user_session_path, class: "nav-link", style: "color: #cbd5e1;" %>
+          <%= link_to "🔐 Iniciar Sesión", new_user_session_path, class: "nav-link", style: "color: #cbd5e1;" %>
         <% end %>
         <% if @company.landing_section_visible?(:show_calculator) %>
           <a href="#cotizador" class="btn-nav-cta">⚡ Cotizar Ahora</a>
@@ -275,6 +275,7 @@
           <%= link_to "🏠 Acceso a la App (Mi Panel)", root_path, style: "color: #38bdf8; text-decoration: none; font-weight: 700; margin-left: 15px;" %>
         <% else %>
           <%= link_to "🔐 Iniciar Sesión en la App", new_user_session_path, style: "color: #94a3b8; text-decoration: none; margin-left: 15px;" %>
+          <%= link_to "👥 ¿Eres músico de #{@company.name}? Únete aquí", join_company_path(@company.slug), style: "color: #a855f7; text-decoration: none; font-weight: 600; margin-left: 15px;" %>
         <% end %>
       </p>
       </p>

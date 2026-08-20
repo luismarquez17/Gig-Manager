@@ -241,6 +241,17 @@
                 <%= link_to superadmin_companies_path, class: "sidebar-link #{'active' if controller_name == 'companies' && controller_path.start_with?('superadmin')}" do %>
                   <span class="icon">🏢</span> <span>Empresas</span>
                 <% end %>
+                <%= link_to superadmin_subscription_payments_path, class: "sidebar-link #{'active' if controller_name == 'subscription_payments' && controller_path.start_with?('superadmin')}" do %>
+                  <span class="icon">💳</span> <span>Pagos Manuales</span>
+                  <% 
+                    pending_sub_count = SubscriptionPayment.pending.count rescue 0
+                  %>
+                  <% if pending_sub_count > 0 %>
+                    <span style="background: #ec4899; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                      <%= pending_sub_count %>
+                    </span>
+                  <% end %>
+                <% end %>
               </div>
             <% end %>
 
@@ -278,6 +289,14 @@
               <% if current_company.present? %>
                 <%= link_to landing_settings_path, class: "sidebar-link #{'active' if controller_name == 'landing_settings'}" do %>
                   <span class="icon">🌐</span> <span>Mi Landing &amp; Videos</span>
+                <% end %>
+                <%= link_to subscriptions_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions'}" do %>
+                  <span class="icon">💳</span> <span>Suscripción SaaS</span>
+                  <% if current_company.trial_active? %>
+                    <span style="background: rgba(139, 92, 246, 0.3); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                      Trial <%= current_company.days_left_in_trial %>d
+                    </span>
+                  <% end %>
                 <% end %>
               <% end %>
 

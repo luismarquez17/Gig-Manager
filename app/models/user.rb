@@ -169,7 +169,20 @@ class User < ApplicationRecord
   def assign_default_company
     return if superadmin? || company_id.present?
 
-    self.company_id = Current.company&.id || Company.first&.id
+    # Garantiza aislamiento total: Si un usuario se registra de forma independiente,
+    # se le crea su propia empresa única con 30 días de prueba gratuita y se le asigna como Líder.
+    user_name = name.presence || email.split('@').first.capitalize
+    new_company = Company.create!(
+      name: "Agrupación #{user_name}",
+      monthly_fee: 0.0,
+      status: :active,
+      trial_started_at: Time.current,
+      trial_ends_at: 30.days.from_now,
+      subscription_status: 'trialing',
+      plan_tier: 'starter'
+    )
+    self.company_id = new_company.id
+    self.role = :leader if role.blank? || client?
   end
 end
 

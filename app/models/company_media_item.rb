@@ -1,5 +1,5 @@
 class CompanyMediaItem < ApplicationRecord
-  belongs_to :company
+  include TenantScoped
 
   has_one_attached :media_file
   has_one_attached :thumbnail

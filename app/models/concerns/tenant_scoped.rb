@@ -2,7 +2,7 @@ module TenantScoped
   extend ActiveSupport::Concern
 
   included do
-    belongs_to :company, optional: true
+    acts_as_tenant :company, allow_nil: true
 
     scope :for_company, ->(company) { where(company: company) }
     scope :current_tenant, -> { where(company: Current.company) if Current.company.present? }
@@ -13,6 +13,6 @@ module TenantScoped
   private
 
   def assign_current_company
-    self.company ||= Current.company || Company.first
+    self.company ||= ::ActsAsTenant.current_tenant || Current.company || Company.first
   end
 end

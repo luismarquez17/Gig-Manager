@@ -31,16 +31,23 @@ class ApplicationController < ActionController::Base
         current_user.update_column(:company_id, Current.company.id)
       end
     end
+
+    ::ActsAsTenant.current_tenant = Current.company
   end
 
   def check_company_subscription!
     return unless user_signed_in?
     return if current_user.superadmin?
     return if controller_name == 'pages' && action_name == 'suspended'
+    return if controller_name == 'subscriptions' || controller_name == 'stripe_webhooks'
     return if devise_controller?
 
-    if current_company&.suspended?
-      redirect_to suspended_company_path
+    if current_company.present?
+      if current_company.suspended?
+        redirect_to suspended_company_path
+      elsif !current_company.access_granted?
+        redirect_to subscriptions_path, alert: "Tu período de prueba de 30 días ha finalizado. Activa tu suscripción para continuar."
+      end
     end
   end
 

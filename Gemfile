@@ -22,6 +22,10 @@ gem "bootstrap", "~> 5.3"
 gem "devise", "~> 4.9"
 gem "dartsass-rails"
 
+# Multi-tenancy y Pagos SaaS
+gem "acts_as_tenant"
+gem "stripe"
+
 # --- Gemas de Funcionalidades Pro (NUEVAS) ---
 
 # Reportes PDF

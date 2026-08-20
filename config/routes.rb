@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  devise_for :users
+  devise_for :users, controllers: { registrations: 'users/registrations' }
   
   root "pages#dashboard"
 
@@ -11,6 +11,12 @@ Rails.application.routes.draw do
         patch :toggle_status
         post :regenerate_token
         post :switch_tenant
+      end
+    end
+    resources :subscription_payments, only: [:index] do
+      member do
+        post :approve
+        post :reject
       end
     end
     post '/switch_tenant', to: 'companies#switch_tenant', as: :switch_tenant_global
@@ -33,6 +39,16 @@ Rails.application.routes.draw do
   get '/financials', to: 'pages#financials', as: 'financials_dashboard'
   get '/normativas', to: 'pages#normativas', as: 'normativas'
   get '/suspended', to: 'pages#suspended', as: 'suspended_company'
+
+  # Gestión de Suscripciones y Stripe
+  resources :subscriptions, only: [:index] do
+    collection do
+      post :checkout
+      post :portal
+      post :report_payment
+    end
+  end
+  post '/stripe_webhooks', to: 'stripe_webhooks#create'
 
 
   get '/funds/:fund_type', to: 'funds#show', as: 'fund'
