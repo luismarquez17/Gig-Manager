@@ -215,7 +215,7 @@
       ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
     </style>
   </head>
-  <body>
+  <body class="<%= @company.template_data[:style_class] %>">
     <%# Navigation %>
     <nav class="landing-nav">
       <a href="#hero" class="nav-brand">

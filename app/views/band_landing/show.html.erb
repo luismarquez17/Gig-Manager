@@ -574,23 +574,148 @@
     box-shadow: 0 8px 30px var(--primary-glow);
   }
 
-  /* Estilos Dinámicos según Plantilla Activa */
+  /* ==========================================
+     PLANTILLA 1: CLÁSICA ESCENARIO (classic_stage)
+     ========================================== */
+  .template-classic-stage .glass-box {
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.65);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+  }
+
+  /* ==========================================
+     PLANTILLA 2: NEÓN FESTIVAL CYBERPUNK (neon_festival)
+     ========================================== */
+  .template-neon-festival {
+    background-image: 
+      linear-gradient(rgba(139, 92, 246, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246, 0.06) 1px, transparent 1px) !important;
+    background-size: 36px 36px !important;
+  }
   .template-neon-festival .glass-box {
-    border-color: var(--primary);
-    box-shadow: 0 0 25px var(--primary-glow);
+    border: 2px solid var(--primary) !important;
+    box-shadow: 0 0 25px var(--primary-glow), inset 0 0 15px var(--primary-glow) !important;
+    border-radius: 8px !important;
+    background: rgba(5, 7, 15, 0.95) !important;
+  }
+  .template-neon-festival .section-badge {
+    border: 2px solid var(--primary) !important;
+    border-radius: 4px !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    letter-spacing: 2px !important;
+    box-shadow: 0 0 15px var(--primary-glow) !important;
+    background: #000000 !important;
+    color: #ffffff !important;
+  }
+  .template-neon-festival .gradient-title {
+    font-family: 'Space Grotesk', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+    text-shadow: 0 0 20px var(--primary-glow);
+  }
+  .template-neon-festival .btn-cta-primary {
+    border-radius: 6px !important;
+    border: 2px solid #ffffff !important;
+    box-shadow: 0 0 30px var(--primary) !important;
+    font-family: 'Space Grotesk', sans-serif !important;
+    text-transform: uppercase !important;
+    letter-spacing: 1px !important;
+  }
+  .template-neon-festival .sim-pill {
+    border-radius: 6px !important;
+    border: 1px solid var(--primary) !important;
+    font-family: 'Space Grotesk', sans-serif !important;
   }
 
+  /* ==========================================
+     PLANTILLA 3: ROYAL GALA LUXURY & BODAS VIP (royal_gala)
+     ========================================== */
+  .template-royal-gala {
+    background-color: #040711 !important;
+    background-image: 
+      radial-gradient(circle at 50% 15%, rgba(234, 179, 8, 0.15) 0%, transparent 60%),
+      radial-gradient(circle at 85% 65%, rgba(202, 138, 4, 0.1) 0%, transparent 50%) !important;
+  }
+  .template-royal-gala .glass-box {
+    border: 1px solid rgba(234, 179, 8, 0.35) !important;
+    border-radius: 24px !important;
+    background: rgba(12, 16, 28, 0.85) !important;
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6) !important;
+  }
+  .template-royal-gala .section-badge {
+    border: 1px solid #eab308 !important;
+    color: #fef08a !important;
+    border-radius: 99px !important;
+    background: rgba(234, 179, 8, 0.12) !important;
+    font-family: 'Playfair Display', serif !important;
+    font-style: italic !important;
+    letter-spacing: 1px !important;
+  }
   .template-royal-gala .gradient-title {
-    font-family: 'Playfair Display', serif;
-    font-style: italic;
-    background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    font-family: 'Playfair Display', serif !important;
+    font-style: italic !important;
+    background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+  }
+  .template-royal-gala .btn-cta-primary {
+    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
+    color: #0f172a !important;
+    font-family: 'Playfair Display', serif !important;
+    font-weight: 900 !important;
+    border-radius: 30px !important;
+    box-shadow: 0 8px 30px rgba(234, 179, 8, 0.4) !important;
+  }
+  .template-royal-gala .sim-pill {
+    border-radius: 20px !important;
+    border: 1px solid rgba(234, 179, 8, 0.3) !important;
+  }
+  .template-royal-gala .sim-pill.active {
+    background: rgba(234, 179, 8, 0.2) !important;
+    border-color: #eab308 !important;
+    box-shadow: 0 0 20px rgba(234, 179, 8, 0.3) !important;
   }
 
+  /* ==========================================
+     PLANTILLA 4: MINIMAL STUDIO & ACÚSTICO (minimal_acoustic)
+     ========================================== */
+  .template-minimal-acoustic {
+    background-color: #08090c !important;
+    background-image: none !important;
+  }
   .template-minimal-acoustic .glass-box {
-    background: rgba(10, 10, 12, 0.95);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(15, 17, 23, 0.95) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 12px !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
+  }
+  .template-minimal-acoustic .section-badge {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #f8fafc !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 6px !important;
+    font-family: 'Inter', sans-serif !important;
+    letter-spacing: 1px !important;
+  }
+  .template-minimal-acoustic .gradient-title {
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 800 !important;
+    color: #ffffff !important;
+    background: none !important;
+    -webkit-text-fill-color: initial !important;
+  }
+  .template-minimal-acoustic .btn-cta-primary {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border-radius: 8px !important;
+    font-family: 'Inter', sans-serif !important;
+    font-weight: 800 !important;
+    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2) !important;
+  }
+  .template-minimal-acoustic .sim-pill {
+    border-radius: 8px !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
   }
 
   .btn-cta-secondary {
