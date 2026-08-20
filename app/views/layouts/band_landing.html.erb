@@ -57,8 +57,9 @@
         top: 0;
         left: 0;
         right: 0;
-        height: 70px;
-        background: rgba(7, 9, 14, 0.75);
+        min-height: <%= [@company.logo_height_px + 20, 70].max %>px;
+        height: auto;
+        background: rgba(7, 9, 14, 0.85);
         backdrop-filter: blur(16px);
         -webkit-backdrop-filter: blur(16px);
         border-bottom: 1px solid rgba(255, 255, 255, 0.06);
@@ -66,7 +67,7 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 30px;
+        padding: 10px 30px;
       }
 
       .nav-brand {
@@ -218,7 +219,7 @@
     <nav class="landing-nav">
       <a href="#hero" class="nav-brand">
         <% if @company.landing_logo.attached? %>
-          <%= image_tag url_for(@company.landing_logo), style: "height: 44px; max-width: 200px; object-fit: contain; border-radius: 6px;" rescue nil %>
+          <%= image_tag url_for(@company.landing_logo), style: "height: #{@company.logo_height_px}px; max-width: 320px; object-fit: contain; border-radius: 6px;" rescue nil %>
           <% if @company.show_brand_name_with_logo? %>
             <span style="font-family: var(--font-heading); font-size: 1.25em; font-weight: 800; color: white; letter-spacing: -0.5px;">
               <%= @company.brand_name_for_landing %>

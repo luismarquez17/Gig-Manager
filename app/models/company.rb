@@ -75,6 +75,14 @@ class Company < ApplicationRecord
     name
   end
 
+  def logo_height_px
+    if landing_sections_config.is_a?(Hash) && landing_sections_config["logo_height"].to_i > 0
+      landing_sections_config["logo_height"].to_i.clamp(25, 120)
+    else
+      50
+    end
+  end
+
   def show_brand_name_with_logo?
     return true unless landing_sections_config.is_a?(Hash)
     return true unless landing_sections_config.key?("show_brand_name_with_logo")

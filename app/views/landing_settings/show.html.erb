@@ -89,7 +89,23 @@
           <p style="margin: 0 0 12px 0; font-size: 0.82em; color: #64748b;">
             Recomendamos un archivo PNG con fondo transparente para que resalte perfectamente en la barra de navegación de tu Landing.
           </p>
-          <%= f.file_field :landing_logo, accept: "image/png,image/jpeg,image/webp,image/svg+xml", style: "width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px dashed #cbd5e1; background: #f8fafc; font-size: 0.88em;" %>
+          <%= f.file_field :landing_logo, accept: "image/png,image/jpeg,image/webp,image/svg+xml", style: "width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px dashed #cbd5e1; background: #f8fafc; font-size: 0.88em; margin-bottom: 16px;" %>
+
+          <%# Control de Tamaño / Altura del Logo %>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+              <label style="font-weight: 700; font-size: 0.84em; color: #334155;">
+                📏 Tamaño / Altura del Logo en la Barra:
+              </label>
+              <span id="logo_height_val_display" style="font-weight: 800; font-size: 0.85em; color: #0284c7; background: #e0f2fe; padding: 2px 8px; border-radius: 6px;">
+                <%= @company.logo_height_px %>px
+              </span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <input type="range" name="company[landing_sections_config][logo_height]" id="logo_height_slider" min="25" max="110" step="5" value="<%= @company.logo_height_px %>" oninput="updateLogoPreviewHeight(this.value)" style="flex: 1; accent-color: #0284c7; cursor: pointer;">
+              <input type="number" id="logo_height_num_input" min="25" max="110" value="<%= @company.logo_height_px %>" oninput="updateLogoPreviewHeight(this.value)" style="width: 60px; padding: 5px; border-radius: 6px; border: 1px solid #cbd5e1; font-weight: bold; font-size: 0.85em; text-align: center; background: white;">
+            </div>
+          </div>
         </div>
 
         <div style="background: #0f172a; padding: 20px; border-radius: 16px; color: white;">
@@ -107,7 +123,7 @@
 
           <div style="display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
             <% if @company.landing_logo.attached? %>
-              <%= image_tag url_for(@company.landing_logo), style: "height: 44px; max-width: 180px; object-fit: contain;" rescue nil %>
+              <%= image_tag url_for(@company.landing_logo), id: "navbar_logo_preview_img", style: "height: #{@company.logo_height_px}px; max-width: 180px; object-fit: contain; transition: height 0.1s;" rescue nil %>
             <% else %>
               <span style="font-size: 1.5em;">🎸</span>
             <% end %>
@@ -812,6 +828,21 @@
       badgeSpan.textContent = `${name} ($0/mes)`;
     } else {
       badgeSpan.textContent = `${name} ($${val}/mes)`;
+    }
+  }
+
+  function updateLogoPreviewHeight(val) {
+    const heightVal = parseInt(val, 10) || 50;
+    const disp = document.getElementById('logo_height_val_display');
+    if (disp) disp.textContent = heightVal + 'px';
+    const num = document.getElementById('logo_height_num_input');
+    if (num) num.value = heightVal;
+    const slider = document.getElementById('logo_height_slider');
+    if (slider) slider.value = heightVal;
+
+    const previewImg = document.getElementById('navbar_logo_preview_img');
+    if (previewImg) {
+      previewImg.style.height = heightVal + 'px';
     }
   }
 </script>

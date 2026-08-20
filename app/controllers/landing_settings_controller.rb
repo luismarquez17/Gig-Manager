@@ -29,6 +29,11 @@ class LandingSettingsController < ApplicationController
         sections_data["custom_brand_name"] = (cfg[:custom_brand_name] || cfg["custom_brand_name"]).to_s.strip
       end
 
+      if cfg.key?("logo_height") || cfg.key?(:logo_height)
+        val = (cfg[:logo_height] || cfg["logo_height"]).to_i
+        sections_data["logo_height"] = val if val > 0
+      end
+
       @company.landing_sections_config = sections_data
     end
 
