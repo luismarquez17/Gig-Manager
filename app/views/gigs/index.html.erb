@@ -16,59 +16,79 @@
     </div>
   <% end %>
 
-  <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN --- %>
-  <div style="background: white; padding: 25px; border-radius: 12px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); margin-bottom: 30px; border: 1px solid #eee;">
-    <%= form_with url: gigs_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
-      
-      <%# Buscador %>
-      <div style="flex-grow: 2; min-width: 200px; margin-bottom: 20px;">
-        <%= f.label :query, "🔍 Buscar Cliente o Teléfono", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.text_field :query, value: params[:query], placeholder: "Ej: Juan Perez o 0414...", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" %>
+  <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN (DESPLEGABLE) --- %>
+  <% 
+    has_active_gigs_filters = params[:query].present? || params[:priority].present? || params[:date_filter].present? || params[:funds_filter].present? || (params[:sort].present? && params[:sort] != 'fecha_desc')
+    active_filters_count = [params[:query], params[:priority], params[:date_filter], params[:funds_filter]].select(&:present?).count
+  %>
+  
+  <details style="background: white; border-radius: 14px; box-shadow: 0 2px 12px rgba(0,0,0,0.04); margin-bottom: 25px; border: 1px solid #e2e8f0; overflow: hidden;" <%= 'open' if has_active_gigs_filters %>>
+    <summary style="cursor: pointer; padding: 14px 20px; font-weight: 700; font-size: 0.95em; color: #1e293b; display: flex; justify-content: space-between; align-items: center; user-select: none; background: #f8fafc;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.1em;">🔍</span>
+        <span>Buscador &amp; Filtros de Toques</span>
+        <% if active_filters_count > 0 %>
+          <span style="background: #2563eb; color: white; padding: 2px 10px; border-radius: 99px; font-size: 0.78em; font-weight: 800;">
+            <%= active_filters_count %> filtro(s) activo(s)
+          </span>
+        <% else %>
+          <span style="color: #94a3b8; font-size: 0.82em; font-weight: normal;">(Haz clic para desplegar u ocultar)</span>
+        <% end %>
       </div>
+      <span style="font-size: 0.8em; color: #64748b; font-weight: bold;">🔽 Desplegar / Contraer</span>
+    </summary>
 
-      <%# Filtro de Prioridad %>
-      <div style="flex-grow: 1; min-width: 130px; margin-bottom: 20px;">
-        <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
-
-      <%# Filtro de Fecha %>
-      <div style="flex-grow: 1; min-width: 130px; margin-bottom: 20px;">
-        <%= f.label :date_filter, "Fecha", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :date_filter, [["Todos", ""], ["Próximos 🔮", "upcoming"], ["Pasados ⏳", "past"]], { selected: params[:date_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
-
-      <%# Filtro de Asignación de Fondos %>
-      <div style="flex-grow: 1; min-width: 210px; margin-bottom: 20px;">
-        <%= f.label :funds_filter, "💰 Asignación a Fondos", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :funds_filter, [
-          ["Todos los estados", ""],
-          ["⚠️ Con saldo por asignar a fondos", "unallocated"],
-          ["❌ Sin ninguna asignación (0 fondos)", "no_allocations"],
-          ["✅ Fondos 100% asignados", "fully_allocated"]
-        ], { selected: params[:funds_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
-
-      <%# Selector de Ordenamiento %>
-      <div style="flex-grow: 1; min-width: 160px; margin-bottom: 20px;">
-        <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-        <%= f.select :sort, 
-            [["📅 Fecha (Reciente)", "fecha_desc"], 
-             ["💰 Monto (Mayor a Menor)", "monto_desc"], 
-             ["💸 Monto (Menor a Mayor)", "monto_asc"]], 
-            { selected: params[:sort] }, 
-            { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
-      </div>
-
-      <%# Botones de Acción %>
-      <div style="display: flex; gap: 10px; margin-bottom: 20px; align-items: flex-end;">
-        <%= f.submit "Aplicar", style: "background: #007bff; color: white; border: none; padding: 0 25px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px;" %>
+    <div style="padding: 20px; border-top: 1px solid #f1f5f9;">
+      <%= form_with url: gigs_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
         
-        <%# Botón Limpiar mejorado con color Gris Oscuro / Antracita %>
-        <%= link_to "Limpiar", gigs_path, style: "background: #4a5568; color: white; border: none; padding: 0 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 40px; font-weight: bold;" %>
-      </div>
-    <% end %>
-  </div>
+        <%# Buscador %>
+        <div style="flex-grow: 2; min-width: 200px; margin-bottom: 15px;">
+          <%= f.label :query, "🔍 Buscar Cliente o Teléfono", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.text_field :query, value: params[:query], placeholder: "Ej: Juan Perez o 0414...", style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box;" %>
+        </div>
+
+        <%# Filtro de Prioridad %>
+        <div style="flex-grow: 1; min-width: 130px; margin-bottom: 15px;">
+          <%= f.label :priority, "Prioridad", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :priority, [["Todas", ""], ["Alta 🟢", "alta"], ["Media 🟡", "media"], ["Baja 🔴", "baja"]], { selected: params[:priority] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
+
+        <%# Filtro de Fecha %>
+        <div style="flex-grow: 1; min-width: 130px; margin-bottom: 15px;">
+          <%= f.label :date_filter, "Fecha", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :date_filter, [["Todos", ""], ["Próximos 🔮", "upcoming"], ["Pasados ⏳", "past"]], { selected: params[:date_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
+
+        <%# Filtro de Asignación de Fondos %>
+        <div style="flex-grow: 1; min-width: 210px; margin-bottom: 15px;">
+          <%= f.label :funds_filter, "💰 Asignación a Fondos", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :funds_filter, [
+            ["Todos los estados", ""],
+            ["⚠️ Con saldo por asignar a fondos", "unallocated"],
+            ["❌ Sin ninguna asignación (0 fondos)", "no_allocations"],
+            ["✅ Fondos 100% asignados", "fully_allocated"]
+          ], { selected: params[:funds_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
+
+        <%# Selector de Ordenamiento %>
+        <div style="flex-grow: 1; min-width: 160px; margin-bottom: 15px;">
+          <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
+          <%= f.select :sort, 
+              [["📅 Fecha (Reciente)", "fecha_desc"], 
+               ["💰 Monto (Mayor a Menor)", "monto_desc"], 
+               ["💸 Monto (Menor a Mayor)", "monto_asc"]], 
+              { selected: params[:sort] }, 
+              { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+        </div>
+
+        <%# Botones de Acción %>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;">
+          <%= f.submit "Aplicar", style: "background: #007bff; color: white; border: none; padding: 0 25px; border-radius: 6px; cursor: pointer; font-weight: bold; height: 40px;" %>
+          <%= link_to "Limpiar", gigs_path, style: "background: #4a5568; color: white; border: none; padding: 0 15px; border-radius: 6px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 40px; font-weight: bold;" %>
+        </div>
+      <% end %>
+    </div>
+  </details>
 
   <%# --- TABLA DE RESULTADOS --- %>
   <div class="d-md-none" style="display: flex; align-items: center; justify-content: space-between; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 8px 14px; margin-bottom: 12px; color: #1e40af; font-size: 0.82em; font-weight: 700;">

@@ -65,36 +65,57 @@
 
   </div>
 
-  <%# --- BARRA DE BÚSQUEDA Y FILTROS --- %>
-  <div style="background: white; padding: 20px 25px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 30px;">
-    <%= form_with url: debts_clients_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
-      
-      <%# Buscador por Cliente %>
-      <div style="flex-grow: 2; min-width: 240px;">
-        <%= f.label :query, "🔍 Buscar Cliente (Nombre, Teléfono, Email)", style: "display: block; font-size: 0.85em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
-        <%= f.text_field :query, value: params[:query], placeholder: "Ej: Juan Pérez, 0414...", style: "width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;" %>
-      </div>
+  <%# --- BARRA DE BÚSQUEDA Y FILTROS (DESPLEGABLE) --- %>
+  <% 
+    has_active_debt_filters = params[:query].present? || params[:date_status].present?
+  %>
 
-      <%# Filtro de Estado de Fecha %>
-      <div style="flex-grow: 1; min-width: 220px;">
-        <%= f.label :date_status, "⏳ Estado del Evento", style: "display: block; font-size: 0.85em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
-        <%= f.select :date_status, [
-            ["Todos los Shows Pendientes", ""],
-            ["🚨 Solo Shows Vencidos (Pasados impagos)", "expired"],
-            ["🗓️ Solo Shows Próximos (Hoy / Futuros)", "upcoming"]
-          ], { selected: params[:date_status] }, { style: "width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font-size: 0.9em;" } %>
-      </div>
-
-      <%# Botones de Acción %>
-      <div style="display: flex; gap: 10px; align-items: flex-end;">
-        <%= f.submit "Filtrar", style: "background: #2563eb; color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: 700; height: 42px; font-size: 0.9em;" %>
-        <% if params[:query].present? || params[:date_status].present? %>
-          <%= link_to "Limpiar", debts_clients_path, style: "background: #64748b; color: white; border: none; padding: 0 16px; border-radius: 8px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 42px; font-weight: 700;" %>
+  <details style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03); margin-bottom: 30px; overflow: hidden;" <%= 'open' if has_active_debt_filters %>>
+    <summary style="cursor: pointer; padding: 14px 20px; font-weight: 700; font-size: 0.95em; color: #1e293b; display: flex; justify-content: space-between; align-items: center; user-select: none; background: #f8fafc;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.1em;">🔍</span>
+        <span>Buscador &amp; Filtros de Deudas</span>
+        <% if has_active_debt_filters %>
+          <span style="background: #2563eb; color: white; padding: 2px 10px; border-radius: 99px; font-size: 0.78em; font-weight: 800;">
+            Filtro activo
+          </span>
+        <% else %>
+          <span style="color: #94a3b8; font-size: 0.82em; font-weight: normal;">(Haz clic para desplegar u ocultar)</span>
         <% end %>
       </div>
+      <span style="font-size: 0.8em; color: #64748b; font-weight: bold;">🔽 Desplegar / Contraer</span>
+    </summary>
 
-    <% end %>
-  </div>
+    <div style="padding: 20px; border-top: 1px solid #f1f5f9;">
+      <%= form_with url: debts_clients_path, method: :get, local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;" do |f| %>
+        
+        <%# Buscador por Cliente %>
+        <div style="flex-grow: 2; min-width: 240px;">
+          <%= f.label :query, "🔍 Buscar Cliente (Nombre, Teléfono, Email)", style: "display: block; font-size: 0.85em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+          <%= f.text_field :query, value: params[:query], placeholder: "Ej: Juan Pérez, 0414...", style: "width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9em; box-sizing: border-box;" %>
+        </div>
+
+        <%# Filtro de Estado de Fecha %>
+        <div style="flex-grow: 1; min-width: 220px;">
+          <%= f.label :date_status, "⏳ Estado del Evento", style: "display: block; font-size: 0.85em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
+          <%= f.select :date_status, [
+              ["Todos los Shows Pendientes", ""],
+              ["🚨 Solo Shows Vencidos (Pasados impagos)", "expired"],
+              ["🗓️ Solo Shows Próximos (Hoy / Futuros)", "upcoming"]
+            ], { selected: params[:date_status] }, { style: "width: 100%; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 8px; background: white; font-size: 0.9em;" } %>
+        </div>
+
+        <%# Botones de Acción %>
+        <div style="display: flex; gap: 10px; align-items: flex-end;">
+          <%= f.submit "Filtrar", style: "background: #2563eb; color: white; border: none; padding: 0 20px; border-radius: 8px; cursor: pointer; font-weight: 700; height: 42px; font-size: 0.9em;" %>
+          <% if params[:query].present? || params[:date_status].present? %>
+            <%= link_to "Limpiar", debts_clients_path, style: "background: #64748b; color: white; border: none; padding: 0 16px; border-radius: 8px; text-decoration: none; font-size: 0.9em; display: flex; align-items: center; height: 42px; font-weight: 700;" %>
+          <% end %>
+        </div>
+
+      <% end %>
+    </div>
+  </details>
 
   <%# --- LISTADO DE CLIENTES DEUDORES --- %>
   <% if @clients_with_debt.any? %>
