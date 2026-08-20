@@ -218,10 +218,17 @@
     <nav class="landing-nav">
       <a href="#hero" class="nav-brand">
         <% if @company.landing_logo.attached? %>
-          <%= image_tag @company.landing_logo, style: "height: 40px; max-width: 180px; object-fit: contain; border-radius: 6px;" %>
+          <%= image_tag @company.landing_logo, style: "height: 44px; max-width: 200px; object-fit: contain; border-radius: 6px;" %>
+          <% if @company.show_brand_name_with_logo? %>
+            <span style="font-family: var(--font-heading); font-size: 1.25em; font-weight: 800; color: white; letter-spacing: -0.5px;">
+              <%= @company.name %>
+            </span>
+          <% end %>
         <% else %>
           <span style="font-size: 1.3em;">🎸</span>
-          <span><%= @company.name %></span>
+          <span style="font-family: var(--font-heading); font-size: 1.25em; font-weight: 800; color: white; letter-spacing: -0.5px;">
+            <%= @company.name %>
+          </span>
         <% end %>
       </a>
 

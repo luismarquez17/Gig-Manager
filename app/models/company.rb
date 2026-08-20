@@ -68,6 +68,11 @@ class Company < ApplicationRecord
     landing_sections_config[key.to_s] != false && landing_sections_config[key.to_s] != "false"
   end
 
+  def show_brand_name_with_logo?
+    return true unless landing_sections_config.is_a?(Hash)
+    landing_sections_config["show_brand_name_with_logo"] == "1" || landing_sections_config["show_brand_name_with_logo"] == true
+  end
+
   TEMPLATES_CATALOG = {
     "classic_stage" => {
       name: "Clásica Escenario",

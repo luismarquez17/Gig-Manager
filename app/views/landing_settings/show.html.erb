@@ -66,6 +66,55 @@
       </div>
     </div>
 
+    <%# --- 1.5 LOGO PNG & IDENTIDAD VISUAL DE LA MARCA EN NAVBAR --- %>
+    <details open style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
+      <summary style="cursor: pointer; padding: 20px 25px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; user-select: none;">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <span style="font-size: 1.3em;">🖼️</span>
+          <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a;">
+            Logo PNG de la Marca &amp; Opciones de Nombre en Navbar
+          </h2>
+          <span style="font-size: 0.78em; font-weight: 700; color: <%= @company.landing_logo.attached? ? '#15803d' : '#64748b' %>; background: <%= @company.landing_logo.attached? ? '#dcfce7' : '#f1f5f9' %>; padding: 4px 12px; border-radius: 99px;">
+            <%= @company.landing_logo.attached? ? '✓ Logo PNG Cargado' : 'Sin Logo (Usando Ícono)' %>
+          </span>
+        </div>
+        <span style="font-size: 0.82em; color: #64748b; font-weight: bold;">🔽 Desplegar / Contraer</span>
+      </summary>
+
+      <div style="padding: 25px; border-top: 1px solid #f1f5f9; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; align-items: center;">
+        <div>
+          <label style="display: block; font-weight: 700; font-size: 0.88em; color: #1e293b; margin-bottom: 6px;">
+            📷 Cargar o Actualizar Logo Oficial (PNG, SVG, JPG, WEBP):
+          </label>
+          <p style="margin: 0 0 12px 0; font-size: 0.82em; color: #64748b;">
+            Recomendamos un archivo PNG con fondo transparente para que resalte perfectamente en la barra de navegación de tu Landing.
+          </p>
+          <%= f.file_field :landing_logo, accept: "image/png,image/jpeg,image/webp,image/svg+xml", style: "width: 100%; box-sizing: border-box; padding: 10px; border-radius: 10px; border: 1px dashed #cbd5e1; background: #f8fafc; font-size: 0.88em;" %>
+        </div>
+
+        <div style="background: #0f172a; padding: 20px; border-radius: 16px; color: white;">
+          <span style="display: block; font-size: 0.75em; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px;">VISTA PREVIA EN LA BARRA DE NAVEGACIÓN:</span>
+          
+          <div style="display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
+            <% if @company.landing_logo.attached? %>
+              <%= image_tag @company.landing_logo, style: "height: 44px; max-width: 180px; object-fit: contain;" %>
+            <% else %>
+              <span style="font-size: 1.5em;">🎸</span>
+            <% end %>
+            
+            <span style="font-family: <%= @company.font_css %>; font-size: 1.2em; font-weight: 800; color: white;">
+              <%= @company.name %>
+            </span>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88em; font-weight: 700; color: #f8fafc; cursor: pointer; background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);">
+            <%= check_box_tag "company[landing_sections_config][show_brand_name_with_logo]", "1", @company.show_brand_name_with_logo?, style: "width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;" %>
+            <span>Mostrar el Nombre de la Marca al lado del Logo PNG</span>
+          </label>
+        </div>
+      </div>
+    </details>
+
     <%# --- 2. CATÁLOGO DE PLANTILLAS WEB (ABIERTO POR DEFECTO) --- %>
     <details open style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
       <summary style="cursor: pointer; padding: 20px 25px; background: #ffffff; display: flex; justify-content: space-between; align-items: center; user-select: none;">

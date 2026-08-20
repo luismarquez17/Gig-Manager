@@ -143,7 +143,7 @@
               </div>
 
               <div style="margin: 15px 0 20px 0;">
-                <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">
+                <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: var(--primary);">
                   <%= number_to_currency(preset.price, unit: preset.currency == "USD" ? "$" : "Bs. ", precision: 0) %>
                 </span>
                 <span style="color: var(--text-muted); font-size: 0.9em;"><%= preset.currency %></span>
@@ -171,7 +171,7 @@
           <div>
             <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Formato Acústico / Íntimo</h3>
             <div style="margin: 15px 0 20px 0;">
-              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$400</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: var(--primary);">$400</span>
               <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
@@ -189,7 +189,7 @@
             <span style="background: var(--primary-glow); color: var(--text-main); font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; text-transform: uppercase; border: 1px solid var(--card-border-hover);">Más Popular</span>
             <h3 style="margin: 8px 0 0 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Banda Completa Fiesta</h3>
             <div style="margin: 15px 0 20px 0;">
-              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$750</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: var(--primary);">$750</span>
               <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
@@ -206,7 +206,7 @@
           <div>
             <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800;">Show Premium Big Band</h3>
             <div style="margin: 15px 0 20px 0;">
-              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: #34d399;">$1,200</span>
+              <span style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 900; color: var(--primary);">$1,200</span>
               <span style="color: var(--text-muted); font-size: 0.9em;">USD</span>
             </div>
             <p style="color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
@@ -271,17 +271,17 @@
               <div class="sim-show-pill active" data-shows="1" onclick="selectShows(1, this)" style="background: var(--primary-glow); border: 1px solid var(--primary); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
                 <div style="font-size: 1.2em; margin-bottom: 2px;">⚡</div>
                 <strong style="display: block; font-size: 0.92em; color: white;">1 Show</strong>
-                <span style="font-size: 0.75em; color: #34d399;">Incluido en Base</span>
+                <span style="font-size: 0.75em; color: var(--primary);">Incluido en Base</span>
               </div>
               <div class="sim-show-pill" data-shows="2" onclick="selectShows(2, this)" style="background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
                 <div style="font-size: 1.2em; margin-bottom: 2px;">🔥</div>
                 <strong style="display: block; font-size: 0.92em; color: white;">2 Shows</strong>
-                <span style="font-size: 0.75em; color: #34d399;">+$<%= @company.landing_calculator_extra_show_price.to_i %> <%= @company.landing_calculator_currency.presence || "USD" %></span>
+                <span style="font-size: 0.75em; color: var(--primary);">+$<%= @company.landing_calculator_extra_show_price.to_i %> <%= @company.landing_calculator_currency.presence || "USD" %></span>
               </div>
               <div class="sim-show-pill" data-shows="3" onclick="selectShows(3, this)" style="background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
                 <div style="font-size: 1.2em; margin-bottom: 2px;">👑</div>
                 <strong style="display: block; font-size: 0.92em; color: white;">3 Shows</strong>
-                <span style="font-size: 0.75em; color: #34d399;">+$<%= (@company.landing_calculator_extra_show_price.to_i * 2) %> <%= @company.landing_calculator_currency.presence || "USD" %></span>
+                <span style="font-size: 0.75em; color: var(--primary);">+$<%= (@company.landing_calculator_extra_show_price.to_i * 2) %> <%= @company.landing_calculator_currency.presence || "USD" %></span>
               </div>
             </div>
           </div>
@@ -319,7 +319,7 @@
                     <input type="checkbox" style="accent-color: var(--primary);">
                     <div>
                       <strong style="display: block; font-size: 0.9em;"><%= upsell.emoji %> <%= upsell.title %></strong>
-                      <span style="font-size: 0.8em; color: #34d399;">+$<%= upsell.price.to_i %> <%= upsell.currency %></span>
+                      <span style="font-size: 0.8em; color: var(--primary);">+$<%= upsell.price.to_i %> <%= upsell.currency %></span>
                     </div>
                   </div>
                 <% end %>
@@ -355,11 +355,11 @@
             </div>
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);" id="sum-shows-name">1 Show en Vivo (60 min)</span>
-              <strong id="sum-shows-price" style="color: #34d399;">Incluido</strong>
+              <strong id="sum-shows-price" style="color: var(--primary);">Incluido</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
               <span style="color: var(--text-muted);" id="sum-sound-name"><%= @company.landing_calculator_base_sound_hours %> Horas Sonido &amp; DJ</span>
-              <strong id="sum-sound-price" style="color: #34d399;">Incluidas</strong>
+              <strong id="sum-sound-price" style="color: var(--primary);">Incluidas</strong>
             </div>
             <div id="sum-addons-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
           </div>
@@ -367,7 +367,7 @@
           <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 20px;">
             <span style="font-size: 1em; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">Total Estimado:</span>
             <div style="text-align: right;">
-              <span style="font-family: var(--font-outfit); font-size: 2.4em; font-weight: 900; color: #34d399;" id="sim-total-price">$<%= @calculator_formats.first['price'].to_i rescue 400 %></span>
+              <span style="font-family: var(--font-outfit); font-size: 2.4em; font-weight: 900; color: var(--primary);" id="sim-total-price">$<%= @calculator_formats.first['price'].to_i rescue 400 %></span>
               <span style="font-size: 0.9em; color: var(--text-muted);"><%= @company.landing_calculator_currency.presence || "USD" %></span>
             </div>
           </div>
@@ -718,20 +718,20 @@
   .template-royal-gala {
     background-color: #040711 !important;
     background-image: 
-      radial-gradient(circle at 50% 15%, rgba(234, 179, 8, 0.15) 0%, transparent 60%),
-      radial-gradient(circle at 85% 65%, rgba(202, 138, 4, 0.1) 0%, transparent 50%) !important;
+      radial-gradient(circle at 50% 15%, var(--primary-glow) 0%, transparent 60%),
+      radial-gradient(circle at 85% 65%, var(--accent-glow) 0%, transparent 50%) !important;
   }
   .template-royal-gala .glass-box {
-    border: 1px solid rgba(234, 179, 8, 0.35) !important;
+    border: 1px solid var(--card-border-hover) !important;
     border-radius: 24px !important;
     background: rgba(12, 16, 28, 0.85) !important;
     box-shadow: 0 15px 40px rgba(0,0,0,0.6) !important;
   }
   .template-royal-gala .section-badge {
-    border: 1px solid #eab308 !important;
-    color: #fef08a !important;
+    border: 1px solid var(--primary) !important;
+    color: var(--primary) !important;
     border-radius: 99px !important;
-    background: rgba(234, 179, 8, 0.12) !important;
+    background: var(--primary-glow) !important;
     font-family: 'Playfair Display', serif !important;
     font-style: italic !important;
     letter-spacing: 1px !important;
@@ -739,26 +739,26 @@
   .template-royal-gala .gradient-title {
     font-family: 'Playfair Display', serif !important;
     font-style: italic !important;
-    background: linear-gradient(135deg, #fef08a 0%, #eab308 50%, #ca8a04 100%) !important;
+    background: linear-gradient(135deg, #ffffff 0%, var(--primary) 50%, var(--accent-cyan) 100%) !important;
     -webkit-background-clip: text !important;
     -webkit-text-fill-color: transparent !important;
   }
   .template-royal-gala .btn-cta-primary {
-    background: linear-gradient(135deg, #eab308 0%, #ca8a04 100%) !important;
-    color: #0f172a !important;
+    background: var(--primary-gradient) !important;
+    color: white !important;
     font-family: 'Playfair Display', serif !important;
     font-weight: 900 !important;
     border-radius: 30px !important;
-    box-shadow: 0 8px 30px rgba(234, 179, 8, 0.4) !important;
+    box-shadow: 0 8px 30px var(--primary-glow) !important;
   }
   .template-royal-gala .sim-pill {
     border-radius: 20px !important;
-    border: 1px solid rgba(234, 179, 8, 0.3) !important;
+    border: 1px solid var(--card-border) !important;
   }
   .template-royal-gala .sim-pill.active {
-    background: rgba(234, 179, 8, 0.2) !important;
-    border-color: #eab308 !important;
-    box-shadow: 0 0 20px rgba(234, 179, 8, 0.3) !important;
+    background: var(--primary-glow) !important;
+    border-color: var(--primary) !important;
+    box-shadow: 0 0 20px var(--primary-glow) !important;
   }
 
   /* ==========================================
@@ -770,14 +770,14 @@
   }
   .template-minimal-acoustic .glass-box {
     background: rgba(15, 17, 23, 0.95) !important;
-    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid var(--card-border-hover) !important;
     border-radius: 12px !important;
     box-shadow: 0 4px 15px rgba(0,0,0,0.4) !important;
   }
   .template-minimal-acoustic .section-badge {
-    background: rgba(255, 255, 255, 0.08) !important;
-    color: #f8fafc !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    background: var(--primary-glow) !important;
+    color: var(--text-main) !important;
+    border: 1px solid var(--primary) !important;
     border-radius: 6px !important;
     font-family: 'Inter', sans-serif !important;
     letter-spacing: 1px !important;
@@ -785,21 +785,21 @@
   .template-minimal-acoustic .gradient-title {
     font-family: 'Inter', sans-serif !important;
     font-weight: 800 !important;
-    color: #ffffff !important;
-    background: none !important;
-    -webkit-text-fill-color: initial !important;
+    background: linear-gradient(135deg, #ffffff 0%, var(--primary) 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
   }
   .template-minimal-acoustic .btn-cta-primary {
-    background: #ffffff !important;
-    color: #000000 !important;
+    background: var(--primary-gradient) !important;
+    color: white !important;
     border-radius: 8px !important;
     font-family: 'Inter', sans-serif !important;
     font-weight: 800 !important;
-    box-shadow: 0 4px 15px rgba(255, 255, 255, 0.2) !important;
+    box-shadow: 0 4px 15px var(--primary-glow) !important;
   }
   .template-minimal-acoustic .sim-pill {
     border-radius: 8px !important;
-    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    border: 1px solid var(--card-border) !important;
   }
 
   .btn-cta-secondary {
@@ -962,11 +962,11 @@
       extraShowsCost = (selectedShows - 1) * extraShowPrice;
       document.getElementById('sum-shows-name').textContent = `${selectedShows} Shows en Vivo (${selectedShows} Pases de 60m)`;
       document.getElementById('sum-shows-price').textContent = `+$${Math.round(extraShowsCost)} ${defaultCurrency}`;
-      document.getElementById('sum-shows-price').style.color = '#34d399';
+      document.getElementById('sum-shows-price').style.color = 'var(--primary)';
     } else {
       document.getElementById('sum-shows-name').textContent = "1 Show en Vivo (Pase de 60m)";
       document.getElementById('sum-shows-price').textContent = "Incluido";
-      document.getElementById('sum-shows-price').style.color = '#34d399';
+      document.getElementById('sum-shows-price').style.color = 'var(--primary)';
     }
 
     // 2. Cobertura de Sonido & DJ
@@ -975,7 +975,7 @@
       extraSoundCost = (selectedSoundHours - baseSoundHours) * extraSoundHourRate;
       document.getElementById('sum-sound-name').textContent = `${selectedSoundHours} Horas Sonido (+${selectedSoundHours - baseSoundHours}h extra)`;
       document.getElementById('sum-sound-price').textContent = `+$${Math.round(extraSoundCost)} ${defaultCurrency}`;
-      document.getElementById('sum-sound-price').style.color = '#34d399';
+      document.getElementById('sum-sound-price').style.color = 'var(--primary)';
     } else if (selectedSoundHours < baseSoundHours) {
       extraSoundCost = (selectedSoundHours - baseSoundHours) * (extraSoundHourRate * 0.5);
       document.getElementById('sum-sound-name').textContent = `${selectedSoundHours} Horas Sonido & DJ`;
@@ -984,7 +984,7 @@
     } else {
       document.getElementById('sum-sound-name').textContent = `${selectedSoundHours} Horas Sonido & DJ`;
       document.getElementById('sum-sound-price').textContent = "Incluidas";
-      document.getElementById('sum-sound-price').style.color = '#34d399';
+      document.getElementById('sum-sound-price').style.color = 'var(--primary)';
     }
 
     // 3. Adicionales
