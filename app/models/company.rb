@@ -68,9 +68,17 @@ class Company < ApplicationRecord
     landing_sections_config[key.to_s] != false && landing_sections_config[key.to_s] != "false"
   end
 
+  def brand_name_for_landing
+    if landing_sections_config.is_a?(Hash) && landing_sections_config["custom_brand_name"].present?
+      return landing_sections_config["custom_brand_name"].to_s.strip
+    end
+    name
+  end
+
   def show_brand_name_with_logo?
     return true unless landing_sections_config.is_a?(Hash)
-    landing_sections_config["show_brand_name_with_logo"] == "1" || landing_sections_config["show_brand_name_with_logo"] == true
+    return true unless landing_sections_config.key?("show_brand_name_with_logo")
+    landing_sections_config["show_brand_name_with_logo"] == "1" || landing_sections_config["show_brand_name_with_logo"] == true || landing_sections_config["show_brand_name_with_logo"] == "true"
   end
 
   TEMPLATES_CATALOG = {

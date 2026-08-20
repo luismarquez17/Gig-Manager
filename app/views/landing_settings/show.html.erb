@@ -93,23 +93,34 @@
         </div>
 
         <div style="background: #0f172a; padding: 20px; border-radius: 16px; color: white;">
-          <span style="display: block; font-size: 0.75em; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px;">VISTA PREVIA EN LA BARRA DE NAVEGACIÓN:</span>
+          <span style="display: block; font-size: 0.75em; font-weight: 800; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px;">CONFIGURACIÓN DEL NOMBRE EN NAVBAR:</span>
           
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-weight: 700; font-size: 0.82em; color: #cbd5e1; margin-bottom: 6px;">
+              ✍️ Nombre Personalizado al lado del Logo PNG (Opcional):
+            </label>
+            <input type="text" name="company[landing_sections_config][custom_brand_name]" value="<%= @company.landing_sections_config.is_a?(Hash) ? @company.landing_sections_config['custom_brand_name'] : '' %>" placeholder="<%= @company.name %>" style="width: 100%; box-sizing: border-box; padding: 9px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white; font-size: 0.88em; outline: none;">
+            <span style="display: block; font-size: 0.75em; color: #94a3b8; margin-top: 4px;">
+              Si lo dejas en blanco, se usará el nombre principal de tu empresa ("<%= @company.name %>").
+            </span>
+          </div>
+
           <div style="display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,0.05); padding: 12px 18px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px;">
             <% if @company.landing_logo.attached? %>
-              <%= image_tag @company.landing_logo, style: "height: 44px; max-width: 180px; object-fit: contain;" %>
+              <%= image_tag url_for(@company.landing_logo), style: "height: 44px; max-width: 180px; object-fit: contain;" rescue nil %>
             <% else %>
               <span style="font-size: 1.5em;">🎸</span>
             <% end %>
             
             <span style="font-family: <%= @company.font_css %>; font-size: 1.2em; font-weight: 800; color: white;">
-              <%= @company.name %>
+              <%= @company.brand_name_for_landing %>
             </span>
           </div>
 
           <label style="display: flex; align-items: center; gap: 10px; font-size: 0.88em; font-weight: 700; color: #f8fafc; cursor: pointer; background: rgba(255,255,255,0.08); padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12);">
+            <%= hidden_field_tag "company[landing_sections_config][show_brand_name_with_logo]", "0" %>
             <%= check_box_tag "company[landing_sections_config][show_brand_name_with_logo]", "1", @company.show_brand_name_with_logo?, style: "width: 18px; height: 18px; accent-color: #10b981; cursor: pointer;" %>
-            <span>Mostrar el Nombre de la Marca al lado del Logo PNG</span>
+            <span>Mostrar el Nombre al lado del Logo en la Landing</span>
           </label>
         </div>
       </div>

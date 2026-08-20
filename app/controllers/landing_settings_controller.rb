@@ -13,13 +13,22 @@ class LandingSettingsController < ApplicationController
   end
 
   def update
-    # 1. Procesar configuración de secciones (checkboxes booleanos)
-    if params[:company][:landing_sections_config].present? || params[:company].key?(:landing_sections_config)
-      sections_data = {}
-      cfg = params[:company][:landing_sections_config] || {}
-      %w[show_metrics show_packages show_calculator show_media show_team show_reviews show_faq].each do |sec|
-        sections_data[sec] = cfg[sec] == "1" || cfg[sec] == true || cfg[sec] == "true"
+    # 1. Procesar configuración de secciones (checkboxes booleanos y nombre de marca personalizado)
+    if params[:company] && params[:company][:landing_sections_config].present?
+      sections_data = @company.landing_sections_config.is_a?(Hash) ? @company.landing_sections_config.dup : {}
+      cfg = params[:company][:landing_sections_config]
+      cfg = cfg.to_unsafe_h if cfg.respond_to?(:to_unsafe_h)
+
+      %w[show_metrics show_packages show_calculator show_media show_team show_reviews show_faq show_brand_name_with_logo].each do |sec|
+        if cfg.key?(sec)
+          sections_data[sec] = (cfg[sec] == "1" || cfg[sec] == true || cfg[sec] == "true")
+        end
       end
+
+      if cfg.key?("custom_brand_name") || cfg.key?(:custom_brand_name)
+        sections_data["custom_brand_name"] = (cfg[:custom_brand_name] || cfg["custom_brand_name"]).to_s.strip
+      end
+
       @company.landing_sections_config = sections_data
     end
 
