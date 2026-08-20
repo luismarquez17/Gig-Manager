@@ -207,6 +207,12 @@ class LandingSettingsController < ApplicationController
     redirect_to landing_settings_path(anchor: 'integrantes'), notice: "Visibilidad de #{@user.display_name} en la Landing: #{@user.show_on_landing? ? 'Visible' : 'Oculto'}."
   end
 
+  def reset_template_defaults
+    target_key = params[:template_key].presence || @company.landing_template
+    @company.reset_template_defaults!(target_key)
+    redirect_to landing_settings_path, notice: "¡Colores, tipografía y estilo de la plantilla '#{@company.template_data[:name]}' restablecidos a sus valores originales de fábrica!"
+  end
+
   private
 
   def set_company

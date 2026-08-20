@@ -210,7 +210,13 @@
         
         <%# Columna Colores %>
         <div>
-          <h3 style="margin: 0 0 16px 0; font-size: 1.1em; font-weight: 800; color: #0f172a;">🎨 Identidad Cromática</h3>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+            <h3 style="margin: 0; font-size: 1.1em; font-weight: 800; color: #0f172a;">🎨 Identidad Cromática</h3>
+            
+            <%= button_to reset_landing_template_colors_path, method: :post, data: { turbo_confirm: "¿Deseas restablecer los colores, fuente y diseño de la plantilla '#{@company.template_data[:name]}' a los valores originales de fábrica?" }, style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;" do %>
+              🔄 Restablecer Colores de Fábrica
+            <% end %>
+          </div>
           
           <div style="margin-bottom: 16px;">
             <label style="display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;">Color Primario de la Marca</label>

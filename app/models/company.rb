@@ -124,6 +124,49 @@ class Company < ApplicationRecord
     }
   }.freeze
 
+  TEMPLATE_DEFAULTS = {
+    "classic_stage" => {
+      theme_color: "#8b5cf6",
+      accent_color: "#06b6d4",
+      font_family: "'Outfit', sans-serif",
+      gradient_style: "linear_neon",
+      bg_style: "stage_lights"
+    },
+    "neon_festival" => {
+      theme_color: "#ec4899",
+      accent_color: "#10b981",
+      font_family: "'Space Grotesk', sans-serif",
+      gradient_style: "linear_neon",
+      bg_style: "stage_lights"
+    },
+    "royal_gala" => {
+      theme_color: "#eab308",
+      accent_color: "#ca8a04",
+      font_family: "'Playfair Display', serif",
+      gradient_style: "radial_glow",
+      bg_style: "royal"
+    },
+    "minimal_acoustic" => {
+      theme_color: "#64748b",
+      accent_color: "#38bdf8",
+      font_family: "'Inter', sans-serif",
+      gradient_style: "solid_bold",
+      bg_style: "carbon"
+    }
+  }.freeze
+
+  def reset_template_defaults!(template_key = nil)
+    key = (template_key.presence || landing_template).to_s
+    defaults = TEMPLATE_DEFAULTS[key] || TEMPLATE_DEFAULTS["classic_stage"]
+    update!(
+      landing_theme_color: defaults[:theme_color],
+      landing_accent_color: defaults[:accent_color],
+      landing_font_family: defaults[:font_family],
+      landing_gradient_style: defaults[:gradient_style],
+      landing_bg_style: defaults[:bg_style]
+    )
+  end
+
   def template_price(key)
     prices = landing_template_prices.is_a?(Hash) ? landing_template_prices : {}
     if prices.key?(key.to_s)
