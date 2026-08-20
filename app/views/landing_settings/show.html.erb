@@ -206,7 +206,37 @@
         <span style="font-size: 0.82em; color: #64748b; font-weight: bold;">🔽 Desplegar / Contraer</span>
       </summary>
 
-      <div style="padding: 25px; border-top: 1px solid #f1f5f9; display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 25px;">
+      <div style="padding: 25px; border-top: 1px solid #f1f5f9;">
+        
+        <%# Selector de Modo: Natural vs Personalizado %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; margin-bottom: 25px;">
+          <label style="display: block; font-weight: 800; font-size: 0.95em; color: #0f172a; margin-bottom: 12px;">
+            🎨 Modo de Estilo Cromático para la Plantilla:
+          </label>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+            <label style="background: white; border: 2px solid <%= @company.use_custom_theme? ? '#e2e8f0' : '#10b981' %>; border-radius: 14px; padding: 14px 16px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s; box-shadow: <%= @company.use_custom_theme? ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.12)' %>;">
+              <input type="radio" name="company[landing_sections_config][use_custom_theme]" value="0" <%= 'checked' unless @company.use_custom_theme? %> style="accent-color: #10b981; width: 20px; height: 20px; margin-top: 2px; cursor: pointer;">
+              <div>
+                <strong style="display: block; font-size: 0.92em; color: #0f172a;">🌿 Estilo Natural de Fábrica (Recomendado)</strong>
+                <span style="font-size: 0.8em; color: #64748b; line-height: 1.4; display: block; margin-top: 3px;">
+                  Mantiene los colores nativos y tipografía original que trae la plantilla seleccionada (ej: dorado VIP en Royal Gala, magenta cyber en Neón Festival).
+                </span>
+              </div>
+            </label>
+
+            <label style="background: white; border: 2px solid <%= @company.use_custom_theme? ? '#8b5cf6' : '#e2e8f0' %>; border-radius: 14px; padding: 14px 16px; cursor: pointer; display: flex; align-items: flex-start; gap: 12px; transition: all 0.2s; box-shadow: <%= @company.use_custom_theme? ? '0 4px 12px rgba(139, 92, 246, 0.12)' : 'none' %>;">
+              <input type="radio" name="company[landing_sections_config][use_custom_theme]" value="1" <%= 'checked' if @company.use_custom_theme? %> style="accent-color: #8b5cf6; width: 20px; height: 20px; margin-top: 2px; cursor: pointer;">
+              <div>
+                <strong style="display: block; font-size: 0.92em; color: #0f172a;">✨ Estilo Personalizado de Marca</strong>
+                <span style="font-size: 0.8em; color: #64748b; line-height: 1.4; display: block; margin-top: 3px;">
+                  Sobrescribe todas las plantillas usando tu color primario hex, secundario y tipografía personalizada elegida abajo.
+                </span>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 25px;">
         
         <%# Columna Colores %>
         <div>

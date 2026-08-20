@@ -34,6 +34,11 @@ class LandingSettingsController < ApplicationController
         sections_data["logo_height"] = val if val > 0
       end
 
+      if cfg.key?("use_custom_theme") || cfg.key?(:use_custom_theme)
+        val = cfg[:use_custom_theme] || cfg["use_custom_theme"]
+        sections_data["use_custom_theme"] = (val == "1" || val == true || val == "true")
+      end
+
       @company.landing_sections_config = sections_data
     end
 

@@ -155,61 +155,6 @@ class Company < ApplicationRecord
     }
   }.freeze
 
-  def reset_template_defaults!(template_key = nil)
-    key = (template_key.presence || landing_template).to_s
-    defaults = TEMPLATE_DEFAULTS[key] || TEMPLATE_DEFAULTS["classic_stage"]
-    update!(
-      landing_theme_color: defaults[:theme_color],
-      landing_accent_color: defaults[:accent_color],
-      landing_font_family: defaults[:font_family],
-      landing_gradient_style: defaults[:gradient_style],
-      landing_bg_style: defaults[:bg_style]
-    )
-  end
-
-  def template_price(key)
-    prices = landing_template_prices.is_a?(Hash) ? landing_template_prices : {}
-    if prices.key?(key.to_s)
-      prices[key.to_s].to_f
-    else
-      default_prices = { "classic_stage" => 0.0, "neon_festival" => 15.0, "royal_gala" => 29.0, "minimal_acoustic" => 19.0 }
-      default_prices[key.to_s] || 0.0
-    end
-  end
-
-  def template_price_formatted(key)
-    price = template_price(key)
-    if price <= 0
-      "$0 / mes (INCLUIDO)"
-    else
-      "$#{price.to_i} / mes"
-    end
-  end
-
-  def template_badge_formatted(key, fallback_badge = nil)
-    price = template_price(key).to_i
-    category_name = case key.to_s
-                    when "classic_stage" then "INCLUIDO"
-                    when "neon_festival" then "PRO FESTIVAL"
-                    when "royal_gala" then "VIP ROYAL"
-                    when "minimal_acoustic" then "STUDIO MINIMAL"
-                    else "PLANTILLA"
-                    end
-
-    if price <= 0
-      "#{category_name} ($0/mes)"
-    else
-      "#{category_name} ($#{price}/mes)"
-    end
-  end
-
-  GRADIENT_STYLES = {
-    "linear_neon" => "Degradado Lineal Neón (Primario ➔ Secundario)",
-    "radial_glow" => "Resplandor Radial Centrado (Glow)",
-    "triple_mesh" => "Degradado Múltiple Neón (Primario ➔ Secundario ➔ Esmeralda)",
-    "solid_bold" => "Color Sólido Puro (Sin Degradado)"
-  }.freeze
-
   AVAILABLE_FONTS = {
     "default" => "Predeterminada por Plantilla",
     "Outfit" => "Outfit (Moderna & Balanceada)",
@@ -221,60 +166,66 @@ class Company < ApplicationRecord
     "Syne" => "Syne (Vanguardista & Artística)"
   }.freeze
 
-  BG_STYLES = {
-    "midnight" => {
-      name: "Midnight Blue & Orbes Neón (Por defecto)",
-      bg_color: "#070914",
-      bg_image: "radial-gradient(circle at 20% 20%, %{p_glow} 0%, transparent 45%), radial-gradient(circle at 80% 70%, %{a_glow} 0%, transparent 50%)"
-    },
-    "carbon" => {
-      name: "Carbon Luxury & Malla de Titanio",
-      bg_color: "#0c0d10",
-      bg_image: "linear-gradient(135deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(315deg, rgba(255,255,255,0.03) 25%, transparent 25%)",
-      bg_size: "24px 24px"
-    },
-    "royal" => {
-      name: "Royal Velvet & Reflejos Champagne",
-      bg_color: "#050716",
-      bg_image: "radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.22) 0%, transparent 70%), radial-gradient(circle at 85% 85%, %{p_glow} 0%, transparent 50%)"
-    },
-    "concert_smoke" => {
-      name: "Luces de Escenario & Humo de Concierto",
-      bg_color: "#050508",
-      bg_image: "radial-gradient(ellipse at 50% -10%, %{p_glow} 0%, transparent 65%), radial-gradient(circle at 50% 100%, %{a_glow} 0%, transparent 65%)"
-    },
-    "cyber_grid" => {
-      name: "Matriz Cyberpunk & Malla Neón 3D",
-      bg_color: "#050811",
-      bg_image: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
-      bg_size: "40px 40px"
-    },
-    "pure_dark" => {
-      name: "Negro OLED Puro Absolute Black",
-      bg_color: "#000000",
-      bg_image: "none"
-    }
-  }.freeze
+  def use_custom_theme?
+    return false unless landing_sections_config.is_a?(Hash)
+    landing_sections_config["use_custom_theme"] == "1" || landing_sections_config["use_custom_theme"] == true || landing_sections_config["use_custom_theme"] == "true"
+  end
+
+  def native_template_defaults
+    TEMPLATE_DEFAULTS[landing_template] || TEMPLATE_DEFAULTS["classic_stage"]
+  end
+
+  def reset_template_defaults!(template_key = nil)
+    key = (template_key.presence || landing_template).to_s
+    defaults = TEMPLATE_DEFAULTS[key] || TEMPLATE_DEFAULTS["classic_stage"]
+    cfg = landing_sections_config.is_a?(Hash) ? landing_sections_config.dup : {}
+    cfg["use_custom_theme"] = false
+    update!(
+      landing_theme_color: defaults[:theme_color],
+      landing_accent_color: defaults[:accent_color],
+      landing_font_family: defaults[:font_family],
+      landing_gradient_style: defaults[:gradient_style],
+      landing_bg_style: defaults[:bg_style],
+      landing_sections_config: cfg
+    )
+  end
 
   def font_css
-    if landing_font_family.present? && landing_font_family != "default" && AVAILABLE_FONTS.key?(landing_font_family)
+    if use_custom_theme? && landing_font_family.present? && landing_font_family != "default" && AVAILABLE_FONTS.key?(landing_font_family)
       if landing_font_family == "Playfair Display" || landing_font_family == "Cinzel"
         "'#{landing_font_family}', serif"
       else
         "'#{landing_font_family}', sans-serif"
       end
     else
-      template_data[:font]
+      native_template_defaults[:font_family]
+    end
+  end
+
+  def theme_hex
+    if use_custom_theme? && landing_theme_color.present?
+      landing_theme_color
+    else
+      native_template_defaults[:theme_color]
+    end
+  end
+
+  def accent_hex
+    if use_custom_theme? && landing_accent_color.present?
+      landing_accent_color
+    else
+      native_template_defaults[:accent_color]
     end
   end
 
   def bg_style_data
-    BG_STYLES[landing_bg_style] || BG_STYLES["midnight"]
+    bg_key = use_custom_theme? ? (landing_bg_style.presence || native_template_defaults[:bg_style]) : native_template_defaults[:bg_style]
+    BG_STYLES[bg_key] || BG_STYLES["midnight"]
   end
 
   def bg_style_css
-    p_glow = (landing_theme_color.presence || "#8b5cf6") + "55"
-    a_glow = (landing_accent_color.presence || "#06b6d4") + "44"
+    p_glow = theme_hex + "55"
+    a_glow = accent_hex + "44"
     data = bg_style_data
     raw_img = data[:bg_image] % { p_glow: p_glow, a_glow: a_glow } rescue data[:bg_image]
     {
@@ -289,10 +240,11 @@ class Company < ApplicationRecord
   end
 
   def gradient_css
-    p_hex = landing_theme_color.presence || "#8b5cf6"
-    s_hex = landing_accent_color.presence || "#06b6d4"
+    p_hex = theme_hex
+    s_hex = accent_hex
+    style = use_custom_theme? ? (landing_gradient_style.presence || native_template_defaults[:gradient_style]) : native_template_defaults[:gradient_style]
 
-    case landing_gradient_style
+    case style
     when "radial_glow"
       "radial-gradient(circle at 50% 50%, #{p_hex} 0%, #{s_hex} 100%)"
     when "triple_mesh"
@@ -302,14 +254,6 @@ class Company < ApplicationRecord
     else # linear_neon
       "linear-gradient(135deg, #{p_hex} 0%, #{s_hex} 100%)"
     end
-  end
-
-  def theme_hex
-    landing_theme_color.presence || "#8b5cf6"
-  end
-
-  def accent_hex
-    landing_accent_color.presence || "#06b6d4"
   end
 
   def effective_faqs
