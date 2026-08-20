@@ -160,30 +160,28 @@
       </div>
 
       <%# Editor de Formatos de Banda en la Calculadora %>
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; margin-bottom: 15px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px; margin-bottom: 15px; overflow: hidden;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
           <h4 style="margin: 0; font-size: 0.95em; font-weight: 800; color: #1e293b;">
             🎼 Formatos Musicales del Cotizador (Paso 1 del Simulador)
           </h4>
           <span style="font-size: 0.78em; color: #64748b;">Ajusta nombres, integrantes y precios base</span>
         </div>
 
-        <div id="calculator_formats_container" style="display: grid; gap: 10px;">
+        <div id="calculator_formats_container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
           <% @calculator_formats.each_with_index do |fmt, idx| %>
-            <div class="calculator-format-row" style="display: grid; grid-template-columns: 60px 1.5fr 1.5fr 1fr; gap: 10px; align-items: center; background: white; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px;">
-              <div>
-                <input type="text" name="company[landing_calculator_formats][<%= idx %>][emoji]" value="<%= fmt['emoji'] %>" placeholder="Emoji" style="width: 100%; text-align: center; font-size: 1.2em; padding: 6px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box;">
+            <div class="calculator-format-row" style="background: white; padding: 14px; border: 1px solid #e2e8f0; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; box-sizing: border-box;">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" name="company[landing_calculator_formats][<%= idx %>][emoji]" value="<%= fmt['emoji'] %>" placeholder="Emoji" style="width: 40px; height: 38px; text-align: center; font-size: 1.2em; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; flex-shrink: 0;">
+                <input type="text" name="company[landing_calculator_formats][<%= idx %>][name]" value="<%= fmt['name'] %>" placeholder="Nombre del Formato" style="width: 100%; min-width: 0; font-weight: 700; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
               </div>
-              <div>
-                <input type="text" name="company[landing_calculator_formats][<%= idx %>][name]" value="<%= fmt['name'] %>" placeholder="Nombre (Ej: Acústico)" style="width: 100%; font-weight: 700; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
-              </div>
-              <div>
-                <input type="text" name="company[landing_calculator_formats][<%= idx %>][musicians]" value="<%= fmt['musicians'] %>" placeholder="Integrantes (Ej: 5 Músicos)" style="width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="color: #64748b; font-weight: bold;">$</span>
-                <input type="number" name="company[landing_calculator_formats][<%= idx %>][price]" value="<%= fmt['price'] %>" step="10" placeholder="Precio" style="width: 100%; font-weight: 800; color: #15803d; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box;">
-                <input type="hidden" name="company[landing_calculator_formats][<%= idx %>][key]" value="<%= fmt['key'] %>">
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <input type="text" name="company[landing_calculator_formats][<%= idx %>][musicians]" value="<%= fmt['musicians'] %>" placeholder="Detalle (Ej: 5 Músicos)" style="width: 100%; min-width: 0; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85em; box-sizing: border-box;">
+                <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                  <span style="color: #64748b; font-weight: bold; font-size: 0.85em;">$</span>
+                  <input type="number" name="company[landing_calculator_formats][<%= idx %>][price]" value="<%= fmt['price'].to_i rescue 400 %>" step="10" placeholder="Precio" style="width: 80px; font-weight: 800; color: #15803d; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; box-sizing: border-box; text-align: right;">
+                  <input type="hidden" name="company[landing_calculator_formats][<%= idx %>][key]" value="<%= fmt['key'] %>">
+                </div>
               </div>
             </div>
           <% end %>
@@ -193,7 +191,7 @@
     </div>
 
     <%# --- 5. GESTIÓN DE ADICIONALES & UPSELLS REALES EN LA LANDING --- %>
-    <div id="adicionales" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
+    <div id="adicionales" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
         <div>
           <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
@@ -204,45 +202,45 @@
           </p>
         </div>
         <div>
-          <span style="font-size: 0.85em; font-weight: 700; color: #64748b;">
+          <span style="font-size: 0.85em; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">
             <%= @upsells.select(&:show_on_landing?).count %> de <%= @upsells.count %> visibles en la web
           </span>
         </div>
       </div>
 
       <% if @upsells.any? %>
-        <div style="display: grid; gap: 12px; margin-bottom: 15px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; margin-bottom: 10px;">
           <% @upsells.each do |upsell| %>
-            <div style="display: grid; grid-template-columns: 50px 1.5fr 1fr 140px 120px; gap: 12px; align-items: center; background: <%= upsell.show_on_landing? ? '#f0fdf4' : '#f8fafc' %>; border: 1px solid <%= upsell.show_on_landing? ? '#bbf7d0' : '#e2e8f0' %>; border-radius: 12px; padding: 12px 16px;">
-              <div style="text-align: center;">
-                <input type="text" name="upsells[<%= upsell.id %>][emoji]" value="<%= upsell.emoji %>" style="width: 38px; height: 38px; text-align: center; font-size: 1.2em; border: 1px solid #cbd5e1; border-radius: 8px; background: white;">
-              </div>
-
-              <div>
-                <input type="text" name="upsells[<%= upsell.id %>][title]" value="<%= upsell.title %>" style="width: 100%; font-weight: 700; font-size: 0.9em; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white;">
-                <p style="margin: 4px 0 0 0; font-size: 0.78em; color: #64748b; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                  <%= upsell.description.presence || "Sin descripción adicional" %>
-                </p>
-              </div>
-
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <span style="color: #64748b; font-weight: 700; font-size: 0.85em;">Precio: $</span>
-                <input type="number" name="upsells[<%= upsell.id %>][price]" value="<%= upsell.price %>" step="5" style="width: 90px; font-weight: 800; color: #15803d; padding: 6px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; background: white;">
-                <span style="color: #64748b; font-size: 0.8em;"><%= upsell.currency %></span>
-              </div>
-
-              <div>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: 700; color: <%= upsell.show_on_landing? ? '#15803d' : '#64748b' %>; cursor: pointer;">
-                  <%= check_box_tag "upsells[#{upsell.id}][show_on_landing]", "1", upsell.show_on_landing?, style: "accent-color: #10b981; width: 16px; height: 16px;" %>
+            <div style="background: <%= upsell.show_on_landing? ? '#f0fdf4' : '#f8fafc' %>; border: 1px solid <%= upsell.show_on_landing? ? '#86efac' : '#cbd5e1' %>; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; box-sizing: border-box;">
+              
+              <%# Top: Emoji, Title & Toggle %>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0;">
+                  <input type="text" name="upsells[<%= upsell.id %>][emoji]" value="<%= upsell.emoji %>" style="width: 38px; height: 38px; text-align: center; font-size: 1.2em; border: 1px solid #cbd5e1; border-radius: 8px; background: white; flex-shrink: 0;">
+                  <input type="text" name="upsells[<%= upsell.id %>][title]" value="<%= upsell.title %>" style="width: 100%; min-width: 0; font-weight: 700; font-size: 0.9em; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white;">
+                </div>
+                
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: 800; color: <%= upsell.show_on_landing? ? '#15803d' : '#64748b' %>; cursor: pointer; flex-shrink: 0; background: white; padding: 6px 10px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                  <%= check_box_tag "upsells[#{upsell.id}][show_on_landing]", "1", upsell.show_on_landing?, style: "accent-color: #10b981; width: 16px; height: 16px; cursor: pointer;" %>
                   <span><%= upsell.show_on_landing? ? "✓ En Landing" : "Oculto" %></span>
                 </label>
               </div>
 
-              <div style="text-align: right;">
-                <%= button_to toggle_landing_upsell_path(upsell_id: upsell.id), method: :patch, style: "background: #{upsell.show_on_landing? ? '#fee2e2' : '#dcfce7'}; color: #{upsell.show_on_landing? ? '#ef4444' : '#15803d'}; border: 1px solid #{upsell.show_on_landing? ? '#fca5a5' : '#86efac'}; padding: 5px 10px; border-radius: 6px; font-size: 0.75em; font-weight: bold; cursor: pointer;" do %>
-                  <%= upsell.show_on_landing? ? "Ocultar" : "Mostrar" %>
-                <% end %>
+              <%# Middle: Description %>
+              <p style="margin: 0; font-size: 0.8em; color: #64748b; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                <%= upsell.description.presence || "Sin descripción adicional configurada." %>
+              </p>
+
+              <%# Bottom: Price %>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px;">
+                <span style="color: #64748b; font-weight: 600; font-size: 0.82em;">Tarifa en Cotizador:</span>
+                <div style="display: flex; align-items: center; gap: 4px;">
+                  <span style="color: #15803d; font-weight: 800; font-size: 0.9em;">$</span>
+                  <input type="number" name="upsells[<%= upsell.id %>][price]" value="<%= upsell.price.to_i %>" step="5" style="width: 80px; font-weight: 800; color: #15803d; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.9em; background: white; text-align: right;">
+                  <span style="color: #64748b; font-size: 0.8em; font-weight: 600;"><%= upsell.currency %></span>
+                </div>
               </div>
+
             </div>
           <% end %>
         </div>
