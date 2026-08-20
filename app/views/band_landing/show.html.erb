@@ -330,8 +330,8 @@
               <input type="date" id="sim-date" class="form-input" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;" onchange="updateSummary()">
             </div>
             <div>
-              <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Ciudad o Lugar</label>
-              <input type="text" id="sim-location" placeholder="Ej: Caracas / San Cristóbal" class="form-input" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;" oninput="updateSummary()">
+              <label style="display: block; font-size: 0.78em; font-weight: 700; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px;">Lugar del Evento</label>
+              <input type="text" id="sim-location" placeholder="Ej: Maracaibo, San Francisco, Cabimas..." class="form-input" style="background: rgba(0,0,0,0.3); color: white; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; padding: 10px 14px; width: 100%; box-sizing: border-box;" oninput="updateSummary()">
             </div>
           </div>
         </div>
@@ -1010,7 +1010,7 @@
       `• Cobertura de Sonido & DJ: ${selectedSoundHours} Horas\n` +
       `• Efectos/Adicionales: ${addonsText}\n` +
       `• Fecha tentativa: ${dateVal}\n` +
-      `• Ciudad/Lugar: ${locVal}\n` +
+      `• Lugar del Evento: ${locVal}\n` +
       `• Presupuesto estimado: $${Math.round(total)} ${defaultCurrency}\n\n` +
       `¿Tienen disponibilidad para esta fecha?`;
 

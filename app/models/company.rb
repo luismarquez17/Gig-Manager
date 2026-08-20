@@ -250,8 +250,8 @@ class Company < ApplicationRecord
         "a" => "¡Sí! Nuestros paquetes incluyen el sistema de sonido profesional ajustado al tamaño de tu evento, consolas y operadores técnicos dedicados."
       },
       {
-        "q" => "¿Realizan presentaciones fuera de la ciudad?",
-        "a" => "Por supuesto. Nos trasladamos a nivel nacional. Solo se calcula un viático adicional de transporte y logística según la ubicación."
+        "q" => "¿En qué zonas y lugares realizan sus presentaciones?",
+        "a" => "Nos presentamos en Maracaibo, San Francisco, Costa Oriental y todo el estado Zulia, además de traslados a nivel nacional según la ubicación del evento."
       },
       {
         "q" => "¿Cómo es el proceso de contratación y pagos?",
