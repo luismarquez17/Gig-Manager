@@ -17,6 +17,7 @@ class Company < ApplicationRecord
 
   has_one_attached :landing_logo
   has_one_attached :landing_hero_video
+  has_one_attached :landing_hero_image
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true
@@ -80,6 +81,22 @@ class Company < ApplicationRecord
       landing_sections_config["logo_height"].to_i.clamp(25, 120)
     else
       50
+    end
+  end
+
+  def hero_image_blur_px
+    if landing_sections_config.is_a?(Hash) && landing_sections_config.key?("hero_image_blur")
+      landing_sections_config["hero_image_blur"].to_i.clamp(0, 30)
+    else
+      8
+    end
+  end
+
+  def hero_image_opacity_pct
+    if landing_sections_config.is_a?(Hash) && landing_sections_config.key?("hero_image_opacity")
+      landing_sections_config["hero_image_opacity"].to_i.clamp(5, 100)
+    else
+      35
     end
   end
 

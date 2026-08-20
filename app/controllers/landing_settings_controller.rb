@@ -39,6 +39,14 @@ class LandingSettingsController < ApplicationController
         sections_data["use_custom_theme"] = (val == "1" || val == true || val == "true")
       end
 
+      if cfg.key?("hero_image_blur") || cfg.key?(:hero_image_blur)
+        sections_data["hero_image_blur"] = (cfg[:hero_image_blur] || cfg["hero_image_blur"]).to_i
+      end
+
+      if cfg.key?("hero_image_opacity") || cfg.key?(:hero_image_opacity)
+        sections_data["hero_image_opacity"] = (cfg[:hero_image_opacity] || cfg["hero_image_opacity"]).to_i
+      end
+
       @company.landing_sections_config = sections_data
     end
 
@@ -263,6 +271,7 @@ class LandingSettingsController < ApplicationController
       :tiktok_url,
       :landing_logo,
       :landing_hero_video,
+      :landing_hero_image,
       landing_template_prices: {}
     )
   end
