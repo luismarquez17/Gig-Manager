@@ -21,6 +21,12 @@
           <span style="color: #cbd5e1;">|</span>
           <%= link_to '✏️ Editar Evento', edit_gig_path(@gig), style: "color: #2563eb; text-decoration: none; font-weight: bold; font-size: 0.9em;" %>
         <% end %>
+        <% if @gig.company&.landing_enabled? %>
+          <span style="color: #cbd5e1;">|</span>
+          <%= link_to band_landing_path(slug: @gig.company.slug), target: "_blank", title: "Ver la Landing Page pública de la empresa", style: "color: #0f172a; text-decoration: none; font-weight: bold; font-size: 0.9em;" do %>
+            🌐 Web Pública de <%= @gig.company.name %> ➔
+          <% end %>
+        <% end %>
       </div>
       <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
     </div>
