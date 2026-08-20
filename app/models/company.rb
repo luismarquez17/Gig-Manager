@@ -166,6 +166,48 @@ class Company < ApplicationRecord
     "Syne" => "Syne (Vanguardista & Artística)"
   }.freeze
 
+  GRADIENT_STYLES = {
+    "linear_neon" => "Degradado Lineal Neón (Primario ➔ Secundario)",
+    "radial_glow" => "Resplandor Radial Centrado (Glow)",
+    "triple_mesh" => "Degradado Múltiple Neón (Primario ➔ Secundario ➔ Esmeralda)",
+    "solid_bold" => "Color Sólido Puro (Sin Degradado)"
+  }.freeze
+
+  BG_STYLES = {
+    "midnight" => {
+      name: "Midnight Blue & Orbes Neón (Por defecto)",
+      bg_color: "#070914",
+      bg_image: "radial-gradient(circle at 20% 20%, %{p_glow} 0%, transparent 45%), radial-gradient(circle at 80% 70%, %{a_glow} 0%, transparent 50%)"
+    },
+    "carbon" => {
+      name: "Carbon Luxury & Malla de Titanio",
+      bg_color: "#0c0d10",
+      bg_image: "linear-gradient(135deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(315deg, rgba(255,255,255,0.03) 25%, transparent 25%)",
+      bg_size: "24px 24px"
+    },
+    "royal" => {
+      name: "Royal Velvet & Reflejos Champagne",
+      bg_color: "#050716",
+      bg_image: "radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.22) 0%, transparent 70%), radial-gradient(circle at 85% 85%, %{p_glow} 0%, transparent 50%)"
+    },
+    "concert_smoke" => {
+      name: "Luces de Escenario & Humo de Concierto",
+      bg_color: "#050508",
+      bg_image: "radial-gradient(ellipse at 50% -10%, %{p_glow} 0%, transparent 65%), radial-gradient(circle at 50% 100%, %{a_glow} 0%, transparent 65%)"
+    },
+    "cyber_grid" => {
+      name: "Matriz Cyberpunk & Malla Neón 3D",
+      bg_color: "#050811",
+      bg_image: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+      bg_size: "40px 40px"
+    },
+    "pure_dark" => {
+      name: "Negro OLED Puro Absolute Black",
+      bg_color: "#000000",
+      bg_image: "none"
+    }
+  }.freeze
+
   def use_custom_theme?
     return false unless landing_sections_config.is_a?(Hash)
     landing_sections_config["use_custom_theme"] == "1" || landing_sections_config["use_custom_theme"] == true || landing_sections_config["use_custom_theme"] == "true"
@@ -188,6 +230,42 @@ class Company < ApplicationRecord
       landing_bg_style: defaults[:bg_style],
       landing_sections_config: cfg
     )
+  end
+
+  def template_price(key)
+    prices = landing_template_prices.is_a?(Hash) ? landing_template_prices : {}
+    if prices.key?(key.to_s)
+      prices[key.to_s].to_f
+    else
+      default_prices = { "classic_stage" => 0.0, "neon_festival" => 15.0, "royal_gala" => 29.0, "minimal_acoustic" => 19.0 }
+      default_prices[key.to_s] || 0.0
+    end
+  end
+
+  def template_price_formatted(key)
+    price = template_price(key)
+    if price <= 0
+      "$0 / mes (INCLUIDO)"
+    else
+      "$#{price.to_i} / mes"
+    end
+  end
+
+  def template_badge_formatted(key, fallback_badge = nil)
+    price = template_price(key).to_i
+    category_name = case key.to_s
+                    when "classic_stage" then "INCLUIDO"
+                    when "neon_festival" then "PRO FESTIVAL"
+                    when "royal_gala" then "VIP ROYAL"
+                    when "minimal_acoustic" then "STUDIO MINIMAL"
+                    else "PLANTILLA"
+                    end
+
+    if price <= 0
+      "#{category_name} ($0/mes)"
+    else
+      "#{category_name} ($#{price}/mes)"
+    end
   end
 
   def font_css
