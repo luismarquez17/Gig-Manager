@@ -128,12 +128,18 @@
     <% if @preset_budgets.any? %>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px;">
         <% @preset_budgets.each do |preset| %>
-          <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between; border-color: var(--card-border-hover); transition: transform 0.3s ease, border-color 0.3s ease;">
+          <% is_feat = preset.featured? %>
+          <div class="glass-box" style="display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.3s ease, border-color 0.3s ease; <%= is_feat ? 'border-color: var(--primary); box-shadow: 0 0 30px var(--primary-glow);' : '' %>">
             <div>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
                 <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800; color: var(--text-main);">
                   <%= preset.title %>
                 </h3>
+                <% if preset.badge_text.present? || is_feat %>
+                  <span style="background: <%= is_feat ? 'var(--primary-glow)' : 'rgba(255,255,255,0.08)' %>; color: white; font-size: 0.75em; font-weight: 800; padding: 4px 12px; border-radius: 99px; text-transform: uppercase; border: 1px solid var(--card-border-hover);">
+                    <%= preset.badge_text.presence || '⭐ Destacado' %>
+                  </span>
+                <% end %>
               </div>
 
               <div style="margin: 15px 0 20px 0;">
@@ -149,11 +155,11 @@
             </div>
 
             <% 
-              wa_text = "Hola! Me interesa el paquete \"#{preset.title}\" por #{preset.price.to_i} #{preset.currency} para mi evento. ¿Tienen disponibilidad?"
-              wa_link = "https://wa.me/584140000000?text=#{ERB::Util.url_encode(wa_text)}"
+              wa_text = "¡Hola #{@company.name}! Me interesa reservar el combo \"#{preset.title}\" por $#{preset.price.to_i} #{preset.currency} para mi evento. ¿Tienen disponibilidad?"
+              wa_link = "https://wa.me/#{@whatsapp_number.gsub(/[^0-9]/, '')}?text=#{ERB::Util.url_encode(wa_text)}"
             %>
             <a href="<%= wa_link %>" target="_blank" class="btn-cta-primary" style="width: 100%; justify-content: center; text-decoration: none; margin-top: 15px;">
-              <span>💬</span> Consultar Disponibilidad
+              <span>💬</span> Reservar Este Combo
             </a>
           </div>
         <% end %>

@@ -9,6 +9,7 @@ class LandingSettingsController < ApplicationController
     @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
     @calculator_formats = @company.effective_calculator_formats
     @staff_members = @company.all_staff_members
+    @preset_budgets = @company.all_preset_budgets
   end
 
   def update
@@ -65,12 +66,29 @@ class LandingSettingsController < ApplicationController
       end
     end
 
-    # 5. Actualización de Trabajadores / Músicos (Fotos, roles, bio y visibilidad en landing)
+    # 5. Actualización en lote de Combos & Paquetes Destacados (PresetBudgets)
+    if params[:preset_budgets].present?
+      params[:preset_budgets].each do |budget_id, b_params|
+        budget = @company.preset_budgets.find_by(id: budget_id)
+        if budget
+          budget.update(
+            title: b_params[:title].presence || budget.title,
+            price: b_params[:price].presence || budget.price,
+            currency: b_params[:currency].presence || budget.currency,
+            description: b_params[:description].presence || budget.description,
+            badge_text: b_params[:badge_text],
+            featured: b_params[:featured] == "1",
+            show_on_landing: b_params[:show_on_landing] == "1"
+          )
+        end
+      end
+    end
+
+    # 6. Actualización de Trabajadores / Músicos (Fotos, roles, bio y visibilidad en landing)
     if params[:staff_members].present?
       params[:staff_members].each do |user_id, staff_params|
         user = @company.users.find_by(id: user_id)
         if user
-          # Subida de foto de perfil / avatar
           avatar_file = params.dig(:staff_avatars, user_id.to_s)
           if avatar_file.respond_to?(:read)
             content_type = avatar_file.content_type.presence || 'image/jpeg'
@@ -90,19 +108,47 @@ class LandingSettingsController < ApplicationController
       end
     end
 
-    # 6. Asignar todos los parámetros de personalización
+    # 7. Asignar todos los parámetros de personalización
     @company.assign_attributes(company_landing_params)
 
     if @company.save
-      redirect_to landing_settings_path, notice: "¡Diseño, calculadora separada (shows vs sonido), músicos y adicionales guardados con éxito!"
+      redirect_to landing_settings_path, notice: "¡Combos, paquetes destacados, diseño y personalizaciones guardados con éxito!"
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @company.company_media_items.build
       @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
       @calculator_formats = @company.effective_calculator_formats
       @staff_members = @company.all_staff_members
+      @preset_budgets = @company.all_preset_budgets
       flash.now[:alert] = "Error al guardar cambios: #{@company.errors.full_messages.join(', ')}"
       render :show, status: :unprocessable_entity
+    end
+  end
+
+  def create_preset_budget
+    budget = @company.preset_budgets.build(
+      title: params[:title].presence || "Nuevo Combo / Paquete",
+      price: params[:price].to_f > 0 ? params[:price].to_f : 500.0,
+      currency: params[:currency].presence || "USD",
+      description: params[:description].presence || "Incluye show en vivo, sistema de sonido profesional y puesta en escena.",
+      badge_text: params[:badge_text].presence || "🔥 Más Popular",
+      featured: params[:featured] == "1",
+      show_on_landing: true
+    )
+
+    if budget.save
+      redirect_to landing_settings_path(anchor: 'combos'), notice: "¡Combo / Paquete '#{budget.title}' agregado con éxito a la Landing!"
+    else
+      redirect_to landing_settings_path(anchor: 'combos'), alert: "Error al crear el paquete: #{budget.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def destroy_preset_budget
+    budget = @company.preset_budgets.find_by(id: params[:budget_id])
+    if budget&.destroy
+      redirect_to landing_settings_path(anchor: 'combos'), notice: "¡Combo / Paquete eliminado correctamente!"
+    else
+      redirect_to landing_settings_path(anchor: 'combos'), alert: "No se pudo eliminar el combo."
     end
   end
 

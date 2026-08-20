@@ -280,6 +280,14 @@ class Company < ApplicationRecord
     standard_upsells.where(active: true, show_on_landing: true).order(landing_position: :asc, created_at: :asc)
   end
 
+  def landing_preset_budgets
+    preset_budgets.where(show_on_landing: true).order(featured: :desc, position: :asc, created_at: :asc)
+  end
+
+  def all_preset_budgets
+    preset_budgets.order(featured: :desc, position: :asc, created_at: :asc)
+  end
+
   def landing_staff_members
     users.where(role: [:leader, :musician, :staff, :superadmin], show_on_landing: true).order(landing_position: :asc, created_at: :asc)
   end

@@ -295,6 +295,113 @@
 
     </div>
 
+    <%# --- 4.5 GESTIÓN DE COMBOS & PAQUETES DESTACADOS (PRESUPUESTOS BASE) --- %>
+    <div id="combos" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>📦</span> Combos &amp; Paquetes Destacados (Presupuestos Base)
+          </h2>
+          <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.88em;">
+            Crea y personaliza 1, 2, 3 o cuantos combos desees mostrar en la Landing. Puedes destacar uno como 🔥 Más Popular o 👑 VIP Gala.
+          </p>
+        </div>
+        <div>
+          <span style="font-size: 0.85em; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">
+            <%= @preset_budgets.select(&:show_on_landing?).count %> de <%= @preset_budgets.count %> visibles en la web
+          </span>
+        </div>
+      </div>
+
+      <% if @preset_budgets.any? %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 20px;">
+          <% @preset_budgets.each do |budget| %>
+            <div style="background: <%= budget.show_on_landing? ? '#ffffff' : '#f8fafc' %>; border: 2px solid <%= budget.featured? ? '#8b5cf6' : (budget.show_on_landing? ? '#e2e8f0' : '#cbd5e1') %>; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 12px; box-shadow: <%= budget.featured? ? '0 6px 20px rgba(139, 92, 246, 0.12)' : '0 2px 8px rgba(0,0,0,0.02)' %>; box-sizing: border-box; position: relative;">
+              
+              <%# Top Badge & Delete %>
+              <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px;">
+                <div style="display: flex; align-items: center; gap: 6px; flex: 1;">
+                  <input type="text" name="preset_budgets[<%= budget.id %>][badge_text]" value="<%= budget.badge_text.presence || '🔥 Más Popular' %>" placeholder="Etiqueta (Ej: 🔥 Más Popular)" style="font-size: 0.78em; font-weight: 800; padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 6px; width: 100%; box-sizing: border-box; background: white;">
+                </div>
+
+                <%= button_to destroy_landing_preset_budget_path(budget_id: budget.id), method: :delete, data: { turbo_confirm: "¿Seguro de eliminar este combo/paquete?" }, style: "background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; border-radius: 6px; padding: 4px 8px; font-size: 0.75em; cursor: pointer; flex-shrink: 0;" do %>
+                  🗑️ Eliminar
+                <% end %>
+              </div>
+
+              <%# Title & Price %>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="text" name="preset_budgets[<%= budget.id %>][title]" value="<%= budget.title %>" placeholder="Nombre del Combo" style="flex: 1; font-weight: 800; font-size: 1.02em; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; background: white;">
+                
+                <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0;">
+                  <span style="color: #15803d; font-weight: 800;">$</span>
+                  <input type="number" name="preset_budgets[<%= budget.id %>][price]" value="<%= budget.price.to_i %>" step="10" min="0" style="width: 80px; font-weight: 800; color: #15803d; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95em; text-align: right; background: white;">
+                  <input type="hidden" name="preset_budgets[<%= budget.id %>][currency]" value="<%= budget.currency %>">
+                </div>
+              </div>
+
+              <%# Description %>
+              <div>
+                <textarea name="preset_budgets[<%= budget.id %>][description]" rows="3" placeholder="Descripción del paquete (puntos incluidos, show, sonido...)" style="width: 100%; font-size: 0.82em; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; box-sizing: border-box; background: white; font-family: inherit;"><%= budget.description %></textarea>
+              </div>
+
+              <%# Bottom Toggles %>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: 800; color: <%= budget.show_on_landing? ? '#15803d' : '#64748b' %>; cursor: pointer;">
+                  <%= check_box_tag "preset_budgets[#{budget.id}][show_on_landing]", "1", budget.show_on_landing?, style: "accent-color: #10b981; width: 16px; height: 16px; cursor: pointer;" %>
+                  <span><%= budget.show_on_landing? ? "✓ Visible en Landing" : "Oculto" %></span>
+                </label>
+
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: 800; color: <%= budget.featured? ? '#6d28d9' : '#64748b' %>; cursor: pointer;">
+                  <%= check_box_tag "preset_budgets[#{budget.id}][featured]", "1", budget.featured?, style: "accent-color: #8b5cf6; width: 16px; height: 16px; cursor: pointer;" %>
+                  <span>⭐ Destacado Escenario</span>
+                </label>
+              </div>
+
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+
+      <%# FORMULARIO RÁPIDO PARA CREAR UN NUEVO COMBO %>
+      <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 16px; padding: 18px;">
+        <h4 style="margin: 0 0 12px 0; font-size: 0.95em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+          <span>➕</span> Agregar un Nuevo Combo / Paquete Prediseñado
+        </h4>
+
+        <%= form_with(url: create_landing_preset_budget_path, method: :post, local: true, style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;") do |bf| %>
+          <div>
+            <label style="display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;">Nombre del Combo</label>
+            <%= bf.text_field :title, placeholder: "Ej: Combo Fiesta Matrimonio VIP", required: true, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.88em;" %>
+          </div>
+
+          <div>
+            <label style="display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;">Precio ($)</label>
+            <%= bf.number_field :price, placeholder: "750", step: 10, required: true, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.88em; font-weight: bold; color: #15803d;" %>
+          </div>
+
+          <div>
+            <label style="display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;">Etiqueta Insignia</label>
+            <%= bf.text_field :badge_text, placeholder: "🔥 Más Popular / 👑 VIP", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.88em;" %>
+          </div>
+
+          <div style="grid-column: 1 / -1;">
+            <label style="display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;">Descripción / Contenido del Combo</label>
+            <%= bf.text_area :description, rows: 2, placeholder: "Detalla los puntos del paquete: • 2 Horas de Show en Vivo\n• 6 Horas de Sonido & DJ Continuo\n• Iluminación Robótica Automatizada", style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.85em; font-family: inherit;" %>
+          </div>
+
+          <div style="display: flex; align-items: center; justify-content: space-between; grid-column: 1 / -1;">
+            <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85em; font-weight: 700; color: #475569; cursor: pointer;">
+              <%= bf.check_box :featured, style: "accent-color: #8b5cf6; width: 16px; height: 16px;" %>
+              <span>⭐ Destacar este Combo en Tarima Central</span>
+            </label>
+
+            <%= bf.submit "➕ Publicar Combo en Landing", style: "background: #0f172a; color: white; border: none; padding: 9px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 0.88em;" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
     <%# --- 5. GESTIÓN DE ADICIONALES & UPSELLS REALES EN LA LANDING --- %>
     <div id="adicionales" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
