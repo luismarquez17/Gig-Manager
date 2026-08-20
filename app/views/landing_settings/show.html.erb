@@ -8,7 +8,7 @@
         <span>🎨</span> Studio de Personalización de Landing Page
       </h1>
       <p style="color: #64748b; margin: 5px 0 0 0; font-size: 0.95em;">
-        Diseña, personaliza y gestiona la vitrina web pública de <strong><%= @company.name %></strong> con tus propios colores, cotizador en vivo, adicionales y videos.
+        Diseña, personaliza y gestiona la vitrina web pública de <strong><%= @company.name %></strong> con tus propios colores, cotizador separado (shows vs sonido), integrantes y videos.
       </p>
     </div>
     
@@ -31,7 +31,7 @@
     </div>
   <% end %>
 
-  <%= form_with(model: @company, url: landing_settings_path, method: :patch, local: true) do |f| %>
+  <%= form_with(model: @company, url: landing_settings_path, method: :patch, local: true, multipart: true) do |f| %>
 
     <%# --- 1. BARRA DE ACTIVACIÓN DEL MÓDULO (ADD-ON SAAS) --- %>
     <div style="background: white; border: 1px solid <%= @company.landing_enabled? ? '#86efac' : '#cbd5e1' %>; border-radius: 20px; padding: 20px 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
@@ -110,9 +110,9 @@
             sections = [
               [:show_metrics, "⭐ Estadísticas & Calificaciones (Social Proof)"],
               [:show_packages, "📦 Catálogo de Paquetes Base & Tarifas"],
-              [:show_calculator, "⚡ Simulador / Cotizador de Presupuestos en Vivo"],
+              [:show_calculator, "⚡ Simulador / Cotizador Separado (Shows + Sonido)"],
               [:show_media, "🎬 Galería Audiovisual (Videos & Instrumentos)"],
-              [:show_team, "👥 Vitrina de Músicos & Integrantes"],
+              [:show_team, "👥 Vitrina de Músicos & Integrantes con Fotos"],
               [:show_reviews, "💬 Muro de Reseñas & Testimonios 5 Estrellas"],
               [:show_faq, "❓ Preguntas Frecuentes (FAQ Interactivo)"]
             ]
@@ -128,35 +128,63 @@
 
     </div>
 
-    <%# --- 4. CONFIGURADOR DE LA CALCULADORA / COTIZADOR EN VIVO --- %>
+    <%# --- 4. CONFIGURADOR DE LA CALCULADORA / COTIZADOR EN VIVO (LÓGICA SEPARADA SHOW VS SONIDO) --- %>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
         <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-          <span>⚡</span> Configurador del Cotizador / Calculadora en Vivo
+          <span>⚡</span> Configurador del Cotizador (Shows en Vivo vs Sonido &amp; DJ)
         </h2>
         <span style="font-size: 0.8em; background: #e0f2fe; color: #0369a1; padding: 4px 12px; border-radius: 99px; font-weight: 700;">
-          Datos Reales en Tiempo Real
+          Lógica Profesional Separada
         </span>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
         <div>
           <%= f.label :landing_calculator_title, "Título del Cotizador", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
           <%= f.text_field :landing_calculator_title, placeholder: "Ej: Simula tu Presupuesto al Instante", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
         </div>
         <div>
-          <%= f.label :landing_calculator_base_hours, "Horas Base Incluidas", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
-          <%= f.number_field :landing_calculator_base_hours, min: 1, max: 6, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
-        </div>
-        <div>
-          <%= f.label :landing_calculator_extra_hour_price, "Precio por Hora Extra (USD)", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
-          <%= f.number_field :landing_calculator_extra_hour_price, step: 5, min: 0, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+          <%= f.label :landing_calculator_subtitle, "Subtítulo / Instrucción para el Cliente", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.text_field :landing_calculator_subtitle, placeholder: "Ej: Elige tu formato, cantidad de pases de show y horas de sonido para tu fiesta.", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
         </div>
       </div>
 
-      <div style="margin-bottom: 20px;">
-        <%= f.label :landing_calculator_subtitle, "Subtítulo / Instrucción para el Cliente", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
-        <%= f.text_field :landing_calculator_subtitle, placeholder: "Ej: Juega con las opciones y calcula el valor estimado de tu evento en tiempo real.", style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+      <%# Tarifación de Shows vs Horas de Sonido %>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #e2e8f0;">
+        <%# Columna Shows %>
+        <div>
+          <h4 style="margin: 0 0 10px 0; font-size: 0.92em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span>🎤</span> Pases / Shows en Vivo (1 Hora por Pase)
+          </h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <%= f.label :landing_calculator_base_shows, "Shows Incluidos en Base", style: "display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;" %>
+              <%= f.number_field :landing_calculator_base_shows, min: 1, max: 4, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+            </div>
+            <div>
+              <%= f.label :landing_calculator_extra_show_price, "Precio por 2do/3er Show ($)", style: "display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;" %>
+              <%= f.number_field :landing_calculator_extra_show_price, step: 10, min: 0, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em; font-weight: bold; color: #15803d;" %>
+            </div>
+          </div>
+        </div>
+
+        <%# Columna Sonido %>
+        <div>
+          <h4 style="margin: 0 0 10px 0; font-size: 0.92em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 6px;">
+            <span>🔊</span> Cobertura de Sonido &amp; DJ Continuo
+          </h4>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <%= f.label :landing_calculator_base_sound_hours, "Horas Sonido Base", style: "display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;" %>
+              <%= f.number_field :landing_calculator_base_sound_hours, min: 2, max: 8, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em;" %>
+            </div>
+            <div>
+              <%= f.label :landing_calculator_extra_sound_hour_price, "Precio Hora Extra Sonido ($)", style: "display: block; font-weight: 700; font-size: 0.78em; color: #64748b; margin-bottom: 4px;" %>
+              <%= f.number_field :landing_calculator_extra_sound_hour_price, step: 5, min: 0, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em; font-weight: bold; color: #15803d;" %>
+            </div>
+          </div>
+        </div>
       </div>
 
       <%# Editor de Formatos de Banda en la Calculadora %>
@@ -165,7 +193,7 @@
           <h4 style="margin: 0; font-size: 0.95em; font-weight: 800; color: #1e293b;">
             🎼 Formatos Musicales del Cotizador (Paso 1 del Simulador)
           </h4>
-          <span style="font-size: 0.78em; color: #64748b;">Ajusta nombres, integrantes y precios base</span>
+          <span style="font-size: 0.78em; color: #64748b;">Ajusta nombres, integrantes y precios base (incluye 1 Show + Sonido base)</span>
         </div>
 
         <div id="calculator_formats_container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
@@ -251,7 +279,76 @@
       <% end %>
     </div>
 
-    <%# --- 6. IDENTIDAD, TEXTOS & CONTACTO --- %>
+    <%# --- 6. GESTIÓN DE MÚSICOS & INTEGRANTES (FOTOS Y PERFILES) --- %>
+    <div id="integrantes" style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px; overflow: hidden;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>👥</span> Vitrina de Músicos &amp; Integrantes (Fotos &amp; Perfiles)
+          </h2>
+          <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.88em;">
+            Sube las fotos de tu equipo, asigna su instrumento/especialidad y decide quién aparece en la vitrina de la Landing.
+          </p>
+        </div>
+        <div>
+          <span style="font-size: 0.85em; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 4px 12px; border-radius: 99px;">
+            <%= @staff_members.select(&:show_on_landing?).count %> de <%= @staff_members.count %> visibles en la web
+          </span>
+        </div>
+      </div>
+
+      <% if @staff_members.any? %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-bottom: 10px;">
+          <% @staff_members.each do |staff| %>
+            <div style="background: <%= staff.show_on_landing? ? '#f0fdf4' : '#f8fafc' %>; border: 1px solid <%= staff.show_on_landing? ? '#86efac' : '#cbd5e1' %>; border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 12px; box-sizing: border-box;">
+              
+              <%# Top: Avatar, Name & Toggle %>
+              <div style="display: flex; gap: 12px; align-items: center;">
+                <div style="width: 56px; height: 56px; border-radius: 50%; overflow: hidden; border: 2px solid #cbd5e1; flex-shrink: 0; background: #e2e8f0; display: flex; align-items: center; justify-content: center;">
+                  <% if staff.avatar_attached? %>
+                    <%= image_tag staff.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
+                  <% else %>
+                    <span style="font-weight: 800; color: #64748b; font-size: 1.3em;"><%= staff.display_name[0].upcase %></span>
+                  <% end %>
+                </div>
+
+                <div style="flex: 1; min-width: 0;">
+                  <input type="text" name="staff_members[<%= staff.id %>][name]" value="<%= staff.name.presence || staff.display_name %>" placeholder="Nombre Artístico" style="width: 100%; min-width: 0; font-weight: 700; font-size: 0.9em; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white; margin-bottom: 4px;">
+                  <input type="text" name="staff_members[<%= staff.id %>][specialty]" value="<%= staff.specialty %>" placeholder="Instrumento (Ej: Voz Principal, Batería)" style="width: 100%; min-width: 0; font-size: 0.82em; padding: 5px 8px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white;">
+                </div>
+              </div>
+
+              <%# Selector de Foto %>
+              <div>
+                <label style="display: block; font-weight: 700; font-size: 0.75em; color: #64748b; margin-bottom: 4px;">📷 Cambiar / Subir Foto de Perfil:</label>
+                <input type="file" name="staff_avatars[<%= staff.id %>]" accept="image/*" style="width: 100%; font-size: 0.78em; color: #475569; background: white; padding: 5px; border-radius: 6px; border: 1px dashed #cbd5e1; box-sizing: border-box;">
+              </div>
+
+              <%# Biografía corta %>
+              <div>
+                <input type="text" name="staff_members[<%= staff.id %>][bio]" value="<%= staff.bio %>" placeholder="Breve reseña / trayectoria..." style="width: 100%; font-size: 0.8em; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; box-sizing: border-box; background: white;">
+              </div>
+
+              <%# Bottom: Visibilidad %>
+              <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: 800; color: <%= staff.show_on_landing? ? '#15803d' : '#64748b' %>; cursor: pointer;">
+                  <%= check_box_tag "staff_members[#{staff.id}][show_on_landing]", "1", staff.show_on_landing?, style: "accent-color: #10b981; width: 16px; height: 16px; cursor: pointer;" %>
+                  <span><%= staff.show_on_landing? ? "✓ Visible en Landing" : "Oculto" %></span>
+                </label>
+                <span style="font-size: 0.75em; color: #94a3b8; text-transform: uppercase; font-weight: 600;"><%= staff.role %></span>
+              </div>
+
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p style="text-align: center; color: #94a3b8; padding: 20px; font-size: 0.9em; margin: 0;">
+          No hay músicos o integrantes registrados en la empresa.
+        </p>
+      <% end %>
+    </div>
+
+    <%# --- 7. IDENTIDAD, TEXTOS & CONTACTO --- %>
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 25px;">
       <h2 style="margin: 0 0 16px 0; font-size: 1.2em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
         <span>✍️</span> Textos de Cabecera, Biografía &amp; Contacto
@@ -306,7 +403,7 @@
 
   <% end %>
 
-  <%# --- 7. GESTIÓN DE VIDEOS & SHOWCASE MULTIMEDIA --- %>
+  <%# --- 8. GESTIÓN DE VIDEOS & SHOWCASE MULTIMEDIA --- %>
   <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 35px;">
     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
       <div>

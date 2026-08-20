@@ -68,6 +68,7 @@ Rails.application.routes.draw do
   delete '/landing_settings/media/:media_id', to: 'landing_settings#destroy_media', as: 'destroy_landing_media'
   patch '/landing_settings/media/:media_id/toggle', to: 'landing_settings#toggle_media_active', as: 'toggle_landing_media'
   patch '/landing_settings/upsells/:upsell_id/toggle', to: 'landing_settings#toggle_upsell_landing', as: 'toggle_landing_upsell'
+  patch '/landing_settings/staff/:user_id/toggle', to: 'landing_settings#toggle_staff_landing', as: 'toggle_landing_staff'
 
   resources :gigs, only: [:index, :new, :create, :destroy, :show, :edit, :update] do
     member do

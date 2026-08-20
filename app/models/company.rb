@@ -125,6 +125,14 @@ class Company < ApplicationRecord
     standard_upsells.where(active: true, show_on_landing: true).order(landing_position: :asc, created_at: :asc)
   end
 
+  def landing_staff_members
+    users.where(role: [:leader, :musician, :staff, :superadmin], show_on_landing: true).order(landing_position: :asc, created_at: :asc)
+  end
+
+  def all_staff_members
+    users.where(role: [:leader, :musician, :staff, :superadmin]).order(landing_position: :asc, created_at: :asc)
+  end
+
   private
 
   def generate_slug_and_token

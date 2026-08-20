@@ -8,6 +8,7 @@ class LandingSettingsController < ApplicationController
     @new_media_item = @company.company_media_items.build
     @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
     @calculator_formats = @company.effective_calculator_formats
+    @staff_members = @company.all_staff_members
   end
 
   def update
@@ -64,16 +65,42 @@ class LandingSettingsController < ApplicationController
       end
     end
 
-    # 5. Asignar todos los parámetros de personalización
+    # 5. Actualización de Trabajadores / Músicos (Fotos, roles, bio y visibilidad en landing)
+    if params[:staff_members].present?
+      params[:staff_members].each do |user_id, staff_params|
+        user = @company.users.find_by(id: user_id)
+        if user
+          # Subida de foto de perfil / avatar
+          avatar_file = params.dig(:staff_avatars, user_id.to_s)
+          if avatar_file.respond_to?(:read)
+            content_type = avatar_file.content_type.presence || 'image/jpeg'
+            encoded = Base64.strict_encode64(avatar_file.read)
+            user.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+            user.avatar.attach(avatar_file)
+            avatar_file.rewind if avatar_file.respond_to?(:rewind)
+          end
+
+          user.update(
+            name: staff_params[:name].presence || user.name,
+            specialty: staff_params[:specialty].presence || user.specialty,
+            bio: staff_params[:bio].presence || user.bio,
+            show_on_landing: staff_params[:show_on_landing] == "1"
+          )
+        end
+      end
+    end
+
+    # 6. Asignar todos los parámetros de personalización
     @company.assign_attributes(company_landing_params)
 
     if @company.save
-      redirect_to landing_settings_path, notice: "¡Diseño, calculadora, adicionales y textos de tu Landing guardados con éxito!"
+      redirect_to landing_settings_path, notice: "¡Diseño, calculadora separada (shows vs sonido), músicos y adicionales guardados con éxito!"
     else
       @media_items = @company.company_media_items.ordered
       @new_media_item = @company.company_media_items.build
       @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
       @calculator_formats = @company.effective_calculator_formats
+      @staff_members = @company.all_staff_members
       flash.now[:alert] = "Error al guardar cambios: #{@company.errors.full_messages.join(', ')}"
       render :show, status: :unprocessable_entity
     end
@@ -90,6 +117,7 @@ class LandingSettingsController < ApplicationController
       @new_media_item = @media_item
       @upsells = @company.standard_upsells.order(landing_position: :asc, created_at: :asc)
       @calculator_formats = @company.effective_calculator_formats
+      @staff_members = @company.all_staff_members
       flash.now[:alert] = "Error al agregar multimedia: #{@media_item.errors.full_messages.join(', ')}"
       render :show, status: :unprocessable_entity
     end
@@ -111,6 +139,12 @@ class LandingSettingsController < ApplicationController
     @upsell = @company.standard_upsells.find(params[:upsell_id])
     @upsell.update(show_on_landing: !@upsell.show_on_landing)
     redirect_to landing_settings_path, notice: "Visibilidad del adicional '#{@upsell.title}' en la Landing: #{@upsell.show_on_landing? ? 'Visible' : 'Oculto'}."
+  end
+
+  def toggle_staff_landing
+    @user = @company.users.find(params[:user_id])
+    @user.update(show_on_landing: !@user.show_on_landing)
+    redirect_to landing_settings_path(anchor: 'integrantes'), notice: "Visibilidad de #{@user.display_name} en la Landing: #{@user.show_on_landing? ? 'Visible' : 'Oculto'}."
   end
 
   private
@@ -140,6 +174,10 @@ class LandingSettingsController < ApplicationController
       :landing_hero_cta_text,
       :landing_calculator_title,
       :landing_calculator_subtitle,
+      :landing_calculator_base_shows,
+      :landing_calculator_extra_show_price,
+      :landing_calculator_base_sound_hours,
+      :landing_calculator_extra_sound_hour_price,
       :landing_calculator_base_hours,
       :landing_calculator_extra_hour_price,
       :landing_calculator_currency,

@@ -139,7 +139,7 @@
   </section>
   <% end %>
 
-  <%# --- 3. SIMULADOR / COTIZADOR VISUAL EN VIVO --- %>
+  <%# --- 3. SIMULADOR / COTIZADOR VISUAL EN VIVO (LÓGICA SEPARADA: SHOWS VS SONIDO) --- %>
   <% if @company.landing_section_visible?(:show_calculator) %>
   <section id="cotizador" style="padding: 40px 0 80px;">
     <div class="glass-box" style="border: 2px solid var(--card-border-hover); box-shadow: 0 12px 50px var(--primary-glow);">
@@ -149,7 +149,7 @@
           <%= @company.landing_calculator_title.presence || "Simula tu Presupuesto al Instante" %>
         </h2>
         <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">
-          <%= @company.landing_calculator_subtitle.presence || "Juega con las opciones y calcula el valor estimado de tu evento en tiempo real." %>
+          <%= @company.landing_calculator_subtitle.presence || "Elige tu formato, cantidad de pases de show y horas de sonido para tu fiesta." %>
         </p>
       </div>
 
@@ -173,26 +173,60 @@
             </div>
           </div>
 
-          <%# 2. Horas de Show %>
+          <%# 2. Cantidad de Shows / Pases en Vivo (Sets de 1 Hora) %>
           <div style="margin-bottom: 25px;">
-            <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
-              2. Duración del Show: <span id="hours-display" style="color: white; font-size: 1.1em;"><%= @company.landing_calculator_base_hours %> Horas</span>
-            </label>
-            <input type="range" id="hours-slider" min="1" max="6" value="<%= @company.landing_calculator_base_hours %>" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateHours(this.value)">
-            <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-muted); font-weight: 700; margin-top: 6px;">
-              <span>1 Hora</span>
-              <span>2 Horas</span>
-              <span>3 Horas</span>
-              <span>4 Horas</span>
-              <span>5 Horas</span>
-              <span>6 Horas</span>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <label style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin: 0;">
+                2. Shows / Pases en Vivo (Sets de 60 min)
+              </label>
+              <span style="font-size: 0.78em; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 6px;">
+                Show en vivo con receso
+              </span>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px;">
+              <div class="sim-show-pill active" data-shows="1" onclick="selectShows(1, this)" style="background: var(--primary-glow); border: 1px solid var(--primary); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                <div style="font-size: 1.2em; margin-bottom: 2px;">⚡</div>
+                <strong style="display: block; font-size: 0.92em; color: white;">1 Show</strong>
+                <span style="font-size: 0.75em; color: #34d399;">Incluido en Base</span>
+              </div>
+              <div class="sim-show-pill" data-shows="2" onclick="selectShows(2, this)" style="background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                <div style="font-size: 1.2em; margin-bottom: 2px;">🔥</div>
+                <strong style="display: block; font-size: 0.92em; color: white;">2 Shows</strong>
+                <span style="font-size: 0.75em; color: #34d399;">+$<%= @company.landing_calculator_extra_show_price.to_i %> <%= @company.landing_calculator_currency.presence || "USD" %></span>
+              </div>
+              <div class="sim-show-pill" data-shows="3" onclick="selectShows(3, this)" style="background: rgba(255,255,255,0.04); border: 1px solid var(--card-border); border-radius: 12px; padding: 12px; text-align: center; cursor: pointer; transition: all 0.2s;">
+                <div style="font-size: 1.2em; margin-bottom: 2px;">👑</div>
+                <strong style="display: block; font-size: 0.92em; color: white;">3 Shows</strong>
+                <span style="font-size: 0.75em; color: #34d399;">+$<%= (@company.landing_calculator_extra_show_price.to_i * 2) %> <%= @company.landing_calculator_currency.presence || "USD" %></span>
+              </div>
             </div>
           </div>
 
-          <%# 3. Efectos y Adicionales Reales de la Empresa %>
+          <%# 3. Horas de Cobertura de Sonido & DJ Continuo %>
+          <div style="margin-bottom: 25px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <label style="font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin: 0;">
+                3. Cobertura de Sonido &amp; DJ: <span id="sound-hours-display" style="color: white; font-size: 1.1em;"><%= @company.landing_calculator_base_sound_hours %> Horas</span>
+              </label>
+              <span style="font-size: 0.78em; color: var(--text-muted); background: rgba(255,255,255,0.05); padding: 3px 8px; border-radius: 6px;">
+                <%= @company.landing_calculator_base_sound_hours %>h incluidas en base
+              </span>
+            </div>
+            <input type="range" id="sound-hours-slider" min="3" max="8" value="<%= @company.landing_calculator_base_sound_hours %>" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateSoundHours(this.value)">
+            <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-muted); font-weight: 700; margin-top: 6px;">
+              <span>3h</span>
+              <span>4h (Base)</span>
+              <span>5h</span>
+              <span>6h</span>
+              <span>7h</span>
+              <span>8h</span>
+            </div>
+          </div>
+
+          <%# 4. Efectos y Adicionales Reales de la Empresa %>
           <div style="margin-bottom: 25px;">
             <label style="display: block; font-family: var(--font-outfit); font-weight: 800; font-size: 0.95em; text-transform: uppercase; color: var(--primary); margin-bottom: 12px;">
-              3. Añade Efectos Especiales &amp; Producción
+              4. Añade Efectos Especiales &amp; Producción
             </label>
             <% if @standard_upsells.any? %>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px;">
@@ -236,8 +270,12 @@
               <strong id="sum-format-price">$<%= @calculator_formats.first['price'].to_i rescue 400 %> USD</strong>
             </div>
             <div style="display: flex; justify-content: space-between;">
-              <span style="color: var(--text-muted);" id="sum-hours-name"><%= @company.landing_calculator_base_hours %> Horas de Música</span>
-              <strong id="sum-hours-price">Incluidas</strong>
+              <span style="color: var(--text-muted);" id="sum-shows-name">1 Show en Vivo (60 min)</span>
+              <strong id="sum-shows-price" style="color: #34d399;">Incluido</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+              <span style="color: var(--text-muted);" id="sum-sound-name"><%= @company.landing_calculator_base_sound_hours %> Horas Sonido &amp; DJ</span>
+              <strong id="sum-sound-price" style="color: #34d399;">Incluidas</strong>
             </div>
             <div id="sum-addons-list" style="display: flex; flex-direction: column; gap: 6px;"></div>
           </div>
@@ -282,76 +320,63 @@
     </div>
 
     <% if @media_items.any? %>
-      <div id="media-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 24px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;" id="media-grid">
         <% @media_items.each do |item| %>
-          <div class="glass-box media-card" data-category="<%= item.category %>" style="padding: 16px; display: flex; flex-direction: column; justify-content: space-between;">
-            <div>
-              <%# Reproductor o Imagen %>
-              <div style="border-radius: 12px; overflow: hidden; background: #000; margin-bottom: 14px; position: relative; aspect-ratio: 16/9; display: flex; align-items: center; justify-content: center;">
-                <% if item.video? && item.media_file.attached? %>
-                  <video controls playsinline preload="metadata" style="width: 100%; height: 100%; object-fit: cover;">
-                    <source src="<%= url_for(item.media_file) %>" type="<%= item.media_file.content_type %>">
-                    Tu navegador no soporta reproducción de video.
-                  </video>
-                <% elsif item.youtube? && item.video_url.present? %>
-                  <iframe src="<%= item.youtube_embed_url %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%; border: none;"></iframe>
-                <% elsif item.photo? && item.media_file.attached? %>
-                  <%= image_tag item.media_file, style: "width: 100%; height: 100%; object-fit: cover;" %>
-                <% else %>
-                  <div style="text-align: center; color: var(--text-muted); padding: 20px;">
-                    <span style="font-size: 2.5em; display: block; margin-bottom: 4px;">🎬</span>
-                    <span style="font-size: 0.85em;"><%= item.title %></span>
-                  </div>
-                <% end %>
-              </div>
-
-              <%# Encabezado del contenido %>
-              <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 8px;">
-                <h4 style="margin: 0; font-family: var(--font-outfit); font-size: 1.15em; font-weight: 800; color: white;">
-                  <%= item.title %>
-                </h4>
-                <span style="background: var(--primary-glow); border: 1px solid var(--card-border-hover); color: var(--primary); font-size: 0.72em; padding: 2px 8px; border-radius: 99px; font-weight: 700; white-space: nowrap;">
-                  <%= item.category_label %>
-                </span>
-              </div>
-
+          <div class="glass-box media-card" data-category="<%= item.category %>" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
+            <div style="position: relative; width: 100%; aspect-ratio: 16/10; background: #000; overflow: hidden;">
+              <% if item.video? && item.media_file.attached? %>
+                <video src="<%= url_for(item.media_file) %>" controls preload="metadata" style="width: 100%; height: 100%; object-fit: cover;"></video>
+              <% elsif item.youtube? && item.youtube_embed_url.present? %>
+                <iframe src="<%= item.youtube_embed_url %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
+              <% elsif item.image? && item.media_file.attached? %>
+                <%= image_tag item.media_file, style: "width: 100%; height: 100%; object-fit: cover;" %>
+              <% else %>
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
+                  <span>🎬 Video en Vivo</span>
+                </div>
+              <% end %>
+              <span style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: white; font-size: 0.75em; padding: 4px 10px; border-radius: 6px; font-weight: 700;">
+                <%= item.category_label %>
+              </span>
+            </div>
+            <div style="padding: 16px;">
+              <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; color: white;"><%= item.title %></h4>
               <% if item.description.present? %>
-                <p style="margin: 0; color: #cbd5e1; font-size: 0.88em; line-height: 1.4;">
-                  <%= item.description %>
-                </p>
+                <p style="margin: 0; font-size: 0.85em; color: var(--text-muted); line-height: 1.4;"><%= item.description %></p>
               <% end %>
             </div>
           </div>
         <% end %>
       </div>
     <% else %>
-      <%# Showcase Placeholder demostrativo %>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
-        <div class="glass-box" style="padding: 20px;">
-          <div style="border-radius: 12px; background: linear-gradient(135deg, var(--primary-glow) 0%, var(--accent-glow) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid var(--card-border);">
-            <span style="font-size: 3em; margin-bottom: 6px;">🥁</span>
-            <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Backline de Batería &amp; Microfonía</span>
+      <%# Mockup placeholder elegante si no hay videos aún %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+        <div class="glass-box" style="padding: 0; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-size: 3em;">
+            🥁
           </div>
-          <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 800; color: white;">Set Acústico &amp; Cajas Profesionales</h4>
-          <p style="margin: 0; color: var(--text-muted); font-size: 0.85em;">Microfonía Shure y consolas digitales para un sonido nítido y balanceado.</p>
+          <div style="padding: 16px;">
+            <h4 style="margin: 0 0 4px 0; color: white;">Batería Acústica &amp; Percusión</h4>
+            <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">Sets profesionales con microfonía individual y monitoreo in-ear.</p>
+          </div>
         </div>
-
-        <div class="glass-box" style="padding: 20px;">
-          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(245,158,11,0.2) 0%, rgba(239,68,68,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid var(--card-border);">
-            <span style="font-size: 3em; margin-bottom: 6px;">✨</span>
-            <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Chispas Frías &amp; Iluminación Robótica</span>
+        <div class="glass-box" style="padding: 0; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-size: 3em;">
+            🎸
           </div>
-          <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 800; color: white;">Efectos Especiales de Tarima</h4>
-          <p style="margin: 0; color: var(--text-muted); font-size: 0.85em;">Chispas seguras para interiores y exteriores para momentos cumbre y primer baile.</p>
+          <div style="padding: 16px;">
+            <h4 style="margin: 0 0 4px 0; color: white;">Guitarras &amp; Bajos Eléctricos</h4>
+            <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">Modelos Fender y amplificación valvular para sonido impecable.</p>
+          </div>
         </div>
-
-        <div class="glass-box" style="padding: 20px;">
-          <div style="border-radius: 12px; background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(59,130,246,0.2) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; margin-bottom: 14px; border: 1px solid var(--card-border);">
-            <span style="font-size: 3em; margin-bottom: 6px;">🎸</span>
-            <span style="font-size: 0.85em; font-weight: 700; color: #cbd5e1;">Guitarras, Bajo &amp; Teclados en Vivo</span>
+        <div class="glass-box" style="padding: 0; overflow: hidden;">
+          <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-size: 3em;">
+            ✨
           </div>
-          <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 800; color: white;">Instrumentación de Alta Gama</h4>
-          <p style="margin: 0; color: var(--text-muted); font-size: 0.85em;">Amplificadores y pedaleras de última generación para fidelidad de estudio en vivo.</p>
+          <div style="padding: 16px;">
+            <h4 style="margin: 0 0 4px 0; color: white;">Pirotecnia Fría &amp; Geisers</h4>
+            <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">Efectos especiales homologados para interiores y momentos estelares.</p>
+          </div>
         </div>
       </div>
     <% end %>
@@ -369,15 +394,15 @@
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px;">
         <% @staff_members.each do |staff| %>
           <div class="glass-box" style="text-align: center; padding: 24px;">
-            <% if staff.avatar_attached? %>
-              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; overflow: hidden; border: 3px solid var(--card-border-hover); box-shadow: 0 0 18px var(--primary-glow);">
+            <div style="width: 95px; height: 95px; border-radius: 50%; margin: 0 auto 14px; overflow: hidden; border: 3px solid var(--card-border-hover); box-shadow: 0 0 20px var(--primary-glow); background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center;">
+              <% if staff.avatar_attached? %>
                 <%= image_tag staff.avatar_url_or_data, style: "width: 100%; height: 100%; object-fit: cover;" %>
-              </div>
-            <% else %>
-              <div style="width: 85px; height: 85px; border-radius: 50%; margin: 0 auto 14px; background: linear-gradient(135deg, var(--primary) 0%, var(--accent-cyan) 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 1.8em; font-weight: 800; color: white; border: 3px solid var(--card-border-hover);">
-                <%= staff.display_name[0].upcase %>
-              </div>
-            <% end %>
+              <% else %>
+                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, var(--primary) 0%, var(--accent-cyan) 100%); display: flex; align-items: center; justify-content: center; font-family: var(--font-outfit); font-size: 2em; font-weight: 800; color: white;">
+                  <%= staff.display_name[0].upcase %>
+                </div>
+              <% end %>
+            </div>
             <h4 style="margin: 0 0 4px 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 700; color: white;"><%= staff.display_name %></h4>
             <% if staff.specialty.present? %>
               <span style="display: inline-block; background: var(--primary-glow); color: var(--primary); padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 800; text-transform: uppercase;">
@@ -428,11 +453,20 @@
         </div>
         <div class="glass-box" style="padding: 24px;">
           <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-            <strong style="color: white; font-size: 1.05em;">Alejandro G. (Corporativo)</strong>
+            <strong style="color: white; font-size: 1.05em;">Alejandro R. (Evento Corporativo)</strong>
             <span style="color: #fbbf24;">★★★★★</span>
           </div>
           <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5; font-style: italic;">
-            "Excelente repertorio y sonido impecable para nuestro evento de fin de año. 100% recomendados."
+            "Superaron todas las expectativas. El repertorio fue muy versátil y la calidad del audio impecable."
+          </p>
+        </div>
+        <div class="glass-box" style="padding: 24px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+            <strong style="color: white; font-size: 1.05em;">Valentina G. (Cumpleaños 30)</strong>
+            <span style="color: #fbbf24;">★★★★★</span>
+          </div>
+          <p style="margin: 0; color: #cbd5e1; font-size: 0.92em; line-height: 1.5; font-style: italic;">
+            "Recomendados al 100%. Hicieron de mi fiesta una noche inolvidable. ¡Gracias por tanta buena vibra!"
           </p>
         </div>
       <% end %>
@@ -440,88 +474,179 @@
   </section>
   <% end %>
 
-  <%# --- 7. PREGUNTAS FRECUENTES (FAQS) --- %>
-  <% if @company.landing_section_visible?(:show_faq) && @faqs.any? %>
-    <section id="faq" style="padding: 40px 0 80px;">
-      <div style="text-align: center; margin-bottom: 35px;">
-        <span class="section-badge">Dudas &amp; Respuestas</span>
-        <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Preguntas Frecuentes</h2>
-        <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Todo lo que necesitas saber antes de contratar a <%= @company.name %>.</p>
-      </div>
+  <%# --- 7. FAQ INTERACTIVO (PREGUNTAS FRECUENTES) --- %>
+  <% if @company.landing_section_visible?(:show_faq) %>
+  <section id="faq" style="padding: 40px 0 80px;">
+    <div style="text-align: center; margin-bottom: 35px;">
+      <span class="section-badge">Dudas &amp; Respuestas</span>
+      <h2 class="gradient-title" style="font-size: 2.3em; margin: 0;">Preguntas Frecuentes</h2>
+    </div>
 
-      <div style="max-width: 800px; margin: 0 auto; display: grid; gap: 14px;">
-        <% @faqs.each_with_index do |faq, idx| %>
-          <div class="glass-box" style="padding: 20px; cursor: pointer; transition: all 0.2s ease;" onclick="toggleFaqAccordion(<%= idx %>)">
-            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-              <h4 style="margin: 0; font-family: var(--font-outfit); font-size: 1.1em; font-weight: 700; color: white; display: flex; align-items: center; gap: 8px;">
-                <span>💬</span> <%= faq['q'] %>
-              </h4>
-              <span id="faq-arrow-<%= idx %>" style="font-size: 1.1em; color: var(--primary); transition: transform 0.3s ease;">▼</span>
-            </div>
-            <div id="faq-ans-<%= idx %>" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.06); color: #cbd5e1; font-size: 0.95em; line-height: 1.6;">
-              <%= faq['a'] %>
-            </div>
+    <div style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px;">
+      <% @faqs.each_with_index do |faq, idx| %>
+        <div class="glass-box" style="padding: 18px 24px; cursor: pointer;" onclick="toggleFaqAccordion(<%= idx %>)">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h4 style="margin: 0; font-family: var(--font-outfit); font-size: 1.08em; font-weight: 700; color: white;">
+              <%= faq['q'] %>
+            </h4>
+            <span id="faq-arrow-<%= idx %>" style="color: var(--primary); font-size: 1.2em; font-weight: bold;">▼</span>
           </div>
-        <% end %>
-      </div>
-    </section>
+          <div id="faq-ans-<%= idx %>" style="display: <%= idx == 0 ? 'block' : 'none' %>; margin-top: 12px; color: var(--text-muted); font-size: 0.92em; line-height: 1.5; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px;">
+            <%= faq['a'] %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </section>
   <% end %>
+
+  <%# --- 8. FOOTER / CONTACTO FINAL --- %>
+  <footer style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding: 50px 0 30px; text-align: center; margin-top: 40px;">
+    <h3 style="font-family: var(--font-outfit); font-size: 1.6em; font-weight: 800; color: white; margin: 0 0 10px 0;">
+      <%= @company.name %>
+    </h3>
+    <p style="color: var(--text-muted); font-size: 0.95em; max-width: 500px; margin: 0 auto 20px;">
+      <%= @company.tagline.presence || "Música en vivo de alto impacto para bodas, celebraciones y eventos de gala." %>
+    </p>
+
+    <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 25px;">
+      <% if @company.instagram_url.present? %>
+        <a href="<%= @company.instagram_url %>" target="_blank" style="color: white; text-decoration: none; font-size: 1.2em; background: rgba(255,255,255,0.06); padding: 8px 14px; border-radius: 10px;">Instagram ↗</a>
+      <% end %>
+      <% if @company.youtube_url.present? %>
+        <a href="<%= @company.youtube_url %>" target="_blank" style="color: white; text-decoration: none; font-size: 1.2em; background: rgba(255,255,255,0.06); padding: 8px 14px; border-radius: 10px;">YouTube ↗</a>
+      <% end %>
+      <% if @company.tiktok_url.present? %>
+        <a href="<%= @company.tiktok_url %>" target="_blank" style="color: white; text-decoration: none; font-size: 1.2em; background: rgba(255,255,255,0.06); padding: 8px 14px; border-radius: 10px;">TikTok ↗</a>
+      <% end %>
+    </div>
+
+    <p style="color: rgba(255,255,255,0.3); font-size: 0.8em; margin: 0;">
+      © <%= Time.current.year %> <%= @company.name %>. Todos los derechos reservados. Impulsado por GigManager.
+    </p>
+  </footer>
 
 </div>
 
-<%# --- ESTILOS DEL SIMULADOR --- %>
+<%# --- ESTILOS CSS DE INTERFAZ & COMPONENTES --- %>
 <style>
-  .sim-pill {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  .section-badge {
+    display: inline-block;
+    background: var(--primary-glow);
+    color: var(--primary);
+    padding: 6px 14px;
+    border-radius: 99px;
+    font-size: 0.82em;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    border: 1px solid var(--primary);
+  }
+
+  .gradient-title {
+    font-family: var(--font-outfit);
+    font-weight: 900;
+    background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+
+  .btn-cta-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-hover) 100%);
+    color: white;
+    font-family: var(--font-outfit);
+    font-weight: 800;
+    font-size: 1.05em;
+    padding: 14px 28px;
     border-radius: 14px;
-    padding: 14px 12px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 20px var(--primary-glow);
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+  .btn-cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px var(--primary-glow);
+  }
+
+  .btn-cta-secondary {
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+    font-family: var(--font-outfit);
+    font-weight: 700;
+    font-size: 1em;
+    padding: 14px 24px;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  .btn-cta-secondary:hover {
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  /* Píldoras del Simulador */
+  .sim-pill {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 14px 10px;
     text-align: center;
     cursor: pointer;
     transition: all 0.2s ease;
   }
   .sim-pill:hover {
-    border-color: var(--card-border-hover);
+    border-color: var(--primary);
+    background: rgba(255, 255, 255, 0.07);
   }
   .sim-pill.active {
     background: var(--primary-glow);
     border-color: var(--primary);
-    box-shadow: 0 0 15px var(--primary-glow);
+    box-shadow: 0 0 16px var(--primary-glow);
   }
 
+  /* Tarjetas de Adicionales */
   .sim-addon-card {
-    background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.06);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 12px 14px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
     transition: all 0.2s ease;
   }
   .sim-addon-card:hover {
-    border-color: var(--card-border-hover);
+    border-color: var(--primary);
   }
   .sim-addon-card.active {
     background: var(--primary-glow);
     border-color: var(--primary);
   }
 
-  /* Media Filter Buttons */
+  /* Botones de Filtro Multimedia */
   .media-filter-btn {
-    background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-muted);
     padding: 8px 16px;
     border-radius: 99px;
     font-size: 0.85em;
     font-weight: 700;
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: all 0.2s;
   }
   .media-filter-btn:hover {
-    border-color: var(--card-border-hover);
+    background: rgba(255, 255, 255, 0.1);
     color: white;
   }
   .media-filter-btn.active {
@@ -532,16 +657,19 @@
   }
 </style>
 
-<%# --- JAVASCRIPT DEL SIMULADOR EN VIVO & GALERÍA --- %>
+<%# --- JAVASCRIPT DEL SIMULADOR EN VIVO (LÓGICA SEPARADA: SHOWS VS SONIDO) & GALERÍA --- %>
 <script>
-  const baseIncludedHours = <%= @company.landing_calculator_base_hours %>;
-  const extraHourRate = <%= @company.landing_calculator_extra_hour_price %>;
+  const baseShowsCount = <%= @company.landing_calculator_base_shows || 1 %>;
+  const extraShowPrice = <%= @company.landing_calculator_extra_show_price || 250.0 %>;
+  const baseSoundHours = <%= @company.landing_calculator_base_sound_hours || 4 %>;
+  const extraSoundHourRate = <%= @company.landing_calculator_extra_sound_hour_price || 60.0 %>;
   const defaultCurrency = '<%= @company.landing_calculator_currency.presence || "USD" %>';
 
   <% first_fmt = @calculator_formats.first || { 'price' => 400, 'name' => 'Acústico', 'musicians' => 'Dúo' } %>
   let baseFormatPrice = <%= first_fmt['price'].to_f %>;
   let baseFormatName = "<%= first_fmt['name'] %> (<%= first_fmt['musicians'] %>)";
-  let selectedHours = baseIncludedHours;
+  let selectedShows = 1;
+  let selectedSoundHours = baseSoundHours;
   let activeAddons = [];
 
   function selectBandFormat(key, price, name, element) {
@@ -549,6 +677,25 @@
     element.classList.add('active');
     baseFormatPrice = price;
     baseFormatName = name;
+    updateSummary();
+  }
+
+  function selectShows(showsCount, element) {
+    document.querySelectorAll('.sim-show-pill').forEach(el => {
+      el.classList.remove('active');
+      el.style.borderColor = 'var(--card-border)';
+      el.style.background = 'rgba(255,255,255,0.04)';
+    });
+    element.classList.add('active');
+    element.style.borderColor = 'var(--primary)';
+    element.style.background = 'var(--primary-glow)';
+    selectedShows = parseInt(showsCount);
+    updateSummary();
+  }
+
+  function updateSoundHours(hours) {
+    selectedSoundHours = parseInt(hours);
+    document.getElementById('sound-hours-display').textContent = `${hours} Horas`;
     updateSummary();
   }
 
@@ -561,12 +708,6 @@
     if (cotizadorSection) {
       cotizadorSection.scrollIntoView({ behavior: 'smooth' });
     }
-  }
-
-  function updateHours(hours) {
-    selectedHours = parseInt(hours);
-    document.getElementById('hours-display').textContent = `${hours} ${hours === '1' ? 'Hora' : 'Horas'}`;
-    updateSummary();
   }
 
   function toggleAddon(element, addonName, addonPrice) {
@@ -587,22 +728,38 @@
     document.getElementById('sum-format-name').textContent = baseFormatName;
     document.getElementById('sum-format-price').textContent = `$${baseFormatPrice} ${defaultCurrency}`;
 
-    // Cálculo por horas extra
-    let extraHoursCost = 0;
-    if (selectedHours > baseIncludedHours) {
-      extraHoursCost = (selectedHours - baseIncludedHours) * extraHourRate;
-      document.getElementById('sum-hours-name').textContent = `${selectedHours} Horas (+${selectedHours - baseIncludedHours}h extra)`;
-      document.getElementById('sum-hours-price').textContent = `+$${extraHoursCost} ${defaultCurrency}`;
-    } else if (selectedHours < baseIncludedHours) {
-      extraHoursCost = (selectedHours - baseIncludedHours) * (extraHourRate * 0.5);
-      document.getElementById('sum-hours-name').textContent = `${selectedHours} ${selectedHours === 1 ? 'Hora' : 'Horas'}`;
-      document.getElementById('sum-hours-price').textContent = `-$${Math.abs(extraHoursCost).toFixed(0)} ${defaultCurrency}`;
+    // 1. Shows en Vivo (1 Hora por Pase)
+    let extraShowsCost = 0;
+    if (selectedShows > 1) {
+      extraShowsCost = (selectedShows - 1) * extraShowPrice;
+      document.getElementById('sum-shows-name').textContent = `${selectedShows} Shows en Vivo (${selectedShows} Pases de 60m)`;
+      document.getElementById('sum-shows-price').textContent = `+$${Math.round(extraShowsCost)} ${defaultCurrency}`;
+      document.getElementById('sum-shows-price').style.color = '#34d399';
     } else {
-      document.getElementById('sum-hours-name').textContent = `${selectedHours} Horas`;
-      document.getElementById('sum-hours-price').textContent = "Incluidas";
+      document.getElementById('sum-shows-name').textContent = "1 Show en Vivo (Pase de 60m)";
+      document.getElementById('sum-shows-price').textContent = "Incluido";
+      document.getElementById('sum-shows-price').style.color = '#34d399';
     }
 
-    // Adicionales
+    // 2. Cobertura de Sonido & DJ
+    let extraSoundCost = 0;
+    if (selectedSoundHours > baseSoundHours) {
+      extraSoundCost = (selectedSoundHours - baseSoundHours) * extraSoundHourRate;
+      document.getElementById('sum-sound-name').textContent = `${selectedSoundHours} Horas Sonido (+${selectedSoundHours - baseSoundHours}h extra)`;
+      document.getElementById('sum-sound-price').textContent = `+$${Math.round(extraSoundCost)} ${defaultCurrency}`;
+      document.getElementById('sum-sound-price').style.color = '#34d399';
+    } else if (selectedSoundHours < baseSoundHours) {
+      extraSoundCost = (selectedSoundHours - baseSoundHours) * (extraSoundHourRate * 0.5);
+      document.getElementById('sum-sound-name').textContent = `${selectedSoundHours} Horas Sonido & DJ`;
+      document.getElementById('sum-sound-price').textContent = `-$${Math.abs(Math.round(extraSoundCost))} ${defaultCurrency}`;
+      document.getElementById('sum-sound-price').style.color = '#cbd5e1';
+    } else {
+      document.getElementById('sum-sound-name').textContent = `${selectedSoundHours} Horas Sonido & DJ`;
+      document.getElementById('sum-sound-price').textContent = "Incluidas";
+      document.getElementById('sum-sound-price').style.color = '#34d399';
+    }
+
+    // 3. Adicionales
     const addonsContainer = document.getElementById('sum-addons-list');
     addonsContainer.innerHTML = '';
     let addonsTotal = 0;
@@ -616,10 +773,10 @@
       addonsContainer.appendChild(row);
     });
 
-    const total = baseFormatPrice + extraHoursCost + addonsTotal;
+    const total = baseFormatPrice + extraShowsCost + extraSoundCost + addonsTotal;
     document.getElementById('sim-total-price').textContent = `$${Math.round(total)}`;
 
-    // Construir mensaje de WhatsApp
+    // 4. Construir mensaje de WhatsApp
     const dateVal = document.getElementById('sim-date').value || "Por definir";
     const locVal = document.getElementById('sim-location').value || "Por confirmar";
     
@@ -627,11 +784,12 @@
     
     let waMsg = `¡Hola <%= @company.name %>! Estuve calculando en su cotizador web y me gustaría reservar:\n` +
       `• Formato: ${baseFormatName}\n` +
-      `• Duración: ${selectedHours} horas\n` +
+      `• Shows en Vivo: ${selectedShows} ${selectedShows === 1 ? 'Show (1 Pase de 60m)' : 'Shows (' + selectedShows + ' Pases de 60m con receso)'}\n` +
+      `• Cobertura de Sonido & DJ: ${selectedSoundHours} Horas\n` +
       `• Efectos/Adicionales: ${addonsText}\n` +
       `• Fecha tentativa: ${dateVal}\n` +
       `• Ciudad/Lugar: ${locVal}\n` +
-      `• Presupuesto estimado: $${total} USD\n\n` +
+      `• Presupuesto estimado: $${Math.round(total)} ${defaultCurrency}\n\n` +
       `¿Tienen disponibilidad para esta fecha?`;
 
     const waNumber = '<%= @whatsapp_number.gsub(/[^0-9]/, "") %>';

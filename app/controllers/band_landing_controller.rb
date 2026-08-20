@@ -11,7 +11,7 @@ class BandLandingController < ApplicationController
     end
 
     @preset_budgets = @company.preset_budgets.order(:price)
-    @staff_members = @company.users.where(role: [:leader, :musician, :staff])
+    @staff_members = @company.landing_staff_members.presence || @company.users.where(role: [:leader, :musician, :staff, :superadmin])
     @reviews = @company.approved_reviews.order(pinned: :desc, created_at: :desc).limit(12)
     @media_items = @company.company_media_items.active.ordered
     @standard_upsells = @company.landing_upsells.presence || @company.standard_upsells.where(active: true).presence || StandardUpsell.where(company: @company).presence || StandardUpsell.all_with_defaults.select(&:active)

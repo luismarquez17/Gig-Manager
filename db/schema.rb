@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_19_233556) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_20_024934) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -96,6 +96,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_233556) do
     t.decimal "landing_calculator_extra_hour_price", precision: 10, scale: 2, default: "100.0"
     t.string "landing_calculator_currency", default: "USD"
     t.jsonb "landing_calculator_formats", default: [{"key"=>"acoustic", "name"=>"Acústico", "emoji"=>"🎻", "price"=>400, "musicians"=>"Dúo / Trío"}, {"key"=>"full_band", "name"=>"Banda Completa", "emoji"=>"🎸", "price"=>750, "musicians"=>"5 Músicos"}, {"key"=>"big_band", "name"=>"Big Band", "emoji"=>"🎺", "price"=>1200, "musicians"=>"Metales & Show (8+ Músicos)"}]
+    t.integer "landing_calculator_base_shows", default: 1
+    t.decimal "landing_calculator_extra_show_price", precision: 10, scale: 2, default: "250.0"
+    t.integer "landing_calculator_base_sound_hours", default: 4
+    t.decimal "landing_calculator_extra_sound_hour_price", precision: 10, scale: 2, default: "60.0"
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
   end
@@ -419,6 +423,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_19_233556) do
     t.text "bio"
     t.text "avatar_base64"
     t.bigint "company_id"
+    t.boolean "show_on_landing", default: true, null: false
+    t.integer "landing_position", default: 0
     t.index ["client_id"], name: "index_users_on_client_id"
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
