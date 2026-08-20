@@ -122,6 +122,23 @@ class Company < ApplicationRecord
     end
   end
 
+  def template_badge_formatted(key, fallback_badge = nil)
+    price = template_price(key).to_i
+    category_name = case key.to_s
+                    when "classic_stage" then "INCLUIDO"
+                    when "neon_festival" then "PRO FESTIVAL"
+                    when "royal_gala" then "VIP ROYAL"
+                    when "minimal_acoustic" then "STUDIO MINIMAL"
+                    else "PLANTILLA"
+                    end
+
+    if price <= 0
+      "#{category_name} ($0/mes)"
+    else
+      "#{category_name} ($#{price}/mes)"
+    end
+  end
+
   GRADIENT_STYLES = {
     "linear_neon" => "Degradado Lineal Neón (Primario ➔ Secundario)",
     "radial_glow" => "Resplandor Radial Centrado (Glow)",

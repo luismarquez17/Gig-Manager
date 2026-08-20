@@ -90,8 +90,8 @@
           <label style="background: <%= is_selected ? '#f5f3ff' : '#ffffff' %>; border: 2px solid <%= is_selected ? '#8b5cf6' : '#e2e8f0' %>; border-radius: 18px; padding: 22px; display: flex; flex-direction: column; justify-content: space-between; gap: 14px; cursor: pointer; transition: all 0.2s; box-shadow: <%= is_selected ? '0 6px 20px rgba(139, 92, 246, 0.15)' : '0 2px 8px rgba(0,0,0,0.02)' %>; position: relative;">
             <div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                <span style="font-size: 0.75em; font-weight: 900; background: <%= is_selected ? '#8b5cf6' : '#0f172a' %>; color: white; padding: 4px 12px; border-radius: 99px; letter-spacing: 0.5px;">
-                  <%= tpl[:badge] %>
+                <span id="template-badge-<%= key %>" style="font-size: 0.75em; font-weight: 900; background: <%= is_selected ? '#8b5cf6' : '#0f172a' %>; color: white; padding: 4px 12px; border-radius: 99px; letter-spacing: 0.5px;">
+                  <%= @company.template_badge_formatted(key, tpl[:badge]) %>
                 </span>
                 <input type="radio" name="company[landing_template]" value="<%= key %>" <%= 'checked' if is_selected %> style="accent-color: #8b5cf6; width: 20px; height: 20px; cursor: pointer;">
               </div>
@@ -104,7 +104,7 @@
               <span>Tipografía: <strong style="color: #1e293b;"><%= (tpl[:font] || "Outfit").split(',').first %></strong></span>
               <div style="display: flex; align-items: center; gap: 4px;" onclick="event.stopPropagation();">
                 <span style="font-weight: 800; font-size: 0.8em; color: #64748b;">Precio Add-on ($):</span>
-                <input type="number" name="company[landing_template_prices][<%= key %>]" value="<%= @company.template_price(key).to_i %>" step="1" min="0" style="width: 65px; font-weight: 800; color: #15803d; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85em; text-align: right; background: white;">
+                <input type="number" name="company[landing_template_prices][<%= key %>]" value="<%= @company.template_price(key).to_i %>" step="1" min="0" oninput="updateTemplateBadge('<%= key %>', this.value)" style="width: 65px; font-weight: 800; color: #15803d; padding: 4px 6px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 0.85em; text-align: right; background: white;">
               </div>
             </div>
           </label>
@@ -740,6 +740,27 @@
     } else {
       fileWrapper.style.display = 'block';
       youtubeWrapper.style.display = 'none';
+    }
+  }
+
+  function updateTemplateBadge(key, priceVal) {
+    const badgeSpan = document.getElementById('template-badge-' + key);
+    if (!badgeSpan) return;
+
+    const names = {
+      'classic_stage': 'INCLUIDO',
+      'neon_festival': 'PRO FESTIVAL',
+      'royal_gala': 'VIP ROYAL',
+      'minimal_acoustic': 'STUDIO MINIMAL'
+    };
+
+    const name = names[key] || 'PLANTILLA';
+    const val = parseInt(priceVal, 10) || 0;
+
+    if (val <= 0) {
+      badgeSpan.textContent = `${name} ($0/mes)`;
+    } else {
+      badgeSpan.textContent = `${name} ($${val}/mes)`;
     }
   }
 </script>
