@@ -217,8 +217,12 @@
     <%# Navigation %>
     <nav class="landing-nav">
       <a href="#hero" class="nav-brand">
-        <span style="font-size: 1.3em;">🎸</span>
-        <span><%= @company.name %></span>
+        <% if @company.landing_logo.attached? %>
+          <%= image_tag @company.landing_logo, style: "height: 40px; max-width: 180px; object-fit: contain; border-radius: 6px;" %>
+        <% else %>
+          <span style="font-size: 1.3em;">🎸</span>
+          <span><%= @company.name %></span>
+        <% end %>
       </a>
 
       <div class="nav-links">
