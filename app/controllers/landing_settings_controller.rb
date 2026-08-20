@@ -167,6 +167,7 @@ class LandingSettingsController < ApplicationController
       :landing_enabled,
       :landing_plan,
       :landing_template,
+      :landing_font_family,
       :landing_theme_color,
       :landing_accent_color,
       :landing_gradient_style,

@@ -110,6 +110,29 @@ class Company < ApplicationRecord
     "solid_bold" => "Color Sólido Puro (Sin Degradado)"
   }.freeze
 
+  AVAILABLE_FONTS = {
+    "default" => "Predeterminada por Plantilla",
+    "Outfit" => "Outfit (Moderna & Balanceada)",
+    "Space Grotesk" => "Space Grotesk (Cyber & Festival)",
+    "Playfair Display" => "Playfair Display (Serif Elegante & Bodas)",
+    "Inter" => "Inter (Minimal & Estudio Refinado)",
+    "Cinzel" => "Cinzel (Imperial Classical & Gala)",
+    "Montserrat" => "Montserrat (Versátil Urban Pop)",
+    "Syne" => "Syne (Vanguardista & Artística)"
+  }.freeze
+
+  def font_css
+    if landing_font_family.present? && landing_font_family != "default" && AVAILABLE_FONTS.key?(landing_font_family)
+      if landing_font_family == "Playfair Display" || landing_font_family == "Cinzel"
+        "'#{landing_font_family}', serif"
+      else
+        "'#{landing_font_family}', sans-serif"
+      end
+    else
+      template_data[:font]
+    end
+  end
+
   def template_data
     TEMPLATES_CATALOG[landing_template] || TEMPLATES_CATALOG["classic_stage"]
   end

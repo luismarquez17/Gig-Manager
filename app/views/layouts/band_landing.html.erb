@@ -7,7 +7,7 @@
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
 
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400&family=Space+Grotesk:wght@400;600;700&family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=Montserrat:wght@400;600;700;800&family=Outfit:wght@300;400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,700;0,900;1,400&family=Space+Grotesk:wght@400;600;700&family=Syne:wght@500;700;800&family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <style>
       :root {
@@ -25,8 +25,8 @@
         --card-border-hover: <%= @company.theme_hex %>66;
         --text-main: #f8fafc;
         --text-muted: #94a3b8;
-        --font-heading: <%= @company.template_data[:font] %>;
-        --font-outfit: <%= @company.template_data[:font] %>;
+        --font-heading: <%= @company.font_css %>;
+        --font-outfit: <%= @company.font_css %>;
         --font-body: 'Plus Jakarta Sans', sans-serif;
       }
 

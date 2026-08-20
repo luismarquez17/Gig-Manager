@@ -1,42 +1,120 @@
 <div class="landing-container">
 
-  <%# --- 1. HERO SECTION --- %>
-  <section id="hero" style="text-align: center; padding: 60px 0 80px; position: relative;">
-    <div class="section-badge">✨ Experiencia Musical de Alto Nivel</div>
-    <h1 class="gradient-title" style="font-size: clamp(2.4em, 6vw, 4.2em); line-height: 1.1; margin: 0 0 20px 0; max-width: 900px; margin-left: auto; margin-right: auto;">
-      <%= @company.landing_hero_title.presence || @company.tagline.presence || "La Mejor Música en Vivo para tu Boda o Evento" %>
-    </h1>
-    <p style="font-size: clamp(1.05em, 2.5vw, 1.25em); color: var(--text-muted); max-width: 680px; margin: 0 auto 35px; line-height: 1.6;">
-      <%= @company.landing_hero_subtitle.presence || @company.bio.presence || "Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en #{@company.name}." %>
-    </p>
+  <%# --- 1. HERO SECTION DINÁMICO SEGÚN PLANTILLA --- %>
+  <% case @company.landing_template %>
+  <% when "neon_festival" %>
+    <%# --- HERO TIPO NEÓN FESTIVAL CYBERPUNK (ASIMÉTRICO / SPLIT) --- %>
+    <section id="hero" style="padding: 70px 0 60px; position: relative;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; align-items: center;">
+        <div>
+          <div class="section-badge" style="letter-spacing: 2px;">[ ⚡ LIVE STAGE CONCERT EXPERIENCE ]</div>
+          <h1 class="gradient-title" style="font-size: clamp(2.5em, 5.5vw, 4.4em); line-height: 1.05; margin: 15px 0 20px 0; text-transform: uppercase;">
+            <%= @company.landing_hero_title.presence || @company.tagline.presence || "ENERGÍA PURA Y MÚSICA EN VIVO DE ALTO VOLTAJE" %>
+          </h1>
+          <p style="font-size: 1.1em; color: var(--text-muted); margin-bottom: 30px; line-height: 1.6;">
+            <%= @company.landing_hero_subtitle.presence || @company.bio.presence || "Producción escénica de nivel concierto con repertorio bailable y sonido e iluminación de festival." %>
+          </p>
 
-    <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
-      <a href="#cotizador" class="btn-cta-primary">
-        <span>⚡</span> <%= @company.landing_hero_cta_text.presence || "Simular Mi Presupuesto en Vivo" %>
-      </a>
-      <a href="#paquetes" class="btn-cta-secondary">
-        <span>📦</span> Ver Paquetes Base
-      </a>
-    </div>
+          <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+            <a href="#cotizador" class="btn-cta-primary">[ ⚡ COTIZAR FESTIVAL EN VIVO ]</a>
+            <a href="#galeria" class="btn-cta-secondary">[ 🎬 VER SHOW EN TARIMA ]</a>
+          </div>
+        </div>
 
-    <%# Métricas / Social Proof %>
-    <% if @company.landing_section_visible?(:show_metrics) %>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; max-width: 800px; margin: 0 auto;">
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #fbbf24;">★ <%= @rating %></div>
-          <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Calificación de Clientes</div>
-        </div>
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: #34d399;">100%</div>
-          <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Puntualidad &amp; Show</div>
-        </div>
-        <div style="background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 16px;">
-          <div style="font-family: var(--font-outfit); font-size: 2em; font-weight: 900; color: var(--primary);">Top Live</div>
-          <div style="font-size: 0.8em; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Show Enérgico &amp; Pro</div>
+        <div>
+          <div class="glass-box" style="padding: 28px; text-align: center; border-width: 2px;">
+            <div style="font-size: 4em; margin-bottom: 10px;">🎸⚡🔥</div>
+            <h3 style="font-family: 'Space Grotesk', sans-serif; text-transform: uppercase; margin: 0 0 10px 0; font-size: 1.4em; color: white;">
+              <%= @company.name %>
+            </h3>
+            <p style="color: var(--text-muted); font-size: 0.9em; margin-bottom: 20px;">
+              Músicos en vivo • Audio Digital • Iluminación Neón
+            </p>
+            <div style="background: rgba(255,255,255,0.05); padding: 12px; border-radius: 8px; font-weight: bold; color: var(--primary);">
+              ⚡ DISPONIBILIDAD TEMPORADA <%= Time.current.year %>
+            </div>
+          </div>
         </div>
       </div>
-    <% end %>
-  </section>
+    </section>
+
+  <% when "royal_gala" %>
+    <%# --- HERO TIPO ROYAL GALA LUXURY & BODAS VIP (EDITORIAL CENTRADO SANCTUARY) --- %>
+    <section id="hero" style="text-align: center; padding: 90px 0 80px; position: relative;">
+      <div style="font-size: 0.85em; font-family: 'Playfair Display', serif; font-style: italic; color: #fef08a; letter-spacing: 3px; margin-bottom: 14px; text-transform: uppercase;">
+        ✨ ──────── 👑 REGALIA &amp; ALTA GALA ──────── ✨
+      </div>
+      <h1 class="gradient-title" style="font-size: clamp(2.8em, 6vw, 4.8em); line-height: 1.1; margin: 0 0 20px 0; font-family: 'Playfair Display', serif; font-style: italic; max-width: 920px; margin-left: auto; margin-right: auto;">
+        <%= @company.landing_hero_title.presence || @company.tagline.presence || "Elegancia Armónica & Shows de Gala Exclusivos" %>
+      </h1>
+      <p style="font-size: clamp(1.1em, 2.5vw, 1.3em); color: #cbd5e1; max-width: 720px; margin: 0 auto 40px; line-height: 1.7; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 300;">
+        <%= @company.landing_hero_subtitle.presence || @company.bio.presence || "Acompañamos las bodas y recepciones VIP más sofisticadas del país con arreglos musicales sinfónicos, ensamble de gala y distinción absoluta." %>
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; margin-bottom: 50px;">
+        <a href="#cotizador" class="btn-cta-primary" style="padding: 16px 36px;">
+          👑 Presupuestar Gala VIP
+        </a>
+      </div>
+    </section>
+
+  <% when "minimal_acoustic" %>
+    <%# --- HERO TIPO MINIMAL STUDIO & ACÚSTICO REFINADO (STUDIO SPEC SHEET) --- %>
+    <section id="hero" style="padding: 60px 0 70px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; align-items: flex-end;">
+        <div>
+          <div class="section-badge">● STUDIO RECORDING LIVE</div>
+          <h1 class="gradient-title" style="font-size: clamp(2.2em, 5vw, 3.8em); line-height: 1.1; margin: 10px 0 16px 0; font-family: 'Inter', sans-serif; font-weight: 900;">
+            <%= @company.landing_hero_title.presence || @company.tagline.presence || "Música en Vivo de Estudio & Acústico Unplugged" %>
+          </h1>
+          <p style="font-size: 1em; color: var(--text-muted); margin: 0 0 25px 0; line-height: 1.6;">
+            <%= @company.landing_hero_subtitle.presence || @company.bio.presence || "Estética minimalista de alta calidad sonográfica. Cero exageración, puro talento y audio prístino." %>
+          </p>
+
+          <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+            <a href="#cotizador" class="btn-cta-primary">Cotizar Formato</a>
+            <a href="#paquetes" class="btn-cta-secondary">Tarifas Base</a>
+          </div>
+        </div>
+
+        <div class="glass-box" style="padding: 20px; font-family: 'Inter', sans-serif; font-size: 0.88em;">
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 8px;">
+            <span style="color: var(--text-muted);">Proyecto:</span>
+            <strong style="color: white;"><%= @company.name %></strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 8px; margin-bottom: 8px;">
+            <span style="color: var(--text-muted);">Formato Base:</span>
+            <span style="color: white;">1 Show 60m + 4h Sonido</span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: var(--text-muted);">Calificación:</span>
+            <strong style="color: #fbbf24;">★ <%= @rating %> / 5.0</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  <% else %>
+    <%# --- HERO CLÁSICO ESCENARIO (classic_stage) --- %>
+    <section id="hero" style="text-align: center; padding: 60px 0 80px; position: relative;">
+      <div class="section-badge">✨ Experiencia Musical de Alto Nivel</div>
+      <h1 class="gradient-title" style="font-size: clamp(2.4em, 6vw, 4.2em); line-height: 1.1; margin: 0 0 20px 0; max-width: 900px; margin-left: auto; margin-right: auto;">
+        <%= @company.landing_hero_title.presence || @company.tagline.presence || "La Mejor Música en Vivo para tu Boda o Evento" %>
+      </h1>
+      <p style="font-size: clamp(1.05em, 2.5vw, 1.25em); color: var(--text-muted); max-width: 680px; margin: 0 auto 35px; line-height: 1.6;">
+        <%= @company.landing_hero_subtitle.presence || @company.bio.presence || "Transformamos tu celebración con sonido profesional, puesta en escena impecable y un repertorio diseñado a tu medida en #{@company.name}." %>
+      </p>
+
+      <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-bottom: 40px;">
+        <a href="#cotizador" class="btn-cta-primary">
+          <span>⚡</span> <%= @company.landing_hero_cta_text.presence || "Simular Mi Presupuesto en Vivo" %>
+        </a>
+        <a href="#paquetes" class="btn-cta-secondary">
+          <span>📦</span> Ver Paquetes Base
+        </a>
+      </div>
+    </section>
+  <% end %>
 
   <%# --- 2. PAQUETES DESTACADOS (PRESET BUDGETS) --- %>
   <% if @company.landing_section_visible?(:show_packages) %>
