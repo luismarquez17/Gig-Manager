@@ -33,12 +33,17 @@ class CompanyMediaItem < ApplicationRecord
     MEDIA_TYPES[media_type] || media_type.titleize
   end
 
-  def youtube_embed_url
+  def youtube_embed_url(autoplay: false)
     return nil unless youtube? && video_url.present?
 
     # Maneja URLs normales de youtube (watch?v=...), acortadas (youtu.be/...) o shorts
     if video_url =~ /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i
-      "https://www.youtube-nocookie.com/embed/#{$1}?autoplay=0&rel=0"
+      video_id = $1
+      if autoplay
+        "https://www.youtube-nocookie.com/embed/#{video_id}?autoplay=1&mute=1&loop=1&playlist=#{video_id}&enablejsapi=1&rel=0"
+      else
+        "https://www.youtube-nocookie.com/embed/#{video_id}?autoplay=0&rel=0"
+      end
     else
       video_url
     end

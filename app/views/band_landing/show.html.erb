@@ -116,7 +116,145 @@
     </section>
   <% end %>
 
-  <%# --- 2. PAQUETES DESTACADOS (PRESET BUDGETS) --- %>
+  <%# --- 2. SHOWCASE AUDIOVISUAL EN VIVO & VIDEOS (POSICIONADO ARRIBA PARA IMPACTO INMEDIATO) --- %>
+  <% if @company.landing_section_visible?(:show_media) %>
+  <section id="galeria" style="padding: 50px 0 70px; border-bottom: 1px solid rgba(255,255,255,0.06); position: relative;">
+    <div style="text-align: center; margin-bottom: 35px;">
+      <span class="section-badge" style="background: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3);">🎬 DEMOSTRACIÓN EN VIVO</span>
+      <h2 class="gradient-title" style="font-size: 2.5em; margin: 8px 0 0 0;">Experimenta la Energía de <%= @company.name %></h2>
+      <p style="color: var(--text-muted); font-size: 1.1em; max-width: 680px; margin: 10px auto 0;">
+        Nuestros shows en vivo reproducidos al instante. Calidad de audio impecable, montaje de luces profesional y puesta en escena real.
+      </p>
+
+      <%# Categorías de videos %>
+      <div style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 22px;" id="media-filter-buttons">
+        <button onclick="filterMediaCategory('all')" class="media-filter-btn active" data-cat="all">🔥 Todos los Videos</button>
+        <button onclick="filterMediaCategory('live_show')" class="media-filter-btn" data-cat="live_show">🎤 Show en Vivo &amp; Tarima</button>
+        <button onclick="filterMediaCategory('instruments')" class="media-filter-btn" data-cat="instruments">🎸 Instrumentos &amp; Sonido</button>
+        <button onclick="filterMediaCategory('effects')" class="media-filter-btn" data-cat="effects">✨ Pirotecnia &amp; Iluminación</button>
+        <button onclick="filterMediaCategory('backstage')" class="media-filter-btn" data-cat="backstage">🎬 Montaje &amp; Backstage</button>
+      </div>
+    </div>
+
+    <% if @media_items.any? %>
+      <% featured_item = @media_items.find(&:featured?) || @media_items.first %>
+      <% remaining_items = @media_items.reject { |i| i.id == featured_item.id } %>
+
+      <%# --- VIDEO REEL DE DESTACADO PRINCIPAL (GRAN PANTALLA CINE) --- %>
+      <div class="glass-box" style="padding: 0; overflow: hidden; border-radius: 24px; border: 1px solid var(--primary-glow); box-shadow: 0 15px 45px rgba(0,0,0,0.5); margin-bottom: 35px; position: relative;">
+        <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden;">
+          <% if featured_item.video? && featured_item.media_file.attached? %>
+            <video id="featured_showcase_video" src="<%= url_for(featured_item.media_file) %>" autoplay muted loop playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+          <% elsif featured_item.youtube? && featured_item.youtube_embed_url.present? %>
+            <iframe src="<%= featured_item.youtube_embed_url(autoplay: true) %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
+          <% elsif featured_item.image? && featured_item.media_file.attached? %>
+            <%= image_tag featured_item.media_file, style: "width: 100%; height: 100%; object-fit: cover;" %>
+          <% end %>
+
+          <%# Badge de Estado en Vivo %>
+          <div style="position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.15); padding: 8px 16px; border-radius: 99px; color: white; font-weight: 800; font-size: 0.85em; z-index: 10;">
+            <span style="width: 10px; height: 10px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 10px #ef4444; animation: pulse 1.5s infinite;"></span>
+            <span>SHOW DESTACADO 4K</span>
+          </div>
+
+          <%# Botón Flotante para Activar / Silenciar Sonido %>
+          <% if featured_item.video? && featured_item.media_file.attached? %>
+            <button onclick="toggleVideoMute('featured_showcase_video', this)" style="position: absolute; bottom: 20px; right: 20px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(16px); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 10px 18px; border-radius: 14px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s; box-shadow: 0 6px 20px rgba(0,0,0,0.4); z-index: 10;">
+              🔊 Activar Audio del Show
+            </button>
+          <% end %>
+
+          <%# Overlay de Información %>
+          <div style="position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(7,9,14,0.95) 0%, transparent 100%); padding: 30px 25px 20px; pointer-events: none; z-index: 5;">
+            <span style="font-size: 0.78em; font-weight: 800; color: var(--accent-cyan); text-transform: uppercase; letter-spacing: 1px;">
+              <%= featured_item.category_label %>
+            </span>
+            <h3 style="margin: 4px 0 6px 0; font-family: var(--font-outfit); font-size: 1.6em; font-weight: 800; color: white;">
+              <%= featured_item.title %>
+            </h3>
+            <% if featured_item.description.present? %>
+              <p style="margin: 0; font-size: 0.95em; color: #cbd5e1; max-width: 700px; line-height: 1.4;">
+                <%= featured_item.description %>
+              </p>
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <%# --- REEL SECUNDARIO DE VIDEOS E IMÁGENES --- %>
+      <% if remaining_items.any? %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px;" id="media-grid">
+          <% remaining_items.each_with_index do |item, idx| %>
+            <% vid_id = "show_video_#{item.id}" %>
+            <div class="glass-box media-card" data-category="<%= item.category %>" style="display: flex; flex-direction: column; overflow: hidden; padding: 0; border-radius: 20px; transition: transform 0.3s ease, box-shadow 0.3s ease;">
+              <div style="position: relative; width: 100%; aspect-ratio: 16/9; background: #000; overflow: hidden;">
+                <% if item.video? && item.media_file.attached? %>
+                  <video id="<%= vid_id %>" src="<%= url_for(item.media_file) %>" autoplay muted loop playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                  <button onclick="toggleVideoMute('<%= vid_id %>', this)" style="position: absolute; bottom: 12px; right: 12px; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.78em; cursor: pointer; z-index: 10;">
+                    🔊 Audio
+                  </button>
+                <% elsif item.youtube? && item.youtube_embed_url.present? %>
+                  <iframe src="<%= item.youtube_embed_url(autoplay: true) %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
+                <% elsif item.image? && item.media_file.attached? %>
+                  <%= image_tag item.media_file, style: "width: 100%; height: 100%; object-fit: cover;" %>
+                <% end %>
+
+                <span style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.75); backdrop-filter: blur(8px); color: white; font-size: 0.78em; padding: 4px 12px; border-radius: 8px; font-weight: 800; border: 1px solid rgba(255,255,255,0.12); z-index: 10;">
+                  <%= item.category_label %>
+                </span>
+              </div>
+
+              <div style="padding: 18px;">
+                <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.15em; font-weight: 800; color: white;"><%= item.title %></h4>
+                <% if item.description.present? %>
+                  <p style="margin: 0; font-size: 0.88em; color: var(--text-muted); line-height: 1.4;"><%= item.description %></p>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    <% else %>
+      <%# Mockup placeholder cinematográfico si no han subido aún %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px;">
+        <div class="glass-box" style="padding: 0; overflow: hidden; border-radius: 20px;">
+          <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.3) 0%, rgba(6, 182, 212, 0.3) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+            <span style="font-size: 3em;">🥁</span>
+            <span style="background: rgba(0,0,0,0.5); padding: 4px 14px; border-radius: 99px; color: white; font-size: 0.8em; font-weight: 800;">REEL EN VIVO (4K)</span>
+          </div>
+          <div style="padding: 18px;">
+            <h4 style="margin: 0 0 4px 0; color: white; font-size: 1.1em; font-weight: 800;">Batería &amp; Percusión en Tarima</h4>
+            <p style="margin: 0; font-size: 0.88em; color: var(--text-muted);">Microfonía individual y potencia sonora profesional.</p>
+          </div>
+        </div>
+
+        <div class="glass-box" style="padding: 0; overflow: hidden; border-radius: 20px;">
+          <div style="background: linear-gradient(135deg, rgba(236, 72, 153, 0.3) 0%, rgba(245, 158, 11, 0.3) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+            <span style="font-size: 3em;">🎸</span>
+            <span style="background: rgba(0,0,0,0.5); padding: 4px 14px; border-radius: 99px; color: white; font-size: 0.8em; font-weight: 800;">SHOW EN VIVO</span>
+          </div>
+          <div style="padding: 18px;">
+            <h4 style="margin: 0 0 4px 0; color: white; font-size: 1.1em; font-weight: 800;">Guitarras &amp; Bajos Eléctricos</h4>
+            <p style="margin: 0; font-size: 0.88em; color: var(--text-muted);">Amplificación de alta gama y fidelidad de audio.</p>
+          </div>
+        </div>
+
+        <div class="glass-box" style="padding: 0; overflow: hidden; border-radius: 20px;">
+          <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(59, 130, 246, 0.3) 100%); aspect-ratio: 16/9; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;">
+            <span style="font-size: 3em;">✨</span>
+            <span style="background: rgba(0,0,0,0.5); padding: 4px 14px; border-radius: 99px; color: white; font-size: 0.8em; font-weight: 800;">ILUMINACIÓN &amp; EFECTOS</span>
+          </div>
+          <div style="padding: 18px;">
+            <h4 style="margin: 0 0 4px 0; color: white; font-size: 1.1em; font-weight: 800;">Pirotecnia Fría &amp; Geisers</h4>
+            <p style="margin: 0; font-size: 0.88em; color: var(--text-muted);">Momentos estelares para bodas y conciertos VIP.</p>
+          </div>
+        </div>
+      </div>
+    <% end %>
+  </section>
+  <% end %>
+
+  <%# --- 3. PAQUETES DESTACADOS (PRESET BUDGETS) --- %>
   <% if @company.landing_section_visible?(:show_packages) %>
   <section id="paquetes" style="padding: 40px 0 70px;">
     <div style="text-align: center; margin-bottom: 40px;">
@@ -382,88 +520,6 @@
 
       </div>
     </div>
-  </section>
-  <% end %>
-
-  <%# --- 4. GALERÍA AUDIOVISUAL & VIDEOS EN TARIMA --- %>
-  <% if @company.landing_section_visible?(:show_media) %>
-  <section id="galeria" style="padding: 40px 0 80px;">
-    <div style="text-align: center; margin-bottom: 35px;">
-      <span class="section-badge">Showcase Audiovisual</span>
-      <h2 class="gradient-title" style="font-size: 2.4em; margin: 0;">Instrumentos, Producción &amp; Show en Vivo</h2>
-      <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 8px;">Conoce de cerca la calidad de nuestros instrumentos, backline profesional y la energía en tarima.</p>
-      
-      <%# Filtros de Categoría %>
-      <div style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-top: 20px;" id="media-filter-buttons">
-        <button onclick="filterMediaCategory('all')" class="media-filter-btn active" data-cat="all">Todos</button>
-        <button onclick="filterMediaCategory('live_show')" class="media-filter-btn" data-cat="live_show">🔥 En Vivo &amp; Tarima</button>
-        <button onclick="filterMediaCategory('instruments')" class="media-filter-btn" data-cat="instruments">🎸 Instrumentos &amp; Backline</button>
-        <button onclick="filterMediaCategory('effects')" class="media-filter-btn" data-cat="effects">✨ Efectos &amp; Iluminación</button>
-        <button onclick="filterMediaCategory('backstage')" class="media-filter-btn" data-cat="backstage">🎬 Montaje &amp; Backstage</button>
-      </div>
-    </div>
-
-    <% if @media_items.any? %>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;" id="media-grid">
-        <% @media_items.each do |item| %>
-          <div class="glass-box media-card" data-category="<%= item.category %>" style="display: flex; flex-direction: column; overflow: hidden; padding: 0;">
-            <div style="position: relative; width: 100%; aspect-ratio: 16/10; background: #000; overflow: hidden;">
-              <% if item.video? && item.media_file.attached? %>
-                <video src="<%= url_for(item.media_file) %>" controls preload="metadata" style="width: 100%; height: 100%; object-fit: cover;"></video>
-              <% elsif item.youtube? && item.youtube_embed_url.present? %>
-                <iframe src="<%= item.youtube_embed_url %>" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="width: 100%; height: 100%;"></iframe>
-              <% elsif item.image? && item.media_file.attached? %>
-                <%= image_tag item.media_file, style: "width: 100%; height: 100%; object-fit: cover;" %>
-              <% else %>
-                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted);">
-                  <span>🎬 Video en Vivo</span>
-                </div>
-              <% end %>
-              <span style="position: absolute; top: 12px; left: 12px; background: rgba(0,0,0,0.7); backdrop-filter: blur(8px); color: white; font-size: 0.75em; padding: 4px 10px; border-radius: 6px; font-weight: 700;">
-                <%= item.category_label %>
-              </span>
-            </div>
-            <div style="padding: 16px;">
-              <h4 style="margin: 0 0 6px 0; font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; color: white;"><%= item.title %></h4>
-              <% if item.description.present? %>
-                <p style="margin: 0; font-size: 0.85em; color: var(--text-muted); line-height: 1.4;"><%= item.description %></p>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-      </div>
-    <% else %>
-      <%# Mockup placeholder elegante si no hay videos aún %>
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
-        <div class="glass-box" style="padding: 0; overflow: hidden;">
-          <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.2) 100%); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-size: 3em;">
-            🥁
-          </div>
-          <div style="padding: 16px;">
-            <h4 style="margin: 0 0 4px 0; color: white;">Batería Acústica &amp; Percusión</h4>
-            <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">Sets profesionales con microfonía individual y monitoreo in-ear.</p>
-          </div>
-        </div>
-        <div class="glass-box" style="padding: 0; overflow: hidden;">
-          <div style="background: linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(236, 72, 153, 0.2) 100%); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-size: 3em;">
-            🎸
-          </div>
-          <div style="padding: 16px;">
-            <h4 style="margin: 0 0 4px 0; color: white;">Guitarras &amp; Bajos Eléctricos</h4>
-            <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">Modelos Fender y amplificación valvular para sonido impecable.</p>
-          </div>
-        </div>
-        <div class="glass-box" style="padding: 0; overflow: hidden;">
-          <div style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(59, 130, 246, 0.2) 100%); aspect-ratio: 16/10; display: flex; align-items: center; justify-content: center; font-size: 3em;">
-            ✨
-          </div>
-          <div style="padding: 16px;">
-            <h4 style="margin: 0 0 4px 0; color: white;">Pirotecnia Fría &amp; Geisers</h4>
-            <p style="margin: 0; font-size: 0.85em; color: var(--text-muted);">Efectos especiales homologados para interiores y momentos estelares.</p>
-          </div>
-        </div>
-      </div>
-    <% end %>
   </section>
   <% end %>
 
@@ -1038,6 +1094,19 @@
         card.style.display = 'none';
       }
     });
+  }
+
+  function toggleVideoMute(vidId, btnEl) {
+    const video = document.getElementById(vidId);
+    if (!video) return;
+
+    if (video.muted) {
+      video.muted = false;
+      if (btnEl) btnEl.textContent = '🔇 Silenciar Audio';
+    } else {
+      video.muted = true;
+      if (btnEl) btnEl.textContent = '🔊 Activar Audio';
+    }
   }
 
   // Acordeón de FAQs
