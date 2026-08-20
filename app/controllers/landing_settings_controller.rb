@@ -191,7 +191,8 @@ class LandingSettingsController < ApplicationController
       :youtube_url,
       :tiktok_url,
       :landing_logo,
-      :landing_hero_video
+      :landing_hero_video,
+      landing_template_prices: {}
     )
   end
 

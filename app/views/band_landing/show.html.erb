@@ -293,9 +293,9 @@
             <input type="range" id="sound-hours-slider" min="3" max="8" value="<%= @company.landing_calculator_base_sound_hours %>" step="1" style="width: 100%; accent-color: var(--primary); cursor: pointer;" oninput="updateSoundHours(this.value)">
             <div style="display: flex; justify-content: space-between; font-size: 0.78em; color: var(--text-muted); font-weight: 700; margin-top: 6px;">
               <span>3h</span>
-              <span>4h (Base)</span>
+              <span>4h</span>
               <span>5h</span>
-              <span>6h</span>
+              <span><%= @company.landing_calculator_base_sound_hours %>h (Base)</span>
               <span>7h</span>
               <span>8h</span>
             </div>

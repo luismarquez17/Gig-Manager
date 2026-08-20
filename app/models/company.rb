@@ -98,10 +98,28 @@ class Company < ApplicationRecord
       badge: "STUDIO MINIMAL ($19/mes)",
       price: "$19 / mes",
       description: "Estética minimalista de estudio de grabación, fondo azabache mate, líneas ultra finas y foco absoluto en los precios.",
-      font: "'Inter', sans-serif",
       style_class: "template-minimal-acoustic"
     }
   }.freeze
+
+  def template_price(key)
+    prices = landing_template_prices.is_a?(Hash) ? landing_template_prices : {}
+    if prices.key?(key.to_s)
+      prices[key.to_s].to_f
+    else
+      default_prices = { "classic_stage" => 0.0, "neon_festival" => 15.0, "royal_gala" => 29.0, "minimal_acoustic" => 19.0 }
+      default_prices[key.to_s] || 0.0
+    end
+  end
+
+  def template_price_formatted(key)
+    price = template_price(key)
+    if price <= 0
+      "$0 / mes (INCLUIDO)"
+    else
+      "$#{price.to_i} / mes"
+    end
+  end
 
   GRADIENT_STYLES = {
     "linear_neon" => "Degradado Lineal Neón (Primario ➔ Secundario)",
