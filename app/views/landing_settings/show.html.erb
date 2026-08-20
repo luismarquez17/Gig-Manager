@@ -151,8 +151,8 @@
         </div>
 
         <div style="margin-bottom: 18px;">
-          <%= f.label :landing_bg_style, "Estilo de Fondo Dark Mode", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
-          <%= f.select :landing_bg_style, [["Midnight Blue (Por defecto)", "midnight"], ["Carbon Luxury Black", "carbon"], ["Deep Royal Navy", "royal"]], {}, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.9em; background: white;" %>
+          <%= f.label :landing_bg_style, "Atmósfera & Fondo de Pantalla Dark Mode", style: "display: block; font-weight: 700; font-size: 0.85em; color: #475569; margin-bottom: 6px;" %>
+          <%= f.select :landing_bg_style, Company::BG_STYLES.map { |k, v| [v[:name], k] }, {}, style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.88em; background: white;" %>
         </div>
 
         <div style="margin-bottom: 15px;">

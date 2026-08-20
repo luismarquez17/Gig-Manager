@@ -121,6 +121,41 @@ class Company < ApplicationRecord
     "Syne" => "Syne (Vanguardista & Artística)"
   }.freeze
 
+  BG_STYLES = {
+    "midnight" => {
+      name: "Midnight Blue & Orbes Neón (Por defecto)",
+      bg_color: "#070914",
+      bg_image: "radial-gradient(circle at 20% 20%, %{p_glow} 0%, transparent 45%), radial-gradient(circle at 80% 70%, %{a_glow} 0%, transparent 50%)"
+    },
+    "carbon" => {
+      name: "Carbon Luxury & Malla de Titanio",
+      bg_color: "#0c0d10",
+      bg_image: "linear-gradient(135deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(45deg, rgba(255,255,255,0.03) 25%, transparent 25%), linear-gradient(315deg, rgba(255,255,255,0.03) 25%, transparent 25%)",
+      bg_size: "24px 24px"
+    },
+    "royal" => {
+      name: "Royal Velvet & Reflejos Champagne",
+      bg_color: "#050716",
+      bg_image: "radial-gradient(ellipse at 50% 0%, rgba(234, 179, 8, 0.22) 0%, transparent 70%), radial-gradient(circle at 85% 85%, %{p_glow} 0%, transparent 50%)"
+    },
+    "concert_smoke" => {
+      name: "Luces de Escenario & Humo de Concierto",
+      bg_color: "#050508",
+      bg_image: "radial-gradient(ellipse at 50% -10%, %{p_glow} 0%, transparent 65%), radial-gradient(circle at 50% 100%, %{a_glow} 0%, transparent 65%)"
+    },
+    "cyber_grid" => {
+      name: "Matriz Cyberpunk & Malla Neón 3D",
+      bg_color: "#050811",
+      bg_image: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+      bg_size: "40px 40px"
+    },
+    "pure_dark" => {
+      name: "Negro OLED Puro Absolute Black",
+      bg_color: "#000000",
+      bg_image: "none"
+    }
+  }.freeze
+
   def font_css
     if landing_font_family.present? && landing_font_family != "default" && AVAILABLE_FONTS.key?(landing_font_family)
       if landing_font_family == "Playfair Display" || landing_font_family == "Cinzel"
@@ -131,6 +166,22 @@ class Company < ApplicationRecord
     else
       template_data[:font]
     end
+  end
+
+  def bg_style_data
+    BG_STYLES[landing_bg_style] || BG_STYLES["midnight"]
+  end
+
+  def bg_style_css
+    p_glow = (landing_theme_color.presence || "#8b5cf6") + "55"
+    a_glow = (landing_accent_color.presence || "#06b6d4") + "44"
+    data = bg_style_data
+    raw_img = data[:bg_image] % { p_glow: p_glow, a_glow: a_glow } rescue data[:bg_image]
+    {
+      color: data[:bg_color],
+      image: raw_img,
+      size: data[:bg_size] || "auto"
+    }
   end
 
   def template_data
