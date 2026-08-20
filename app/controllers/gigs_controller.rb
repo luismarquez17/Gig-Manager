@@ -62,9 +62,18 @@ class GigsController < ApplicationController
       @gigs = @gigs.order(amount: :desc)
     when "monto_asc"
       @gigs = @gigs.order(amount: :asc)
-    else
-      # Orden por defecto: Fecha (más reciente primero)
+    when "fecha_asc"
+      @gigs = @gigs.order(date: :asc)
+    when "fecha_desc"
       @gigs = @gigs.order(date: :desc)
+    else
+      # Si el filtro es "Próximos", ordenamos del show más cercano (Date.today ➔ Futuro)
+      if params[:date_filter] == "upcoming"
+        @gigs = @gigs.order(date: :asc)
+      else
+        # Orden por defecto general: Fecha más reciente primero
+        @gigs = @gigs.order(date: :desc)
+      end
     end
     
     # 5. Cálculos para el resumen (basados en la lista ya filtrada)

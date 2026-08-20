@@ -74,7 +74,8 @@
         <div style="flex-grow: 1; min-width: 160px; margin-bottom: 15px;">
           <%= f.label :sort, "📊 Ordenar por", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
           <%= f.select :sort, 
-              [["📅 Fecha (Reciente)", "fecha_desc"], 
+              [["📅 Fecha (Más Cercano primero)", "fecha_asc"],
+               ["📅 Fecha (Más Reciente primero)", "fecha_desc"], 
                ["💰 Monto (Mayor a Menor)", "monto_desc"], 
                ["💸 Monto (Menor a Mayor)", "monto_asc"]], 
               { selected: params[:sort] }, 
