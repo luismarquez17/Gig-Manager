@@ -565,7 +565,7 @@
       <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
         <div style="flex: 1; min-width: 200px;">
           <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">Seleccionar trabajador</label>
-          <%= f.select :staff_id, User.workers.order(:email).map { |w| [w.display_name, w.id] }, { prompt: "Seleccionar trabajador..." }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+          <%= f.select :staff_id, current_company.users.workers.order(:email).map { |w| [w.display_name, w.id] }, { prompt: "Seleccionar trabajador..." }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
         </div>
         <div style="flex: 1; min-width: 220px;">
           <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">¿Cuánto le vas a pagar a este trabajador? ($ USD)</label>

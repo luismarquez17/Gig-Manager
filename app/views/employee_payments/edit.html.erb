@@ -19,7 +19,7 @@
     <%= form_with model: @payment, local: true do |f| %>
       <div class="form-group-custom">
         <%= f.label :user_id, 'Trabajador / Músico / Staff' %>
-        <%= f.collection_select :user_id, User.workers.order(:email), :id, :display_name, { include_blank: "-- Selecciona un trabajador --" }, { class: 'form-input-custom', required: true } %>
+        <%= f.collection_select :user_id, current_company.users.workers.order(:email), :id, :display_name, { include_blank: "-- Selecciona un trabajador --" }, { class: 'form-input-custom', required: true } %>
       </div>
 
       <%# --- ORIGEN DE LOS FONDOS (CAPITAL EXTERNO VS FONDO DE NÓMINA) --- %>
