@@ -19,18 +19,6 @@
     </div>
   </div>
 
-  <%# --- ALERTAS FLASH --- %>
-  <% if notice.present? %>
-    <div style="background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
-      ✓ <%= notice %>
-    </div>
-  <% end %>
-  <% if alert.present? %>
-    <div style="background: #fee2e2; border: 1px solid #fca5a5; color: #991b1b; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
-      ⚠️ <%= alert %>
-    </div>
-  <% end %>
-
   <%= form_with(model: @company, url: landing_settings_path, method: :patch, local: true, multipart: true) do |f| %>
 
     <%# --- 1. BARRA DE ACTIVACIÓN DEL MÓDULO (ADD-ON SAAS) --- %>

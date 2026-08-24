@@ -4,12 +4,6 @@
     <h2 style="margin: 8px 0 0 0; color: #0f172a; font-weight: 800; font-size: 1.8em;">💳 Registrar Pago a Trabajador</h2>
   </div>
 
-  <% if alert %>
-    <div style="background: #fff1f2; border: 1px solid #fecaca; color: #991b1b; padding: 14px 18px; border-radius: 12px; margin-bottom: 20px; font-weight: 600;">
-      ⚠️ <%= alert %>
-    </div>
-  <% end %>
-
   <div class="custom-card">
     <%= form_with model: @payment, local: true do |f| %>
       <div class="form-group-custom">
