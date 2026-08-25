@@ -64,8 +64,10 @@ Rails.application.configure do
   # want to log everything, set the level to "debug".
   config.log_level = ENV.fetch("RAILS_LOG_LEVEL", "info")
 
-  # Use a different cache store in production.
-  # config.cache_store = :mem_cache_store
+  # Caché en memoria del proceso con límite de 32 MB.
+  # Evita queries repetidas (ej. StandardUpsell.all_with_defaults) sin necesitar Redis.
+  # Si en el futuro se añade Redis/Memcache, cambiar a :redis_cache_store.
+  config.cache_store = :memory_store, { size: 32.megabytes }
 
   # Use a real queuing backend for Active Job (and separate queues per environment).
   # config.active_job.queue_adapter = :resque

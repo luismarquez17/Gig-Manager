@@ -11,3 +11,12 @@ services:
         value: "1"
       - key: SECRET_KEY_BASE
         generateValue: true
+      # Optimización de memoria para Render free (512 MB RAM):
+      # 1 worker Puma con 2 threads = menor huella de RAM
+      - key: WEB_CONCURRENCY
+        value: "1"
+      - key: RAILS_MAX_THREADS
+        value: "2"
+      # Reduce la fragmentación de memoria en glibc (recomendado para contenedores Ruby)
+      - key: MALLOC_ARENA_MAX
+        value: "2"

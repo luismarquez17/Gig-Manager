@@ -5,7 +5,10 @@ class GigsController < ApplicationController
 
   def check_gig_assignment
     @gig = current_company.gigs.find_by!(id: params[:id])
-    unless current_user.superadmin? || current_user.leader? || current_user.assigned_gigs.include?(@gig)
+    # Usamos exists? para verificar la asignación directamente en SQL sin cargar
+    # todos los gigs asignados en memoria.
+    unless current_user.superadmin? || current_user.leader? ||
+           current_user.staff_assignments.exists?(gig_id: @gig.id)
       redirect_to root_path, alert: "No tienes asignado este evento."
     end
   end

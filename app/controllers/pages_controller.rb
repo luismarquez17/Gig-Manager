@@ -3,21 +3,37 @@ class PagesController < ApplicationController
 
   def dashboard
     if current_user.leader? || current_user.superadmin?
-      @total_items = InventoryItem.joins(:item).where(items: { company_id: current_company.id }).count
-      @items_danados = InventoryItem.joins(:item).where(items: { company_id: current_company.id }, status: 'damaged').count
-      @items_excelente = InventoryItem.joins(:item).where(items: { company_id: current_company.id }, status: 'available').count
+      # Consolidamos las 3 queries de InventoryItem en UNA sola con group
+      inventory_counts = InventoryItem.joins(:item)
+                                      .where(items: { company_id: current_company.id })
+                                      .group(:status)
+                                      .count
+      @total_items   = inventory_counts.values.sum
+      @items_danados = inventory_counts['damaged'].to_i
+      @items_excelente = inventory_counts['available'].to_i
 
-      @total_gigs = current_company.gigs.count
-      @upcoming_gigs_count = current_company.gigs.where("date >= ?", Date.today).count
-      @proximos_gigs = current_company.gigs.where("date >= ?", Date.today).order(date: :asc).limit(5)
-      @total_clients = current_company.clients.count
+      # Fusionamos el conteo total y el de próximos gigs en una query
+      gigs_scope = current_company.gigs
+      @total_gigs           = gigs_scope.count
+      @upcoming_gigs_count  = gigs_scope.where("date >= ?", Date.today).count
+      @proximos_gigs        = gigs_scope.where("date >= ?", Date.today).order(date: :asc).limit(5)
+      @total_clients        = current_company.clients.count
 
       @total_received = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
       @total_payroll_reserved = FundAllocation.joins(:gig).where(gigs: { company_id: current_company.id }, fund_type: 'payroll').sum(:amount).to_f
       @total_payroll_spent = FundAllocation.joins(:gig, :fund_expenses).where(gigs: { company_id: current_company.id }, fund_type: 'payroll').sum('fund_expenses.amount').to_f
       @total_payroll_available = @total_payroll_reserved - @total_payroll_spent
       @total_funds_allocated = FundAllocation.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
-      @total_pending_worker_payments = current_company.users.workers.to_a.sum(&:pending_balance)
+
+      # Calculamos los balances pendientes de nómina directamente en SQL,
+      # en lugar de cargar todos los workers con .to_a.sum(&:pending_balance)
+      worker_ids = current_company.users.workers.pluck(:id)
+      agreed_by_user = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
+      paid_by_user   = current_company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).sum(:amount)
+      @total_pending_worker_payments = worker_ids.sum do |uid|
+        [(agreed_by_user[uid].to_f - paid_by_user[uid].to_f), 0].max
+      end
+
       @needed_payroll = [@total_pending_worker_payments - @total_payroll_available, 0].max
       @shows_with_payroll = current_company.gigs.joins(:fund_allocations).where(fund_allocations: { fund_type: 'payroll' }).distinct.count
       @pending_worker_reports = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc)

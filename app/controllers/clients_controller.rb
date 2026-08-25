@@ -4,9 +4,22 @@ class ClientsController < ApplicationController
   def index
     @clients = current_company.clients.includes(gigs: :gig_payments)
 
-    @all_clients_list = current_company.clients.includes(gigs: :gig_payments)
-    @total_debt_global = @all_clients_list.sum(&:total_debt)
-    @debtors_count = @all_clients_list.count(&:has_debt?)
+    # Calculamos las métricas globales de deuda directamente en SQL sin cargar
+    # todos los clientes en RAM. Antes se cargaban TODOS los clientes DOS VECES.
+    @total_debt_global = GigPayment.joins(:gig)
+                                   .where(gigs: { company_id: current_company.id })
+                                   .sum(:amount)
+                                   .then { |total_paid|
+                                     current_company.gigs.sum(:amount).to_f - total_paid.to_f
+                                   }
+    @total_debt_global = [@total_debt_global, 0.0].max
+
+    # Cuenta clientes con al menos un gig sin pagar completamente
+    @debtors_count = current_company.clients
+                                    .joins(gigs: :gig_payments)
+                                    .where('gigs.amount > COALESCE((SELECT SUM(gp.amount) FROM gig_payments gp WHERE gp.gig_id = gigs.id), 0)')
+                                    .distinct
+                                    .count
 
     if params[:query].present?
       terms = params[:query].split(/\s+/)
@@ -42,15 +55,23 @@ class ClientsController < ApplicationController
   def debts
     all_clients = current_company.clients.includes(gigs: :gig_payments)
 
-    all_unpaid_gigs = current_company.gigs.includes(:client, :gig_payments).all.select { |g| g.remaining_amount.to_f > 0 }
-    @expired_unpaid_gigs = all_unpaid_gigs.select { |g| g.date.present? && g.date < Date.today }
-    @upcoming_unpaid_gigs = all_unpaid_gigs.select { |g| g.date.blank? || g.date >= Date.today }
+    # Filtramos gigs con saldo pendiente directamente en SQL, sin cargar todos en RAM.
+    # Antes: .all.select { |g| g.remaining_amount.to_f > 0 } cargaba TODO en memoria.
+    unpaid_gigs_scope = current_company.gigs
+                                       .includes(:client, :gig_payments)
+                                       .where(
+                                         'gigs.amount > COALESCE((SELECT SUM(gp.amount) FROM gig_payments gp WHERE gp.gig_id = gigs.id), 0)'
+                                       )
 
-    @total_debt_global = all_unpaid_gigs.sum { |g| g.remaining_amount.to_f }
-    @expired_debt_total = @expired_unpaid_gigs.sum { |g| g.remaining_amount.to_f }
+    all_unpaid_gigs = unpaid_gigs_scope.to_a
+    @expired_unpaid_gigs  = all_unpaid_gigs.select { |g| g.date.present? && g.date < Date.today }
+    @upcoming_unpaid_gigs = all_unpaid_gigs.reject { |g| g.date.present? && g.date < Date.today }
+
+    @total_debt_global       = all_unpaid_gigs.sum { |g| g.remaining_amount.to_f }
+    @expired_debt_total      = @expired_unpaid_gigs.sum { |g| g.remaining_amount.to_f }
     @total_unpaid_gigs_count = all_unpaid_gigs.size
     @expired_unpaid_gigs_count = @expired_unpaid_gigs.size
-    @total_debtors_count = all_clients.count(&:has_debt?)
+    @total_debtors_count     = all_clients.count(&:has_debt?)
 
     @clients_with_debt = all_clients.select(&:has_debt?)
 
