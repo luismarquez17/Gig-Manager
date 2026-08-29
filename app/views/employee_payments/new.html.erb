@@ -1,3 +1,29 @@
+<% if flash[:payment_success].present?
+     success_data = JSON.parse(flash[:payment_success]) rescue {}
+%>
+  <div style="max-width: 800px; margin: 0 auto;">
+    <div style="background: #f0fdf4; border: 2px solid #86efac; border-radius: 20px; padding: 36px 32px; text-align: center; box-shadow: 0 8px 30px rgba(34,197,94,0.1);">
+      <div style="font-size: 3em; margin-bottom: 12px;">✅</div>
+      <h2 style="margin: 0 0 8px 0; font-size: 1.5em; font-weight: 900; color: #15803d;">¡Pago registrado!</h2>
+      <p style="margin: 0 0 28px 0; font-size: 1.05em; color: #166534;">
+        <%= success_data["message"] %>
+      </p>
+
+      <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+        <%= link_to '🎵 Ir a Shows', gigs_path,
+            style: "background: #16a34a; color: #fff; padding: 12px 26px; border-radius: 12px; font-weight: 800; font-size: 1em; text-decoration: none;" %>
+
+        <%= link_to '💳 Registrar otro pago',
+            new_employee_payment_path(user_id: success_data["worker_id"]),
+            style: "background: #fff; color: #15803d; padding: 12px 26px; border-radius: 12px; font-weight: 800; font-size: 1em; text-decoration: none; border: 2px solid #86efac;" %>
+
+        <%= link_to '👁️ Ver pagos del trabajador',
+            employee_payments_path(user_id: success_data["worker_id"]),
+            style: "background: #fff; color: #64748b; padding: 12px 26px; border-radius: 12px; font-weight: 700; font-size: 0.95em; text-decoration: none; border: 2px solid #e2e8f0;" %>
+      </div>
+    </div>
+  </div>
+<% else %>
 <div style="max-width: 800px; margin: 0 auto;">
   <div style="margin-bottom: 22px;">
     <%= link_to '← Volver a Pagos a Trabajadores', employee_payments_path, style: "text-decoration: none; color: #64748b; font-weight: 700; font-size: 0.9em;" %>
@@ -76,7 +102,7 @@
 
       <div class="form-group-custom">
         <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
-        <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client&.name || 'Sin cliente'} - #{g.date&.strftime('%d/%m/%Y')}" }, { include_blank: "-- Ninguno / Pago General --" }, { class: 'form-input-custom' } %>
+        <%= f.collection_select :gig_id, @gigs, :id, ->(g) { "#{g.client&.name || 'Sin cliente'} - #{g.date&.strftime('%d/%m/%Y')}" }, { include_blank: "-- Ninguno / Pago General --" }, { class: 'form-input-custom' } %>
       </div>
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
@@ -127,6 +153,7 @@
     <% end %>
   </div>
 </div>
+<% end %>
 
 <script>
   function toggleFundingSource(val) {

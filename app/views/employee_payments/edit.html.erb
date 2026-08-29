@@ -72,7 +72,7 @@
 
       <div class="form-group-custom">
         <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
-        <%= f.collection_select :gig_id, Gig.order(date: :desc), :id, ->(g) { "#{g.client&.name || 'Sin cliente'} - #{g.date&.strftime('%d/%m/%Y')}" }, { include_blank: "-- Ninguno / Pago General --" }, { class: 'form-input-custom' } %>
+        <%= f.collection_select :gig_id, @gigs, :id, ->(g) { "#{g.client&.name || 'Sin cliente'} - #{g.date&.strftime('%d/%m/%Y')}" }, { include_blank: "-- Ninguno / Pago General --" }, { class: 'form-input-custom' } %>
       </div>
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">

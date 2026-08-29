@@ -149,6 +149,7 @@ Rails.application.routes.draw do
     collection do
       get :new_worker_report
       post :create_worker_report
+      post :reset_balance
     end
     member do
       post :approve

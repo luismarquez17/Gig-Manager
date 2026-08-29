@@ -186,6 +186,11 @@
           font-size: 16px !important;
         }
       }
+
+      @keyframes toastProgress {
+        from { transform: scaleX(1); }
+        to   { transform: scaleX(0); }
+      }
     </style>
   </head>
 
@@ -466,16 +471,22 @@
             <% end %>
           <% end %>
 
-          <% if notice.present? %>
-            <div style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
-              <span>✅</span> <span><%= notice %></span>
-            </div>
-          <% end %>
+          <%# ── Toast container (fixed, top-right) ── %>
+          <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none; max-width:400px; width:calc(100vw - 40px);"></div>
 
+          <% if notice.present? %>
+            <script>
+              document.addEventListener('turbo:load', function() {
+                showToast(<%= notice.to_json %>, 'success');
+              }, { once: true });
+            </script>
+          <% end %>
           <% if alert.present? %>
-            <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #9f1239; padding: 14px 20px; border-radius: 12px; margin-bottom: 24px; font-weight: 600; font-size: 0.92rem; display: flex; align-items: center; gap: 8px;">
-              <span>⚠️</span> <span><%= alert %></span>
-            </div>
+            <script>
+              document.addEventListener('turbo:load', function() {
+                showToast(<%= alert.to_json %>, 'error');
+              }, { once: true });
+            </script>
           <% end %>
 
           <%= yield %>
@@ -486,6 +497,83 @@
     </div>
 
     <script>
+      /* ── Toast notification system ───────────────────────── */
+      function showToast(message, type) {
+        var container = document.getElementById('toast-container');
+        if (!container) return;
+
+        var isSuccess = type === 'success';
+        var toast = document.createElement('div');
+        toast.style.cssText = [
+          'pointer-events: all',
+          'display: flex',
+          'align-items: flex-start',
+          'gap: 10px',
+          'padding: 14px 16px',
+          'border-radius: 14px',
+          'font-family: Inter, sans-serif',
+          'font-size: 0.9rem',
+          'font-weight: 600',
+          'line-height: 1.4',
+          'box-shadow: 0 8px 30px rgba(0,0,0,0.14)',
+          'border: 1px solid ' + (isSuccess ? '#86efac' : '#fca5a5'),
+          'background: ' + (isSuccess ? '#f0fdf4' : '#fff1f2'),
+          'color: ' + (isSuccess ? '#15803d' : '#9f1239'),
+          'transform: translateX(120%)',
+          'transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+          'position: relative',
+          'overflow: hidden',
+          'max-width: 100%',
+        ].join(';');
+
+        toast.innerHTML =
+          '<span style="font-size:1.2em;flex-shrink:0;">' + (isSuccess ? '✅' : '⚠️') + '</span>' +
+          '<span style="flex:1;">' + message + '</span>' +
+          '<button onclick="this.closest(\'[data-toast]\').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1em;color:inherit;opacity:0.6;padding:0;margin:0;line-height:1;flex-shrink:0;" title="Cerrar">✕</button>' +
+          '<div style="position:absolute;bottom:0;left:0;height:3px;background:' + (isSuccess ? '#22c55e' : '#f87171') + ';width:100%;transform-origin:left;animation:toastProgress 4s linear forwards;border-radius:0 0 14px 14px;"></div>';
+        toast.setAttribute('data-toast', '1');
+
+        container.appendChild(toast);
+        requestAnimationFrame(function() {
+          requestAnimationFrame(function() {
+            toast.style.transform = 'translateX(0)';
+          });
+        });
+
+        var timer = setTimeout(function() { dismissToast(toast); }, 4000);
+        toast.addEventListener('mouseenter', function() { clearTimeout(timer); });
+        toast.addEventListener('mouseleave', function() { timer = setTimeout(function() { dismissToast(toast); }, 1500); });
+      }
+
+      function dismissToast(toast) {
+        if (!toast || !toast.parentNode) return;
+        toast.style.transform = 'translateX(120%)';
+        toast.style.opacity = '0';
+        setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+      }
+
+      /* ── Prevent Turbo scroll-to-top on form actions ─────── */
+      (function() {
+        var savedScrollY = 0;
+
+        // Guardar posición antes de que Turbo procese la respuesta
+        document.addEventListener('turbo:before-fetch-response', function() {
+          savedScrollY = window.scrollY;
+        });
+
+        // Después de que Turbo actualiza el DOM, restaurar posición
+        document.addEventListener('turbo:render', function() {
+          if (savedScrollY > 0) {
+            window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+          }
+        });
+      })();
+
+      /* ── Turbo compatibility ─────────────────────────────── */
+      document.addEventListener('turbo:load', function() {
+        // container exists after SPA nav
+      });
+
       (function() {
         // ─── Scroll indicator (original) ───────────────────────────
         document.addEventListener('DOMContentLoaded', function(){

@@ -36,10 +36,12 @@ class FundAllocation < ApplicationRecord
   # Calcula el saldo disponible de todos los fondos de nómina directamente en SQL,
   # sin cargar ningún registro en memoria Ruby.
   def self.total_payroll_remaining
-    result = where(fund_type: 'payroll')
-               .left_joins(:fund_expenses)
-               .select('COALESCE(SUM(fund_allocations.amount), 0) - COALESCE(SUM(fund_expenses.amount), 0) AS net_remaining')
-               .first
-    result&.net_remaining.to_f
+    sql = <<~SQL
+      SELECT COALESCE(SUM(fa.amount), 0) - COALESCE(SUM(fe.amount), 0)
+      FROM fund_allocations fa
+      LEFT JOIN fund_expenses fe ON fe.fund_allocation_id = fa.id
+      WHERE fa.fund_type = 'payroll'
+    SQL
+    connection.select_value(sql).to_f
   end
 end

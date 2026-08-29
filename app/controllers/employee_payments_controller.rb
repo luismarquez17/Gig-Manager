@@ -22,17 +22,80 @@ class EmployeePaymentsController < ApplicationController
     paid_sums = current_company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).sum(:amount)
     counts = current_company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).count
 
+    # Preload assignments with gig + client for breakdown
+    assignments_by_worker = StaffAssignment
+      .where(user_id: worker_ids)
+      .includes(gig: :client)
+      .group_by(&:user_id)
+
+    # Preload approved payments per worker keyed by gig_id (nil = standalone)
+    all_approved_payments = current_company.employee_payments.approved.where(user_id: worker_ids).includes(:gig)
+    payments_by_worker = all_approved_payments.group_by(&:user_id)
+
     @worker_metrics = workers.map do |worker|
       agreed_total = staff_agreed_sums[worker.id].to_f
-      paid_total = paid_sums[worker.id].to_f
-      balance = agreed_total - paid_total
+      paid_total   = paid_sums[worker.id].to_f
+      balance      = agreed_total - paid_total  # total: past + future
+
+      worker_payments = payments_by_worker[worker.id] || []
+      paid_by_gig     = worker_payments.group_by(&:gig_id).transform_values { |ps| ps.sum { |p| p.amount.to_f } }
+
+      worker_assignments = assignments_by_worker[worker.id] || []
+
+      today = Date.today
+
+      # Past balance: only gigs that have already occurred
+      past_balance = worker_assignments.sum do |sa|
+        next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today
+        sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
+      end
+
+      # Debt breakdown: one entry per past gig with a pending balance
+      gig_debts = worker_assignments.filter_map do |sa|
+        next if sa.gig.blank? || sa.gig.date.blank? || sa.gig.date > today
+
+        paid_for_gig   = paid_by_gig[sa.gig_id].to_f
+        pending        = sa.agreed_amount.to_f - paid_for_gig
+        next if pending <= 0
+
+        {
+          gig:            sa.gig,
+          agreed_amount:  sa.agreed_amount.to_f,
+          paid_amount:    paid_for_gig,
+          pending_amount: pending,
+          type:           :assignment
+        }
+      end
+
+      # Standalone payments where expected_amount > paid amount (e.g. adjustment debts)
+      assigned_gig_ids = worker_assignments.map(&:gig_id)
+      standalone_payments = worker_payments.reject { |p| assigned_gig_ids.include?(p.gig_id) }
+      standalone_by_gig   = standalone_payments.group_by(&:gig_id)
+      standalone_by_gig.each do |gig_id, ps|
+        paid_for_gig   = ps.sum { |p| p.amount.to_f }
+        expected       = ps.map { |p| p.expected_amount.to_f }.max || 0.0
+        pending        = expected - paid_for_gig
+        next if pending <= 0
+
+        gig_debts << {
+          gig:            ps.first.gig,
+          agreed_amount:  expected,
+          paid_amount:    paid_for_gig,
+          pending_amount: pending,
+          type:           :standalone
+        }
+      end
+
+      gig_debts.sort_by! { |d| d[:gig]&.date || Date.today }.reverse!
 
       {
-        worker: worker,
-        total_paid: paid_total,
+        worker:        worker,
+        total_paid:    paid_total,
         agreed_amount: agreed_total,
-        balance: balance,
-        payment_count: counts[worker.id] || 0
+        balance:       balance,
+        past_balance:  past_balance,
+        payment_count: counts[worker.id] || 0,
+        gig_debts:     gig_debts
       }
     end
   end
@@ -179,8 +242,81 @@ class EmployeePaymentsController < ApplicationController
     redirect_back fallback_location: employee_payments_path, alert: "❌ El reporte de pago de #{@payment.user.display_name} ha sido rechazado."
   end
 
+  def reset_balance
+    worker = current_company.users.find(params[:user_id])
+    new_balance = params[:new_balance].to_f.round(2)
+
+    current_balance   = worker.pending_balance.round(2)
+    adjustment        = (new_balance - current_balance).round(2)
+
+    if adjustment == 0
+      redirect_back fallback_location: employee_payments_path(user_id: worker.id),
+                    notice: "ℹ️ El saldo de #{worker.display_name} ya está en #{view_context.number_to_currency(new_balance, unit: 'USD')}. No se realizó ningún ajuste."
+      return
+    end
+
+    # Un ajuste positivo significa que el trabajador aún tiene saldo a favor →
+    # debemos "pagarle" virtualmente la diferencia para que el saldo baje al nuevo acordado.
+    # Un ajuste negativo significa que pagamos de más en el historial →
+    # debemos añadir expected_amount para que el saldo "suba" al nuevo acordado.
+    note_text = "[AJUSTE LIDER #{Date.today.strftime('%d/%m/%Y')}] "\
+                "Saldo anterior: #{view_context.number_to_currency(current_balance, unit: 'USD')} → "\
+                "Nuevo saldo: #{view_context.number_to_currency(new_balance, unit: 'USD')}. Editado directamente por el líder."
+
+    ActiveRecord::Base.transaction do
+      if adjustment > 0
+        # El saldo actual es menor al nuevo acordado → añadimos expected_amount (deuda adicional)
+        # Creamos un pago de ajuste con monto 0 y expected_amount = adjustment
+        # para que "agreed total" suba y el saldo aumente correctamente.
+        # PERO lo más simple y auditable: creamos un EmployeePayment de "pago virtual"
+        # con amount = -adjustment... Rails no admite negativos, así que usamos expected_amount.
+
+        # Estrategia: crear un payment con amount = adjustment (pago ficticio que equilibra)
+        # y expected_amount = 0 → esto reduce el saldo pendiente en 'adjustment'
+        current_company.employee_payments.create!(
+          user:                worker,
+          amount:              adjustment,
+          expected_amount:     0.0,
+          currency:            'USD',
+          date_paid:           Date.today,
+          payment_method:      'Ajuste contable',
+          funding_source:      'external_capital',
+          external_source_name: 'Ajuste por el Líder',
+          notes:               note_text,
+          status:              'approved',
+          reported_by_worker:  false
+        )
+      else
+        # El saldo actual es mayor al nuevo acordado (pagamos de más o hay error)
+        # → Añadimos expected_amount (deuda virtual) para que el saldo suba al acordado
+        abs_adjustment = adjustment.abs
+        current_company.employee_payments.create!(
+          user:                worker,
+          amount:              0.01,         # mínimo técnico para pasar validación > 0
+          expected_amount:     abs_adjustment + 0.01,
+          currency:            'USD',
+          date_paid:           Date.today,
+          payment_method:      'Ajuste contable',
+          funding_source:      'external_capital',
+          external_source_name: 'Ajuste por el Líder',
+          notes:               note_text,
+          status:              'approved',
+          reported_by_worker:  false
+        )
+      end
+    end
+
+    direction = adjustment > 0 ? "↓ reducido" : "↑ corregido"
+    redirect_to employee_payments_path(user_id: worker.id),
+                notice: "✅ Saldo de #{worker.display_name} #{direction} a #{view_context.number_to_currency(new_balance, unit: 'USD')}. Ajuste registrado por el líder."
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_back fallback_location: employee_payments_path(user_id: params[:user_id]),
+                  alert: "Error al registrar el acuerdo: #{e.message}"
+  end
+
   def new
-    @gig = Gig.find_by(id: params[:gig_id]) if params[:gig_id].present?
+    @gig = current_company.gigs.find_by(id: params[:gig_id]) if params[:gig_id].present?
+    @gigs = current_company.gigs.includes(:client).order(date: :desc)
     default_amount = nil
     if @gig.present? && params[:user_id].present?
       assignment = @gig.staff_assignments.find_by(user_id: params[:user_id])
@@ -213,6 +349,7 @@ class EmployeePaymentsController < ApplicationController
         formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
         @payroll_balance = total_payroll_available
         @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
+        @gigs = current_company.gigs.includes(:client).order(date: :desc)
         flash.now[:alert] = "El monto excede el saldo disponible en el fondo de Nómina (#{formatted_avail}). Puedes cambiar el origen a 'Capital Externo (Dinero personal del leader)' para proceder."
         render :new, status: :unprocessable_entity and return
       end
@@ -223,18 +360,27 @@ class EmployeePaymentsController < ApplicationController
       consume_payroll_funds(payroll_gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund?
     end
 
-    notice_msg = @payment.from_external_capital? ? 
-      "Pago a trabajador registrado con capital externo (#{@payment.funding_source_label})." : 
-      "Pago a trabajador registrado descontado de fondos de nómina."
+    worker_name  = @payment.user.display_name rescue @payment.user.email
+    currency_sym = @payment.currency.presence || '$'
+    amount_label = "#{currency_sym}#{'%.2f' % @payment.amount.to_f}"
+    gig_id       = @payment.gig_id
 
-    redirect_to employee_payments_path(user_id: @payment.user_id), notice: notice_msg
+    flash[:payment_success] = {
+      message:     "Pago de #{amount_label} a #{worker_name} registrado correctamente.",
+      worker_id:   @payment.user_id,
+      gig_id:      gig_id
+    }.to_json
+
+    redirect_to new_employee_payment_path(user_id: @payment.user_id, gig_id: gig_id)
   rescue ActiveRecord::RecordInvalid
     @payroll_balance = FundAllocation.total_payroll_remaining
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
+    @gigs = current_company.gigs.includes(:client).order(date: :desc)
     render :new, status: :unprocessable_entity
   end
 
   def edit
+    @gigs = current_company.gigs.includes(:client).order(date: :desc)
     @payroll_balance = FundAllocation.total_payroll_remaining
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
   end
@@ -264,6 +410,7 @@ class EmployeePaymentsController < ApplicationController
   rescue ActiveRecord::RecordInvalid
     @payroll_balance = FundAllocation.total_payroll_remaining
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
+    @gigs = current_company.gigs.includes(:client).order(date: :desc)
     render :edit, status: :unprocessable_entity
   end
 
