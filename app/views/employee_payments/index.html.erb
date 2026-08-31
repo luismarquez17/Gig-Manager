@@ -91,140 +91,225 @@
 
 <%# --- RESUMEN GENERAL DE PAGOS Y DEUDAS --- %>
 <div class="custom-card" style="margin-bottom: 20px;">
-  <h3 style="margin: 0 0 12px 0;">Resumen general de pagos y deudas</h3>
+  <h3 style="margin: 0 0 12px 0;">Resumen general</h3>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Total pagado (Aprobado)</div>
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">💰 Total pagado</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
     </div>
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto acordado en shows</div>
-      <div style="font-size: 1.15em; font-weight: 800; color: #1d4ed8; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:agreed_amount] }, unit: 'USD') %></div>
+    <div style="background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #0369a1; font-weight: 700; text-transform: uppercase;">📅 Pendiente (shows futuros)</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #0369a1; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:future_balance] }, unit: 'USD') %></div>
     </div>
-    <% 
-      total_pending_to_workers = @worker_metrics.sum { |m| m[:balance] > 0 ? m[:balance] : 0 } 
-      total_worker_owes_company = @worker_metrics.sum { |m| m[:balance] < 0 ? m[:balance].abs : 0 } 
-    %>
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Pendiente por pagar a trabajadores</div>
-      <div style="font-size: 1.15em; font-weight: 800; color: #b45309; margin-top: 4px;"><%= number_to_currency(total_pending_to_workers, unit: 'USD') %></div>
+    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (shows pasados)</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #ea580c; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:past_balance] }, unit: 'USD') %></div>
     </div>
-    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">Le deben a la empresa (vueltos)</div>
-      <div style="font-size: 1.15em; font-weight: 800; color: #dc2626; margin-top: 4px;"><%= number_to_currency(total_worker_owes_company, unit: 'USD') %></div>
+    <% settled_count = @worker_metrics.count { |m| m[:past_balance] <= 0 && m[:future_balance] <= 0 } %>
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #15803d; font-weight: 700; text-transform: uppercase;">✅ Al día</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #15803d; margin-top: 4px;"><%= settled_count %> / <%= @worker_metrics.size %> trabajadores</div>
     </div>
+    <% total_worker_owes = @worker_metrics.sum { |m| m[:overpaid] } %>
+    <% if total_worker_owes > 0 %>
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px;">
+        <div style="font-size: 0.8em; color: #b91c1c; font-weight: 700; text-transform: uppercase;">⚠️ Trabajadores nos deben</div>
+        <div style="font-size: 1.15em; font-weight: 800; color: #dc2626; margin-top: 4px;"><%= number_to_currency(total_worker_owes, unit: 'USD') %></div>
+      </div>
+    <% end %>
   </div>
 </div>
+
 
 <%# --- ESTADO POR TRABAJADOR --- %>
 <div class="custom-card" style="margin-bottom: 20px;">
   <h3 style="margin-top: 0;">Estado por trabajador</h3>
   <div style="display: grid; gap: 10px;">
     <% @worker_metrics.each_with_index do |metric, idx| %>
-      <% balance      = metric[:balance] %>
-      <% past_balance = metric[:past_balance] %>
-      <% gig_debts    = metric[:gig_debts] %>
-      <div style="border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; overflow: hidden;">
+      <% past_balance   = metric[:past_balance] %>
+      <% future_balance = metric[:future_balance] %>
+      <% worker_owes    = metric[:overpaid] %>
+      <% gig_debts      = metric[:gig_debts] %>
+      <% future_gigs    = metric[:future_gigs] %>
+      <% is_settled     = past_balance <= 0 && future_balance <= 0 && worker_owes <= 0 %>
+
+      <div style="border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; overflow: hidden;">
 
         <%# ── Fila principal del trabajador ── %>
-        <div style="padding: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <div style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
           <div>
             <div style="font-weight: 800; color: #1e293b; font-size: 1.05em;"><%= metric[:worker].display_name rescue metric[:worker].email %></div>
-            <div style="font-size: 0.85em; color: #64748b;"><%= metric[:worker].email %> • <%= metric[:payment_count] %> pago(s) registrado(s)</div>
+            <div style="font-size: 0.82em; color: #94a3b8; margin-top: 2px;"><%= metric[:worker].email %></div>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <span style="background: #eff6ff; color: #1d4ed8; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Acordado: <%= number_to_currency(metric[:agreed_amount], unit: 'USD') %></span>
-            <span style="background: #ecfdf5; color: #065f46; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 700;">Pagado: <%= number_to_currency(metric[:total_paid], unit: 'USD') %></span>
 
-            <%# ── Badge: Pendiente total (pasados + futuros) ── %>
-            <% if balance > 0 %>
-              <span title="Pendiente total incluyendo shows futuros" style="background: #f0f9ff; color: #0369a1; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #bae6fd;">
-                📅 Total: <%= number_to_currency(balance, unit: 'USD') %>
-              </span>
-            <% elsif balance < 0 %>
-              <span title="Le debe a la empresa (cobró de más)" style="background: #fffbe6; color: #b45309; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #fef08a;">
-                ⚠️ Le debe a la empresa: <%= number_to_currency(balance.abs, unit: 'USD') %>
-              </span>
+          <%# ── Tres apartados ── %>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+
+            <%# 1. PENDIENTE: shows futuros que se le deben %>
+            <% if future_balance > 0 %>
+              <div style="display: flex; align-items: center; gap: 6px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 10px; padding: 7px 13px;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #0369a1; text-transform: uppercase; letter-spacing: 0.4px;">📅 Pendiente</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #0369a1;"><%= number_to_currency(future_balance, unit: 'USD') %></div>
+                  <div style="font-size: 0.7em; color: #7dd3fc;">Shows futuros</div>
+                </div>
+              </div>
             <% else %>
-              <span style="background: #f0fdf4; color: #15803d; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #bbf7d0;">
-                ✅ Al día
-              </span>
+              <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 13px; opacity: 0.6;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">📅 Pendiente</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #cbd5e1;">$0.00</div>
+                  <div style="font-size: 0.7em; color: #cbd5e1;">Shows futuros</div>
+                </div>
+              </div>
             <% end %>
 
-            <%# ── Badge: Pendiente vencido (solo shows pasados) ── %>
+            <%# Separador %>
+            <div style="width: 1px; height: 38px; background: #e2e8f0; flex-shrink: 0;"></div>
+
+            <%# 2. DEUDA: shows pasados sin pagar %>
             <% if past_balance > 0 %>
-              <span title="Deuda real: solo de shows que ya ocurrieron" style="background: #fff7ed; color: #b45309; padding: 6px 12px; border-radius: 999px; font-size: 0.85em; font-weight: 800; border: 1px solid #ffedd5;">
-                ⏳ Vencido: <%= number_to_currency(past_balance, unit: 'USD') %>
-              </span>
+              <div style="display: flex; align-items: center; gap: 6px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 13px;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #ea580c;"><%= number_to_currency(past_balance, unit: 'USD') %></div>
+                  <div style="font-size: 0.7em; color: #fdba74;">Shows pasados</div>
+                </div>
+              </div>
+            <% else %>
+              <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 13px; opacity: 0.6;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #cbd5e1;">$0.00</div>
+                  <div style="font-size: 0.7em; color: #cbd5e1;">Shows pasados</div>
+                </div>
+              </div>
             <% end %>
 
-            <%= link_to '👁️ Ver historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
-            <%= link_to '💳 Registrar pago', new_employee_payment_path(user_id: metric[:worker].id), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
+            <%# 2b. NOS DEBE: trabajador fue pagado más de lo acordado en shows pasados %>
+            <% if worker_owes > 0 %>
+              <div style="display: flex; align-items: center; gap: 6px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 7px 13px;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.4px;">⚠️ Nos debe</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #dc2626;"><%= number_to_currency(worker_owes, unit: 'USD') %></div>
+                  <div style="font-size: 0.7em; color: #fca5a5;">Pagado de más</div>
+                </div>
+              </div>
+            <% end %>
 
-            <%# Botón editar saldo %>
+            <%# Separador %>
+            <div style="width: 1px; height: 38px; background: #e2e8f0; flex-shrink: 0;"></div>
+
+            <%# 3. AL DÍA %>
+            <% if is_settled %>
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 7px 13px;">
+                <div style="font-size: 0.7em; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.4px;">✅ Al día</div>
+                <div style="font-size: 0.82em; font-weight: 700; color: #16a34a; margin-top: 2px;">Sin deudas</div>
+              </div>
+            <% else %>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 13px; opacity: 0.5;">
+                <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">✅ Al día</div>
+                <div style="font-size: 0.82em; font-weight: 700; color: #cbd5e1; margin-top: 2px;">Pendiente</div>
+              </div>
+            <% end %>
+
+            <%# Separador %>
+            <div style="width: 1px; height: 38px; background: #e2e8f0; flex-shrink: 0;"></div>
+
+            <%# ── Acciones ── %>
+            <%= link_to '👁️ Historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+            <%= link_to '💳 Pagar', new_employee_payment_path(user_id: metric[:worker].id), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
+
             <% worker_display = begin; metric[:worker].display_name; rescue; metric[:worker].email; end %>
             <button
               type="button"
               class="btn-main py-1 px-3 fs-7"
               style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700; cursor: pointer;"
-              onclick="openResetModal('<%= metric[:worker].id %>', '<%= j(worker_display) %>', '<%= metric[:balance].round(2) %>')"
-              title="Editar el saldo pendiente de este trabajador"
+              onclick="openResetModal('<%= metric[:worker].id %>', '<%= j(worker_display) %>', '<%= metric[:past_balance].round(2) %>')"
+              title="Editar la deuda de shows pasados de este trabajador"
             >
-              ✏️ Editar saldo
+              ✏️ Editar deuda
             </button>
 
-            <%# Botón desglose por evento (solo si hay deudas) %>
             <% if gig_debts.any? %>
               <button
                 type="button"
                 class="btn-main py-1 px-3 fs-7"
-                style="background: #fefce8; color: #854d0e; border: 1px solid #fef08a; font-weight: 700; cursor: pointer;"
-                onclick="toggleDebtBreakdown('debt-breakdown-<%= idx %>', this)"
-                title="Ver de qué eventos viene la deuda"
+                style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; font-weight: 700; cursor: pointer;"
+                onclick="togglePanel('debt-<%= idx %>', this)"
               >
-                📋 Ver deuda por evento (<%= gig_debts.size %>)
+                📋 Deuda por show (<%= gig_debts.size %>)
+              </button>
+            <% end %>
+
+            <% if future_gigs.any? %>
+              <button
+                type="button"
+                class="btn-main py-1 px-3 fs-7"
+                style="background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; font-weight: 700; cursor: pointer;"
+                onclick="togglePanel('future-<%= idx %>', this)"
+              >
+                📅 Pendiente por show (<%= future_gigs.size %>)
               </button>
             <% end %>
           </div>
         </div>
 
-        <%# ── Panel desplegable: desglose por evento ── %>
+        <%# ── Panel: desglose deuda (shows pasados) ── %>
         <% if gig_debts.any? %>
-          <div id="debt-breakdown-<%= idx %>" style="display:none; border-top: 1px solid #f1f5f9; background: #f8fafc; padding: 14px 18px;">
-            <div style="font-size: 0.8em; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
-              📌 Origen de la deuda — eventos pendientes de pago
+          <div id="debt-<%= idx %>" style="display:none; border-top: 1px solid #fed7aa; background: #fff7ed; padding: 14px 18px;">
+            <div style="font-size: 0.75em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+              ⏳ Deuda — shows ya ocurridos sin pagar
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <% gig_debts.each do |debt| %>
-                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="background: #fff; border: 1px solid #fed7aa; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
                   <div style="flex: 1; min-width: 160px;">
                     <% if debt[:gig].present? %>
-                      <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;">
-                        🎵 <%= debt[:gig].client&.name.presence || "Show sin cliente" %>
-                      </div>
+                      <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;">🎵 <%= debt[:gig].client&.name.presence || "Show sin cliente" %></div>
                       <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">
                         <%= debt[:gig].date&.strftime("%d/%m/%Y") %> &nbsp;•&nbsp;
                         <%= link_to "Ver evento →", gig_path(debt[:gig]), style: "color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.95em;" %>
                       </div>
                     <% else %>
-                      <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;">📦 Pago directo / Sin evento</div>
-                      <div style="font-size: 0.8em; color: #94a3b8; margin-top: 2px; font-style: italic;">No asociado a un show</div>
+                      <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;">📦 Ajuste / Sin show</div>
                     <% end %>
                   </div>
                   <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                    <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">
-                      Acordado: <%= number_to_currency(debt[:agreed_amount], unit: 'USD') %>
-                    </span>
-                    <span style="background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">
-                      Pagado: <%= number_to_currency(debt[:paid_amount], unit: 'USD') %>
-                    </span>
-                    <span style="background: #fff7ed; color: #b45309; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 800; border: 1px solid #ffedd5;">
-                      ⏳ Debe: <%= number_to_currency(debt[:pending_amount], unit: 'USD') %>
-                    </span>
+                    <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Acordado: <%= number_to_currency(debt[:agreed_amount], unit: 'USD') %></span>
+                    <span style="background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Pagado: <%= number_to_currency(debt[:paid_amount], unit: 'USD') %></span>
+                    <span style="background: #fff7ed; color: #c2410c; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 800; border: 1px solid #fed7aa;">Debe: <%= number_to_currency(debt[:pending_amount], unit: 'USD') %></span>
                     <% if debt[:gig].present? %>
                       <%= link_to '💳 Pagar', new_employee_payment_path(user_id: metric[:worker].id, gig_id: debt[:gig].id),
-                          style: "background:#2563eb; color:#fff; padding:4px 12px; border-radius:999px; font-size:0.8em; font-weight:800; text-decoration:none;" %>
+                          style: "background:#ea580c; color:#fff; padding:4px 12px; border-radius:999px; font-size:0.8em; font-weight:800; text-decoration:none;" %>
                     <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <%# ── Panel: desglose pendiente (shows futuros) ── %>
+        <% if future_gigs.any? %>
+          <div id="future-<%= idx %>" style="display:none; border-top: 1px solid #bae6fd; background: #f0f9ff; padding: 14px 18px;">
+            <div style="font-size: 0.75em; font-weight: 800; color: #0369a1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+              📅 Pendiente — shows futuros que aún no han pasado
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <% future_gigs.each do |fg| %>
+                <div style="background: #fff; border: 1px solid #bae6fd; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 160px;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;">🎵 <%= fg[:gig].client&.name.presence || "Show sin cliente" %></div>
+                    <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">
+                      <%= fg[:gig].date&.strftime("%d/%m/%Y") %> &nbsp;•&nbsp;
+                      <%= link_to "Ver evento →", gig_path(fg[:gig]), style: "color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.95em;" %>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Acordado: <%= number_to_currency(fg[:agreed_amount], unit: 'USD') %></span>
+                    <span style="background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Pagado: <%= number_to_currency(fg[:paid_amount], unit: 'USD') %></span>
+                    <span style="background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 800; border: 1px solid #bae6fd;">Por cobrar: <%= number_to_currency(fg[:pending_amount], unit: 'USD') %></span>
                   </div>
                 </div>
               <% end %>
@@ -237,14 +322,14 @@
   </div>
 </div>
 
+
 <script>
-  function toggleDebtBreakdown(panelId, btn) {
+  function togglePanel(panelId, btn) {
     var panel = document.getElementById(panelId);
     if (!panel) return;
     var isOpen = panel.style.display !== 'none';
     panel.style.display = isOpen ? 'none' : 'block';
-    btn.style.background  = isOpen ? '#fefce8' : '#fef9c3';
-    btn.style.borderColor = isOpen ? '#fef08a' : '#fde047';
+    btn.style.opacity = isOpen ? '1' : '0.75';
   }
 </script>
 
@@ -259,15 +344,15 @@
     <%# Encabezado %>
     <div style="margin-bottom:20px;">
       <div style="font-size:2em; margin-bottom:8px;">✏️</div>
-      <h2 style="margin:0 0 4px 0; font-size:1.25em; font-weight:900; color:#0f172a;">Editar saldo del trabajador</h2>
+      <h2 style="margin:0 0 4px 0; font-size:1.25em; font-weight:900; color:#0f172a;">Editar deuda del trabajador</h2>
       <p id="reset-modal-subtitle" style="margin:0; font-size:0.9em; color:#64748b;"></p>
     </div>
 
-    <%# Saldo actual %>
-    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
-      <div style="font-size:0.78em; font-weight:700; color:#64748b; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Saldo actual del trabajador</div>
+    <%# Deuda actual %>
+    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
+      <div style="font-size:0.78em; font-weight:700; color:#c2410c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Deuda actual (shows pasados)</div>
       <div id="reset-modal-current-balance" style="font-size:1.4em; font-weight:900; color:#0f172a;"></div>
-      <div style="font-size:0.8em; color:#94a3b8; margin-top:2px;">Total acordado − Total pagado aprobado</div>
+      <div style="font-size:0.8em; color:#94a3b8; margin-top:2px;">Lo que la empresa le debe al trabajador por shows ya realizados</div>
     </div>
 
     <%# Formulario %>
@@ -276,7 +361,7 @@
 
       <div style="margin-bottom:18px;">
         <label for="reset-new-balance" style="display:block; font-size:0.88em; font-weight:700; color:#374151; margin-bottom:6px;">
-          Nuevo saldo (el trabajador quedará con este monto pendiente)
+          Nueva deuda (el trabajador quedará con este monto pendiente por cobrar)
         </label>
         <div style="position:relative;">
           <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; font-weight:700; font-size:1em;">$</span>
@@ -285,6 +370,7 @@
             name="new_balance"
             id="reset-new-balance"
             step="0.01"
+            min="0"
             placeholder="0.00"
             required
             style="width:100%; padding:12px 14px 12px 30px; border:2px solid #e2e8f0; border-radius:10px; font-size:1.05em; font-weight:700; color:#0f172a; outline:none; box-sizing:border-box; transition:border-color 0.15s;"
@@ -293,7 +379,7 @@
           >
         </div>
         <p style="margin:6px 0 0 0; font-size:0.8em; color:#64748b;">
-          Ingresa <strong>$0</strong> para dejarlo en cero, o el monto que el líder considera correcto.
+          Ingresa <strong>$0</strong> para saldar la deuda completamente, o el monto real que sigue pendiente.
         </p>
       </div>
 
@@ -324,21 +410,20 @@
 </style>
 
 <script>
-  function openResetModal(workerId, workerName, currentBalance) {
-    var balance = parseFloat(currentBalance);
+  function openResetModal(workerId, workerName, currentDebt) {
+    var debt = parseFloat(currentDebt);
     document.getElementById('reset-user-id').value = workerId;
-    document.getElementById('reset-modal-subtitle').textContent =
-      'Trabajador: ' + workerName;
-    
-    var formatted = '$' + Math.abs(balance).toFixed(2);
-    var label = balance >= 0
-      ? 'La empresa le debe: ' + formatted
-      : 'El trabajador le debe a la empresa: ' + formatted + ' (Vuelto)';
+    document.getElementById('reset-modal-subtitle').textContent = 'Trabajador: ' + workerName;
+
+    var formatted = '$' + debt.toFixed(2);
+    var label = debt > 0
+      ? 'Le debemos: ' + formatted
+      : '✅ Sin deuda pendiente';
     document.getElementById('reset-modal-current-balance').textContent = label;
     document.getElementById('reset-modal-current-balance').style.color =
-      balance > 0 ? '#b45309' : balance < 0 ? '#dc2626' : '#15803d';
+      debt > 0 ? '#ea580c' : '#15803d';
 
-    // Precargar el campo con 0 como punto de partida
+    // Precargar con 0 como punto de partida
     document.getElementById('reset-new-balance').value = '0.00';
 
     var modal = document.getElementById('reset-balance-modal');

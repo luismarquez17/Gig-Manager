@@ -44,30 +44,68 @@ class EmployeePaymentsController < ApplicationController
 
       today = Date.today
 
-      # Past balance: only gigs that have already occurred
-      past_balance = worker_assignments.sum do |sa|
-        next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today
-        sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
+      # Shows pasados del trabajador (de más antiguo a más reciente)
+      past_assignments = worker_assignments
+        .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today }
+        .sort_by { |sa| sa.gig.date || today }
+
+      raw_past_balance = past_assignments.sum do |sa|
+        unpaid = sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
+        unpaid > 0 ? unpaid : 0
       end
 
-      # Debt breakdown: one entry per past gig with a pending balance
-      gig_debts = worker_assignments.filter_map do |sa|
-        next if sa.gig.blank? || sa.gig.date.blank? || sa.gig.date > today
+      # Pagos de ajuste (gig_id=nil) actúan como crédito/débito flotante y
+      # se aplican a la deuda total de shows pasados (ej: "Ajuste por el Líder")
+      net_adjustment_credits = worker_payments
+        .select { |p| p.gig_id.nil? }
+        .sum { |p| p.amount.to_f - p.expected_amount.to_f }
 
+      net_past_balance = raw_past_balance - net_adjustment_credits
+
+      if net_past_balance >= 0
+        past_balance = net_past_balance.round(2)
+      else
+        past_balance = 0.0
+      end
+
+      # Desglose de deuda: un entry por show pasado con saldo pendiente (descontando créditos flotantes)
+      remaining_credit = [net_adjustment_credits, 0].max
+      gig_debts = []
+
+      past_assignments.each do |sa|
         paid_for_gig   = paid_by_gig[sa.gig_id].to_f
-        pending        = sa.agreed_amount.to_f - paid_for_gig
-        next if pending <= 0
+        pending_raw    = sa.agreed_amount.to_f - paid_for_gig
+        next if pending_raw <= 0
 
-        {
+        # Absorber saldo pendiente del show si hay créditos flotantes de ajuste
+        credit_applied    = [remaining_credit, pending_raw].min
+        effective_pending = (pending_raw - credit_applied).round(2)
+        remaining_credit  -= credit_applied
+
+        # Si el ajuste canceló o saldó este show totalmente, no aparece en "Deuda por show"
+        next if effective_pending <= 0
+
+        gig_debts << {
           gig:            sa.gig,
           agreed_amount:  sa.agreed_amount.to_f,
-          paid_amount:    paid_for_gig,
-          pending_amount: pending,
+          paid_amount:    paid_for_gig + credit_applied,
+          pending_amount: effective_pending,
           type:           :assignment
         }
       end
 
-      # Standalone payments where expected_amount > paid amount (e.g. adjustment debts)
+      if net_adjustment_credits < 0
+        gig_debts << {
+          gig:            nil,
+          agreed_amount:  0.0,
+          paid_amount:    0.0,
+          pending_amount: -net_adjustment_credits,
+          type:           :adjustment,
+          title:          "Ajustes contables del Líder (Cargo adicional)"
+        }
+      end
+
+      # Pagos standalone (sin gig asignado por StaffAssignment) donde expected > paid
       assigned_gig_ids = worker_assignments.map(&:gig_id)
       standalone_payments = worker_payments.reject { |p| assigned_gig_ids.include?(p.gig_id) }
       standalone_by_gig   = standalone_payments.group_by(&:gig_id)
@@ -88,14 +126,45 @@ class EmployeePaymentsController < ApplicationController
 
       gig_debts.sort_by! { |d| d[:gig]&.date || Date.today }.reverse!
 
+      # Overpaid: shows PASADOS donde se pagó MÁS de lo acordado (el trabajador nos debe)
+      overpaid = worker_assignments.sum do |sa|
+        next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today
+        excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
+        excess > 0 ? excess : 0
+      end
+
+      # Pendiente: shows que AÚN NO HAN PASADO y no han sido pagados
+      future_balance = worker_assignments.sum do |sa|
+        next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date > today
+        unpaid = sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
+        unpaid > 0 ? unpaid : 0
+      end
+
+      # Desglose de pendiente: shows futuros con saldo aún no cobrado
+      future_gigs = worker_assignments.filter_map do |sa|
+        next if sa.gig.blank? || sa.gig.date.blank? || sa.gig.date <= today
+        paid_for_gig = paid_by_gig[sa.gig_id].to_f
+        pending      = sa.agreed_amount.to_f - paid_for_gig
+        next if pending <= 0
+        {
+          gig:            sa.gig,
+          agreed_amount:  sa.agreed_amount.to_f,
+          paid_amount:    paid_for_gig,
+          pending_amount: pending
+        }
+      end.sort_by { |d| d[:gig]&.date || Date.today }
+
       {
-        worker:        worker,
-        total_paid:    paid_total,
-        agreed_amount: agreed_total,
-        balance:       balance,
-        past_balance:  past_balance,
-        payment_count: counts[worker.id] || 0,
-        gig_debts:     gig_debts
+        worker:         worker,
+        total_paid:     paid_total,
+        agreed_amount:  agreed_total,
+        balance:        balance,
+        past_balance:   past_balance,   # deuda: shows ya ocurridos sin pagar
+        future_balance: future_balance, # pendiente: shows futuros aún no pagados
+        overpaid:       overpaid,       # pagado de más: el trabajador nos debe esta cantidad
+        payment_count:  counts[worker.id] || 0,
+        gig_debts:      gig_debts,      # desglose de deuda (pasados)
+        future_gigs:    future_gigs     # desglose pendiente (futuros)
       }
     end
   end
@@ -246,72 +315,120 @@ class EmployeePaymentsController < ApplicationController
     worker = current_company.users.find(params[:user_id])
     new_balance = params[:new_balance].to_f.round(2)
 
-    current_balance   = worker.pending_balance.round(2)
-    adjustment        = (new_balance - current_balance).round(2)
+    # Calcular la deuda actual de shows PASADOS (misma lógica que en el index)
+    today       = Date.today
+    assignments = StaffAssignment.where(user_id: worker.id).includes(:gig)
+    paid_by_gig = worker.employee_payments.approved.where.not(gig_id: nil).group(:gig_id).sum(:amount)
+    all_payments = worker.employee_payments.approved.to_a
+
+    raw_debt = assignments.sum do |sa|
+      next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today
+      unpaid = sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
+      unpaid > 0 ? unpaid : 0
+    end
+
+    net_adjustment_credits = all_payments
+      .select { |p| p.gig_id.nil? }
+      .sum { |p| p.amount.to_f - p.expected_amount.to_f }
+
+    current_debt = [[raw_debt - net_adjustment_credits, 0].max, 0].max.round(2)
+
+    # La diferencia: cuánto hay que ajustar para llegar al nuevo monto deseado
+    # new_balance=0 → necesitamos "pagar" current_debt más (adjustment negativo)
+    # new_balance=50 y current_debt=100 → "pagamos" 50 más
+    adjustment = (new_balance - current_debt).round(2)
 
     if adjustment == 0
       redirect_back fallback_location: employee_payments_path(user_id: worker.id),
-                    notice: "ℹ️ El saldo de #{worker.display_name} ya está en #{view_context.number_to_currency(new_balance, unit: 'USD')}. No se realizó ningún ajuste."
+                    notice: "ℹ️ La deuda de #{worker.display_name} ya está en #{view_context.number_to_currency(new_balance, unit: 'USD')}. No se realizó ningún ajuste."
       return
     end
 
-    # Un ajuste positivo significa que el trabajador aún tiene saldo a favor →
-    # debemos "pagarle" virtualmente la diferencia para que el saldo baje al nuevo acordado.
-    # Un ajuste negativo significa que pagamos de más en el historial →
-    # debemos añadir expected_amount para que el saldo "suba" al nuevo acordado.
-    note_text = "[AJUSTE LIDER #{Date.today.strftime('%d/%m/%Y')}] "\
-                "Saldo anterior: #{view_context.number_to_currency(current_balance, unit: 'USD')} → "\
-                "Nuevo saldo: #{view_context.number_to_currency(new_balance, unit: 'USD')}. Editado directamente por el líder."
+    note_text = "[AJUSTE LIDER #{Date.today.strftime('%d/%m/%Y')}] " \
+                "Deuda anterior: #{view_context.number_to_currency(current_debt, unit: 'USD')} → " \
+                "Nueva deuda: #{view_context.number_to_currency(new_balance, unit: 'USD')}. Editado directamente por el líder."
 
     ActiveRecord::Base.transaction do
-      if adjustment > 0
-        # El saldo actual es menor al nuevo acordado → añadimos expected_amount (deuda adicional)
-        # Creamos un pago de ajuste con monto 0 y expected_amount = adjustment
-        # para que "agreed total" suba y el saldo aumente correctamente.
-        # PERO lo más simple y auditable: creamos un EmployeePayment de "pago virtual"
-        # con amount = -adjustment... Rails no admite negativos, así que usamos expected_amount.
+      abs_adjustment = adjustment.abs
 
-        # Estrategia: crear un payment con amount = adjustment (pago ficticio que equilibra)
-        # y expected_amount = 0 → esto reduce el saldo pendiente en 'adjustment'
+      if adjustment > 0
+        # El líder quiere subir la deuda (new_balance > current_debt): añadir expected_amount
         current_company.employee_payments.create!(
-          user:                worker,
-          amount:              adjustment,
-          expected_amount:     0.0,
-          currency:            'USD',
-          date_paid:           Date.today,
-          payment_method:      'Ajuste contable',
-          funding_source:      'external_capital',
+          user:                 worker,
+          amount:               0.01,
+          expected_amount:      abs_adjustment + 0.01,
+          gig_id:               nil,
+          currency:             'USD',
+          date_paid:            Date.today,
+          payment_method:       'Ajuste contable',
+          funding_source:       'external_capital',
           external_source_name: 'Ajuste por el Líder',
-          notes:               note_text,
-          status:              'approved',
-          reported_by_worker:  false
+          notes:                note_text,
+          status:               'approved',
+          reported_by_worker:   false
         )
       else
-        # El saldo actual es mayor al nuevo acordado (pagamos de más o hay error)
-        # → Añadimos expected_amount (deuda virtual) para que el saldo suba al acordado
-        abs_adjustment = adjustment.abs
-        current_company.employee_payments.create!(
-          user:                worker,
-          amount:              0.01,         # mínimo técnico para pasar validación > 0
-          expected_amount:     abs_adjustment + 0.01,
-          currency:            'USD',
-          date_paid:           Date.today,
-          payment_method:      'Ajuste contable',
-          funding_source:      'external_capital',
-          external_source_name: 'Ajuste por el Líder',
-          notes:               note_text,
-          status:              'approved',
-          reported_by_worker:  false
-        )
+        # El líder quiere bajar la deuda (new_balance < current_debt):
+        # Asignar el pago de ajuste a los shows pasados pendientes (de más antiguo a más reciente)
+        # para que esos shows queden explícitamente saldados/cancelados por el ajuste
+        remaining_adj = adjustment.abs
+        past_assignments = assignments
+          .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today }
+          .sort_by { |sa| sa.gig.date || today }
+
+        past_assignments.each do |sa|
+          break if remaining_adj <= 0
+          paid_for_gig = worker.employee_payments.approved.where(gig_id: sa.gig_id).sum(:amount).to_f
+          pending_gig  = sa.agreed_amount.to_f - paid_for_gig
+          next if pending_gig <= 0
+
+          portion = [remaining_adj, pending_gig].min.round(2)
+          next if portion <= 0
+
+          gig_note = "#{note_text} (Show: #{sa.gig.client&.name.presence || sa.gig.date&.strftime('%d/%m/%Y')})"
+          current_company.employee_payments.create!(
+            user:                 worker,
+            amount:               portion,
+            expected_amount:      0.0,
+            gig_id:               sa.gig_id,
+            currency:             'USD',
+            date_paid:            Date.today,
+            payment_method:       'Ajuste contable',
+            funding_source:       'external_capital',
+            external_source_name: 'Ajuste por el Líder',
+            notes:                gig_note,
+            status:               'approved',
+            reported_by_worker:   false
+          )
+          remaining_adj = (remaining_adj - portion).round(2)
+        end
+
+        # Si aún queda monto de ajuste sin asociar a un show específico
+        if remaining_adj > 0
+          current_company.employee_payments.create!(
+            user:                 worker,
+            amount:               remaining_adj,
+            expected_amount:      0.0,
+            gig_id:               nil,
+            currency:             'USD',
+            date_paid:            Date.today,
+            payment_method:       'Ajuste contable',
+            funding_source:       'external_capital',
+            external_source_name: 'Ajuste por el Líder',
+            notes:                note_text,
+            status:               'approved',
+            reported_by_worker:   false
+          )
+        end
       end
     end
 
-    direction = adjustment > 0 ? "↓ reducido" : "↑ corregido"
+    direction = adjustment < 0 ? "saldada" : "ajustada"
     redirect_to employee_payments_path(user_id: worker.id),
-                notice: "✅ Saldo de #{worker.display_name} #{direction} a #{view_context.number_to_currency(new_balance, unit: 'USD')}. Ajuste registrado por el líder."
+                notice: "✅ Deuda de #{worker.display_name} #{direction} a #{view_context.number_to_currency(new_balance, unit: 'USD')}. Ajuste registrado."
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path(user_id: params[:user_id]),
-                  alert: "Error al registrar el acuerdo: #{e.message}"
+                  alert: "Error al registrar el ajuste: #{e.message}"
   end
 
   def new
