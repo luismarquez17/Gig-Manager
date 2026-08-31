@@ -78,6 +78,11 @@ Rails.application.routes.draw do
   post '/portal/:token/submit_review', to: 'portals#submit_review', as: 'submit_public_portal_review'
   post '/portal/:token/request_upsell', to: 'portals#request_upsell', as: 'request_public_portal_upsell'
 
+  # Presupuestos de Clientes
+  resources :client_quotes
+  get '/q/:token', to: 'client_quotes#public_show', as: 'public_client_quote'
+  post '/q/:token/submit', to: 'client_quotes#public_submit', as: 'submit_public_client_quote'
+
   resources :gig_upsell_requests, only: [] do
     member do
       post :approve

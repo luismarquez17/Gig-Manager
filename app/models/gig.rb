@@ -13,6 +13,7 @@ class Gig < ApplicationRecord
   has_many :gig_reviews, dependent: :destroy
   has_many :gig_upsell_requests, dependent: :destroy
   has_many :pending_upsell_requests, -> { where(status: 'pending') }, class_name: 'GigUpsellRequest'
+  has_many :client_quotes, dependent: :nullify
   
   validates :amount, presence: true
   validates :client_email, presence: true, if: -> { client_id.blank? }

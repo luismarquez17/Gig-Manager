@@ -1,0 +1,81 @@
+<div style="max-width: 1050px; margin: 0 auto; padding-bottom: 60px;">
+  
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 24px; background: white; padding: 24px; border-radius: 18px; border: 1px solid #e2e8f0; box-shadow: 0 2px 10px rgba(0,0,0,0.03);">
+    <div>
+      <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; display: flex; align-items: center; gap: 10px;">
+        <span>📋</span> Presupuestos de Clientes
+      </h1>
+      <p style="margin: 0; color: #64748b; font-size: 0.95rem;">
+        Gestiona los formularios de presupuestos enviados por clientes y conviértelos directamente en eventos activos.
+      </p>
+    </div>
+
+    <%= link_to new_client_quote_path, style: "background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" do %>
+      <span>+</span> Generar Enlace de Presupuesto
+    <% end %>
+  </div>
+
+  <% if @client_quotes.any? %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 18px;">
+      <% @client_quotes.each do |quote| %>
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04); display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px;">
+              <span style="font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; <%= quote.status_badge_style %>">
+                <%= quote.status_label %>
+              </span>
+              <span style="font-size: 0.8rem; font-weight: 800; color: #166534; background: #dcfce7; padding: 3px 8px; border-radius: 6px;">
+                $<%= quote.amount %> <%= quote.currency %>
+              </span>
+            </div>
+
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
+              <%= quote.client_name %>
+            </h3>
+
+            <div style="font-size: 0.86rem; color: #64748b; margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+              <div>📧 <%= quote.client_email %></div>
+              <div>📞 <%= quote.client_phone %></div>
+              <div>📅 Fecha: <strong><%= quote.event_date ? quote.event_date.strftime("%d/%m/%Y") : "Por definir" %></strong></div>
+              <div>📍 Lugar: <strong><%= quote.event_location.presence || "Por confirmar" %></strong></div>
+              <% if quote.advance_amount.to_f > 0 %>
+                <div style="color: #15803d; font-weight: 700;">💵 Adelanto declarado: $<%= quote.advance_amount %> <%= quote.currency %></div>
+              <% end %>
+            </div>
+          </div>
+
+          <div style="border-top: 1px solid #f1f5f9; pt: 14px; margin-top: 14px; display: flex; flex-direction: column; gap: 8px;">
+            <% public_url = public_client_quote_url(quote.public_token) %>
+            
+            <div style="display: flex; gap: 8px;">
+              <input type="text" readonly value="<%= public_url %>" style="flex: 1; padding: 6px 10px; font-size: 0.78rem; border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; color: #475569;" id="token-input-<%= quote.id %>">
+              <button onclick="navigator.clipboard.writeText('<%= public_url %>'); alert('¡Enlace de presupuesto copiado al portapapeles!');" style="background: #f1f5f9; border: 1px solid #cbd5e1; color: #334155; padding: 6px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;" title="Copiar Enlace para WhatsApp">
+                📋 Copiar
+              </button>
+            </div>
+
+            <% if quote.status != 'converted' %>
+              <%= link_to new_gig_path(quote_id: quote.id), style: "background: #10b981; color: white; padding: 9px; border-radius: 10px; font-size: 0.85rem; font-weight: 800; text-decoration: none; text-align: center; display: block; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);" do %>
+                ✨ Jalar Presupuesto y Crear Gig ➔
+              <% end %>
+            <% else %>
+              <% if quote.gig %>
+                <%= link_to gig_path(quote.gig), style: "background: #f1f5f9; color: #0f172a; padding: 8px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; text-decoration: none; text-align: center; display: block; border: 1px solid #cbd5e1;" do %>
+                  Ver Evento Activo (Gig) ➔
+                <% end %>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <div style="text-align: center; padding: 60px 20px; background: white; border-radius: 18px; border: 1px dashed #cbd5e1; color: #64748b;">
+      <div style="font-size: 3rem; margin-bottom: 12px;">📋</div>
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: #334155; margin: 0 0 6px 0;">No tienes presupuestos de clientes aún</h3>
+      <p style="margin: 0 0 16px 0; font-size: 0.9rem;">Genera un presupuesto o envía el formulario a tus clientes para que llenen la información de sus eventos.</p>
+      <%= link_to "+ Generar Nuevo Enlace de Presupuesto", new_client_quote_path, style: "background: #2563eb; color: white; padding: 10px 20px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; text-decoration: none; display: inline-block;" %>
+    </div>
+  <% end %>
+
+</div>

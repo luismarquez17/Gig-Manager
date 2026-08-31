@@ -1,0 +1,215 @@
+<div style="max-width: 760px; margin: 0 auto; padding: 20px 14px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+
+  <%# Header / Company Header %>
+  <div style="text-align: center; margin-bottom: 28px; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05);">
+    <div style="font-size: 2.2rem; margin-bottom: 8px;">📋</div>
+    <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
+      Formulario de Presupuesto del Evento
+    </h1>
+    <p style="margin: 0; color: #64748b; font-size: 0.95rem; line-height: 1.5;">
+      Organizado por <strong style="color: #2563eb;"><%= @quote.company.name %></strong>
+    </p>
+    <p style="margin: 6px 0 0 0; color: #475569; font-size: 0.88rem;">
+      Ingresa o confirma la información de tu evento para proceder con la reserva y el registro oficial.
+    </p>
+  </div>
+
+  <% if @quote.status == 'converted' %>
+    <div style="background: #e0e7ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 20px; border-radius: 16px; text-align: center; font-weight: 700; font-size: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
+      ✅ Este presupuesto ya fue procesado y convertido en un evento activo por la agrupación.
+    </div>
+  <% else %>
+
+    <div style="background: white; padding: 28px 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05);">
+      
+      <form id="public-quote-form" action="<%= submit_public_client_quote_path(@quote.public_token) %>" method="POST" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
+        <%# --- SECCIÓN 1: DATOS DEL CLIENTE --- %>
+        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+            <span>👤</span> Tus Datos de Contacto
+          </h3>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Nombre Completo *
+              </label>
+              <input type="text" name="client_name" value="<%= @quote.client_name %>" required placeholder="Ej. Carlos Mendoza" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; font-weight: 600;">
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Correo Electrónico *
+              </label>
+              <input type="email" name="client_email" value="<%= @quote.client_email %>" required placeholder="ejemplo@correo.com" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Teléfono / WhatsApp *
+              </label>
+              <input type="tel" name="client_phone" value="<%= @quote.client_phone %>" required placeholder="Ej. 04141234567" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; font-weight: 600;">
+            </div>
+          </div>
+        </div>
+
+        <%# --- SECCIÓN 2: DATOS DEL EVENTO --- %>
+        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 14px; border: 1px solid #e2e8f0;">
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+            <span>📅</span> Detalles del Evento
+          </h3>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Tipo de Evento *
+              </label>
+              <select name="event_type" required style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.92rem; background: white; font-weight: 600;">
+                <option value="Boda" <%= 'selected' if @quote.event_type == 'Boda' %>>💍 Boda / Matrimonio</option>
+                <option value="XV Años" <%= 'selected' if @quote.event_type == 'XV Años' %>>👑 XV Años</option>
+                <option value="Cumpleaños" <%= 'selected' if @quote.event_type == 'Cumpleaños' %>>🎂 Cumpleaños / Fiesta</option>
+                <option value="Corporativo" <%= 'selected' if @quote.event_type == 'Corporativo' %>>🏢 Evento Corporativo</option>
+                <option value="Concierto" <%= 'selected' if @quote.event_type == 'Concierto' %>>🎸 Concierto / Festival</option>
+                <option value="Otro" <%= 'selected' if @quote.event_type == 'Otro' %>>⭐ Otro Tipo de Evento</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Fecha del Evento *
+              </label>
+              <input type="date" name="event_date" value="<%= @quote.event_date || Date.today %>" required style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; font-weight: 600;">
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Ubicación / Lugar del Show *
+              </label>
+              <input type="text" name="event_location" value="<%= @quote.event_location %>" required placeholder="Ej. Quinta La Esmeralda, Caracas" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Hora de Inicio
+              </label>
+              <input type="time" name="start_time" value="<%= @quote.start_time&.strftime('%H:%M') %>" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+                Hora de Fin
+              </label>
+              <input type="time" name="end_time" value="<%= @quote.end_time&.strftime('%H:%M') %>" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+
+        <%# --- SECCIÓN 3: PRESUPUESTO & ADELANTO --- %>
+        <div style="background: #f0fdf4; padding: 18px 20px; border-radius: 14px; border: 1px solid #bbf7d0;">
+          <h3 style="font-size: 1.05rem; font-weight: 800; color: #166534; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
+            <span>💰</span> Presupuesto Acordado & Adelanto
+          </h3>
+
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
+                Monto Total Acordado
+              </label>
+              <div style="display: flex; gap: 8px;">
+                <input type="number" step="0.01" name="amount" value="<%= @quote.amount %>" placeholder="0.00" style="flex: 1; padding: 11px 14px; border: 1px solid #86efac; border-radius: 10px; font-size: 1.05rem; font-weight: 800; color: #166534;">
+                <select name="currency" style="padding: 11px; border: 1px solid #86efac; border-radius: 10px; font-size: 0.9rem; font-weight: 800; background: white; color: #166534;">
+                  <option value="USD" <%= 'selected' if @quote.currency == 'USD' %>>USD ($)</option>
+                  <option value="BS" <%= 'selected' if @quote.currency == 'BS' %>>BS (Bs)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
+                Adelanto / Anticipo Pagado
+              </label>
+              <input type="number" step="0.01" name="advance_amount" value="<%= @quote.advance_amount %>" placeholder="0.00" style="width: 100%; padding: 11px 14px; border: 1px solid #86efac; border-radius: 10px; font-size: 1.05rem; font-weight: 800; color: #166534; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
+              Requerimientos Específicos / Observaciones
+            </label>
+            <textarea name="details" rows="3" placeholder="Ej. Formato banda completa de 5 músicos, incluye planta eléctrica y 2 horas de show..." style="width: 100%; padding: 11px 14px; border: 1px solid #86efac; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; resize: vertical;"><%= @quote.details %></textarea>
+          </div>
+        </div>
+
+        <%# --- SECCIÓN 4: CONFIRMACIÓN Y BOTÓN --- %>
+        <div style="text-align: center; margin-top: 10px;">
+          <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #334155; margin-bottom: 16px; cursor: pointer;">
+            <input type="checkbox" required style="width: 18px; height: 18px; accent-color: #2563eb;">
+            Confirmo que deseo solicitar este presupuesto y contratar el servicio de la agrupación.
+          </label>
+
+          <button type="submit" id="submit-quote-btn" style="background: linear-gradient(135deg, #16a34a, #15803d); color: white; border: none; padding: 16px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3); width: 100%; max-width: 420px; transition: all 0.2s;">
+            ✅ Confirmar y Enviar Presupuesto
+          </button>
+        </div>
+
+      </form>
+
+      <div id="quote-response-msg" style="display: none; margin-top: 20px; padding: 20px; border-radius: 14px; text-align: center; font-weight: 700; font-size: 1rem;"></div>
+
+    </div>
+
+  <% end %>
+
+</div>
+
+<script>
+  document.getElementById('public-quote-form')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    var form = this;
+    var btn = document.getElementById('submit-quote-btn');
+    var msgDiv = document.getElementById('quote-response-msg');
+
+    btn.disabled = true;
+    btn.textContent = "Procesando...";
+
+    var formData = new FormData(form);
+
+    fetch(form.action, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'Accept': 'application/json'
+      }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      msgDiv.style.display = "block";
+      if (data.success) {
+        msgDiv.style.background = "#dcfce7";
+        msgDiv.style.color = "#15803d";
+        msgDiv.style.border = "1px solid #86efac";
+        msgDiv.textContent = data.message;
+        form.style.display = "none";
+      } else {
+        msgDiv.style.background = "#ffe4e6";
+        msgDiv.style.color = "#9f1239";
+        msgDiv.style.border = "1px solid #fca5a5";
+        msgDiv.textContent = "Error: " + (data.error || "No se pudo procesar la solicitud.");
+        btn.disabled = false;
+        btn.textContent = "✅ Confirmar y Enviar Presupuesto";
+      }
+    })
+    .catch(function(err) {
+      msgDiv.style.display = "block";
+      msgDiv.style.background = "#ffe4e6";
+      msgDiv.style.color = "#9f1239";
+      msgDiv.textContent = "Error de conexión al enviar el presupuesto.";
+      btn.disabled = false;
+      btn.textContent = "✅ Confirmar y Enviar Presupuesto";
+    });
+  });
+</script>

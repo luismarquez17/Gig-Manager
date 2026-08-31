@@ -1,5 +1,28 @@
 <div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;">
   <%= form_with(model: gig, local: true) do |f| %>
+
+    <%# --- SELECTOR PARA JALAR DATOS DE PRESUPUESTO DE CLIENTE --- %>
+    <% if @available_quotes.present? && @available_quotes.any? %>
+      <div style="margin-bottom: 25px; background: #f0f9ff; padding: 20px; border-radius: 15px; border: 1px solid #bae6fd; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);">
+        <label style="display: block; font-weight: bold; color: #0369a1; margin-bottom: 6px; font-size: 1rem;">
+          ✨ Jalar Datos de Presupuesto de Cliente
+        </label>
+        <p style="margin: 0 0 12px 0; font-size: 0.86rem; color: #0284c7;">
+          Selecciona un presupuesto recibido del cliente para auto-completar los datos del evento.
+        </p>
+        <select onchange="if(this.value){ window.location.href = '/gigs/new?quote_id=' + this.value; }" style="width: 100%; padding: 12px; border-radius: 10px; border: 2px solid #0284c7; background: white; font-weight: bold; font-size: 0.95rem; color: #0f172a;">
+          <option value="">-- Seleccionar Presupuesto de Cliente --</option>
+          <% @available_quotes.each do |q| %>
+            <option value="<%= q.id %>" <%= 'selected' if @selected_quote_id == q.id %>>
+              <%= q.client_name %> (<%= q.event_date ? q.event_date.strftime("%d/%m/%Y") : "Fecha TBD" %>) - $<%= q.amount %> <%= q.currency %> [<%= q.status_label %>]
+            </option>
+          <% end %>
+        </select>
+        <% if @selected_quote_id.present? %>
+          <input type="hidden" name="client_quote_id" value="<%= @selected_quote_id %>">
+        <% end %>
+      </div>
+    <% end %>
     
     <%# --- BUSCADOR INTELIGENTE DE CLIENTE --- %>
     <div style="margin-bottom: 25px; background: #fff7ed; padding: 20px; border-radius: 15px; border: 1px solid #ffedd5;">
@@ -81,6 +104,34 @@
       <%= f.label :details, "📝 Detalles o Paquete del Evento", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
       <%= f.text_area :details, rows: 4, placeholder: "Ejemplo: Pantallas y dos estructuras, o Grupo y sonido (2 bajos de 18 y 16)...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; resize: vertical; font-family: inherit;" %>
     </div>
+
+    <% if gig.new_record? %>
+      <%# --- REGISTRO DE ADELANTO INICIAL (ANTICIPO) --- %>
+      <div style="margin-bottom: 25px; background: #ecfdf5; padding: 20px; border-radius: 15px; border: 1px solid #a7f3d0;">
+        <label style="display: block; font-weight: bold; color: #047857; margin-bottom: 6px; font-size: 1rem;">
+          💵 Registrar Pago de Adelanto Inicial (Anticipo)
+        </label>
+        <p style="margin: 0 0 12px 0; font-size: 0.86rem; color: #059669;">
+          Indica el monto abonado por el cliente como anticipo para registrar la transacción automáticamente en el evento.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #047857; margin-bottom: 6px;">
+              Monto del Adelanto / Anticipo
+            </label>
+            <input type="number" step="0.01" name="advance_amount" value="<%= @default_advance_amount || 0.0 %>" placeholder="0.00" style="width: 100%; padding: 12px; border: 1px solid #6ee7b7; border-radius: 10px; font-size: 1.05rem; font-weight: 800; color: #047857; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #047857; margin-bottom: 6px;">
+              Fecha del Adelanto
+            </label>
+            <input type="date" name="advance_date_paid" value="<%= Date.today %>" style="width: 100%; padding: 12px; border: 1px solid #6ee7b7; border-radius: 10px; font-size: 0.95rem; font-weight: 700; color: #047857; box-sizing: border-box;">
+          </div>
+        </div>
+      </div>
+    <% end %>
 
     <div style="display: flex; flex-direction: column; gap: 12px;">
       <%= f.submit gig.new_record? ? "✅ Confirmar Registro" : "💾 Guardar Cambios", 

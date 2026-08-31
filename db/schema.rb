@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_31_202504) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_31_210602) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -63,6 +63,33 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_202504) do
     t.string "name"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+  end
+
+  create_table "client_quotes", force: :cascade do |t|
+    t.bigint "company_id"
+    t.bigint "client_id"
+    t.bigint "gig_id"
+    t.string "client_name", null: false
+    t.string "client_email", null: false
+    t.string "client_phone", null: false
+    t.string "event_type"
+    t.date "event_date"
+    t.string "event_location"
+    t.time "start_time"
+    t.time "end_time"
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0"
+    t.string "currency", default: "USD"
+    t.decimal "advance_amount", precision: 12, scale: 2, default: "0.0"
+    t.text "details"
+    t.string "status", default: "pending", null: false
+    t.string "public_token", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["client_id"], name: "index_client_quotes_on_client_id"
+    t.index ["company_id"], name: "index_client_quotes_on_company_id"
+    t.index ["gig_id"], name: "index_client_quotes_on_gig_id"
+    t.index ["public_token"], name: "index_client_quotes_on_public_token", unique: true
+    t.index ["status"], name: "index_client_quotes_on_status"
   end
 
   create_table "clients", force: :cascade do |t|
@@ -518,6 +545,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_202504) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "app_notifications", "companies"
   add_foreign_key "app_notifications", "users", column: "sender_id"
+  add_foreign_key "client_quotes", "clients"
+  add_foreign_key "client_quotes", "companies"
+  add_foreign_key "client_quotes", "gigs"
   add_foreign_key "clients", "companies"
   add_foreign_key "company_media_items", "companies"
   add_foreign_key "employee_payments", "companies"

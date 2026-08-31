@@ -2,6 +2,7 @@ class Client < ApplicationRecord
   include TenantScoped
 
   has_many :gigs, dependent: :destroy
+  has_many :client_quotes, dependent: :nullify
   
   # Permite editar los datos del show desde el formulario del cliente
   accepts_nested_attributes_for :gigs

@@ -16,6 +16,7 @@ class Company < ApplicationRecord
   has_many :gig_reviews, through: :gigs
   has_many :gig_upsell_requests, dependent: :destroy
   has_many :company_media_items, dependent: :destroy
+  has_many :client_quotes, dependent: :destroy
 
   has_one_attached :landing_logo
   has_one_attached :landing_hero_video

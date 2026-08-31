@@ -354,6 +354,10 @@
                 <span class="icon">📄</span> <span>Presupuestos Base</span>
               <% end %>
 
+              <%= link_to client_quotes_path, class: "sidebar-link #{'active' if controller_name == 'client_quotes'}" do %>
+                <span class="icon">📋</span> <span>Presupuestos Clientes</span>
+              <% end %>
+
               <%= link_to standard_upsells_path, class: "sidebar-link #{'active' if controller_name == 'standard_upsells'}" do %>
                 <span class="icon">🚀</span> <span>Adicionales (Upsells)</span>
               <% end %>

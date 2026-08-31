@@ -1,0 +1,61 @@
+<div style="max-width: 760px; margin: 0 auto; padding-bottom: 60px;">
+  
+  <div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
+    <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0;">
+      📋 Crear Enlace de Presupuesto para Cliente
+    </h1>
+    <p style="color: #64748b; font-size: 0.92rem; margin: 0 0 24px 0;">
+      Puedes pre-llenar algunos datos del cliente o dejar los campos listos para que él complete la información en su formulario.
+    </p>
+
+    <%= form_with(model: @client_quote, local: true, style: "display: grid; grid-template-columns: 1fr; gap: 18px;") do |f| %>
+      
+      <div style="background: #f8fafc; padding: 18px; border-radius: 14px; border: 1px solid #e2e8f0;">
+        <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Datos Básicos del Cliente</h3>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;">
+          <div>
+            <%= f.label :client_name, "Nombre del Cliente *", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+            <%= f.text_field :client_name, required: true, placeholder: "Ej. María Fernández", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;" %>
+          </div>
+
+          <div>
+            <%= f.label :client_email, "Correo Electrónico *", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+            <%= f.email_field :client_email, required: true, placeholder: "ejemplo@correo.com", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;" %>
+          </div>
+
+          <div>
+            <%= f.label :client_phone, "Teléfono / WhatsApp *", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+            <%= f.text_field :client_phone, required: true, placeholder: "Ej. 04141234567", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box;" %>
+          </div>
+        </div>
+      </div>
+
+      <div style="background: #f8fafc; padding: 18px; border-radius: 14px; border: 1px solid #e2e8f0;">
+        <h3 style="font-size: 1rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">Estimación o Presupuesto Inicial</h3>
+        <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 12px;">
+          <div>
+            <%= f.label :amount, "Monto Acordado o Estimado", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+            <%= f.number_field :amount, step: "0.01", placeholder: "0.00", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: 700; box-sizing: border-box;" %>
+          </div>
+
+          <div>
+            <%= f.label :currency, "Moneda", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+            <%= f.select :currency, [["USD ($)", "USD"], ["BS (Bs)", "BS"]], {}, { style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; font-weight: 700; background: white;" } %>
+          </div>
+        </div>
+
+        <div>
+          <%= f.label :details, "Detalles / Paquete Propuesto", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+          <%= f.text_area :details, rows: 3, placeholder: "Ej. Paquete Banda Completa (2 horas de show + sonido profesional)", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88rem; box-sizing: border-box; resize: vertical;" %>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 12px; margin-top: 10px;">
+        <%= f.submit "Generar Presupuesto", style: "flex: 1; background: #2563eb; color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);" %>
+        <%= link_to "Cancelar", client_quotes_path, style: "padding: 12px 20px; border: 1px solid #cbd5e1; border-radius: 10px; color: #475569; font-weight: 700; text-decoration: none; font-size: 0.9rem;" %>
+      </div>
+
+    <% end %>
+  </div>
+
+</div>

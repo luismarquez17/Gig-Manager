@@ -252,14 +252,72 @@ class GigsController < ApplicationController
 
   def new
     @gig = Gig.new
+    @available_quotes = current_company.client_quotes.convertible.recent_first
+
+    if params[:quote_id].present?
+      @quote = current_company.client_quotes.find_by(id: params[:quote_id])
+      if @quote.present?
+        client = current_company.clients.find_by(email: @quote.client_email) ||
+                 current_company.clients.find_by(phone: @quote.client_phone) ||
+                 current_company.clients.create(name: @quote.client_name, email: @quote.client_email, phone: @quote.client_phone, company: current_company) rescue nil
+
+        @gig.client = client
+        @gig.client_email = @quote.client_email
+        @gig.amount = @quote.amount
+        @gig.currency = @quote.currency
+        @gig.location = @quote.event_location
+        @gig.date = @quote.event_date || Date.today
+        @gig.start_time = @quote.start_time
+        @gig.end_time = @quote.end_time
+        @gig.details = @quote.details
+        @selected_quote_id = @quote.id
+        @default_advance_amount = @quote.advance_amount
+      end
+    end
   end
 
   def create
     @gig = Gig.new(gig_params)
+    @gig.company = current_company if @gig.company.nil?
+
+    if @gig.client_id.blank? && @gig.client_email.present?
+      existing_client = current_company.clients.find_by(email: @gig.client_email)
+      if existing_client.nil?
+        existing_client = current_company.clients.create(
+          name: params[:client_name].presence || @gig.client_email.split('@').first.capitalize,
+          email: @gig.client_email,
+          phone: params[:client_phone].presence || "0000000000",
+          company: current_company
+        ) rescue nil
+      end
+      @gig.client = existing_client if existing_client
+    end
+
     if @gig.save
-      @gig.client.update_priority! 
-      redirect_to gigs_path, notice: "Toque registrado y prioridad actualizada."
+      @gig.client&.update_priority!
+
+      advance_val = params[:advance_amount].to_s.tr(',', '.').to_f
+      if advance_val > 0
+        @gig.gig_payments.create!(
+          amount: advance_val,
+          currency: @gig.currency.presence || "USD",
+          date_paid: params[:advance_date_paid].presence || Date.today,
+          is_advance: true,
+          payer_name: @gig.client&.name.presence || params[:client_name].presence || "Cliente",
+          notes: "Adelanto Inicial (Anticipo) registrado al crear el evento."
+        ) rescue nil
+      end
+
+      if params[:client_quote_id].present?
+        quote = current_company.client_quotes.find_by(id: params[:client_quote_id])
+        if quote
+          quote.update(status: 'converted', gig_id: @gig.id, client_id: @gig.client_id)
+        end
+      end
+
+      redirect_to gigs_path, notice: "Toque registrado con éxito."
     else
+      @available_quotes = current_company.client_quotes.convertible.recent_first
       render :new, status: :unprocessable_entity
     end
   end
