@@ -307,6 +307,14 @@
 
               <%= link_to gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name != 'my'}" do %>
                 <span class="icon">🎸</span> <span>Gigs / Eventos</span>
+                <% 
+                  pending_upsells_count = current_company&.gig_upsell_requests&.pending&.count rescue 0 
+                %>
+                <% if pending_upsells_count.to_i > 0 %>
+                  <span style="background: #3b82f6; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                    <%= pending_upsells_count %>
+                  </span>
+                <% end %>
               <% end %>
 
               <%= link_to gig_payments_path, class: "sidebar-link #{'active' if controller_name == 'gig_payments'}" do %>
@@ -467,6 +475,22 @@
                   <span><strong>Notificación:</strong> Tienes <strong><%= pending_worker_reports %> pago(s) reportado(s)</strong> por trabajadores esperando tu confirmación.</span>
                 </div>
                 <%= link_to 'Revisar y Confirmar ➔', employee_payments_path, style: 'background: #f59e0b; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25); white-space: nowrap;' %>
+              </div>
+            <% end %>
+
+            <% pending_upsell_requests_count = current_company&.gig_upsell_requests&.pending&.count rescue 0 %>
+            <% if pending_upsell_requests_count.to_i > 0 && !(controller_name == 'gigs' && action_name == 'show') %>
+              <% first_pending_gig = current_company&.gig_upsell_requests&.pending&.first&.gig %>
+              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);">
+                <div style="display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 0.92rem; font-weight: 600;">
+                  <span style="font-size: 1.3rem;">🚀</span>
+                  <span><strong>Aviso de Clientes:</strong> Tienes <strong><%= pending_upsell_requests_count %> solicitud(es) de adicionales (upsells)</strong> de clientes esperando tu decisión.</span>
+                </div>
+                <% if first_pending_gig %>
+                  <%= link_to 'Ver y Decidir en el Evento ➔', gig_path(first_pending_gig), style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
+                <% else %>
+                  <%= link_to 'Ver Eventos ➔', gigs_path, style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
+                <% end %>
               </div>
             <% end %>
           <% end %>

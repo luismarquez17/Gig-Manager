@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_20_184000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_31_150800) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -245,6 +245,26 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_184000) do
     t.datetime "updated_at", null: false
     t.boolean "for_musician", default: false, null: false
     t.index ["gig_id"], name: "index_gig_timeline_items_on_gig_id"
+  end
+
+  create_table "gig_upsell_requests", force: :cascade do |t|
+    t.bigint "gig_id", null: false
+    t.bigint "company_id"
+    t.string "upsell_key", null: false
+    t.string "title", null: false
+    t.string "emoji"
+    t.decimal "price", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD", null: false
+    t.string "status", default: "pending", null: false
+    t.text "notes"
+    t.datetime "requested_at"
+    t.datetime "processed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_gig_upsell_requests_on_company_id"
+    t.index ["gig_id", "upsell_key"], name: "index_gig_upsell_requests_on_gig_id_and_upsell_key"
+    t.index ["gig_id"], name: "index_gig_upsell_requests_on_gig_id"
+    t.index ["status"], name: "index_gig_upsell_requests_on_status"
   end
 
   create_table "gigs", force: :cascade do |t|
@@ -484,6 +504,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_20_184000) do
   add_foreign_key "gig_payments", "gigs"
   add_foreign_key "gig_reviews", "gigs"
   add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
+  add_foreign_key "gig_upsell_requests", "companies"
+  add_foreign_key "gig_upsell_requests", "gigs"
   add_foreign_key "gigs", "clients"
   add_foreign_key "gigs", "companies"
   add_foreign_key "inventory_items", "items"

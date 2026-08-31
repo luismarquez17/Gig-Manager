@@ -64,7 +64,11 @@ Rails.application.routes.draw do
   resources :gig_payments, only: [:index, :edit, :update, :destroy]
   
   namespace :client do
-    resources :gigs, only: [:index, :show]
+    resources :gigs, only: [:index, :show] do
+      member do
+        post :request_upsell
+      end
+    end
   end
 
   # Portal Público de Clientes (Acceso mediante token seguro de WhatsApp)
@@ -72,6 +76,14 @@ Rails.application.routes.draw do
   get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
   post '/portal/:token/submit_review', to: 'portals#submit_review', as: 'submit_public_portal_review'
+  post '/portal/:token/request_upsell', to: 'portals#request_upsell', as: 'request_public_portal_upsell'
+
+  resources :gig_upsell_requests, only: [] do
+    member do
+      post :approve
+      post :reject
+    end
+  end
 
   # Micrositio Público y Cotizador Interactivo de la Agrupación
   get '/b/:slug', to: 'band_landing#show', as: 'band_landing'

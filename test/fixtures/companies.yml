@@ -5,3 +5,4 @@ one:
   currency: "USD"
   status: 0
   invitation_token: "token123456"
+  subscription_status: "active"

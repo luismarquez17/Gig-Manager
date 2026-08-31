@@ -11,6 +11,8 @@ class Gig < ApplicationRecord
   has_many :fund_allocations, dependent: :destroy
   has_many :gig_timeline_items, dependent: :destroy
   has_many :gig_reviews, dependent: :destroy
+  has_many :gig_upsell_requests, dependent: :destroy
+  has_many :pending_upsell_requests, -> { where(status: 'pending') }, class_name: 'GigUpsellRequest'
   
   validates :amount, presence: true
   validates :client_email, presence: true, if: -> { client_id.blank? }
@@ -161,6 +163,9 @@ class Gig < ApplicationRecord
     standard_catalog = StandardUpsell.all_with_defaults.select(&:active)
     custom_map = custom_upsells || {}
 
+    # Obtenemos las solicitudes de adicionales de este evento para saber el estado
+    requests_by_key = gig_upsell_requests.order(created_at: :desc).group_by(&:upsell_key)
+
     standard_catalog.each do |std|
       key_str = std.key.to_s
       custom_data = custom_map[key_str] || custom_map[std.id.to_s] || {}
@@ -183,6 +188,9 @@ class Gig < ApplicationRecord
       currency = custom_data['currency'].presence || std.currency || 'USD'
       description = custom_data['description'].presence || std.description || ''
 
+      latest_request = requests_by_key[key_str]&.first
+      request_status = latest_request&.status
+
       whatsapp_message = "Hola! Me gustaría añadir la opción #{title.downcase} por $#{price.to_i} #{currency} adicionales a mi evento del día #{date&.strftime('%d/%m/%Y')}."
 
       upsells << {
@@ -193,7 +201,9 @@ class Gig < ApplicationRecord
         price: price,
         currency: currency,
         description: description,
-        whatsapp_message: whatsapp_message
+        whatsapp_message: whatsapp_message,
+        request_status: request_status,
+        request_id: latest_request&.id
       }
     end
 

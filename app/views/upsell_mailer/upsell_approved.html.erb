@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 0; background: #f0fdf4; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .wrapper { max-width: 580px; margin: 32px auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #065f46 0%, #059669 100%); padding: 36px 36px 28px; text-align: center; }
+    .header-emoji { font-size: 3.5em; line-height: 1; margin-bottom: 12px; }
+    .header h1 { margin: 0; color: white; font-size: 1.5em; font-weight: 800; }
+    .header p { margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.95em; }
+    .body { padding: 32px 36px; }
+    .approve-banner { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 18px 22px; text-align: center; margin-bottom: 24px; }
+    .approve-banner .big-check { font-size: 2.8em; line-height: 1; margin-bottom: 8px; }
+    .approve-banner h2 { margin: 0; color: #166534; font-size: 1.2em; font-weight: 800; }
+    .approve-banner p { margin: 6px 0 0 0; color: #16a34a; font-size: 0.9em; }
+    .item-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; gap: 14px; margin: 18px 0; }
+    .item-emoji { font-size: 2.2em; line-height: 1; }
+    .item-title { font-size: 1.1em; font-weight: 800; color: #0f172a; margin: 0 0 4px 0; }
+    .item-price { font-size: 1.25em; font-weight: 900; color: #059669; }
+    .item-currency { font-size: 0.7em; color: #64748b; }
+    .cta-block { text-align: center; margin: 28px 0 8px; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 1em; box-shadow: 0 4px 12px rgba(109,40,217,0.3); }
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+    .footer { background: #f8fafc; padding: 20px 36px; text-align: center; font-size: 0.78em; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+    p { color: #334155; line-height: 1.6; font-size: 0.95em; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="header-emoji"><%= @request.emoji.presence || "✅" %></div>
+      <h1>¡Tu adicional fue confirmado!</h1>
+      <p><%= @company&.name || "El equipo organizador" %></p>
+    </div>
+    <div class="body">
+      <div class="approve-banner">
+        <div class="big-check">🎉</div>
+        <h2>¡Buenas noticias!</h2>
+        <p>El equipo ha confirmado tu solicitud. Ya está incluido en tu evento.</p>
+      </div>
+
+      <p>
+        Hola, te confirmamos que el servicio adicional que solicitaste para tu evento del
+        <strong><%= @gig.date&.strftime("%d/%m/%Y") %></strong> ha sido <strong style="color: #059669;">aprobado y añadido</strong>.
+        Tu presupuesto acordado se ha actualizado:
+      </p>
+
+      <div class="item-box">
+        <div class="item-emoji"><%= @request.emoji.presence || "🚀" %></div>
+        <div>
+          <p class="item-title"><%= @request.title %></p>
+          <div>
+            <span class="item-price">+ $<%= sprintf("%.2f", @request.price.to_f) %></span>
+            <span class="item-currency"><%= @request.currency %></span>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider">
+
+      <div class="cta-block">
+        <a href="<%= @portal_url %>" class="btn">
+          🔗 Ver mi portal del evento
+        </a>
+      </div>
+      <p style="text-align: center; color: #94a3b8; font-size: 0.82em; margin-top: 12px;">
+        Puedes ver el estado actualizado de tu evento, pagos y cronograma en cualquier momento desde tu portal.
+      </p>
+    </div>
+    <div class="footer">
+      Gig Manager · <%= @company&.name %> · Este correo fue generado automáticamente.
+    </div>
+  </div>
+</body>
+</html>

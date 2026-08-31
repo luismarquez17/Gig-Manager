@@ -646,13 +646,29 @@
                 </div>
               <% end %>
             </div>
-            <div style="margin-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <div id="p-upsell-action-<%= upsell[:key] %>" style="margin-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--portal-font-outfit);">
                 +<%= number_to_currency(upsell[:price], unit: upsell[:currency] == "USD" ? "$" : "Bs. ", precision: 0) %> <span style="font-size: 0.7em; color: var(--portal-text-muted); font-weight: normal;"><%= upsell[:currency] %></span>
               </span>
-              <a href="https://wa.me/584140000000?text=<%= ERB::Util.url_encode(upsell[:whatsapp_message]) %>" target="_blank" class="p-btn-portal p-btn-wa" style="text-decoration: none; padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.8em; width: auto; box-shadow: none;">
-                Añadir ＋
-              </a>
+
+              <% case upsell[:request_status] %>
+              <% when 'pending' %>
+                <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">
+                  ⏳ Solicitud Enviada
+                </span>
+              <% when 'approved' %>
+                <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">
+                  ✅ Añadido al Show
+                </span>
+              <% when 'rejected' %>
+                <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">
+                  ❌ No Disponible
+                </span>
+              <% else %>
+                <button type="button" onclick="openClientUpsellModal('<%= upsell[:key] %>', '<%= escape_javascript(upsell[:title]) %>', '<%= upsell[:emoji] %>', <%= upsell[:price] %>, '<%= upsell[:currency] %>', '<%= escape_javascript(upsell[:description]) %>')" class="p-btn-portal" style="padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; width: auto; box-shadow: none;">
+                  Añadir ＋
+                </button>
+              <% end %>
             </div>
           </div>
         <% end %>
@@ -665,6 +681,26 @@
     <p style="margin:0;">Generado por <strong style="color:var(--portal-text-main);">Gig Manager</strong>. Todos los derechos reservados.</p>
   </footer>
 
+</div>
+
+<%# --- MODAL DE CONFIRMACIÓN DE UPSELL CLIENTE --- %>
+<div id="client-upsell-confirm-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: #0f172a; border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 24px; padding: 30px; max-width: 440px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); animation: p-scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; color: white; box-sizing: border-box;">
+    <div id="c-modal-upsell-emoji" style="font-size: 3.5em; margin-bottom: 8px; line-height: 1;">🚀</div>
+    <h3 id="c-modal-upsell-title" style="font-family: var(--portal-font-outfit); font-size: 1.4em; font-weight: 800; margin: 0 0 10px 0; color: #f8fafc;">Añadir Adicional</h3>
+    <div id="c-modal-upsell-price" style="font-family: var(--portal-font-outfit); font-size: 1.6em; font-weight: 800; color: #34d399; margin-bottom: 12px;">+ $0 USD</div>
+    <p id="c-modal-upsell-desc" style="color: #94a3b8; font-size: 0.9em; line-height: 1.5; margin: 0 0 24px 0;">
+      ¿Deseas solicitar este servicio adicional para tu evento? El equipo organizador recibirá tu aviso y confirmará la disponibilidad.
+    </p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+      <button type="button" onclick="closeClientUpsellModal()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95em; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+        Cancelar
+      </button>
+      <button type="button" id="btn-client-confirm-upsell" onclick="confirmClientUpsellRequest()" class="p-btn-portal" style="padding: 12px; margin: 0; width: 100%;">
+        ✅ Sí, solicitar
+      </button>
+    </div>
+  </div>
 </div>
 
 <%# === JAVASCRIPT === %>
@@ -776,6 +812,94 @@
     .catch(() => {
       alert('Error de red. Verifica tu conexión e intenta de nuevo.');
       if (btn) { btn.disabled = false; btn.innerHTML = '✍️ Aceptar Términos y Firmar Contrato'; }
+    });
+  }
+
+  // 3. Modal y Solicitud de Adicionales (Upsells) dentro de la App
+  let activeClientUpsell = null;
+
+  function openClientUpsellModal(key, title, emoji, price, currency, description) {
+    activeClientUpsell = { key: key, title: title, emoji: emoji, price: price, currency: currency, description: description };
+    document.getElementById('c-modal-upsell-emoji').textContent = emoji || '🚀';
+    document.getElementById('c-modal-upsell-title').textContent = title;
+
+    const formattedPrice = Number(price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const symbol = currency === 'USD' ? '$' : 'Bs. ';
+    document.getElementById('c-modal-upsell-price').textContent = `+ ${symbol}${formattedPrice} ${currency}`;
+
+    const descEl = document.getElementById('c-modal-upsell-desc');
+    descEl.textContent = description || "¿Deseas solicitar este servicio adicional para tu evento? El equipo organizador recibirá tu aviso y confirmará la disponibilidad.";
+
+    const btn = document.getElementById('btn-client-confirm-upsell');
+    btn.disabled = false;
+    btn.textContent = "✅ Sí, solicitar adicional";
+
+    const modal = document.getElementById('client-upsell-confirm-modal');
+    modal.style.display = 'flex';
+  }
+
+  function closeClientUpsellModal() {
+    const modal = document.getElementById('client-upsell-confirm-modal');
+    if (modal) modal.style.display = 'none';
+    activeClientUpsell = null;
+  }
+
+  function confirmClientUpsellRequest() {
+    if (!activeClientUpsell) return;
+
+    const btn = document.getElementById('btn-client-confirm-upsell');
+    btn.disabled = true;
+    btn.textContent = "Enviando solicitud...";
+
+    const gigId = '<%= @gig.id %>';
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+    fetch(`/client/gigs/${gigId}/request_upsell`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrfToken,
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({
+        upsell_key: activeClientUpsell.key,
+        title: activeClientUpsell.title,
+        emoji: activeClientUpsell.emoji,
+        price: activeClientUpsell.price,
+        currency: activeClientUpsell.currency
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const savedUpsell = Object.assign({}, activeClientUpsell);
+        closeClientUpsellModal();
+
+        const actionContainer = document.getElementById(`p-upsell-action-${data.request?.key || savedUpsell.key}`);
+        if (actionContainer) {
+          const priceFormatted = Number(savedUpsell.price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+          const symbol = savedUpsell.currency === 'USD' ? '$' : 'Bs. ';
+          actionContainer.innerHTML = `
+            <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--portal-font-outfit);">
+              +${symbol}${priceFormatted} <span style="font-size: 0.7em; color: var(--portal-text-muted); font-weight: normal;">${savedUpsell.currency}</span>
+            </span>
+            <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em; animation: p-scaleIn 0.35s ease;">
+              ⏳ Solicitud Enviada
+            </span>
+          `;
+        }
+
+        alert(data.message || "¡Solicitud enviada con éxito! El equipo organizador ha sido notificado.");
+      } else {
+        alert("Error al solicitar adicional: " + (data.error || "Ocurrió un error."));
+        btn.disabled = false;
+        btn.textContent = "✅ Sí, solicitar adicional";
+      }
+    })
+    .catch(() => {
+      alert("Error de red al enviar la solicitud.");
+      btn.disabled = false;
+      btn.textContent = "✅ Sí, solicitar adicional";
     });
   }
 </script>

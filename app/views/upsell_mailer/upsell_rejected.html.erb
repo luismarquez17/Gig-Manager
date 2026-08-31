@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { margin: 0; padding: 0; background: #fef2f2; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    .wrapper { max-width: 580px; margin: 32px auto; background: #ffffff; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #7f1d1d 0%, #dc2626 100%); padding: 36px 36px 28px; text-align: center; }
+    .header-emoji { font-size: 3.5em; line-height: 1; margin-bottom: 12px; }
+    .header h1 { margin: 0; color: white; font-size: 1.5em; font-weight: 800; }
+    .header p { margin: 8px 0 0 0; color: rgba(255,255,255,0.8); font-size: 0.95em; }
+    .body { padding: 32px 36px; }
+    .info-banner { background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 14px; padding: 18px 22px; text-align: center; margin-bottom: 24px; }
+    .info-banner h2 { margin: 0 0 6px 0; color: #991b1b; font-size: 1.15em; font-weight: 800; }
+    .info-banner p { margin: 0; color: #dc2626; font-size: 0.9em; line-height: 1.5; }
+    .item-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px 22px; display: flex; align-items: center; gap: 14px; margin: 18px 0; opacity: 0.7; }
+    .item-emoji { font-size: 2.2em; line-height: 1; filter: grayscale(0.6); }
+    .item-title { font-size: 1.1em; font-weight: 700; color: #475569; margin: 0 0 4px 0; }
+    .item-strike { text-decoration: line-through; color: #94a3b8; }
+    .cta-block { text-align: center; margin: 28px 0 8px; }
+    .btn { display: inline-block; background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 12px; font-weight: 800; font-size: 1em; box-shadow: 0 4px 12px rgba(109,40,217,0.3); }
+    .divider { border: none; border-top: 1px solid #e2e8f0; margin: 24px 0; }
+    .footer { background: #f8fafc; padding: 20px 36px; text-align: center; font-size: 0.78em; color: #94a3b8; border-top: 1px solid #e2e8f0; }
+    p { color: #334155; line-height: 1.6; font-size: 0.95em; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <div class="header-emoji">😔</div>
+      <h1>Servicio no disponible</h1>
+      <p><%= @company&.name || "El equipo organizador" %></p>
+    </div>
+    <div class="body">
+      <div class="info-banner">
+        <h2>❌ No tenemos disponibilidad en esta fecha</h2>
+        <p>Lamentamos no poder añadir el servicio que solicitaste. El equipo ya tiene los equipos comprometidos para esta fecha.</p>
+      </div>
+
+      <p>
+        Hola, te informamos que el servicio adicional que solicitaste para tu evento del
+        <strong><%= @gig.date&.strftime("%d/%m/%Y") %></strong> <strong style="color: #dc2626;">no está disponible</strong> para esa fecha.
+        Tu presupuesto acordado no ha sido modificado.
+      </p>
+
+      <div class="item-box">
+        <div class="item-emoji"><%= @request.emoji.presence || "🚀" %></div>
+        <div>
+          <p class="item-title item-strike"><%= @request.title %></p>
+          <p style="margin: 0; font-size: 0.85em; color: #94a3b8;">No disponible para esta fecha</p>
+        </div>
+      </div>
+
+      <p style="font-size: 0.88em; color: #64748b;">
+        Si tienes alguna pregunta o quieres saber sobre otras opciones disponibles, no dudes en contactarnos directamente.
+      </p>
+
+      <hr class="divider">
+
+      <div class="cta-block">
+        <a href="<%= @portal_url %>" class="btn">
+          🔗 Ver mi portal del evento
+        </a>
+      </div>
+      <p style="text-align: center; color: #94a3b8; font-size: 0.82em; margin-top: 12px;">
+        Tu evento sigue organizado como se acordó. Puedes consultar tu portal en cualquier momento.
+      </p>
+    </div>
+    <div class="footer">
+      Gig Manager · <%= @company&.name %> · Este correo fue generado automáticamente.
+    </div>
+  </div>
+</body>
+</html>
