@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
   <head>
-    <title><%= @gig.client&.name || "Mi Evento" %> | Portal del Cliente</title>
+    <title><%= @gig&.client&.name || @quote&.client_name || "Presupuesto" %> | Portal del Cliente</title>
     <meta name="viewport" content="width=device-width,initial-scale=1">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
