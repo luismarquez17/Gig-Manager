@@ -1,0 +1,80 @@
+<%# encoding: utf-8 %>
+<% 
+  user = local_assigns[:current_user] rescue nil
+  user ||= current_user rescue nil
+  is_read = user ? notification.read_by?(user) : false
+  title_str = notification.title.to_s.force_encoding('UTF-8')
+  message_str = notification.message.to_s.force_encoding('UTF-8')
+
+  action_label = "Ver detalles ➔"
+  if notification.action_url.to_s.include?('/gigs')
+    action_label = "Ver evento ➔"
+  elsif notification.action_url.to_s.include?('/my_payments') || notification.action_url.to_s.include?('/employee_payments')
+    action_label = "Ver pago ➔"
+  end
+%>
+
+<div id="notification_<%= notification.id %>" class="notification-card" style="background: <%= is_read ? '#ffffff' : '#f8fafc' %>; border: 1px solid <%= is_read ? '#e2e8f0' : '#bfdbfe' %>; border-left: 4px solid <%= is_read ? '#cbd5e1' : '#2563eb' %>; border-radius: 16px; padding: 20px 24px; margin-bottom: 14px; position: relative; transition: all 0.2s ease; box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);">
+  <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap;">
+    
+    <div style="display: flex; gap: 16px; flex: 1; min-width: 240px;">
+      
+      <div style="font-size: 1.3rem; background: <%= is_read ? '#f1f5f9' : '#eff6ff' %>; color: <%= is_read ? '#64748b' : '#2563eb' %>; border: 1px solid <%= is_read ? '#e2e8f0' : '#dbeafe' %>; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+        <%= notification.type_icon %>
+      </div>
+
+      <div style="flex: 1;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
+          <span style="font-size: 0.73rem; font-weight: 700; background: #f1f5f9; color: #334155; padding: 3px 10px; border-radius: 99px; border: 1px solid #e2e8f0;">
+            <%= notification.target_area_label %>
+          </span>
+          <span style="font-size: 0.73rem; font-weight: 600; background: #f8fafc; color: #64748b; padding: 3px 10px; border-radius: 99px; border: 1px solid #e2e8f0;">
+            <%= notification.type_label %>
+          </span>
+          <% unless is_read %>
+            <span style="font-size: 0.71rem; font-weight: 800; background: #2563eb; color: #ffffff; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.03em;">
+              Sin leer
+            </span>
+          <% end %>
+        </div>
+
+        <h4 style="margin: 4px 0 6px 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.01em;">
+          <%= title_str %>
+        </h4>
+
+        <div style="font-size: 0.9rem; color: #334155; line-height: 1.55; white-space: pre-wrap; font-weight: 400;">
+          <%= message_str %>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: 0.78rem; color: #94a3b8; font-weight: 500;">
+          <span>Hace <%= time_ago_in_words(notification.created_at) %></span>
+          <% if notification.sender %>
+            <span>• <%= notification.sender.display_name %></span>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="btn-action-container" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; align-self: center;">
+      <% if notification.action_url.present? %>
+        <%= link_to notification.action_url, class: "btn-action", style: "background: #0f172a; color: #ffffff; padding: 8px 16px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12); transition: all 0.15s;" do %>
+          <%= action_label %>
+        <% end %>
+      <% end %>
+
+      <% if user && !is_read %>
+        <%= button_to mark_as_read_notification_path(notification), method: :post, style: "background: #ffffff; border: 1px solid #cbd5e1; color: #334155; padding: 7px 12px; border-radius: 10px; font-size: 0.82rem; font-weight: 600; cursor: pointer; transition: all 0.15s;", title: "Marcar como leída" do %>
+          ✓ Leída
+        <% end %>
+      <% end %>
+
+      <% if user && (user.leader? || user.superadmin?) %>
+        <%= button_to notification_path(notification), method: :delete, data: { turbo_confirm: "¿Eliminar esta notificación?" }, style: "background: transparent; border: none; color: #94a3b8; padding: 6px 8px; border-radius: 8px; font-size: 0.9rem; cursor: pointer; transition: all 0.15s;", title: "Eliminar" do %>
+          ✕
+        <% end %>
+      <% end %>
+    </div>
+
+  </div>
+</div>

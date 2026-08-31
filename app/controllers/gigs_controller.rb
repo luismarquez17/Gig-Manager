@@ -127,11 +127,39 @@ class GigsController < ApplicationController
     user = User.find_by(id: params[:staff_id])
     agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
 
-    if user && (user.staff? || user.leader? || user.musician?)
+      if user && (user.staff? || user.leader? || user.musician?)
       assignment = @gig.staff_assignments.find_or_initialize_by(user_id: user.id)
       is_new = assignment.new_record?
       assignment.agreed_amount = agreed_amount
       assignment.save!
+
+      if is_new
+        target_area = user.musician? ? 'musicians' : 'staffs'
+        date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
+        client_name = @gig.client&.name || "Cliente"
+
+        # Notificar al músico / staff asignado
+        AppNotification.create(
+          company: @gig.company,
+          sender: current_user,
+          target_area: target_area,
+          notification_type: 'gig_alert',
+          title: "🎸 Has sido asignado a un evento",
+          message: "Fuiste asignado al show de '#{client_name}' para la fecha #{date_formatted} en #{@gig.location.presence || 'Ubicación por confirmar'}.",
+          action_url: "/my_gigs"
+        ) rescue nil
+
+        # Notificar al área de líderes
+        AppNotification.create(
+          company: @gig.company,
+          sender: current_user,
+          target_area: 'leaders',
+          notification_type: 'gig_alert',
+          title: "👤 Nueva Asignación de Personal",
+          message: "#{user.display_name} ha sido asignado(a) al show '#{client_name}' (#{date_formatted}).",
+          action_url: "/gigs/#{@gig.id}"
+        ) rescue nil
+      end
 
       notice_msg = is_new ? "Trabajador #{user.display_name} asignado con éxito con pago acordado de $#{view_context.number_with_precision(agreed_amount, precision: 2)}." : "Pago acordado para #{user.display_name} actualizado."
       redirect_to gig_path(@gig), notice: notice_msg

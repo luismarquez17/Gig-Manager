@@ -34,6 +34,15 @@ class PortalsController < ApplicationController
       contract_signed_ip: request.remote_ip,
       contract_signed_name: params[:signature_name]
     )
+      AppNotification.create(
+        company: @gig.company,
+        target_area: 'leaders',
+        notification_type: 'gig_alert',
+        title: "✍️ Contrato Firmado Digitalmente",
+        message: "El cliente '#{@gig.contract_signed_name}' ha firmado el contrato del evento para el #{@gig.date ? @gig.date.strftime('%d/%m/%Y') : 'show'}.",
+        action_url: "/gigs/#{@gig.id}"
+      ) rescue nil
+
       render json: { 
         success: true, 
         signed_at: @gig.contract_signed_at.strftime("%d/%m/%Y %I:%M %p"),
@@ -59,6 +68,14 @@ class PortalsController < ApplicationController
     end
 
     if review.save
+      AppNotification.create(
+        company: @gig.company,
+        target_area: 'all_areas',
+        notification_type: 'general',
+        title: "⭐ Nueva Reseña de Cliente",
+        message: "#{review.client_name} ha dejado una calificación de #{review.rating}/5 estrellas para el show del #{@gig.date ? @gig.date.strftime('%d/%m/%Y') : 'evento'}.",
+        action_url: "/gigs/#{@gig.id}"
+      ) rescue nil
       render json: {
         success: true,
         message: "¡Gracias por tu reseña y compartir tu experiencia!",
@@ -115,6 +132,15 @@ class PortalsController < ApplicationController
     if req.persisted?
       # Notificar al líder por email (en background para no retrasar la respuesta)
       UpsellMailer.new_upsell_request(req).deliver_later rescue nil
+
+      AppNotification.create(
+        company: @gig.company,
+        target_area: 'leaders',
+        notification_type: 'gig_alert',
+        title: "🚀 Nueva Solicitud de Adicional (Upsell)",
+        message: "El cliente '#{@gig.client&.name || @gig.contract_signed_name || 'Invitado'}' ha solicitado #{req.emoji} '#{req.title}' ($#{req.price} #{req.currency}).",
+        action_url: "/gigs/#{@gig.id}"
+      ) rescue nil
 
       render json: {
         success: true,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_31_150800) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_31_202504) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -41,6 +41,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_150800) do
     t.bigint "blob_id", null: false
     t.string "variation_digest", null: false
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
+
+  create_table "app_notifications", force: :cascade do |t|
+    t.bigint "company_id"
+    t.bigint "sender_id"
+    t.string "target_area", default: "all_areas", null: false
+    t.string "title", null: false
+    t.text "message", null: false
+    t.string "notification_type", default: "general", null: false
+    t.string "action_url"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_app_notifications_on_company_id"
+    t.index ["notification_type"], name: "index_app_notifications_on_notification_type"
+    t.index ["sender_id"], name: "index_app_notifications_on_sender_id"
+    t.index ["target_area"], name: "index_app_notifications_on_target_area"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -366,6 +382,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_150800) do
     t.index ["item_id"], name: "index_maintenance_records_on_item_id"
   end
 
+  create_table "notification_reads", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.bigint "app_notification_id", null: false
+    t.datetime "read_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["app_notification_id"], name: "index_notification_reads_on_app_notification_id"
+    t.index ["user_id", "app_notification_id"], name: "index_notification_reads_on_user_id_and_app_notification_id", unique: true
+    t.index ["user_id"], name: "index_notification_reads_on_user_id"
+  end
+
   create_table "preset_budgets", force: :cascade do |t|
     t.string "title"
     t.text "description"
@@ -489,6 +516,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_150800) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "app_notifications", "companies"
+  add_foreign_key "app_notifications", "users", column: "sender_id"
   add_foreign_key "clients", "companies"
   add_foreign_key "company_media_items", "companies"
   add_foreign_key "employee_payments", "companies"
@@ -517,6 +546,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_150800) do
   add_foreign_key "maintenance_records", "gigs"
   add_foreign_key "maintenance_records", "inventory_items"
   add_foreign_key "maintenance_records", "items"
+  add_foreign_key "notification_reads", "app_notifications"
+  add_foreign_key "notification_reads", "users"
   add_foreign_key "preset_budgets", "companies"
   add_foreign_key "shopping_items", "companies"
   add_foreign_key "songs", "companies"

@@ -298,6 +298,18 @@ class EmployeePaymentsController < ApplicationController
     end
 
     funding_info = @payment.from_external_capital? ? "(#{@payment.funding_source_label})" : "(Fondo Nómina)"
+
+    target_area = @payment.user.musician? ? 'musicians' : 'staffs'
+    AppNotification.create(
+      company: current_company,
+      sender: current_user,
+      target_area: target_area,
+      notification_type: 'payment_alert',
+      title: "Pago Aprobado",
+      message: "Tu pago de $#{@payment.amount} (#{@payment.gig ? 'Show: ' + (@payment.gig.client&.name || @payment.gig.date.to_s) : 'Pago directo'}) ha sido aprobado.",
+      action_url: "/my_payments"
+    ) rescue nil
+
     redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} a #{@payment.user.display_name} confirmado y aprobado exitosamente #{funding_info}."
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path, alert: "Error al aprobar pago: #{e.message}"
@@ -307,6 +319,17 @@ class EmployeePaymentsController < ApplicationController
     @payment.status = 'rejected'
     @payment.rejection_reason = params[:rejection_reason].presence || 'Rechazado por el líder.'
     @payment.save!
+
+    target_area = @payment.user.musician? ? 'musicians' : 'staffs'
+    AppNotification.create(
+      company: current_company,
+      sender: current_user,
+      target_area: target_area,
+      notification_type: 'urgent',
+      title: "Reporte de Pago Rechazado",
+      message: "Tu reporte de pago de $#{@payment.amount} ha sido rechazado: #{@payment.rejection_reason}",
+      action_url: "/my_payments"
+    ) rescue nil
 
     redirect_back fallback_location: employee_payments_path, alert: "❌ El reporte de pago de #{@payment.user.display_name} ha sido rechazado."
   end

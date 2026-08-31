@@ -36,6 +36,18 @@ class User < ApplicationRecord
   has_many :staff_assignments, dependent: :destroy
   has_many :assigned_gigs, through: :staff_assignments, source: :gig
   has_many :employee_payments, dependent: :nullify
+  has_many :notification_reads, dependent: :destroy
+  has_many :sent_notifications, class_name: 'AppNotification', foreign_key: 'sender_id', dependent: :nullify
+
+  def app_notifications
+    return AppNotification.none unless company_id.present?
+    AppNotification.where(company_id: company_id).for_role(role).recent_first
+  end
+
+  def unread_notifications_count
+    return 0 unless company_id.present?
+    app_notifications.unread_by(self).count
+  end
 
   after_create :associate_and_claim_gigs
 

@@ -173,4 +173,13 @@ Rails.application.routes.draw do
   # Staff & Musician: view their payments and balances
   get '/my_payments', to: 'pages#my_payments', as: 'my_payments'
   get '/help', to: 'pages#help', as: 'help'
+
+  resources :notifications, only: [:index, :create, :destroy] do
+    member do
+      post :mark_as_read
+    end
+    collection do
+      post :mark_all_as_read
+    end
+  end
 end

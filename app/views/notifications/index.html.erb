@@ -1,0 +1,208 @@
+<div class="notifications-container" style="max-width: 980px; margin: 0 auto; padding-bottom: 60px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+  
+  <%# ── ENCABEZADO MODERNO Y ACCIÓN GLOBAL ── %>
+  <div class="notifications-header" style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 24px 28px; margin-bottom: 24px; box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+        <div style="background: linear-gradient(135deg, #3b82f6, #1d4ed8); color: white; width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25); flex-shrink: 0;">
+          🔔
+        </div>
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0; letter-spacing: -0.02em;">
+          Notificaciones
+        </h1>
+      </div>
+      <p style="margin: 0; color: #64748b; font-size: 0.9rem; font-weight: 500;">
+        Centro de avisos y recordatorios para <strong style="color: #334155; font-weight: 700;"><%= current_user.role.to_s.humanize %></strong>.
+      </p>
+    </div>
+
+    <div class="mobile-full-width" style="display: flex; align-items: center; gap: 12px;">
+      <% if @unread_count > 0 %>
+        <%= button_to mark_all_as_read_notifications_path, method: :post, style: "background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.03); width: 100%;" do %>
+          <span style="color: #2563eb; font-weight: 800;">✓✓</span> Marcar todas como leídas (<%= @unread_count %>)
+        <% end %>
+      <% end %>
+    </div>
+  </div>
+
+  <%# ── PESTAÑAS DE NAVEGACIÓN SEGMENTADA (SCROLLABLE EN MÓVIL) ── %>
+  <div class="nav-tabs-scroll" style="background: #ffffff; padding: 6px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04); display: flex; align-items: center; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
+    
+    <% 
+      is_all_active = params[:target_area].blank? && params[:filter] != 'unread'
+      is_unread_active = params[:filter] == 'unread'
+      is_musicians_active = params[:target_area] == 'musicians'
+      is_staffs_active = params[:target_area] == 'staffs'
+      is_leaders_active = params[:target_area] == 'leaders'
+    %>
+
+    <%= link_to notifications_path, style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_all_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+      Todas
+    <% end %>
+
+    <%= link_to notifications_path(filter: 'unread'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; #{ is_unread_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+      Sin leer
+      <% if @unread_count > 0 %>
+        <span style="background: #2563eb; color: #ffffff; border-radius: 99px; font-size: 0.72rem; padding: 2px 7px; font-weight: 800;">
+          <%= @unread_count %>
+        </span>
+      <% end %>
+    <% end %>
+
+    <%= link_to notifications_path(target_area: 'musicians'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_musicians_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+      Músicos
+    <% end %>
+
+    <%= link_to notifications_path(target_area: 'staffs'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_staffs_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+      Staffs
+    <% end %>
+
+    <%= link_to notifications_path(target_area: 'leaders'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_leaders_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+      Líderes
+    <% end %>
+  </div>
+
+  <%# ── FORMULARIO ELEGANTE DE CREACIÓN (LÍDERES Y SUPERADMIN) ── %>
+  <% if current_user.leader? || current_user.superadmin? %>
+    <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 20px; padding: 26px 32px; margin-bottom: 32px; box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05); position: relative; overflow: hidden;">
+      
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 4px; background: linear-gradient(90deg, #2563eb, #3b82f6);"></div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 20px;">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 4px 0; letter-spacing: -0.01em;">
+            Nueva Notificación
+          </h2>
+          <p style="margin: 0; color: #64748b; font-size: 0.86rem; font-weight: 500;">
+            Redacta indicaciones u avisos para el equipo de trabajo.
+          </p>
+        </div>
+        
+        <%# Botones elegantes de plantilla %>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span style="font-size: 0.8rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em;">Plantillas:</span>
+          <button type="button" onclick="useTemplate('sound_check')" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #1e293b; padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            Prueba de sonido
+          </button>
+          <button type="button" onclick="useTemplate('dress_code')" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #1e293b; padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            Vestuario
+          </button>
+          <button type="button" onclick="useTemplate('logistics')" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #1e293b; padding: 5px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: all 0.15s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+            Transporte
+          </button>
+        </div>
+      </div>
+
+      <%= form_with(model: @new_notification, url: notifications_path, local: true, id: "notification-form", style: "display: grid; grid-template-columns: 1fr; gap: 16px;") do |f| %>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+          
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;">
+              Evento Relacionado
+            </label>
+            <select id="gig-selector" onchange="selectGig(this)" style="width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; box-sizing: border-box;">
+              <option value="">-- Ninguno / General --</option>
+              <% @upcoming_gigs.each do |gig| %>
+                <option value="/gigs/<%= gig.id %>">
+                  <%= gig.date ? gig.date.strftime("%d/%m/%Y") : "Fecha TBD" %> - <%= gig.client&.name || "Evento" %>
+                </option>
+              <% end %>
+            </select>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;">
+              Dirigido a
+            </label>
+            <%= f.select :target_area, [
+              ['Toda la Agrupación', 'all_areas'],
+              ['Músicos', 'musicians'],
+              ['Staffs', 'staffs'],
+              ['Líderes', 'leaders']
+            ], {}, { id: "target-area-select", style: "width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; box-sizing: border-box;" } %>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;">
+              Tipo de Alerta
+            </label>
+            <%= f.select :notification_type, [
+              ['Recordatorio / Aviso', 'general'],
+              ['Evento / Show', 'gig_alert'],
+              ['Pago / Finanzas', 'payment_alert'],
+              ['Urgente', 'urgent']
+            ], {}, { id: "notification-type-select", style: "width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; font-weight: 600; box-sizing: border-box;" } %>
+          </div>
+
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;">
+            Título del Aviso
+          </label>
+          <%= f.text_field :title, id: "notification-title-input", placeholder: "Ej. Prueba de sonido e indicaciones para el show...", required: true, style: "width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 10px; font-size: 0.92rem; font-weight: 600; box-sizing: border-box;" %>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em;">
+            Detalle del Mensaje
+          </label>
+          <%= f.text_area :message, id: "notification-message-input", rows: 3, placeholder: "Escribe las instrucciones detalladas...", required: true, style: "width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; resize: vertical;" %>
+        </div>
+
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-top: 4px;">
+          <div style="flex: 1; min-width: 220px;">
+            <%= f.text_field :action_url, id: "notification-url-input", placeholder: "Enlace opcional (ej. /gigs/12)", style: "width: 100%; background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 10px; font-size: 0.88rem; box-sizing: border-box;" %>
+          </div>
+
+          <%= f.submit "Enviar Notificación", style: "background: linear-gradient(135deg, #0f172a, #1e293b); color: #ffffff; border: none; padding: 11px 24px; border-radius: 10px; font-weight: 800; font-size: 0.9rem; cursor: pointer; white-space: nowrap; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2); transition: all 0.2s;" %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <%# ── LISTA DINÁMICA DE NOTIFICACIONES ── %>
+  <div id="notifications_list">
+    <% if @notifications.any? %>
+      <%= render partial: "notifications/notification", collection: @notifications, as: :notification %>
+    <% else %>
+      <div style="text-align: center; padding: 56px 20px; background: #ffffff; border-radius: 20px; border: 1px dashed #cbd5e1; color: #64748b; box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.03);">
+        <div style="font-size: 2.2rem; margin-bottom: 8px;">📭</div>
+        <h3 style="font-size: 1.05rem; font-weight: 700; color: #334155; margin: 0 0 4px 0;">Sin notificaciones en esta sección</h3>
+        <p style="margin: 0; font-size: 0.88rem;">Las notificaciones y recordatorios nuevos aparecerán aquí automáticamente.</p>
+      </div>
+    <% end %>
+  </div>
+
+</div>
+
+<script>
+  function selectGig(selectElem) {
+    var urlInput = document.getElementById('notification-url-input');
+    if (urlInput && selectElem.value) {
+      urlInput.value = selectElem.value;
+    }
+  }
+
+  function useTemplate(type) {
+    var titleInput = document.getElementById('notification-title-input');
+    var msgInput = document.getElementById('notification-message-input');
+    var targetSelect = document.getElementById('target-area-select');
+    var typeSelect = document.getElementById('notification-type-select');
+
+    if (type === 'sound_check') {
+      if (titleInput) titleInput.value = "Prueba de Sonido y Horario de Llegada";
+      if (msgInput) msgInput.value = "Favor llegar a las [HORA] para montaje y prueba de sonido antes del show.";
+      if (typeSelect) typeSelect.value = "gig_alert";
+    } else if (type === 'dress_code') {
+      if (titleInput) titleInput.value = "Código de Vestuario (Dress Code)";
+      if (msgInput) msgInput.value = "Vestuario para el show: Traje formal negro / uniforme oficial.";
+      if (typeSelect) typeSelect.value = "general";
+    } else if (type === 'logistics') {
+      if (titleInput) titleInput.value = "Punto de Encuentro y Transporte";
+      if (msgInput) msgInput.value = "Salida / Punto de encuentro en [LUGAR] a las [HORA]. Favor ser puntuales.";
+      if (typeSelect) typeSelect.value = "general";
+    }
+  }
+</script>

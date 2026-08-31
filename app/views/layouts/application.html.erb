@@ -185,6 +185,61 @@
         input, select, textarea {
           font-size: 16px !important;
         }
+
+        /* Ajustes de responsividad para teléfonos móviles (estrechos) */
+        .notifications-container {
+          padding-left: 2px !important;
+          padding-right: 2px !important;
+        }
+
+        .notifications-header {
+          padding: 18px 16px !important;
+          border-radius: 14px !important;
+        }
+
+        .mobile-full-width,
+        .mobile-full-width form,
+        .mobile-full-width button {
+          width: 100% !important;
+        }
+
+        .notification-card {
+          padding: 16px 14px !important;
+          border-radius: 12px !important;
+        }
+
+        .notification-card > div {
+          flex-direction: column !important;
+          align-items: stretch !important;
+        }
+
+        .btn-action-container {
+          width: 100% !important;
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: stretch !important;
+          margin-top: 10px !important;
+        }
+
+        .btn-action-container a,
+        .btn-action-container form,
+        .btn-action-container button {
+          width: 100% !important;
+          text-align: center !important;
+          justify-content: center !important;
+          box-sizing: border-box !important;
+        }
+
+        .nav-tabs-scroll {
+          padding: 4px !important;
+          border-radius: 12px !important;
+          overflow-x: auto !important;
+          -webkit-overflow-scrolling: touch !important;
+          scrollbar-width: none !important;
+        }
+        .nav-tabs-scroll::-webkit-scrollbar {
+          display: none !important;
+        }
       }
 
       @keyframes toastProgress {
@@ -213,6 +268,11 @@
 
       <%# Backdrop para cerrar sidebar en móvil %>
       <div id="mobile-backdrop" aria-hidden="true"></div>
+    <% end %>
+
+    <% if user_signed_in? && current_company.present? %>
+      <%= turbo_stream_from current_company, "notifications_#{current_user.role}" %>
+      <%= turbo_stream_from current_company, "notifications_all_areas" %>
     <% end %>
 
     <div style="display: flex; min-height: 100vh; font-family: 'Inter', sans-serif;">
@@ -263,6 +323,13 @@
 
             <%= link_to root_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'dashboard'}" do %>
               <span class="icon">🏠</span> <span>Inicio (Dashboard)</span>
+            <% end %>
+
+            <% if current_user.leader? || current_user.staff? || current_user.musician? || current_user.superadmin? %>
+              <%= link_to notifications_path, class: "sidebar-link #{'active' if controller_name == 'notifications'}" do %>
+                <span class="icon">🔔</span> <span>Notificaciones</span>
+                <%= render "notifications/unread_badge" %>
+              <% end %>
             <% end %>
 
             <% if current_user.leader? || current_user.superadmin? %>
@@ -574,6 +641,16 @@
         toast.style.transform = 'translateX(120%)';
         toast.style.opacity = '0';
         setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+      }
+
+      function updateUnreadBadge(delta) {
+        var badge = document.getElementById('unread-notifications-badge');
+        if (!badge) return;
+        var currentCount = parseInt(badge.getAttribute('data-count') || '0', 10);
+        var newCount = Math.max(0, currentCount + delta);
+        badge.setAttribute('data-count', newCount);
+        badge.textContent = newCount;
+        badge.style.display = newCount > 0 ? 'inline-block' : 'none';
       }
 
       /* ── Prevent Turbo scroll-to-top on form actions ─────── */

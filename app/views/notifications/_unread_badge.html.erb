@@ -1,0 +1,4 @@
+<% unread_count = (local_assigns[:count] || current_user&.unread_notifications_count).to_i %>
+<span id="unread-notifications-badge" data-count="<%= unread_count %>" style="<%= unread_count > 0 ? '' : 'display: none;' %> background: #ef4444; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto; transition: all 0.2s;">
+  <%= unread_count %>
+</span>
