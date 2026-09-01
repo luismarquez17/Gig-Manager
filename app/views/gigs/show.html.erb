@@ -133,11 +133,11 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; align-items: center;">
-                  <%= button_to approve_gig_upsell_request_path(req), method: :post, style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: transform 0.15s;", onclick: "return confirm('¿Añadir \\'#{escape_javascript(req.title)}\\' (+ $#{number_with_precision(req.price, precision: 2)} #{req.currency}) a este evento?\\n\\nEl monto acordado del show se incrementará automáticamente.');" do %>
+                  <%= button_to approve_gig_upsell_request_path(req), method: :post, style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: transform 0.15s;", data: { turbo_confirm: "¿Añadir '#{req.title}' (+ $#{number_with_precision(req.price, precision: 2)} #{req.currency}) a este evento?\n\nEl monto acordado del show se incrementará automáticamente." } do %>
                     <span>✅ Añadir al Show</span>
                   <% end %>
 
-                  <%= button_to reject_gig_upsell_request_path(req), method: :post, style: "background: #f8fafc; color: #dc2626; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;", onclick: "return confirm('¿Rechazar esta solicitud de adicional (ej. por no tener disponibilidad de equipos)?\\n\\nEl presupuesto del show permanecerá sin cambios.');" do %>
+                  <%= button_to reject_gig_upsell_request_path(req), method: :post, style: "background: #f8fafc; color: #dc2626; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;", data: { turbo_confirm: "¿Rechazar esta solicitud de adicional (ej. por no tener disponibilidad de equipos)?\n\nEl presupuesto del show permanecerá sin cambios." } do %>
                     <span>❌ No añadir</span>
                   <% end %>
                 </div>
@@ -339,11 +339,11 @@
                   item_currency = c_data['currency'].presence || std.currency || @gig.currency || 'USD'
                   is_time = key_name == 'extra_time' || key_name.include?('hora')
                 %>
-                <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "display: inline-block;" do |f| %>
+                <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "display: inline-block;", data: { turbo_confirm: "¿Añadir '#{item_title}' (+ $ #{number_with_precision(item_price, precision: 2)} #{item_currency}) a este evento?#{' Se agregará 1 hora al horario final.' if is_time}" } do |f| %>
                   <%= hidden_field_tag :upsell_key, key_name %>
                   <%= hidden_field_tag :price, item_price %>
                   <%= hidden_field_tag :title, item_title %>
-                  <button type="submit" onclick="return confirm('¿Añadir \'<%= item_title %>\' (+ $ <%= number_with_precision(item_price, precision: 2) %> <%= item_currency %>) a este evento?<%= ' Se agregará 1 hora al horario final.' if is_time %>');" style="background: <%= is_time ? '#4f46e5' : '#059669' %>; color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 700; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); transition: transform 0.15s, opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                  <button type="submit" style="background: <%= is_time ? '#4f46e5' : '#059669' %>; color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 700; font-size: 0.86em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); transition: transform 0.15s, opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
                     <span><%= item_emoji %></span>
                     <span>+ <%= item_title %> (+ $ <%= number_with_precision(item_price, precision: 0) %> <%= item_currency %>)</span>
                   </button>

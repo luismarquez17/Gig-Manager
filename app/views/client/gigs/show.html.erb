@@ -665,7 +665,16 @@
                   ❌ No Disponible
                 </span>
               <% else %>
-                <button type="button" onclick="openClientUpsellModal('<%= upsell[:key] %>', '<%= escape_javascript(upsell[:title]) %>', '<%= upsell[:emoji] %>', <%= upsell[:price] %>, '<%= upsell[:currency] %>', '<%= escape_javascript(upsell[:description]) %>')" class="p-btn-portal" style="padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; width: auto; box-shadow: none;">
+                <button type="button"
+                        onclick="openClientUpsellModalFromButton(this)"
+                        data-key="<%= upsell[:key] %>"
+                        data-title="<%= upsell[:title] %>"
+                        data-emoji="<%= upsell[:emoji] %>"
+                        data-price="<%= upsell[:price] %>"
+                        data-currency="<%= upsell[:currency] %>"
+                        data-description="<%= upsell[:description] %>"
+                        class="p-btn-portal"
+                        style="padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; width: auto; box-shadow: none;">
                   Añadir ＋
                 </button>
               <% end %>
@@ -710,6 +719,7 @@
     const gigDateStr = '<%= @gig.date&.to_s %>';
     if (!gigDateStr || gigDateStr === '') return;
 
+    let interval = null;
     const targetDate = new Date(`${gigDateStr}T20:00:00`).getTime();
     const lblEl = document.getElementById('pcd-label');
 
@@ -722,21 +732,31 @@
         const eventDayEnd   = new Date(`${gigDateStr}T23:59:59`).getTime();
         const currentNow    = new Date().getTime();
 
+        const d = document.getElementById('pcd-days');
+        const h = document.getElementById('pcd-hours');
+        const m = document.getElementById('pcd-minutes');
+        const s = document.getElementById('pcd-seconds');
+
         if (currentNow >= eventDayStart && currentNow <= eventDayEnd) {
-          document.getElementById('pcd-days').textContent    = '🎉';
-          document.getElementById('pcd-hours').textContent   = '🎸';
-          document.getElementById('pcd-minutes').textContent = '🔥';
-          document.getElementById('pcd-seconds').textContent = '⚡';
-          lblEl.textContent = '¡TU EVENTO ES HOY! ¡A DISFRUTAR!';
-          lblEl.style.color = '#10b981';
+          if (d) d.textContent = '🎉';
+          if (h) h.textContent = '🎸';
+          if (m) m.textContent = '🔥';
+          if (s) s.textContent = '⚡';
+          if (lblEl) {
+            lblEl.textContent = '¡TU EVENTO ES HOY! ¡A DISFRUTAR!';
+            lblEl.style.color = '#10b981';
+          }
         } else {
-          ['pcd-days','pcd-hours','pcd-minutes','pcd-seconds'].forEach(id => {
-            document.getElementById(id).textContent = '00';
-          });
-          lblEl.textContent = '¡Evento Finalizado! Gracias por tu preferencia.';
-          lblEl.style.color = '#94a3b8';
+          if (d) d.textContent = '00';
+          if (h) h.textContent = '00';
+          if (m) m.textContent = '00';
+          if (s) s.textContent = '00';
+          if (lblEl) {
+            lblEl.textContent = '¡Evento Finalizado! Gracias por tu preferencia.';
+            lblEl.style.color = '#94a3b8';
+          }
         }
-        clearInterval(interval);
+        if (interval) clearInterval(interval);
         return;
       }
 
@@ -745,18 +765,22 @@
       const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-      document.getElementById('pcd-days').textContent    = days.toString().padStart(2, '0');
-      document.getElementById('pcd-hours').textContent   = hours.toString().padStart(2, '0');
-      document.getElementById('pcd-minutes').textContent = minutes.toString().padStart(2, '0');
-      document.getElementById('pcd-seconds').textContent = seconds.toString().padStart(2, '0');
+      const d = document.getElementById('pcd-days');
+      const h = document.getElementById('pcd-hours');
+      const m = document.getElementById('pcd-minutes');
+      const s = document.getElementById('pcd-seconds');
+      if (d) d.textContent = days.toString().padStart(2, '0');
+      if (h) h.textContent = hours.toString().padStart(2, '0');
+      if (m) m.textContent = minutes.toString().padStart(2, '0');
+      if (s) s.textContent = seconds.toString().padStart(2, '0');
     };
 
     updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
+    interval = setInterval(updateCountdown, 1000);
   })();
 
   // 2. Firma Digital
-  function pSubmitSignature() {
+  window.pSubmitSignature = function() {
     const sigInput = document.getElementById('p-signature-input');
     const name     = sigInput ? sigInput.value.trim() : '';
 
@@ -790,20 +814,22 @@
     .then(data => {
       if (data.success) {
         const section = document.getElementById('p-signature-section');
-        section.innerHTML = `
-          <div class="p-signed-badge" style="animation: p-scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <div>
-              <h4 style="margin:0 0 5px 0; font-size:1.05em; font-weight:800;">✅ Contrato Firmado Digitalmente</h4>
-              <p><strong>Firmante:</strong> ${data.name}</p>
-              <p><strong>Fecha:</strong> ${data.signed_at}</p>
-              <p><strong>IP de Registro:</strong> ${data.ip}</p>
+        if (section) {
+          section.innerHTML = `
+            <div class="p-signed-badge" style="animation: p-scaleIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+              </svg>
+              <div>
+                <h4 style="margin:0 0 5px 0; font-size:1.05em; font-weight:800;">✅ Contrato Firmado Digitalmente</h4>
+                <p><strong>Firmante:</strong> ${data.name}</p>
+                <p><strong>Fecha:</strong> ${data.signed_at}</p>
+                <p><strong>IP de Registro:</strong> ${data.ip}</p>
+              </div>
             </div>
-          </div>
-        `;
+          `;
+        }
       } else {
         alert('Error al firmar: ' + (data.error || 'Ocurrió un problema.'));
         if (btn) { btn.disabled = false; btn.innerHTML = '✍️ Aceptar Términos y Firmar Contrato'; }
@@ -813,43 +839,74 @@
       alert('Error de red. Verifica tu conexión e intenta de nuevo.');
       if (btn) { btn.disabled = false; btn.innerHTML = '✍️ Aceptar Términos y Firmar Contrato'; }
     });
-  }
+  };
 
   // 3. Modal y Solicitud de Adicionales (Upsells) dentro de la App
   let activeClientUpsell = null;
 
-  function openClientUpsellModal(key, title, emoji, price, currency, description) {
-    activeClientUpsell = { key: key, title: title, emoji: emoji, price: price, currency: currency, description: description };
-    document.getElementById('c-modal-upsell-emoji').textContent = emoji || '🚀';
-    document.getElementById('c-modal-upsell-title').textContent = title;
+  window.openClientUpsellModalFromButton = function(btn) {
+    if (!btn) return;
+    const key = btn.getAttribute('data-key') || '';
+    const title = btn.getAttribute('data-title') || '';
+    const emoji = btn.getAttribute('data-emoji') || '🚀';
+    const price = parseFloat(btn.getAttribute('data-price')) || 0;
+    const currency = btn.getAttribute('data-currency') || 'USD';
+    const description = btn.getAttribute('data-description') || '';
+    window.openClientUpsellModal(key, title, emoji, price, currency, description);
+  };
 
-    const formattedPrice = Number(price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    const symbol = currency === 'USD' ? '$' : 'Bs. ';
-    document.getElementById('c-modal-upsell-price').textContent = `+ ${symbol}${formattedPrice} ${currency}`;
+  window.openClientUpsellModal = function(key, title, emoji, price, currency, description) {
+    activeClientUpsell = {
+      key: key,
+      title: title,
+      emoji: emoji || '🚀',
+      price: parseFloat(price) || 0,
+      currency: currency || 'USD',
+      description: description || ''
+    };
+
+    const emojiEl = document.getElementById('c-modal-upsell-emoji');
+    if (emojiEl) emojiEl.textContent = activeClientUpsell.emoji;
+
+    const titleEl = document.getElementById('c-modal-upsell-title');
+    if (titleEl) titleEl.textContent = activeClientUpsell.title;
+
+    const formattedPrice = Number(activeClientUpsell.price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    const symbol = activeClientUpsell.currency === 'USD' ? '$' : 'Bs. ';
+    const priceEl = document.getElementById('c-modal-upsell-price');
+    if (priceEl) priceEl.textContent = `+ ${symbol}${formattedPrice} ${activeClientUpsell.currency}`;
 
     const descEl = document.getElementById('c-modal-upsell-desc');
-    descEl.textContent = description || "¿Deseas solicitar este servicio adicional para tu evento? El equipo organizador recibirá tu aviso y confirmará la disponibilidad.";
+    if (descEl) {
+      descEl.textContent = activeClientUpsell.description || "¿Deseas solicitar este servicio adicional para tu evento? El equipo organizador recibirá tu aviso y confirmará la disponibilidad.";
+    }
 
     const btn = document.getElementById('btn-client-confirm-upsell');
-    btn.disabled = false;
-    btn.textContent = "✅ Sí, solicitar adicional";
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "✅ Sí, solicitar adicional";
+    }
 
     const modal = document.getElementById('client-upsell-confirm-modal');
-    modal.style.display = 'flex';
-  }
+    if (modal) {
+      modal.style.display = 'flex';
+    }
+  };
 
-  function closeClientUpsellModal() {
+  window.closeClientUpsellModal = function() {
     const modal = document.getElementById('client-upsell-confirm-modal');
     if (modal) modal.style.display = 'none';
     activeClientUpsell = null;
-  }
+  };
 
-  function confirmClientUpsellRequest() {
+  window.confirmClientUpsellRequest = function() {
     if (!activeClientUpsell) return;
 
     const btn = document.getElementById('btn-client-confirm-upsell');
-    btn.disabled = true;
-    btn.textContent = "Enviando solicitud...";
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Enviando solicitud...";
+    }
 
     const gigId = '<%= @gig.id %>';
     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
@@ -869,11 +926,16 @@
         currency: activeClientUpsell.currency
       })
     })
-    .then(res => res.json())
+    .then(res => {
+      if (!res.ok && res.status !== 422) {
+        throw new Error("HTTP error " + res.status);
+      }
+      return res.json();
+    })
     .then(data => {
       if (data.success) {
         const savedUpsell = Object.assign({}, activeClientUpsell);
-        closeClientUpsellModal();
+        window.closeClientUpsellModal();
 
         const actionContainer = document.getElementById(`p-upsell-action-${data.request?.key || savedUpsell.key}`);
         if (actionContainer) {
@@ -881,7 +943,7 @@
           const symbol = savedUpsell.currency === 'USD' ? '$' : 'Bs. ';
           actionContainer.innerHTML = `
             <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--portal-font-outfit);">
-              +${symbol}${priceFormatted} <span style="font-size: 0.7em; color: var(--portal-text-muted); font-weight: normal;">${savedUpsell.currency}</span>
+              +${symbol}${priceFormatted} <span style="font-size: 0.7em; color: var(--text-muted); font-weight: normal;">${savedUpsell.currency}</span>
             </span>
             <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em; animation: p-scaleIn 0.35s ease;">
               ⏳ Solicitud Enviada
@@ -892,14 +954,36 @@
         alert(data.message || "¡Solicitud enviada con éxito! El equipo organizador ha sido notificado.");
       } else {
         alert("Error al solicitar adicional: " + (data.error || "Ocurrió un error."));
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = "✅ Sí, solicitar adicional";
+        }
+      }
+    })
+    .catch((err) => {
+      console.error("Error en upsell:", err);
+      alert("Error de red al enviar la solicitud.");
+      if (btn) {
         btn.disabled = false;
         btn.textContent = "✅ Sí, solicitar adicional";
       }
-    })
-    .catch(() => {
-      alert("Error de red al enviar la solicitud.");
-      btn.disabled = false;
-      btn.textContent = "✅ Sí, solicitar adicional";
     });
-  }
+  };
+
+  // Delegación de eventos para clicks en botones de upsell
+  document.addEventListener('click', function(e) {
+    const btn = e.target.closest('button[data-key]');
+    if (btn) {
+      e.preventDefault();
+      window.openClientUpsellModalFromButton(btn);
+    }
+  });
+
+  // Cerrar al hacer clic fuera del modal
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('client-upsell-confirm-modal');
+    if (modal && e.target === modal) {
+      window.closeClientUpsellModal();
+    }
+  });
 </script>
