@@ -139,6 +139,24 @@ class Client < ApplicationRecord
     whatsapp_url(text: lines.join("\n"))
   end
 
+  def self.find_or_create_for_gig(company:, email:, name: nil, phone: nil)
+    return nil if email.blank? || company.nil?
+
+    existing = company.clients.find_by(email: email)
+    return existing if existing.present?
+
+    client_name = name.presence || email.split('@').first.capitalize
+    client_phone = phone.presence || "0000000000"
+
+    company.clients.create(
+      name: client_name,
+      email: email,
+      phone: client_phone
+    )
+  rescue StandardError
+    nil
+  end
+
   private
 
   def set_default_priority

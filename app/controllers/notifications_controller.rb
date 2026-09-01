@@ -1,6 +1,5 @@
 class NotificationsController < ApplicationController
-  before_action :authenticate_user!
-  before_action :authorize_leader_or_superadmin!, only: [:create, :destroy]
+  before_action :require_leader!, only: [:create, :destroy]
 
   def index
     @all_notifications = current_user.app_notifications
@@ -61,9 +60,19 @@ class NotificationsController < ApplicationController
   end
 
   def mark_all_as_read
-    unread_notifications = current_user.app_notifications.unread_by(current_user)
-    unread_notifications.find_each do |n|
-      n.mark_as_read_by!(current_user)
+    unread_ids = current_user.app_notifications.unread_by(current_user).pluck(:id)
+    if unread_ids.any?
+      now = Time.current
+      records = unread_ids.map do |notif_id|
+        {
+          app_notification_id: notif_id,
+          user_id: current_user.id,
+          read_at: now,
+          created_at: now,
+          updated_at: now
+        }
+      end
+      NotificationRead.insert_all(records)
     end
 
     redirect_to notifications_path, notice: "Todas las notificaciones se han marcado como leídas."
@@ -83,11 +92,5 @@ class NotificationsController < ApplicationController
 
   def notification_params
     params.require(:app_notification).permit(:title, :message, :target_area, :notification_type, :action_url)
-  end
-
-  def authorize_leader_or_superadmin!
-    unless current_user.leader? || current_user.superadmin?
-      redirect_to notifications_path, alert: "No tienes permisos para realizar esta acción."
-    end
   end
 end

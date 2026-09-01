@@ -2,6 +2,7 @@ class GigsController < ApplicationController
   before_action :require_leader!, except: [:show, :load_in_checklist, :my]
   before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract]
   before_action :check_gig_assignment, only: [:show, :load_in_checklist]
+  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :add_upsell, :edit, :update, :destroy]
 
   def check_gig_assignment
     @gig = current_company.gigs.find_by!(id: params[:id])
@@ -93,15 +94,14 @@ class GigsController < ApplicationController
   end
 
   def load_in_checklist
-    @gig ||= Gig.find(params[:id])
+    @gig ||= current_company.gigs.find(params[:id])
     @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
     # Use a layout specifically without navbar, or render false and build full html
     render layout: false
   end
 
   def add_kit
-    @gig = Gig.find(params[:id])
-    kit = Kit.find(params[:kit_id])
+    kit = current_company.kits.find(params[:kit_id])
 
     if kit.kit_items.empty?
       redirect_to gig_path(@gig), alert: "La plantilla seleccionada está vacía."
@@ -123,11 +123,10 @@ class GigsController < ApplicationController
   end
 
   def assign_staff
-    @gig = Gig.find(params[:id])
-    user = User.find_by(id: params[:staff_id])
+    user = current_company.users.find_by(id: params[:staff_id])
     agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
 
-      if user && (user.staff? || user.leader? || user.musician?)
+    if user && (user.staff? || user.leader? || user.musician?)
       assignment = @gig.staff_assignments.find_or_initialize_by(user_id: user.id)
       is_new = assignment.new_record?
       assignment.agreed_amount = agreed_amount
@@ -169,8 +168,7 @@ class GigsController < ApplicationController
   end
 
   def remove_staff
-    @gig = Gig.find(params[:id])
-    user = User.find_by(id: params[:staff_id])
+    user = current_company.users.find_by(id: params[:staff_id])
     assignment = @gig.staff_assignments.find_by(user_id: user&.id)
 
     if assignment
@@ -182,7 +180,6 @@ class GigsController < ApplicationController
   end
 
   def update_staff_pay
-    @gig = Gig.find(params[:id])
     assignment = @gig.staff_assignments.find_by(id: params[:staff_assignment_id])
     agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
 
@@ -204,17 +201,15 @@ class GigsController < ApplicationController
   end
 
   def print_contract
-    @gig = Gig.find(params[:id])
     render layout: false
   end
 
   def add_upsell
-    @gig = Gig.find(params[:id])
     upsell_key = params[:upsell_key].to_s
 
     custom_map = @gig.custom_upsells || {}
     custom_data = custom_map[upsell_key] || {}
-    std_upsell = StandardUpsell.find_by(key: upsell_key)
+    std_upsell = current_company.standard_upsells.find_by(key: upsell_key)
 
     title = params[:title].presence || custom_data['title'].presence || std_upsell&.title || upsell_key.humanize
     
@@ -257,9 +252,12 @@ class GigsController < ApplicationController
     if params[:quote_id].present?
       @quote = current_company.client_quotes.find_by(id: params[:quote_id])
       if @quote.present?
-        client = current_company.clients.find_by(email: @quote.client_email) ||
-                 current_company.clients.find_by(phone: @quote.client_phone) ||
-                 current_company.clients.create(name: @quote.client_name, email: @quote.client_email, phone: @quote.client_phone, company: current_company) rescue nil
+        client = Client.find_or_create_for_gig(
+          company: current_company,
+          email: @quote.client_email,
+          name: @quote.client_name,
+          phone: @quote.client_phone
+        )
 
         @gig.client = client
         @gig.client_email = @quote.client_email
@@ -277,20 +275,15 @@ class GigsController < ApplicationController
   end
 
   def create
-    @gig = Gig.new(gig_params)
-    @gig.company = current_company if @gig.company.nil?
+    @gig = current_company.gigs.build(gig_params)
 
     if @gig.client_id.blank? && @gig.client_email.present?
-      existing_client = current_company.clients.find_by(email: @gig.client_email)
-      if existing_client.nil?
-        existing_client = current_company.clients.create(
-          name: params[:client_name].presence || @gig.client_email.split('@').first.capitalize,
-          email: @gig.client_email,
-          phone: params[:client_phone].presence || "0000000000",
-          company: current_company
-        ) rescue nil
-      end
-      @gig.client = existing_client if existing_client
+      @gig.client = Client.find_or_create_for_gig(
+        company: current_company,
+        email: @gig.client_email,
+        name: params[:client_name],
+        phone: params[:client_phone]
+      )
     end
 
     if @gig.save
@@ -323,11 +316,9 @@ class GigsController < ApplicationController
   end
 
   def edit
-    @gig = current_company.gigs.find(params[:id])
   end
 
   def update
-    @gig = current_company.gigs.find(params[:id])
     if @gig.update(gig_params)
       @gig.client.update_priority! if @gig.client
       redirect_to gig_path(@gig), notice: "Evento actualizado correctamente."
@@ -337,7 +328,6 @@ class GigsController < ApplicationController
   end
 
   def destroy
-    @gig = current_company.gigs.find(params[:id])
     @client = @gig.client
     
     if @gig.destroy
@@ -348,8 +338,11 @@ class GigsController < ApplicationController
     end
   end
 
-
   private
+
+  def set_gig
+    @gig = current_company.gigs.find(params[:id])
+  end
 
   def gig_params
     params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :start_time, :end_time).tap do |whitelisted|

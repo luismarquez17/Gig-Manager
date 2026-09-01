@@ -73,16 +73,6 @@ class AppNotification < ApplicationRecord
     str.dup.force_encoding('UTF-8')
   end
 
-  def target_area_badge_style
-    case target_area
-    when 'all_areas' then 'background: #e0e7ff; color: #4338ca;'
-    when 'leaders'   then 'background: #fef3c7; color: #b45309;'
-    when 'musicians' then 'background: #fce7f3; color: #be185d;'
-    when 'staffs'    then 'background: #dcfce7; color: #15803d;'
-    else 'background: #f3f4f6; color: #374151;'
-    end
-  end
-
   def type_icon
     icon = case notification_type
     when 'general'       then '📢'

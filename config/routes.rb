@@ -107,11 +107,14 @@ Rails.application.routes.draw do
       resources :fund_expenses, only: [:create, :destroy]
     end
   end
-  
-  patch '/gig_items/:id/toggle', to: 'gig_items#toggle', as: 'toggle_gig_item'
-  post '/gig_items/:id/report_damage', to: 'gig_items#report_damage', as: 'report_damage_gig_item'
-  patch '/gig_items/:id/update_quantities', to: 'gig_items#update_quantities', as: 'update_quantities_gig_item'
-  post '/gig_items/:id/report_lost', to: 'gig_items#report_lost', as: 'report_lost_gig_item'
+  resources :gig_items, only: [] do
+    member do
+      patch :toggle
+      post :report_damage
+      patch :update_quantities
+      post :report_lost
+    end
+  end
 
   resources :items do
     member do
