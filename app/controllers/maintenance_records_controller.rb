@@ -3,18 +3,18 @@ class MaintenanceRecordsController < ApplicationController
   before_action :set_maintenance_record, only: [:edit, :update]
 
   def index
-    @maintenance_records = MaintenanceRecord.includes(:item, :gig).order(created_at: :desc)
+    @maintenance_records = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id }).includes(:item, :gig).order(created_at: :desc)
     @active_records = @maintenance_records.where(status: [:pending, :in_repair])
     @resolved_records = @maintenance_records.where(status: [:fixed, :discarded])
 
-    @total_cost = MaintenanceRecord.sum(:cost)
+    @total_cost = @maintenance_records.sum(:cost)
     @pending_count = @active_records.where(status: :pending).count
     @in_repair_count = @active_records.where(status: :in_repair).count
   end
 
   def new
     @maintenance_record = MaintenanceRecord.new
-    @items = Item.order(:name)
+    @items = current_company.items.order(:name)
   end
 
   def create
@@ -171,9 +171,10 @@ class MaintenanceRecordsController < ApplicationController
   end
 
   def edit
-    # saldo disponible en repairs
-    total_alloc = FundAllocation.where(fund_type: 'repairs').sum(:amount)
-    total_spent = FundAllocation.joins(:fund_expenses).where(fund_type: 'repairs').sum('fund_expenses.amount')
+    # saldo disponible en repairs de la empresa
+    company_repairs = FundAllocation.joins(:gig).where(gigs: { company_id: current_company.id }, fund_type: 'repairs')
+    total_alloc = company_repairs.sum(:amount)
+    total_spent = company_repairs.joins(:fund_expenses).sum('fund_expenses.amount')
     @repairs_available = total_alloc.to_f - total_spent.to_f
   end
 
@@ -206,7 +207,7 @@ class MaintenanceRecordsController < ApplicationController
   private
 
   def set_maintenance_record
-    @maintenance_record = MaintenanceRecord.find(params[:id])
+    @maintenance_record = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id }).find(params[:id])
   end
 
   def maintenance_record_params

@@ -10,7 +10,6 @@ class Gig < ApplicationRecord
   has_many :employee_payments, dependent: :nullify
   has_many :fund_allocations, dependent: :destroy
   has_many :gig_timeline_items, dependent: :destroy
-  has_many :gig_reviews, dependent: :destroy
   has_many :gig_upsell_requests, dependent: :destroy
   has_many :pending_upsell_requests, -> { where(status: 'pending') }, class_name: 'GigUpsellRequest'
   has_many :client_quotes, dependent: :nullify
@@ -209,12 +208,6 @@ class Gig < ApplicationRecord
     end
 
     upsells
-  end
-
-  def average_review_rating
-    approved = gig_reviews.approved
-    return 0 if approved.empty?
-    (approved.average(:rating) || 0).to_f.round(1)
   end
 
   private

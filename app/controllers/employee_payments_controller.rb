@@ -573,7 +573,9 @@ class EmployeePaymentsController < ApplicationController
     primary_allocations = gig.present? ? gig.payroll_allocations.order(:created_at).to_a : []
     primary_ids = primary_allocations.map(&:id)
 
-    secondary_allocations = FundAllocation.where(fund_type: 'payroll')
+    company_id = gig&.company_id || payment.company_id || current_company&.id
+    secondary_allocations = FundAllocation.joins(:gig)
+                                          .where(gigs: { company_id: company_id }, fund_type: 'payroll')
                                           .where.not(id: primary_ids)
                                           .order(:created_at).to_a
 

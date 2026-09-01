@@ -15,12 +15,15 @@ class MaintenanceRecord < ApplicationRecord
   def charge_from_funds!(allow_cross_fund: false, fallback_order: %w[savings capital other])
     amount = cost.to_f
     created = []
+    company_id = item&.company_id || Current.company&.id
 
     ActiveRecord::Base.transaction do
       types = ['repairs'] + (allow_cross_fund ? fallback_order : [])
       types.each do |ft|
         break if amount <= 0
-        allocs = FundAllocation.where(fund_type: ft).order(:created_at).lock
+        scope = FundAllocation.where(fund_type: ft)
+        scope = scope.joins(:gig).where(gigs: { company_id: company_id }) if company_id.present?
+        allocs = scope.order(:created_at).lock
         allocs.each do |alloc|
           break if amount <= 0
           avail = alloc.remaining

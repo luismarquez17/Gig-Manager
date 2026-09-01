@@ -69,14 +69,14 @@ class ShoppingItemsController < ApplicationController
   end
 
   def add_to_inventory
-    # Sugerencia automática por nombre (puede estar vacía)
-    @suggested_item = Item.where("unaccent(name) ILIKE unaccent(?)", @shopping_item.name.strip).first
+    # Sugerencia automática por nombre dentro de la empresa
+    @suggested_item = current_company.items.where("unaccent(name) ILIKE unaccent(?)", @shopping_item.name.strip).first
 
     # Lista completa del inventario para que el usuario elija manualmente
-    @all_items = Item.order(:category, :name)
+    @all_items = current_company.items.order(:category, :name)
 
     # Formulario pre-llenado para el caso de crear uno nuevo
-    @item = Item.new(
+    @item = current_company.items.build(
       name:     @shopping_item.name,
       category: map_category(@shopping_item.category),
       status:   "Excelente",
@@ -87,7 +87,7 @@ class ShoppingItemsController < ApplicationController
   # Suma 1 unidad a un ítem de inventario existente
   def increment_inventory
     amount = (params[:amount].presence || 1).to_i
-    existing_item = Item.find(params[:item_id])
+    existing_item = current_company.items.find(params[:item_id])
     new_quantity = (existing_item.quantity || 0) + amount
     existing_item.update!(quantity: new_quantity)
     redirect_to shopping_items_path,

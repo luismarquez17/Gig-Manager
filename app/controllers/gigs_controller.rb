@@ -87,7 +87,7 @@ class GigsController < ApplicationController
   end
 
   def show
-    @gig ||= Gig.find(params[:id])
+    @gig = current_company.gigs.includes(:client, :gig_payments, :fund_allocations, :gig_timeline_items, :gig_upsell_requests, staff_assignments: :user).find(params[:id])
     @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
     @new_gig_item = GigItem.new
   end

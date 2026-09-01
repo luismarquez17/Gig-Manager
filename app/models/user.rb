@@ -96,12 +96,17 @@ class User < ApplicationRecord
 
   def worker_payment_items
     items = []
-    assigned_gig_ids = staff_assignments.pluck(:gig_id)
+    assignments = staff_assignments.includes(gig: :client)
+    assigned_gig_ids = assignments.map(&:gig_id)
+
+    # Pre-agregación en solo 2 queries SQL para eliminar N+1
+    paid_by_gig = employee_payments.approved.where(gig_id: assigned_gig_ids).group(:gig_id).sum(:amount)
+    pending_by_gig = employee_payments.pending_approval.where(gig_id: assigned_gig_ids).group(:gig_id).sum(:amount)
 
     # 1. Shows asignados vía StaffAssignment
-    staff_assignments.includes(gig: :client).each do |sa|
-      paid = employee_payments.approved.where(gig_id: sa.gig_id).sum(:amount).to_f
-      pending_approval = employee_payments.pending_approval.where(gig_id: sa.gig_id).sum(:amount).to_f
+    assignments.each do |sa|
+      paid = paid_by_gig[sa.gig_id].to_f
+      pending_approval = pending_by_gig[sa.gig_id].to_f
       expected = sa.agreed_amount.to_f
       items << {
         gig: sa.gig,

@@ -62,14 +62,15 @@ class StandardUpsell < ApplicationRecord
   end
 
   def self.all_with_defaults
+    cache_key = "standard_upsells_seeded_#{Current.company&.id || 'all'}"
     # Usamos caché para evitar un COUNT(*) en cada request.
     # Si el caché dice que ya existen registros, saltamos el seed.
-    has_records = Rails.cache.fetch('standard_upsells_seeded', expires_in: 1.hour) do
+    has_records = Rails.cache.fetch(cache_key, expires_in: 1.hour) do
       count > 0
     end
     unless has_records
       seed_defaults!
-      Rails.cache.write('standard_upsells_seeded', true, expires_in: 1.hour)
+      Rails.cache.write(cache_key, true, expires_in: 1.hour)
     end
     all.order(created_at: :asc)
   end

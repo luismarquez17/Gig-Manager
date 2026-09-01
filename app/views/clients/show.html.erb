@@ -12,11 +12,6 @@
           Chat WhatsApp
         <% end %>
       <% end %>
-      <% if current_company.landing_enabled? %>
-        <%= link_to band_landing_path(slug: current_company.slug), target: "_blank", title: "Ver la Landing Page pública de la empresa", style: "background: #0f172a; color: white; text-decoration: none; padding: 8px 16px; border-radius: 8px; font-size: 0.85em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(15, 23, 42, 0.15);" do %>
-          🌐 Ver Landing Pública ➔
-        <% end %>
-      <% end %>
     </div>
     <div style="background: <%= color_prioridad(@client.priority) %>; color: white; padding: 8px 20px; border-radius: 50px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       PRIORIDAD: <%= @client.priority.upcase %>

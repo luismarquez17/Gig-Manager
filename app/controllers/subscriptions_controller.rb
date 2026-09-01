@@ -12,7 +12,7 @@ class SubscriptionsController < ApplicationController
 
   def report_payment
     plan_tier = params[:plan_tier] == 'pro' ? 'pro' : 'starter'
-    amount = plan_tier == 'pro' ? 19.00 : 10.00
+    amount = plan_tier == 'pro' ? 20.00 : 10.00
 
     @payment = current_company.subscription_payments.build(
       user: current_user,
@@ -32,8 +32,8 @@ class SubscriptionsController < ApplicationController
 
   def checkout
     plan_tier = params[:plan_tier] == 'pro' ? 'pro' : 'starter'
-    price_amount = plan_tier == 'pro' ? 1900 : 1000 # en centavos: $19 USD o $10 USD
-    plan_name = plan_tier == 'pro' ? 'Gig Manager Pro (+ Landing Page)' : 'Gig Manager Base'
+    price_amount = plan_tier == 'pro' ? 2000 : 1000 # en centavos: $20 USD o $10 USD
+    plan_name = plan_tier == 'pro' ? 'Gig Manager Pro (En Ajuste por Desarrollador)' : 'Gig Manager Base'
 
     # Simulación directa en ambiente de desarrollo si aún no se han configurado llaves reales de Stripe
     if ENV['STRIPE_SECRET_KEY'].blank? && !Rails.application.credentials.dig(:stripe, :secret_key).present?
