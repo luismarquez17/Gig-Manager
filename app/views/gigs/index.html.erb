@@ -169,8 +169,17 @@
                 <% end %>
               </td>
               <td style="padding: 15px; text-align: center;">
-                <div style="display: flex; justify-content: center; gap: 15px;">
-                  
+                  <%# Botón Ficha para WhatsApp %>
+                  <button type="button" 
+                          onclick="openFlashcardModal('flashcard-modal-<%= gig.id %>')" 
+                          style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: 0.2s; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.05);" 
+                          onmouseover="this.style.backgroundColor='#e0e7ff'" 
+                          onmouseout="this.style.backgroundColor='#eef2ff'" 
+                          title="Descargar Ficha para WhatsApp">
+                    <span style="color: #4338ca; font-size: 0.9em; font-weight: bold;">Ficha</span>
+                    <span style="font-size: 1.1em;">📸</span>
+                  </button>
+
                   <%# NUEVO Botón de Ver Evento (Panel/Checklist) %>
                   <%= link_to gig_path(gig), 
                       style: "background: #f0fdf4; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: 0.2s; box-shadow: 0 2px 4px rgba(22, 101, 52, 0.05);", 
@@ -193,6 +202,8 @@
                     <span style="font-size: 1.1em;">🗑️</span>
                   <% end %>
                 </div>
+
+                <%= render 'gigs/flashcard_modal', gig: gig %>
               </td>
             </tr>
           <% end %>

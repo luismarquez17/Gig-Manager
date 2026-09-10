@@ -1,8 +1,8 @@
 class GigsController < ApplicationController
-  before_action :require_leader!, except: [:show, :load_in_checklist, :my]
-  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract]
-  before_action :check_gig_assignment, only: [:show, :load_in_checklist]
-  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :add_upsell, :edit, :update, :destroy]
+  before_action :require_leader!, except: [:show, :load_in_checklist, :my, :flashcard]
+  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract, :flashcard]
+  before_action :check_gig_assignment, only: [:show, :load_in_checklist, :flashcard]
+  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :add_upsell, :edit, :update, :destroy]
 
   def check_gig_assignment
     @gig = current_company.gigs.find_by!(id: params[:id])
@@ -201,6 +201,10 @@ class GigsController < ApplicationController
   end
 
   def print_contract
+    render layout: false
+  end
+
+  def flashcard
     render layout: false
   end
 

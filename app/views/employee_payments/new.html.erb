@@ -30,6 +30,21 @@
     <h2 style="margin: 8px 0 0 0; color: #0f172a; font-weight: 800; font-size: 1.8em;">💳 Registrar Pago a Trabajador</h2>
   </div>
 
+  <% if @payment.errors.any? %>
+    <div style="margin-bottom: 20px; padding: 14px 18px; border-radius: 12px; background: #fff1f2; color: #991b1b; border: 1px solid #fecaca;">
+      <strong>No se pudo registrar el pago:</strong>
+      <ul style="margin: 6px 0 0 16px;">
+        <% @payment.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% elsif flash[:alert].present? %>
+    <div style="margin-bottom: 20px; padding: 14px 18px; border-radius: 12px; background: #fff1f2; color: #991b1b; border: 1px solid #fecaca;">
+      <%= flash[:alert] %>
+    </div>
+  <% end %>
+
   <div class="custom-card">
     <%= form_with model: @payment, local: true do |f| %>
       <div class="form-group-custom">

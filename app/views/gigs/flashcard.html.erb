@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ficha del Show - <%= @gig.client&.name || 'Evento' %></title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 20px 10px;
+      background-color: #030712;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #f8fafc;
+    }
+  </style>
+</head>
+<body>
+
+  <div style="margin-bottom: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; justify-content: center;">
+    <a href="<%= gig_path(@gig) %>" style="background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9em; text-decoration: none;">
+      ← Volver al Panel
+    </a>
+    
+    <button type="button" id="copy-btn" onclick="copyStandaloneImage()" style="background: #334155; color: white; border: 1px solid #475569; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 0.9em; cursor: pointer;">
+      📋 Copiar Foto
+    </button>
+
+    <button type="button" id="download-btn" onclick="downloadStandaloneImage()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 22px; border-radius: 12px; font-weight: 800; font-size: 0.92em; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);">
+      📥 Descargar Foto (PNG)
+    </button>
+  </div>
+
+  <%
+    arrival_time = gig_arrival_time(@gig)
+    dress_code = gig_dress_code_hint(@gig)
+    musician_notes = clean_gig_musician_notes(@gig)
+    timeline_items = @gig.gig_timeline_items.order(position: :asc, time: :asc)
+    staff_list = @gig.staff_assignments.includes(:user)
+    company_name = @gig.company&.name.presence || "GIG MANAGER"
+    client_name = @gig.client&.name.presence || @gig.client_email.presence || "Cliente Particular"
+    formatted_date = spanish_long_date(@gig.date)
+  %>
+
+  <div id="standalone-flashcard" style="width: 100%; max-width: 440px; background: linear-gradient(165deg, #0f172a 0%, #1e1b4b 45%, #0f172a 100%); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 26px 24px; color: #ffffff; box-shadow: 0 20px 45px rgba(0,0,0,0.6); position: relative;">
+    
+    <div style="position: absolute; top: 0; left: 20px; right: 20px; height: 2px; background: linear-gradient(90deg, transparent, #818cf8, #38bdf8, transparent); border-radius: 2px;"></div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 14px;">
+      <div>
+        <div style="font-size: 0.72em; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1.5px;">AGRUPACIÓN MUSICAL</div>
+        <div style="font-size: 1.25em; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; margin-top: 2px;"><%= company_name %></div>
+      </div>
+      <div style="background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(129, 140, 248, 0.4); color: #c7d2fe; padding: 5px 12px; border-radius: 99px; font-size: 0.74em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 5px;">
+        <span>⚡</span> FICHA DEL SHOW
+      </div>
+    </div>
+
+    <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+      <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3em; flex-shrink: 0; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);">
+        📅
+      </div>
+      <div style="min-width: 0;">
+        <div style="font-size: 0.7em; text-transform: uppercase; font-weight: 800; color: #94a3b8; letter-spacing: 1px;">FECHA DEL EVENTO</div>
+        <div style="font-size: 1.05em; font-weight: 800; color: #ffffff; margin-top: 1px; text-transform: capitalize;"><%= formatted_date %></div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+      
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.25em; flex-shrink: 0;">👤</span>
+        <div style="min-width: 0;">
+          <div style="font-size: 0.68em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">CLIENTE / EVENTO</div>
+          <div style="font-size: 0.98em; font-weight: 800; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= client_name %></div>
+        </div>
+      </div>
+
+      <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 12px;">
+        <span style="font-size: 1.25em; flex-shrink: 0; margin-top: 2px;">📍</span>
+        <div style="min-width: 0;">
+          <div style="font-size: 0.68em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">UBICACIÓN / LUGAR</div>
+          <div style="font-size: 0.94em; font-weight: 700; color: #f1f5f9; line-height: 1.35;"><%= @gig.location.presence || "Ubicación por confirmar" %></div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+        <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px 12px;">
+          <div style="font-size: 0.66em; font-weight: 800; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+            <span>🚪</span> LLEGADA / CALL
+          </div>
+          <div style="font-size: 1.05em; font-weight: 900; color: #34d399; margin-top: 3px;">
+            <%= arrival_time %>
+          </div>
+        </div>
+
+        <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 10px 12px;">
+          <div style="font-size: 0.66em; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+            <span>⏰</span> HORARIO SHOW
+          </div>
+          <div style="font-size: 0.92em; font-weight: 800; color: #e0e7ff; margin-top: 3px; line-height: 1.2;">
+            <% if @gig.start_time.present? && @gig.end_time.present? %>
+              <%= @gig.start_time.strftime("%I:%M %p") %> → <%= @gig.end_time.strftime("%I:%M %p") %>
+              <% if @gig.event_duration.present? %>
+                <div style="font-size: 0.78em; color: #94a3b8; font-weight: 600; margin-top: 2px;">(<%= @gig.event_duration == @gig.event_duration.to_i ? "#{@gig.event_duration.to_i}h" : "#{@gig.event_duration}h" %>)</div>
+              <% end %>
+            <% elsif @gig.start_time.present? %>
+              <%= @gig.start_time.strftime("%I:%M %p") %>
+            <% else %>
+              Por confirmar
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <% if timeline_items.any? %>
+      <div style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 12px 14px;">
+        <div style="font-size: 0.7em; font-weight: 800; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <span>📜</span> CRONOGRAMA &amp; ACTIVIDADES
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          <% timeline_items.each do |item| %>
+            <div style="display: flex; align-items: baseline; gap: 10px; font-size: 0.86em; line-height: 1.35; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.06);">
+              <span style="background: rgba(129, 140, 248, 0.2); color: #a5b4fc; font-weight: 800; font-size: 0.8em; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-family: monospace;">
+                <%= item.time %>
+              </span>
+              <div style="min-width: 0; flex: 1;">
+                <strong style="color: #f8fafc;"><%= item.title %></strong>
+                <% if item.description.present? %>
+                  <div style="color: #94a3b8; font-size: 0.84em; margin-top: 1px;"><%= item.description %></div>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <% if staff_list.any? %>
+      <div style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 12px 14px;">
+        <div style="font-size: 0.7em; font-weight: 800; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+          <span>🎸</span> INTEGRANTES CONVOCADOS (<%= staff_list.count %>)
+        </div>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+          <% staff_list.each do |sa| %>
+            <% user = sa.user %>
+            <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 4px 9px; border-radius: 8px; font-size: 0.8em; color: #f1f5f9; display: inline-flex; align-items: center; gap: 5px;">
+              <span style="color: #818cf8; font-size: 0.9em;">•</span>
+              <strong><%= user.display_name %></strong>
+              <% if user.role.present? && user.role != 'staff' %>
+                <span style="color: #94a3b8; font-size: 0.85em;">(<%= user.role.capitalize %>)</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+    <!-- Notas / Vestimenta (filtrando temas financieros y de adicionales) -->
+    <% if dress_code.present? || musician_notes.present? %>
+      <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.84em; line-height: 1.4;">
+        <% if dress_code.present? %>
+          <div style="color: #fcd34d; font-weight: 800; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+            <span>👔</span> Vestimenta: <span style="color: #ffffff;"><%= dress_code %></span>
+          </div>
+        <% end %>
+        <% if musician_notes.present? %>
+          <div style="color: #cbd5e1; font-size: 0.9em;"><%= truncate(musician_notes, length: 140) %></div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.72em; color: #64748b;">
+      <span>🎶 <%= company_name %></span>
+      <span style="color: #94a3b8; font-weight: 700;">¡A dar un gran show! 🔥</span>
+    </div>
+
+  </div>
+
+  <script>
+    async function downloadStandaloneImage() {
+      const btn = document.getElementById('download-btn');
+      const card = document.getElementById('standalone-flashcard');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Generando...';
+      btn.disabled = true;
+
+      try {
+        const canvas = await html2canvas(card, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#0f172a'
+        });
+        const link = document.createElement('a');
+        link.href = canvas.toDataURL('image/png');
+        link.download = 'Ficha_Show_<%= @gig.client&.name&.parameterize&.underscore || "evento" %>_<%= @gig.date&.strftime("%d_%m_%Y") || "fecha" %>.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        btn.innerHTML = '✅ ¡Guardada!';
+        setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+      } catch (err) {
+        alert('Error al generar la imagen');
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+      }
+    }
+
+    async function copyStandaloneImage() {
+      const btn = document.getElementById('copy-btn');
+      const card = document.getElementById('standalone-flashcard');
+      const originalText = btn.innerHTML;
+      btn.innerHTML = '⏳ Copiando...';
+      btn.disabled = true;
+
+      try {
+        const canvas = await html2canvas(card, {
+          scale: 2.5,
+          useCORS: true,
+          backgroundColor: '#0f172a'
+        });
+        canvas.toBlob(async (blob) => {
+          if (navigator.clipboard && window.ClipboardItem) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            btn.innerHTML = '✅ ¡Copiado!';
+            setTimeout(() => { btn.innerHTML = originalText; btn.disabled = false; }, 2000);
+          } else {
+            downloadStandaloneImage();
+          }
+        }, 'image/png');
+      } catch (err) {
+        downloadStandaloneImage();
+      }
+    }
+  </script>
+</body>
+</html>

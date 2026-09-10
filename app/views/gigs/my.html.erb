@@ -90,7 +90,13 @@
                 <div style="margin-top: 6px; color: #94a3b8; font-size: 0.85em;"><%= truncate(gig.details, length: 100) %></div>
               <% end %>
             </div>
-            <div style="display: flex; gap: 8px; flex-shrink: 0;">
+            <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
+              <button type="button" 
+                      onclick="openFlashcardModal('flashcard-modal-<%= gig.id %>')" 
+                      style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #4338ca; font-weight: 700; font-size: 0.85em; transition: 0.2s;" 
+                      title="Descargar Ficha para WhatsApp">
+                <span>📸</span> Ficha
+              </button>
               <% if current_user.staff? %>
                 <%= link_to 'Checklist', load_in_checklist_gig_path(gig),
                     style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #475569; font-weight: 700; font-size: 0.85em;' %>
@@ -98,6 +104,7 @@
               <%= link_to 'Ver', gig_path(gig),
                   style: 'background: #4f46e5; color: white; padding: 8px 14px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85em;' %>
             </div>
+            <%= render 'gigs/flashcard_modal', gig: gig %>
           </div>
         <% end %>
       </div>

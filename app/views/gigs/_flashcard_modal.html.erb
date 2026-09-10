@@ -1,0 +1,359 @@
+<%# --- MODAL Y TARJETA FLASHCARD PARA WHATSAPP --- %>
+<%
+  card_id = "gig-flashcard-#{gig.id}"
+  modal_id = "flashcard-modal-#{gig.id}"
+  arrival_time = gig_arrival_time(gig)
+  dress_code = gig_dress_code_hint(gig)
+  musician_notes = clean_gig_musician_notes(gig)
+  timeline_items = gig.gig_timeline_items.order(position: :asc, time: :asc)
+  staff_list = gig.staff_assignments.includes(:user)
+  company_name = gig.company&.name.presence || "GIG MANAGER"
+  client_name = gig.client&.name.presence || gig.client_email.presence || "Cliente Particular"
+  formatted_date = spanish_long_date(gig.date)
+%>
+
+<!-- Modal Container -->
+<div id="<%= modal_id %>" class="flashcard-modal-backdrop" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 9999; overflow-y: auto; padding: 20px 10px;" onclick="closeFlashcardModal('<%= modal_id %>')">
+  
+  <div style="max-width: 520px; margin: 20px auto; background: #0b0f19; border: 1px solid rgba(255,255,255,0.12); border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7); overflow: hidden;" onclick="event.stopPropagation();">
+    
+    <!-- Modal Header -->
+    <div style="padding: 16px 22px; background: rgba(255,255,255,0.03); border-bottom: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: center;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.4em;">📸</span>
+        <div>
+          <h3 style="margin: 0; color: #ffffff; font-size: 1.1em; font-weight: 800; letter-spacing: -0.3px;">Ficha del Show para WhatsApp</h3>
+          <p style="margin: 2px 0 0 0; color: #94a3b8; font-size: 0.8em;">Descarga la imagen para enviarla al grupo de la banda</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeFlashcardModal('<%= modal_id %>')" style="background: rgba(255,255,255,0.08); border: none; color: #cbd5e1; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.1em; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+        ✕
+      </button>
+    </div>
+
+    <!-- Modal Body (Flashcard Preview) -->
+    <div style="padding: 20px; display: flex; justify-content: center; background: #030712;">
+      
+      <!-- ============================================== -->
+      <!-- FLASHCARD CAPTURE AREA (Se exporta como PNG)   -->
+      <!-- ============================================== -->
+      <div id="<%= card_id %>" style="width: 100%; max-width: 440px; background: linear-gradient(165deg, #0f172a 0%, #1e1b4b 45%, #0f172a 100%); border: 1.5px solid rgba(255, 255, 255, 0.12); border-radius: 20px; padding: 24px 22px; color: #ffffff; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; box-sizing: border-box; position: relative; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+        
+        <!-- Top Glow Accent -->
+        <div style="position: absolute; top: 0; left: 20px; right: 20px; height: 2px; background: linear-gradient(90deg, transparent, #818cf8, #38bdf8, transparent); border-radius: 2px;"></div>
+
+        <!-- Band / Company Branding & Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding-bottom: 14px;">
+          <div>
+            <div style="font-size: 0.72em; font-weight: 800; color: #818cf8; text-transform: uppercase; letter-spacing: 1.5px;">AGRUPACIÓN MUSICAL</div>
+            <div style="font-size: 1.25em; font-weight: 900; color: #ffffff; letter-spacing: -0.5px; margin-top: 2px;"><%= company_name %></div>
+          </div>
+          <div style="background: rgba(99, 102, 241, 0.18); border: 1px solid rgba(129, 140, 248, 0.4); color: #c7d2fe; padding: 5px 12px; border-radius: 99px; font-size: 0.74em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.8px; display: flex; align-items: center; gap: 5px;">
+            <span style="font-size: 1em;">⚡</span> FICHA DEL SHOW
+          </div>
+        </div>
+
+        <!-- Date Banner -->
+        <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 14px; padding: 12px 14px; margin-bottom: 16px; display: flex; align-items: center; gap: 12px;">
+          <div style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.3em; flex-shrink: 0; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.35);">
+            📅
+          </div>
+          <div style="min-width: 0;">
+            <div style="font-size: 0.7em; text-transform: uppercase; font-weight: 800; color: #94a3b8; letter-spacing: 1px;">FECHA DEL EVENTO</div>
+            <div style="font-size: 1.05em; font-weight: 800; color: #ffffff; margin-top: 1px; text-transform: capitalize;"><%= formatted_date %></div>
+          </div>
+        </div>
+
+        <!-- Key Information Grid -->
+        <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 18px;">
+          
+          <!-- Cliente -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; gap: 12px;">
+            <span style="font-size: 1.25em; flex-shrink: 0;">👤</span>
+            <div style="min-width: 0;">
+              <div style="font-size: 0.68em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">CLIENTE / EVENTO</div>
+              <div style="font-size: 0.98em; font-weight: 800; color: #38bdf8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"><%= client_name %></div>
+            </div>
+          </div>
+
+          <!-- Ubicación -->
+          <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.07); border-radius: 12px; padding: 10px 14px; display: flex; align-items: flex-start; gap: 12px;">
+            <span style="font-size: 1.25em; flex-shrink: 0; margin-top: 2px;">📍</span>
+            <div style="min-width: 0;">
+              <div style="font-size: 0.68em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">UBICACIÓN / LUGAR</div>
+              <div style="font-size: 0.94em; font-weight: 700; color: #f1f5f9; line-height: 1.35;"><%= gig.location.presence || "Ubicación por confirmar" %></div>
+            </div>
+          </div>
+
+          <!-- Horarios (Llegada & Show) -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            
+            <!-- Hora de Llegada / Convocatoria -->
+            <div style="background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px 12px;">
+              <div style="font-size: 0.66em; font-weight: 800; color: #6ee7b7; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                <span>🚪</span> LLEGADA / CALL
+              </div>
+              <div style="font-size: 1.05em; font-weight: 900; color: #34d399; margin-top: 3px;">
+                <%= arrival_time %>
+              </div>
+            </div>
+
+            <!-- Horario Show -->
+            <div style="background: rgba(99, 102, 241, 0.08); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 10px 12px;">
+              <div style="font-size: 0.66em; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 4px;">
+                <span>⏰</span> HORARIO SHOW
+              </div>
+              <div style="font-size: 0.92em; font-weight: 800; color: #e0e7ff; margin-top: 3px; line-height: 1.2;">
+                <% if gig.start_time.present? && gig.end_time.present? %>
+                  <%= gig.start_time.strftime("%I:%M %p") %> → <%= gig.end_time.strftime("%I:%M %p") %>
+                  <% if gig.event_duration.present? %>
+                    <div style="font-size: 0.78em; color: #94a3b8; font-weight: 600; margin-top: 2px;">(<%= gig.event_duration == gig.event_duration.to_i ? "#{gig.event_duration.to_i}h" : "#{gig.event_duration}h" %> de evento)</div>
+                  <% end %>
+                <% elsif gig.start_time.present? %>
+                  <%= gig.start_time.strftime("%I:%M %p") %>
+                <% else %>
+                  Por confirmar
+                <% end %>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Cronograma de Actividades (si existen) -->
+        <% if timeline_items.any? %>
+          <div style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 12px 14px;">
+            <div style="font-size: 0.7em; font-weight: 800; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
+              <span>📜</span> CRONOGRAMA &amp; ACTIVIDADES
+            </div>
+            
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <% timeline_items.each do |item| %>
+                <div style="display: flex; align-items: baseline; gap: 10px; font-size: 0.86em; line-height: 1.35; padding-bottom: 6px; border-bottom: 1px dashed rgba(255,255,255,0.06);">
+                  <span style="background: rgba(129, 140, 248, 0.2); color: #a5b4fc; font-weight: 800; font-size: 0.8em; padding: 2px 7px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; font-family: monospace;">
+                    <%= item.time %>
+                  </span>
+                  <div style="min-width: 0; flex: 1;">
+                    <strong style="color: #f8fafc;"><%= item.title %></strong>
+                    <% if item.description.present? %>
+                      <div style="color: #94a3b8; font-size: 0.84em; margin-top: 1px;"><%= item.description %></div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Músicos y Personal Convocados (si existen) -->
+        <% if staff_list.any? %>
+          <div style="margin-bottom: 16px; background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 14px; padding: 12px 14px;">
+            <div style="font-size: 0.7em; font-weight: 800; color: #c7d2fe; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between;">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span>🎸</span> INTEGRANTES CONVOCADOS (<%= staff_list.count %>)
+              </div>
+            </div>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+              <% staff_list.each do |sa| %>
+                <% user = sa.user %>
+                <div style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.1); padding: 4px 9px; border-radius: 8px; font-size: 0.8em; color: #f1f5f9; display: inline-flex; align-items: center; gap: 5px;">
+                  <span style="color: #818cf8; font-size: 0.9em;">•</span>
+                  <strong><%= user.display_name %></strong>
+                  <% if user.role.present? && user.role != 'staff' %>
+                    <span style="color: #94a3b8; font-size: 0.85em;">(<%= user.role.capitalize %>)</span>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <!-- Notas / Vestimenta (filtrando temas financieros y de adicionales) -->
+        <% if dress_code.present? || musician_notes.present? %>
+          <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.84em; line-height: 1.4;">
+            <% if dress_code.present? %>
+              <div style="color: #fcd34d; font-weight: 800; margin-bottom: 3px; display: flex; align-items: center; gap: 5px;">
+                <span>👔</span> Vestimenta: <span style="color: #ffffff;"><%= dress_code %></span>
+              </div>
+            <% end %>
+            <% if musician_notes.present? %>
+              <div style="color: #cbd5e1; font-size: 0.9em;"><%= truncate(musician_notes, length: 140) %></div>
+            <% end %>
+          </div>
+        <% end %>
+
+        <!-- Footer -->
+        <div style="text-align: center; border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center; font-size: 0.72em; color: #64748b;">
+          <span>🎶 <%= company_name %></span>
+          <span style="color: #94a3b8; font-weight: 700;">¡A dar un gran show! 🔥</span>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Modal Actions Footer -->
+    <div style="padding: 16px 20px; background: #0f172a; border-top: 1px solid rgba(255,255,255,0.08); display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+      
+      <button type="button" onclick="closeFlashcardModal('<%= modal_id %>')" style="background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.88em; cursor: pointer;">
+        Cerrar
+      </button>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        
+        <!-- Copiar Imagen -->
+        <button type="button" id="copy-btn-<%= gig.id %>" onclick="copyFlashcardImage('<%= card_id %>', 'copy-btn-<%= gig.id %>')" style="background: #334155; color: white; border: 1px solid #475569; padding: 11px 16px; border-radius: 12px; font-weight: 700; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;">
+          <span>📋</span> <span id="copy-text-<%= gig.id %>">Copiar Foto</span>
+        </button>
+
+        <!-- Descargar Imagen PNG -->
+        <button type="button" id="download-btn-<%= gig.id %>" onclick="downloadFlashcardImage('<%= card_id %>', 'Flashcard_<%= client_name.parameterize.underscore %>_<%= gig.date&.strftime('%d_%m_%Y') || 'evento' %>', 'download-btn-<%= gig.id %>')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 11px 20px; border-radius: 12px; font-weight: 800; font-size: 0.92em; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35); transition: transform 0.15s, opacity 0.15s;">
+          <span>📥</span> <span id="download-text-<%= gig.id %>">Descargar Foto (PNG)</span>
+        </button>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  // Dynamic html2canvas Loader
+  window.loadHtml2Canvas = window.loadHtml2Canvas || function() {
+    return new Promise((resolve, reject) => {
+      if (window.html2canvas) {
+        resolve(window.html2canvas);
+        return;
+      }
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+      script.crossOrigin = 'anonymous';
+      script.onload = () => resolve(window.html2canvas);
+      script.onerror = () => reject(new Error('No se pudo cargar la librería de captura. Verifica tu conexión a internet.'));
+      document.head.appendChild(script);
+    });
+  };
+
+  function openFlashcardModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'block';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeFlashcardModal(modalId) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+
+  async function downloadFlashcardImage(cardId, filename, buttonId) {
+    const btn = document.getElementById(buttonId);
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.innerHTML = '<span>⏳ Generando imagen...</span>';
+    }
+
+    try {
+      const html2canvas = await window.loadHtml2Canvas();
+      const canvas = await html2canvas(card, {
+        scale: 2.5, // High resolution for clear text and sharp mobile display
+        useCORS: true,
+        backgroundColor: '#0f172a',
+        logging: false
+      });
+
+      // Triggers direct PNG download
+      const imageURL = canvas.toDataURL('image/png');
+      const link = document.createElement('a');
+      link.href = imageURL;
+      link.download = `${filename}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      if (btn) {
+        btn.innerHTML = '<span>✅ ¡Foto Guardada!</span>';
+        setTimeout(() => {
+          btn.innerHTML = originalText;
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        }, 2200);
+      }
+    } catch (err) {
+      console.error('Error al generar la imagen:', err);
+      alert('Hubo un error al generar la imagen. Por favor intenta de nuevo.');
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    }
+  }
+
+  async function copyFlashcardImage(cardId, buttonId) {
+    const btn = document.getElementById(buttonId);
+    const card = document.getElementById(cardId);
+    if (!card) return;
+
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.style.opacity = '0.7';
+      btn.innerHTML = '<span>⏳ Copiando...</span>';
+    }
+
+    try {
+      const html2canvas = await window.loadHtml2Canvas();
+      const canvas = await html2canvas(card, {
+        scale: 2.5,
+        useCORS: true,
+        backgroundColor: '#0f172a',
+        logging: false
+      });
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) throw new Error("No se pudo crear el archivo de imagen");
+
+        try {
+          if (navigator.clipboard && window.ClipboardItem) {
+            await navigator.clipboard.write([
+              new ClipboardItem({ 'image/png': blob })
+            ]);
+            if (btn) {
+              btn.innerHTML = '<span>✅ ¡Copiado al Portapapeles!</span>';
+              setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                btn.style.opacity = '1';
+              }, 2200);
+            }
+          } else {
+            // Fallback to direct download if clipboard API is not available
+            downloadFlashcardImage(cardId, 'Flashcard_Show', buttonId);
+          }
+        } catch (clipErr) {
+          console.warn('Clipboard write failed, fallback to download:', clipErr);
+          downloadFlashcardImage(cardId, 'Flashcard_Show', buttonId);
+        }
+      }, 'image/png');
+
+    } catch (err) {
+      console.error('Error al copiar:', err);
+      alert('No se pudo copiar automáticamente. Puedes usar el botón "Descargar Foto".');
+      if (btn) {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    }
+  }
+</script>

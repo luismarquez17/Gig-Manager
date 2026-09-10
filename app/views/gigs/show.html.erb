@@ -12,7 +12,11 @@
       </div>
       <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
     </div>
-    <div style="text-align: right;">
+    <div style="text-align: right; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+      <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25); transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        <span>📸</span> Ficha para WhatsApp
+      </button>
+
       <% if @gig.client %>
         <%
           priority_color = case @gig.client.priority
@@ -184,6 +188,9 @@
           </svg>
           Enviar por WhatsApp
         </a>
+        <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 10px 18px; border-radius: 12px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(67, 56, 202, 0.08); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s;">
+          📸 Ficha de Show
+        </button>
         <%= link_to print_contract_gig_path(@gig), target: "_blank", style: "background: #f1f5f9; color: #475569; padding: 10px 18px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: inline-flex; align-items: center; justify-content: center; transition: 0.2s;" do %>
           🖨️ Imprimir Físico
         <% end %>
@@ -1494,3 +1501,7 @@
     if (e.target === this) closeLostModal();
   });
 </script>
+
+<%# --- MODAL FLASHCARD PARA WHATSAPP --- %>
+<%= render 'gigs/flashcard_modal', gig: @gig %>
+

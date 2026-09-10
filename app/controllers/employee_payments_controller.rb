@@ -330,76 +330,97 @@ class EmployeePaymentsController < ApplicationController
     @payment = current_company.employee_payments.build(payment_params)
     @payment.status = 'approved'
     payroll_gig = @payment.gig
-
-    if @payment.from_payroll_fund?
-      total_payroll_available = FundAllocation.total_payroll_remaining
-
-      if @payment.amount.to_f > total_payroll_available
-        formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
-        @payroll_balance = total_payroll_available
-        @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
-        @gigs = current_company.gigs.includes(:client).order(date: :desc)
-        flash.now[:alert] = "El monto excede el saldo disponible en el fondo de Nómina (#{formatted_avail}). Puedes cambiar el origen a 'Capital Externo (Dinero personal del leader)' para proceder."
-        render :new, status: :unprocessable_entity and return
-      end
-    end
+    payment_amount = @payment.amount.to_f
+    total_payroll_available = 0.0
 
     ActiveRecord::Base.transaction do
+      if @payment.from_external_capital?
+        @payment.funding_source = 'external_capital'
+        @payment.external_source_name = params.dig(:employee_payment, :external_source_name).presence || 'Capital personal del leader'
+      else
+        total_payroll_available = FundAllocation.total_payroll_remaining(current_company.id)
+
+        if total_payroll_available >= payment_amount && total_payroll_available > 0
+          @payment.funding_source = 'payroll_fund'
+        elsif total_payroll_available > 0
+          consumed_from_payroll = total_payroll_available
+          @payment.funding_source = 'external_capital'
+          @payment.external_source_name = "Nómina ($#{'%.2f' % consumed_from_payroll}) + Capital personal ($#{'%.2f' % (payment_amount - consumed_from_payroll)})"
+        else
+          @payment.funding_source = 'external_capital'
+          @payment.external_source_name = 'Capital personal del leader (Fondos nómina en $0)'
+        end
+      end
+
       @payment.save!
-      consume_payroll_funds(payroll_gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund?
+
+      if @payment.from_payroll_fund?
+        consume_payroll_funds(payroll_gig, payment_amount, @payment)
+      elsif @payment.funding_source == 'external_capital' && total_payroll_available > 0
+        consume_payroll_funds(payroll_gig, [total_payroll_available, payment_amount].min, @payment)
+      end
     end
 
     worker_name  = @payment.user.display_name rescue @payment.user.email
     currency_sym = @payment.currency.presence || '$'
     amount_label = "#{currency_sym}#{'%.2f' % @payment.amount.to_f}"
-    gig_id       = @payment.gig_id
 
-    flash[:payment_success] = {
-      message:     "Pago de #{amount_label} a #{worker_name} registrado correctamente.",
-      worker_id:   @payment.user_id,
-      gig_id:      gig_id
-    }.to_json
-
-    redirect_to new_employee_payment_path(user_id: @payment.user_id, gig_id: gig_id)
-  rescue ActiveRecord::RecordInvalid
-    @payroll_balance = FundAllocation.total_payroll_remaining
+    redirect_to employee_payments_path(user_id: @payment.user_id),
+                notice: "✅ Pago de #{amount_label} a #{worker_name} registrado y aplicado a su cuenta correctamente."
+  rescue ActiveRecord::RecordInvalid => e
+    @payroll_balance = FundAllocation.total_payroll_remaining(current_company.id)
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
     @gigs = current_company.gigs.includes(:client).order(date: :desc)
+    flash.now[:alert] = "Error al registrar el pago: #{@payment.errors.full_messages.to_sentence.presence || e.message}"
     render :new, status: :unprocessable_entity
   end
 
   def edit
     @gigs = current_company.gigs.includes(:client).order(date: :desc)
-    @payroll_balance = FundAllocation.total_payroll_remaining
+    @payroll_balance = FundAllocation.total_payroll_remaining(current_company.id)
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
   end
 
   def update
     ActiveRecord::Base.transaction do
-      # Revertir los gastos de nómina anteriores asociados a este pago
       @payment.fund_expenses.destroy_all
-
       @payment.assign_attributes(payment_params)
+      payment_amount = @payment.amount.to_f
+      total_payroll_available = 0.0
 
-      if @payment.from_payroll_fund? && @payment.approved?
-        total_payroll_available = FundAllocation.total_payroll_remaining
+      if @payment.from_external_capital?
+        @payment.funding_source = 'external_capital'
+        @payment.external_source_name = params.dig(:employee_payment, :external_source_name).presence || 'Capital personal del leader'
+      else
+        total_payroll_available = FundAllocation.total_payroll_remaining(current_company.id)
 
-        if @payment.amount.to_f > total_payroll_available
-          formatted_avail = view_context.number_to_currency(total_payroll_available, unit: 'USD')
-          @payment.errors.add(:amount, "excede el saldo disponible en el fondo de Nómina (#{formatted_avail}). Puedes cambiar el origen a 'Capital Externo'.")
-          raise ActiveRecord::RecordInvalid.new(@payment)
+        if total_payroll_available >= payment_amount && total_payroll_available > 0
+          @payment.funding_source = 'payroll_fund'
+        elsif total_payroll_available > 0
+          consumed_from_payroll = total_payroll_available
+          @payment.funding_source = 'external_capital'
+          @payment.external_source_name = "Nómina ($#{'%.2f' % consumed_from_payroll}) + Capital personal ($#{'%.2f' % (payment_amount - consumed_from_payroll)})"
+        else
+          @payment.funding_source = 'external_capital'
+          @payment.external_source_name = 'Capital personal del leader (Fondos nómina en $0)'
         end
       end
 
       @payment.save!
-      consume_payroll_funds(@payment.gig, @payment.amount.to_f, @payment) if @payment.from_payroll_fund? && @payment.approved?
+
+      if @payment.from_payroll_fund? && @payment.approved?
+        consume_payroll_funds(@payment.gig, payment_amount, @payment)
+      elsif @payment.funding_source == 'external_capital' && @payment.approved? && total_payroll_available > 0
+        consume_payroll_funds(@payment.gig, [total_payroll_available, payment_amount].min, @payment)
+      end
     end
 
     redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
-  rescue ActiveRecord::RecordInvalid
-    @payroll_balance = FundAllocation.total_payroll_remaining
+  rescue ActiveRecord::RecordInvalid => e
+    @payroll_balance = FundAllocation.total_payroll_remaining(current_company.id)
     @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
     @gigs = current_company.gigs.includes(:client).order(date: :desc)
+    flash.now[:alert] = "Error al actualizar el pago: #{@payment.errors.full_messages.to_sentence.presence || e.message}"
     render :edit, status: :unprocessable_entity
   end
 
@@ -444,11 +465,6 @@ class EmployeePaymentsController < ApplicationController
       )
       remaining_amount -= used
     end
-
-    if remaining_amount > 0
-      payment.errors.add(:amount, "excede el saldo disponible en el fondo universal de Nómina.")
-      raise ActiveRecord::RecordInvalid.new(payment)
-    end
   end
 
   def payment_params
@@ -457,6 +473,8 @@ class EmployeePaymentsController < ApplicationController
       :payment_method, :notes, :expected_amount, 
       :funding_source, :external_source_name, :status
     )
+    p_params[:amount] = p_params[:amount].to_s.tr(',', '.').strip if p_params[:amount].present?
+    p_params[:expected_amount] = p_params[:expected_amount].to_s.tr(',', '.').strip if p_params[:expected_amount].present?
     p_params[:expected_amount] = 0.0 if p_params[:expected_amount].blank?
     p_params
   end
