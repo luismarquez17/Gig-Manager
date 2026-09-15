@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_31_210602) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_14_200000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -69,9 +69,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_210602) do
     t.bigint "company_id"
     t.bigint "client_id"
     t.bigint "gig_id"
-    t.string "client_name", null: false
-    t.string "client_email", null: false
-    t.string "client_phone", null: false
+    t.string "client_name"
+    t.string "client_email"
+    t.string "client_phone"
     t.string "event_type"
     t.date "event_date"
     t.string "event_location"
@@ -85,9 +85,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_210602) do
     t.string "public_token", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "preset_budget_id"
+    t.string "package_name"
     t.index ["client_id"], name: "index_client_quotes_on_client_id"
     t.index ["company_id"], name: "index_client_quotes_on_company_id"
     t.index ["gig_id"], name: "index_client_quotes_on_gig_id"
+    t.index ["preset_budget_id"], name: "index_client_quotes_on_preset_budget_id"
     t.index ["public_token"], name: "index_client_quotes_on_public_token", unique: true
     t.index ["status"], name: "index_client_quotes_on_status"
   end
@@ -548,6 +551,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_31_210602) do
   add_foreign_key "client_quotes", "clients"
   add_foreign_key "client_quotes", "companies"
   add_foreign_key "client_quotes", "gigs"
+  add_foreign_key "client_quotes", "preset_budgets"
   add_foreign_key "clients", "companies"
   add_foreign_key "company_media_items", "companies"
   add_foreign_key "employee_payments", "companies"

@@ -1,11 +1,11 @@
 <div style="background: white; padding: 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Segoe UI', sans-serif;">
   <%= form_with(model: gig, local: true) do |f| %>
 
-    <%# --- SELECTOR PARA JALAR DATOS DE PRESUPUESTO DE CLIENTE --- %>
+    <%# --- SELECTOR PARA CARGAR DATOS DE PRESUPUESTO DE CLIENTE --- %>
     <% if @available_quotes.present? && @available_quotes.any? %>
       <div style="margin-bottom: 25px; background: #f0f9ff; padding: 20px; border-radius: 15px; border: 1px solid #bae6fd; box-shadow: 0 4px 12px rgba(2, 132, 199, 0.08);">
         <label style="display: block; font-weight: bold; color: #0369a1; margin-bottom: 6px; font-size: 1rem;">
-          ✨ Jalar Datos de Presupuesto de Cliente
+          ✨ Cargar Datos de Presupuesto de Cliente
         </label>
         <p style="margin: 0 0 12px 0; font-size: 0.86rem; color: #0284c7;">
           Selecciona un presupuesto recibido del cliente para auto-completar los datos del evento.
@@ -14,7 +14,7 @@
           <option value="">-- Seleccionar Presupuesto de Cliente --</option>
           <% @available_quotes.each do |q| %>
             <option value="<%= q.id %>" <%= 'selected' if @selected_quote_id == q.id %>>
-              <%= q.client_name %> (<%= q.event_date ? q.event_date.strftime("%d/%m/%Y") : "Fecha TBD" %>) - $<%= q.amount %> <%= q.currency %> [<%= q.status_label %>]
+              <%= q.display_client_name %> (<%= q.event_date ? q.event_date.strftime("%d/%m/%Y") : "Fecha TBD" %>) - $<%= q.amount %> <%= q.currency %> [<%= q.package_display_title %>] - <%= q.status_label %>
             </option>
           <% end %>
         </select>

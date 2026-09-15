@@ -7,24 +7,35 @@ class ClientQuotesController < ApplicationController
 
   def index
     @client_quotes = current_company.client_quotes.recent_first
+    @preset_budgets = current_company.preset_budgets.order(created_at: :desc)
   end
 
   def show
   end
 
   def new
+    @preset_budgets = current_company.preset_budgets.order(created_at: :desc)
+    preset = @preset_budgets.find_by(id: params[:preset_budget_id]) if params[:preset_budget_id].present?
+
     @client_quote = current_company.client_quotes.build(
-      amount: 0.0,
-      currency: current_company.currency.presence || "USD"
+      preset_budget: preset,
+      package_name: preset&.title,
+      amount: preset ? preset.price : 0.0,
+      currency: preset ? preset.currency : (current_company.currency.presence || "USD"),
+      details: preset&.description
     )
   end
 
   def create
     @client_quote = current_company.client_quotes.build(quote_params)
+    @client_quote.currency ||= current_company.currency.presence || "USD"
+    @client_quote.amount ||= 0.0
 
     if @client_quote.save
-      redirect_to client_quotes_path, notice: "Presupuesto creado con éxito. Puedes enviar el enlace público al cliente."
+      redirect_to client_quotes_path, notice: "🎯 ¡Enlace generado con éxito! Ya puedes copiarlo o enviarlo por WhatsApp."
     else
+      @client_quotes = current_company.client_quotes.recent_first
+      @preset_budgets = current_company.preset_budgets.order(created_at: :desc)
       render :new, status: :unprocessable_entity
     end
   end
@@ -37,6 +48,8 @@ class ClientQuotesController < ApplicationController
   # --- VISTAS PÚBLICAS PARA EL CLIENTE ---
 
   def public_show
+    @company = @quote.company
+    @preset_budgets = @company.preset_budgets.order(created_at: :asc)
   end
 
   def public_submit
@@ -45,12 +58,21 @@ class ClientQuotesController < ApplicationController
       return
     end
 
-    if @quote.update(public_quote_params.merge(status: 'accepted'))
+    preset = @quote.company.preset_budgets.find_by(id: params[:preset_budget_id]) if params[:preset_budget_id].present?
+    
+    update_data = public_quote_params.merge(status: 'accepted')
+    if preset.present?
+      update_data[:preset_budget_id] = preset.id
+      update_data[:package_name] ||= preset.title
+    end
+
+    if @quote.update(update_data)
       @quote.notify_leaders_of_acceptance!
 
+      date_formatted = @quote.event_date ? @quote.event_date.strftime('%d/%m/%Y') : 'tu evento'
       render json: {
         success: true,
-        message: "¡Gracias #{@quote.client_name}! Tu información y presupuesto para el #{@quote.event_date ? @quote.event_date.strftime('%d/%m/%Y') : 'evento'} han sido recibidos y confirmados con éxito. El equipo organizador ha sido notificado."
+        message: "¡Muchas gracias #{@quote.display_client_name}! Tu propuesta y requerimientos para #{date_formatted} han sido recibidos con éxito. El equipo de #{@quote.company.name} ha sido notificado."
       }
     else
       render json: { success: false, error: @quote.errors.full_messages.join(", ") }, status: :unprocessable_entity
@@ -71,12 +93,21 @@ class ClientQuotesController < ApplicationController
   end
 
   def quote_params
-    params.require(:client_quote).permit(
-      :client_name, :client_email, :client_phone,
-      :event_type, :event_date, :event_location,
-      :start_time, :end_time, :amount, :currency,
-      :advance_amount, :details
-    )
+    if params[:client_quote].present?
+      params.require(:client_quote).permit(
+        :client_name, :client_email, :client_phone,
+        :event_type, :event_date, :event_location,
+        :start_time, :end_time, :amount, :currency,
+        :advance_amount, :details, :preset_budget_id, :package_name
+      )
+    else
+      params.permit(
+        :client_name, :client_email, :client_phone,
+        :event_type, :event_date, :event_location,
+        :start_time, :end_time, :amount, :currency,
+        :advance_amount, :details, :preset_budget_id, :package_name
+      )
+    end
   end
 
   def public_quote_params
@@ -84,7 +115,7 @@ class ClientQuotesController < ApplicationController
       :client_name, :client_email, :client_phone,
       :event_type, :event_date, :event_location,
       :start_time, :end_time, :amount, :currency,
-      :advance_amount, :details
+      :advance_amount, :details, :preset_budget_id, :package_name
     )
   end
 end

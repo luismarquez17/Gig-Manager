@@ -139,18 +139,30 @@ class Client < ApplicationRecord
     whatsapp_url(text: lines.join("\n"))
   end
 
-  def self.find_or_create_for_gig(company:, email:, name: nil, phone: nil)
-    return nil if email.blank? || company.nil?
+  def self.find_or_create_for_gig(company:, email: nil, name: nil, phone: nil)
+    return nil if company.nil?
+    return nil if email.blank? && name.blank? && phone.blank?
 
-    existing = company.clients.find_by(email: email)
+    # Buscar cliente existente por teléfono, correo o nombre
+    existing = nil
+    if phone.present?
+      clean_phone = phone.gsub(/\D/, '')
+      if clean_phone.length >= 7
+        existing = company.clients.where.not(phone: [nil, '']).find { |c| c.phone.gsub(/\D/, '').include?(clean_phone) || clean_phone.include?(c.phone.gsub(/\D/, '')) }
+      end
+    end
+    existing ||= company.clients.find_by(email: email) if email.present?
+    existing ||= company.clients.find_by("LOWER(name) = ?", name.downcase.strip) if name.present?
+
     return existing if existing.present?
 
-    client_name = name.presence || email.split('@').first.capitalize
+    client_name = name.presence || (email.present? ? email.split('@').first.capitalize : "Cliente #{phone}")
     client_phone = phone.presence || "0000000000"
+    client_email = email.presence
 
     company.clients.create(
       name: client_name,
-      email: email,
+      email: client_email,
       phone: client_phone
     )
   rescue StandardError

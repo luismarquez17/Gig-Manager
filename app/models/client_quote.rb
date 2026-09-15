@@ -5,6 +5,7 @@ class ClientQuote < ApplicationRecord
 
   belongs_to :client, optional: true
   belongs_to :gig, optional: true
+  belongs_to :preset_budget, optional: true
 
   enum status: {
     pending: 'pending',
@@ -12,7 +13,7 @@ class ClientQuote < ApplicationRecord
     converted: 'converted'
   }
 
-  validates :client_name, :client_email, :client_phone, presence: true
+  validates :client_name, :client_phone, presence: true, if: -> { accepted? || converted? }
 
   before_validation :generate_public_token, on: :create
   before_validation :set_default_status, on: :create
@@ -20,37 +21,56 @@ class ClientQuote < ApplicationRecord
   scope :recent_first, -> { order(created_at: :desc) }
   scope :convertible, -> { where(status: [:pending, :accepted]) }
 
+  def display_client_name
+    client_name.presence || "Enlace Abierto ##{id}"
+  end
+
+  def package_display_title
+    package_name.presence || preset_budget&.title || "Personalizado"
+  end
+
   def notify_leaders_of_acceptance!
     return unless company_id.present?
 
     date_str = event_date ? event_date.strftime("%d/%m/%Y") : "Fecha por definir"
     loc_str = event_location.presence || "Lugar por confirmar"
+    pkg_str = package_name.presence || preset_budget&.title
+    pkg_info = pkg_str.present? ? " [Paquete: #{pkg_str}]" : ""
+    adv_info = advance_amount.to_f > 0 ? " (Adelanto: $#{advance_amount} #{currency})" : ""
 
     AppNotification.create(
       company: company,
       target_area: 'leaders',
       notification_type: 'gig_alert',
-      title: "📋 Presupuesto Aceptado por Cliente",
-      message: "#{client_name} ha aceptado la propuesta para el show del #{date_str} en #{loc_str}. Presupuesto acordado: $#{amount} #{currency}.",
+      title: "📋 Presupuesto Recibido de Cliente",
+      message: "#{display_client_name} ha completado su cotización para el show del #{date_str} en #{loc_str}#{pkg_info}. Total: $#{amount} #{currency}#{adv_info}.",
       action_url: "/gigs/new?quote_id=#{id}"
     ) rescue nil
   end
 
   def status_label
     case status
-    when 'pending'   then 'Pendiente de Cliente'
-    when 'accepted'  then 'Aceptado por Cliente (Listo para Gig)'
-    when 'converted' then 'Convertido en Evento (Gig)'
-    else status.humanize
+    when 'pending'
+      client_name.present? ? 'Pendiente de Cliente' : 'Enlace Abierto (Sin Asignar)'
+    when 'accepted'
+      'Confirmado por Cliente (Listo para Gig)'
+    when 'converted'
+      'Convertido en Evento (Gig)'
+    else
+      status.humanize
     end
   end
 
   def status_badge_style
     case status
-    when 'pending'   then 'background: #fef3c7; color: #b45309;'
-    when 'accepted'  then 'background: #dcfce7; color: #15803d;'
-    when 'converted' then 'background: #e0e7ff; color: #4338ca;'
-    else 'background: #f3f4f6; color: #374151;'
+    when 'pending'
+      client_name.present? ? 'background: #fef3c7; color: #b45309;' : 'background: #f1f5f9; color: #475569;'
+    when 'accepted'
+      'background: #dcfce7; color: #15803d;'
+    when 'converted'
+      'background: #e0e7ff; color: #4338ca;'
+    else
+      'background: #f3f4f6; color: #374151;'
     end
   end
 

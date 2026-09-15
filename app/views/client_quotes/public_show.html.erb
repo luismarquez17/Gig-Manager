@@ -1,180 +1,561 @@
-<div style="max-width: 760px; margin: 0 auto; padding: 20px 14px; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+<style>
+  /* Glassmorphism & Portal aesthetic */
+  .quote-container {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 30px 18px 60px;
+    font-family: var(--font-jakarta, -apple-system, BlinkMacSystemFont, sans-serif);
+    color: var(--text-main, #f8fafc);
+  }
 
-  <%# Header / Company Header %>
-  <div style="text-align: center; margin-bottom: 28px; background: white; padding: 28px 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05);">
-    <div style="font-size: 2.2rem; margin-bottom: 8px;">📋</div>
-    <h1 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
-      Formulario de Presupuesto del Evento
-    </h1>
-    <p style="margin: 0; color: #64748b; font-size: 0.95rem; line-height: 1.5;">
-      Organizado por <strong style="color: #2563eb;"><%= @quote.company.name %></strong>
-    </p>
-    <p style="margin: 6px 0 0 0; color: #475569; font-size: 0.88rem;">
-      Ingresa o confirma la información de tu evento para proceder con la reserva y el registro oficial.
-    </p>
-  </div>
+  .glass-card {
+    background: var(--card-bg, rgba(15, 23, 42, 0.7));
+    border: 1px solid var(--card-border, rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(16px) saturate(120%);
+    -webkit-backdrop-filter: blur(16px) saturate(120%);
+    border-radius: 24px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
+    transition: all 0.3s ease;
+  }
 
-  <% if @quote.status == 'converted' %>
-    <div style="background: #e0e7ff; border: 1px solid #c7d2fe; color: #3730a3; padding: 20px; border-radius: 16px; text-align: center; font-weight: 700; font-size: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.04);">
-      ✅ Este presupuesto ya fue procesado y convertido en un evento activo por la agrupación.
+  .glass-card-highlight {
+    border-color: rgba(139, 92, 246, 0.4);
+    box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+  }
+
+  .title-gradient {
+    background: linear-gradient(135deg, #a78bfa 0%, #22d3ee 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-family: var(--font-outfit, sans-serif);
+    font-weight: 800;
+  }
+
+  /* Preset Budgets Grid */
+  .preset-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 16px;
+    margin-top: 14px;
+  }
+
+  .preset-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 2px solid rgba(255, 255, 255, 0.06);
+    border-radius: 18px;
+    padding: 18px;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    position: relative;
+    user-select: none;
+  }
+
+  .preset-card:hover {
+    border-color: rgba(139, 92, 246, 0.5);
+    background: rgba(139, 92, 246, 0.05);
+    transform: translateY(-3px);
+  }
+
+  .preset-card.selected {
+    border-color: #8b5cf6;
+    background: rgba(139, 92, 246, 0.12);
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+  }
+
+  .preset-card .check-indicator {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    color: transparent;
+    transition: all 0.2s;
+  }
+
+  .preset-card.selected .check-indicator {
+    background: #8b5cf6;
+    border-color: #8b5cf6;
+    color: white;
+  }
+
+  /* Form Elements */
+  .input-label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #cbd5e1;
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .portal-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 12px;
+    color: white;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+
+  .portal-input:focus {
+    border-color: #8b5cf6;
+    box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.2);
+  }
+
+  .portal-input::placeholder {
+    color: #64748b;
+  }
+
+  .btn-submit {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: none;
+    padding: 16px 36px;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
+    width: 100%;
+    transition: transform 0.2s, box-shadow 0.2s;
+    font-family: var(--font-outfit, sans-serif);
+    letter-spacing: 0.5px;
+  }
+
+  .btn-submit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.45);
+  }
+
+  .btn-submit:active {
+    transform: translateY(0);
+  }
+
+  .btn-submit:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 600px) {
+    .glass-card {
+      padding: 20px 16px;
+      border-radius: 18px;
+    }
+  }
+</style>
+
+<div class="quote-container">
+  
+  <%# --- HEADER DE LA EMPRESA --- %>
+  <header style="text-align: center; margin-bottom: 30px;">
+    <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(139, 92, 246, 0.15); border: 1px solid rgba(139, 92, 246, 0.35); color: #c084fc; padding: 6px 16px; border-radius: 99px; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+      <span>✨</span> <%= @company.name %>
     </div>
-  <% else %>
+    <h1 class="title-gradient" style="font-size: 2.3rem; margin: 0 0 8px 0; line-height: 1.2;">
+      Formulario de Presupuesto para tu Evento
+    </h1>
+    <p style="margin: 0; color: #94a3b8; font-size: 1rem; max-width: 580px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+      <%= @company.tagline.presence || "Selecciona una de nuestras opciones base o personaliza tu cotización al instante." %>
+    </p>
+  </header>
 
-    <div style="background: white; padding: 28px 24px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.05);">
-      
-      <form id="public-quote-form" action="<%= submit_public_client_quote_path(@quote.public_token) %>" method="POST" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
-        <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+  <%# --- CASO 1: YA CONVERTIDO EN GIG --- %>
+  <% if @quote.status == 'converted' %>
+    <div class="glass-card" style="text-align: center; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); padding: 36px 20px;">
+      <div style="font-size: 3.5rem; margin-bottom: 12px;">🎉</div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; color: #34d399; margin: 0 0 8px 0; font-family: var(--font-outfit);">
+        ¡Tu evento ya está activo y confirmado!
+      </h2>
+      <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 20px 0; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+        El equipo de <strong><%= @company.name %></strong> ya ha registrado y agendado tu evento formalmente.
+      </p>
 
-        <%# --- SECCIÓN 1: DATOS DEL CLIENTE --- %>
-        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 14px; border: 1px solid #e2e8f0;">
-          <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
-            <span>👤</span> Tus Datos de Contacto
-          </h3>
+      <% if @company.whatsapp_number.present? %>
+        <% wa_clean = @company.whatsapp_number.gsub(/\D/, '') %>
+        <a href="https://wa.me/<%= wa_clean %>?text=<%= ERB::Util.url_encode("Hola #{@company.name}! Te escribo sobre mi evento.") %>" target="_blank" style="background: #25d366; color: white; padding: 13px 26px; border-radius: 12px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(37, 211, 102, 0.3);">
+          💬 Contactar por WhatsApp
+        </a>
+      <% end %>
+    </div>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Nombre Completo *
-              </label>
-              <input type="text" name="client_name" value="<%= @quote.client_name %>" required placeholder="Ej. Carlos Mendoza" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; font-weight: 600;">
-            </div>
+  <%# --- CASO 2: YA ENVIADO Y ACEPTADO (PANTALLA DE CONFIRMACIÓN CON RESUMEN) --- %>
+  <% elsif @quote.status == 'accepted' %>
+    <div id="already-confirmed-box" class="glass-card" style="text-align: center; border-color: rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.08); padding: 36px 24px;">
+      <div style="font-size: 3.5rem; margin-bottom: 12px;">✅</div>
+      <h2 style="font-size: 1.6rem; font-weight: 800; color: #34d399; margin: 0 0 8px 0; font-family: var(--font-outfit);">
+        ¡Presupuesto Recibido y Confirmado!
+      </h2>
+      <p style="color: #cbd5e1; font-size: 0.95rem; margin: 0 0 24px 0; max-width: 550px; margin-left: auto; margin-right: auto; line-height: 1.5;">
+        ¡Muchas gracias, <strong><%= @quote.display_client_name %></strong>! La información de tu evento ha sido enviada al equipo de <strong><%= @company.name %></strong>.
+      </p>
 
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Correo Electrónico *
-              </label>
-              <input type="email" name="client_email" value="<%= @quote.client_email %>" required placeholder="ejemplo@correo.com" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
-            </div>
+      <%# Resumen de lo enviado %>
+      <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 16px; padding: 20px; max-width: 500px; margin: 0 auto 24px; text-align: left; font-size: 0.9rem;">
+        <div style="font-weight: 800; color: #a78bfa; font-size: 0.8rem; text-transform: uppercase; margin-bottom: 10px;">Resumen de tu Solicitud:</div>
+        <div style="display: flex; flex-direction: column; gap: 6px; color: #e2e8f0;">
+          <div>👤 <strong>Cliente:</strong> <%= @quote.display_client_name %></div>
+          <div>📞 <strong>Teléfono:</strong> <%= @quote.client_phone %></div>
+          <% if @quote.client_email.present? %>
+            <div>📧 <strong>Correo:</strong> <%= @quote.client_email %></div>
+          <% end %>
+          <div>📦 <strong>Paquete:</strong> <%= @quote.package_display_title %></div>
+          <div>📅 <strong>Fecha:</strong> <%= @quote.event_date ? @quote.event_date.strftime("%d/%m/%Y") : "Por definir" %></div>
+          <div>📍 <strong>Lugar:</strong> <%= @quote.event_location.presence || "Por confirmar" %></div>
+          <div>💰 <strong>Monto Estimado:</strong> $<%= @quote.amount %> <%= @quote.currency %></div>
+          <% if @quote.advance_amount.to_f > 0 %>
+            <div style="color: #34d399; font-weight: 800;">💵 <strong>Adelanto / Anticipo:</strong> $<%= @quote.advance_amount %> <%= @quote.currency %></div>
+          <% end %>
+        </div>
+      </div>
 
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Teléfono / WhatsApp *
-              </label>
-              <input type="tel" name="client_phone" value="<%= @quote.client_phone %>" required placeholder="Ej. 04141234567" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; font-weight: 600;">
-            </div>
+      <%# Banner que incita a usar la App e Iniciar Sesión en el Perfil de Cliente %>
+      <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(6, 182, 212, 0.09) 100%); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 20px; padding: 26px 22px; max-width: 580px; margin: 0 auto 24px; text-align: center; box-shadow: 0 8px 30px rgba(139, 92, 246, 0.12);">
+        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(139, 92, 246, 0.2); color: #c084fc; padding: 5px 14px; border-radius: 99px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+          <span>📱</span> App & Perfil del Cliente
+        </div>
+
+        <h3 style="font-family: var(--font-outfit); font-size: 1.35rem; font-weight: 800; color: #f8fafc; margin: 0 0 10px 0;">
+          Accede a tu Cuenta y Gestiona tu Evento
+        </h3>
+
+        <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.5; margin: 0 0 18px 0;">
+          Inicia sesión en nuestra app para consultar tus presupuestos, dar seguimiento a tus fechas y gestionar tu perfil de cliente:
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; font-size: 0.85rem; margin-bottom: 20px;">
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            👤 <strong>Perfil de Cliente</strong> y datos de contacto.
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            💳 <strong>Control de Pagos</strong> y abonos en tiempo real.
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            ⏳ <strong>Cronograma</strong> y cuenta regresiva del show.
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            ✍️ <strong>Firma Digital</strong> de contrato y normativas.
           </div>
         </div>
 
-        <%# --- SECCIÓN 2: DATOS DEL EVENTO --- %>
-        <div style="background: #f8fafc; padding: 18px 20px; border-radius: 14px; border: 1px solid #e2e8f0;">
-          <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
-            <span>📅</span> Detalles del Evento
-          </h3>
+        <div style="margin-top: 18px; display: flex; flex-direction: column; gap: 10px; align-items: center;">
+          <% if @quote.gig&.portal_token.present? %>
+            <%= link_to public_portal_path(@quote.gig.portal_token), style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 14px 28px; border-radius: 14px; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35); width: 100%; max-width: 420px;" do %>
+              🚀 Ver Portal de Mi Evento en Vivo ➔
+            <% end %>
+          <% end %>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Tipo de Evento *
-              </label>
-              <select name="event_type" required style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.92rem; background: white; font-weight: 600;">
-                <option value="Boda" <%= 'selected' if @quote.event_type == 'Boda' %>>💍 Boda / Matrimonio</option>
-                <option value="XV Años" <%= 'selected' if @quote.event_type == 'XV Años' %>>👑 XV Años</option>
-                <option value="Cumpleaños" <%= 'selected' if @quote.event_type == 'Cumpleaños' %>>🎂 Cumpleaños / Fiesta</option>
-                <option value="Corporativo" <%= 'selected' if @quote.event_type == 'Corporativo' %>>🏢 Evento Corporativo</option>
-                <option value="Concierto" <%= 'selected' if @quote.event_type == 'Concierto' %>>🎸 Concierto / Festival</option>
-                <option value="Otro" <%= 'selected' if @quote.event_type == 'Otro' %>>⭐ Otro Tipo de Evento</option>
-              </select>
-            </div>
-
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Fecha del Evento *
-              </label>
-              <input type="date" name="event_date" value="<%= @quote.event_date || Date.today %>" required style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box; font-weight: 600;">
-            </div>
-
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Ubicación / Lugar del Show *
-              </label>
-              <input type="text" name="event_location" value="<%= @quote.event_location %>" required placeholder="Ej. Quinta La Esmeralda, Caracas" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
-            </div>
-          </div>
-
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Hora de Inicio
-              </label>
-              <input type="time" name="start_time" value="<%= @quote.start_time&.strftime('%H:%M') %>" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
-            </div>
-
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
-                Hora de Fin
-              </label>
-              <input type="time" name="end_time" value="<%= @quote.end_time&.strftime('%H:%M') %>" style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; box-sizing: border-box;">
-            </div>
-          </div>
+          <a href="<%= new_user_session_path %>" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 14px 28px; border-radius: 14px; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35); width: 100%; max-width: 420px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            🔐 Iniciar Sesión / Mi Perfil de Cliente ➔
+          </a>
         </div>
+      </div>
 
-        <%# --- SECCIÓN 3: PRESUPUESTO & ADELANTO --- %>
-        <div style="background: #f0fdf4; padding: 18px 20px; border-radius: 14px; border: 1px solid #bbf7d0;">
-          <h3 style="font-size: 1.05rem; font-weight: 800; color: #166534; margin: 0 0 14px 0; display: flex; align-items: center; gap: 8px;">
-            <span>💰</span> Presupuesto Acordado & Adelanto
-          </h3>
+      <div style="display: flex; justify-content: center;">
+        <button onclick="document.getElementById('public-quote-form').style.display = 'grid'; document.getElementById('already-confirmed-box').style.display = 'none';" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 12px 20px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.88rem;">
+          ✏️ Modificar Datos Enviados
+        </button>
+      </div>
+    </div>
+  <% end %>
 
-          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
-            <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
-                Monto Total Acordado
-              </label>
-              <div style="display: flex; gap: 8px;">
-                <input type="number" step="0.01" name="amount" value="<%= @quote.amount %>" placeholder="0.00" style="flex: 1; padding: 11px 14px; border: 1px solid #86efac; border-radius: 10px; font-size: 1.05rem; font-weight: 800; color: #166534;">
-                <select name="currency" style="padding: 11px; border: 1px solid #86efac; border-radius: 10px; font-size: 0.9rem; font-weight: 800; background: white; color: #166534;">
-                  <option value="USD" <%= 'selected' if @quote.currency == 'USD' %>>USD ($)</option>
-                  <option value="BS" <%= 'selected' if @quote.currency == 'BS' %>>BS (Bs)</option>
-                </select>
+  <%# --- FORMULARIO PRINCIPAL --- %>
+  <% form_style = (@quote.status == 'converted' || @quote.status == 'accepted') ? 'display: none;' : 'display: grid;' %>
+  
+  <form id="public-quote-form" action="<%= submit_public_client_quote_path(@quote.public_token) %>" method="POST" style="<%= form_style %> grid-template-columns: 1fr; gap: 20px;">
+    <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+    <input type="hidden" name="preset_budget_id" id="selected-preset-id" value="<%= @quote.preset_budget_id %>">
+    <input type="hidden" name="package_name" id="selected-package-name" value="<%= @quote.package_name %>">
+
+    <%# --- PASO 1: SELECCIÓN DE PRESUPUESTO BASE (SI EXISTEN) --- %>
+    <% if @preset_budgets.present? && @preset_budgets.any? %>
+      <section class="glass-card glass-card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
+            <span style="background: rgba(139, 92, 246, 0.25); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">1</span>
+            Elige tu Presupuesto o Paquete Base
+          </h2>
+          <span style="font-size: 0.8rem; color: #a78bfa; font-weight: 700;">Toca una opción para elegirla</span>
+        </div>
+        <p style="color: #94a3b8; font-size: 0.88rem; margin: 0 0 16px 0;">
+          Selecciona el paquete que mejor se ajuste a lo que deseas, o escoge la opción a medida.
+        </p>
+
+        <div class="preset-grid">
+          <% @preset_budgets.each do |preset| %>
+            <% is_selected = @quote.preset_budget_id == preset.id %>
+            <div class="preset-card <%= 'selected' if is_selected %>"
+                 onclick="selectPreset(this, '<%= preset.id %>', '<%= j preset.title %>', '<%= preset.price %>', '<%= preset.currency %>', '<%= j preset.description %>')">
+              <div class="check-indicator">✓</div>
+              
+              <div>
+                <% if preset.image.attached? %>
+                  <div style="height: 120px; border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: rgba(0,0,0,0.2);">
+                    <%= image_tag preset.image, style: "width: 100%; height: 100%; object-fit: cover;" %>
+                  </div>
+                <% end %>
+
+                <div style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-bottom: 4px; font-family: var(--font-outfit);">
+                  <%= preset.title %>
+                </div>
+
+                <p style="font-size: 0.84rem; color: #94a3b8; margin: 0 0 12px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                  <%= preset.description %>
+                </p>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 8px;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Precio Base</span>
+                <span style="font-size: 1.2rem; font-weight: 800; color: #34d399; font-family: var(--font-outfit);">
+                  $<%= preset.price %> <span style="font-size: 0.75rem; color: #94a3b8;"><%= preset.currency %></span>
+                </span>
               </div>
             </div>
+          <% end %>
 
+          <%# Opción Personalizada / A Medida %>
+          <div class="preset-card <%= 'selected' if @quote.preset_budget_id.blank? && @quote.amount.to_f > 0 %>"
+               onclick="selectCustom(this)">
+            <div class="check-indicator">✓</div>
             <div>
-              <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
-                Adelanto / Anticipo Pagado
-              </label>
-              <input type="number" step="0.01" name="advance_amount" value="<%= @quote.advance_amount %>" placeholder="0.00" style="width: 100%; padding: 11px 14px; border: 1px solid #86efac; border-radius: 10px; font-size: 1.05rem; font-weight: 800; color: #166534; box-sizing: border-box;">
+              <div style="font-size: 2rem; margin-bottom: 8px;">⭐</div>
+              <div style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-bottom: 4px; font-family: var(--font-outfit);">
+                Servicio a Medida / Personalizado
+              </div>
+              <p style="font-size: 0.84rem; color: #94a3b8; margin: 0; line-height: 1.4;">
+                ¿Tienes requerimientos especiales o quieres cotizar un número específico de horas o músicos? Elige esta opción.
+              </p>
+            </div>
+            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 12px;">
+              <span style="font-size: 0.82rem; font-weight: 800; color: #a78bfa;">A Convenir / Personalizado</span>
             </div>
           </div>
+        </div>
+      </section>
+    <% end %>
 
-          <div>
-            <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #166534; margin-bottom: 6px;">
-              Requerimientos Específicos / Observaciones
-            </label>
-            <textarea name="details" rows="3" placeholder="Ej. Formato banda completa de 5 músicos, incluye planta eléctrica y 2 horas de show..." style="width: 100%; padding: 11px 14px; border: 1px solid #86efac; border-radius: 10px; font-size: 0.9rem; box-sizing: border-box; resize: vertical;"><%= @quote.details %></textarea>
+    <%# --- PASO 2: TUS DATOS DE CONTACTO --- %>
+    <section class="glass-card">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
+        <span style="background: rgba(139, 92, 246, 0.25); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+          <%= @preset_budgets.present? && @preset_budgets.any? ? '2' : '1' %>
+        </span>
+        Tus Datos de Contacto
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+        <div>
+          <label class="input-label">Nombre y Apellido *</label>
+          <input type="text" name="client_name" value="<%= @quote.client_name %>" required placeholder="Ej. Carlos Mendoza" class="portal-input" style="font-weight: 700;">
+        </div>
+
+        <div>
+          <label class="input-label">Teléfono / WhatsApp *</label>
+          <input type="tel" name="client_phone" value="<%= @quote.client_phone %>" required placeholder="Ej. 04141234567" class="portal-input" style="font-weight: 700;">
+        </div>
+      </div>
+    </section>
+
+    <%# --- PASO 3: DETALLES DEL EVENTO --- %>
+    <section class="glass-card">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
+        <span style="background: rgba(139, 92, 246, 0.25); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+          <%= @preset_budgets.present? && @preset_budgets.any? ? '3' : '2' %>
+        </span>
+        Detalles del Evento
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label class="input-label">Tipo de Evento *</label>
+          <select name="event_type" required class="portal-input" style="background: #0f172a; font-weight: 700;">
+            <option value="Boda" <%= 'selected' if @quote.event_type == 'Boda' %>>💍 Boda / Matrimonio</option>
+            <option value="XV Años" <%= 'selected' if @quote.event_type == 'XV Años' %>>👑 XV Años</option>
+            <option value="Cumpleaños" <%= 'selected' if @quote.event_type == 'Cumpleaños' %>>🎂 Cumpleaños / Fiesta</option>
+            <option value="Corporativo" <%= 'selected' if @quote.event_type == 'Corporativo' %>>🏢 Evento Corporativo</option>
+            <option value="Concierto" <%= 'selected' if @quote.event_type == 'Concierto' %>>🎸 Concierto / Festival</option>
+            <option value="Graduación" <%= 'selected' if @quote.event_type == 'Graduación' %>>🎓 Graduación</option>
+            <option value="Otro" <%= 'selected' if @quote.event_type == 'Otro' %>>⭐ Otro Tipo de Evento</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="input-label">Fecha del Evento *</label>
+          <input type="date" name="event_date" value="<%= @quote.event_date || Date.today %>" required class="portal-input" style="font-weight: 700;">
+        </div>
+
+        <div>
+          <label class="input-label">Lugar / Salón / Ubicación *</label>
+          <input type="text" name="event_location" value="<%= @quote.event_location %>" required placeholder="Ej. Hotel Trinitarias / Quinta La Esmeralda" class="portal-input">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div>
+          <label class="input-label">Hora Tentativa de Inicio</label>
+          <input type="time" name="start_time" value="<%= @quote.start_time&.strftime('%H:%M') %>" class="portal-input">
+        </div>
+
+        <div>
+          <label class="input-label">Hora Tentativa de Fin</label>
+          <input type="time" name="end_time" value="<%= @quote.end_time&.strftime('%H:%M') %>" class="portal-input">
+        </div>
+      </div>
+    </section>
+
+    <%# --- PASO 4: PRESUPUESTO & ADELANTO --- %>
+    <section class="glass-card" style="border-color: rgba(16, 185, 129, 0.35);">
+      <h2 style="font-size: 1.25rem; font-weight: 800; color: #34d399; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
+        <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+          <%= @preset_budgets.present? && @preset_budgets.any? ? '4' : '3' %>
+        </span>
+        Presupuesto Estimado & Adelanto (Anticipo)
+      </h2>
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px;">
+        <div>
+          <label class="input-label" style="color: #6ee7b7;">Monto del Presupuesto Acordado o Estimado</label>
+          <div style="display: flex; gap: 8px;">
+            <input type="number" step="0.01" id="form-amount-input" name="amount" value="<%= @quote.amount %>" placeholder="0.00" class="portal-input" style="font-size: 1.15rem; font-weight: 800; color: #34d399;">
+            <select name="currency" id="form-currency-select" class="portal-input" style="width: 105px; font-weight: 800; background: #0f172a; color: #34d399;">
+              <option value="USD" <%= 'selected' if @quote.currency == 'USD' %>>USD ($)</option>
+              <option value="BS" <%= 'selected' if @quote.currency == 'BS' %>>BS (Bs)</option>
+            </select>
           </div>
         </div>
 
-        <%# --- SECCIÓN 4: CONFIRMACIÓN Y BOTÓN --- %>
-        <div style="text-align: center; margin-top: 10px;">
-          <label style="display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 0.9rem; font-weight: 600; color: #334155; margin-bottom: 16px; cursor: pointer;">
-            <input type="checkbox" required style="width: 18px; height: 18px; accent-color: #2563eb;">
-            Confirmo que deseo solicitar este presupuesto y contratar el servicio de la agrupación.
-          </label>
-
-          <button type="submit" id="submit-quote-btn" style="background: linear-gradient(135deg, #16a34a, #15803d); color: white; border: none; padding: 16px 36px; border-radius: 14px; font-size: 1.1rem; font-weight: 800; cursor: pointer; box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3); width: 100%; max-width: 420px; transition: all 0.2s;">
-            ✅ Confirmar y Enviar Presupuesto
-          </button>
+        <div>
+          <label class="input-label" style="color: #6ee7b7;">Adelanto / Anticipo (Opcional)</label>
+          <input type="number" step="0.01" name="advance_amount" value="<%= @quote.advance_amount %>" placeholder="0.00" class="portal-input" style="font-size: 1.15rem; font-weight: 800; color: #34d399;">
         </div>
+      </div>
 
-      </form>
+      <div>
+        <label class="input-label">Requerimientos Específicos / Canciones / Observaciones</label>
+        <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes preferencias musicales, canciones para la entrada o detalles del montaje técnico..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
+      </div>
+    </section>
 
-      <div id="quote-response-msg" style="display: none; margin-top: 20px; padding: 20px; border-radius: 14px; text-align: center; font-weight: 700; font-size: 1rem;"></div>
+    <%# --- CONFIRMACIÓN Y BOTÓN --- %>
+    <div style="text-align: center; margin-top: 10px;">
+      <label style="display: inline-flex; align-items: center; gap: 10px; font-size: 0.92rem; font-weight: 600; color: #cbd5e1; margin-bottom: 20px; cursor: pointer;">
+        <input type="checkbox" required style="width: 20px; height: 20px; accent-color: #8b5cf6;">
+        Confirmo que deseo enviar esta propuesta y solicitar la fecha para mi evento.
+      </label>
 
+      <button type="submit" id="submit-quote-btn" class="btn-submit">
+        🚀 Enviar y Confirmar Presupuesto
+      </button>
     </div>
 
-  <% end %>
+  </form>
+
+  <%# --- PANTALLA DE ÉXITO TRAS ENVIAR --- %>
+  <div id="quote-success-screen" style="display: none;" class="glass-card">
+    <div style="text-align: center; padding: 20px 10px;">
+      <div style="font-size: 4rem; margin-bottom: 12px;">🎉</div>
+      <h2 style="font-size: 1.8rem; font-weight: 800; color: #34d399; margin: 0 0 10px 0; font-family: var(--font-outfit);">
+        ¡Presupuesto Enviado con Éxito!
+      </h2>
+      <p id="quote-success-text" style="font-size: 1.05rem; color: #e2e8f0; line-height: 1.6; max-width: 600px; margin: 0 auto 24px;">
+      </p>
+
+      <%# Banner que incita a usar la App e Iniciar Sesión en el Perfil de Cliente %>
+      <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(6, 182, 212, 0.09) 100%); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 20px; padding: 26px 22px; max-width: 580px; margin: 0 auto 20px; text-align: center; box-shadow: 0 8px 30px rgba(139, 92, 246, 0.12);">
+        <div style="display: inline-flex; align-items: center; gap: 6px; background: rgba(139, 92, 246, 0.2); color: #c084fc; padding: 5px 14px; border-radius: 99px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+          <span>📱</span> App & Perfil del Cliente
+        </div>
+
+        <h3 style="font-family: var(--font-outfit); font-size: 1.35rem; font-weight: 800; color: #f8fafc; margin: 0 0 10px 0;">
+          Accede a tu Cuenta y Gestiona tu Evento
+        </h3>
+
+        <p style="color: #cbd5e1; font-size: 0.92rem; line-height: 1.5; margin: 0 0 18px 0;">
+          Inicia sesión en nuestra app para consultar tus presupuestos, dar seguimiento a tus fechas y gestionar tu perfil de cliente:
+        </p>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: left; font-size: 0.85rem; margin-bottom: 18px;">
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            👤 <strong>Perfil de Cliente</strong> y datos de contacto.
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            💳 <strong>Control de Pagos</strong> y abonos en tiempo real.
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            ⏳ <strong>Cronograma</strong> y cuenta regresiva del show.
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.25); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); color: #e2e8f0;">
+            ✍️ <strong>Firma Digital</strong> de contrato y normativas.
+          </div>
+        </div>
+
+        <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.3); color: #6ee7b7; padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+          <span>⭐</span> Guarda este enlace: la información de tu evento se sincronizará con tu cuenta al formalizar la fecha.
+        </div>
+
+        <div>
+          <a href="<%= new_user_session_path %>" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 14px 28px; border-radius: 14px; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35); width: 100%; max-width: 420px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            🔐 Iniciar Sesión / Mi Perfil de Cliente ➔
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </div>
 
 <script>
+  function selectPreset(card, presetId, title, price, currency, desc) {
+    document.querySelectorAll('.preset-card').forEach(function(el) { el.classList.remove('selected'); });
+    card.classList.add('selected');
+
+    document.getElementById('selected-preset-id').value = presetId;
+    document.getElementById('selected-package-name').value = title;
+
+    var amountInput = document.getElementById('form-amount-input');
+    var currencySelect = document.getElementById('form-currency-select');
+    var detailsInput = document.getElementById('form-details-input');
+
+    if (amountInput) amountInput.value = price;
+    if (currencySelect) currencySelect.value = currency;
+    if (detailsInput && (!detailsInput.value || detailsInput.value.includes('Paquete'))) {
+      detailsInput.value = "Paquete seleccionado: " + title + ".\n" + desc;
+    }
+  }
+
+  function selectCustom(card) {
+    document.querySelectorAll('.preset-card').forEach(function(el) { el.classList.remove('selected'); });
+    card.classList.add('selected');
+
+    document.getElementById('selected-preset-id').value = "";
+    document.getElementById('selected-package-name').value = "Servicio Personalizado";
+  }
+
   document.getElementById('public-quote-form')?.addEventListener('submit', function(e) {
     e.preventDefault();
     var form = this;
     var btn = document.getElementById('submit-quote-btn');
-    var msgDiv = document.getElementById('quote-response-msg');
+    var successScreen = document.getElementById('quote-success-screen');
+    var successText = document.getElementById('quote-success-text');
 
     btn.disabled = true;
-    btn.textContent = "Procesando...";
+    btn.textContent = "Enviando tu presupuesto...";
 
     var formData = new FormData(form);
 
@@ -187,29 +568,23 @@
     })
     .then(function(res) { return res.json(); })
     .then(function(data) {
-      msgDiv.style.display = "block";
       if (data.success) {
-        msgDiv.style.background = "#dcfce7";
-        msgDiv.style.color = "#15803d";
-        msgDiv.style.border = "1px solid #86efac";
-        msgDiv.textContent = data.message;
         form.style.display = "none";
+        var confirmedBox = document.getElementById('already-confirmed-box');
+        if (confirmedBox) confirmedBox.style.display = "none";
+        successScreen.style.display = "block";
+        successText.textContent = data.message;
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        msgDiv.style.background = "#ffe4e6";
-        msgDiv.style.color = "#9f1239";
-        msgDiv.style.border = "1px solid #fca5a5";
-        msgDiv.textContent = "Error: " + (data.error || "No se pudo procesar la solicitud.");
+        alert("Error: " + (data.error || "No se pudo procesar la solicitud."));
         btn.disabled = false;
-        btn.textContent = "✅ Confirmar y Enviar Presupuesto";
+        btn.textContent = "🚀 Enviar y Confirmar Presupuesto";
       }
     })
     .catch(function(err) {
-      msgDiv.style.display = "block";
-      msgDiv.style.background = "#ffe4e6";
-      msgDiv.style.color = "#9f1239";
-      msgDiv.textContent = "Error de conexión al enviar el presupuesto.";
+      alert("Error de conexión al enviar el presupuesto.");
       btn.disabled = false;
-      btn.textContent = "✅ Confirmar y Enviar Presupuesto";
+      btn.textContent = "🚀 Enviar y Confirmar Presupuesto";
     });
   });
 </script>

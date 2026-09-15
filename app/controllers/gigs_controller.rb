@@ -256,12 +256,19 @@ class GigsController < ApplicationController
     if params[:quote_id].present?
       @quote = current_company.client_quotes.find_by(id: params[:quote_id])
       if @quote.present?
-        client = Client.find_or_create_for_gig(
-          company: current_company,
-          email: @quote.client_email,
-          name: @quote.client_name,
-          phone: @quote.client_phone
-        )
+        client = nil
+        if @quote.client_email.present? || @quote.client_name.present? || @quote.client_phone.present?
+          email_to_use = @quote.client_email.presence || "cliente_quote_#{@quote.id}@empresa.com"
+          name_to_use = @quote.client_name.presence || "Cliente Presupuesto ##{@quote.id}"
+          phone_to_use = @quote.client_phone.presence || "0000000000"
+
+          client = Client.find_or_create_for_gig(
+            company: current_company,
+            email: email_to_use,
+            name: name_to_use,
+            phone: phone_to_use
+          )
+        end
 
         @gig.client = client
         @gig.client_email = @quote.client_email
