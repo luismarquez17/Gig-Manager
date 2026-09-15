@@ -1,0 +1,273 @@
+<%
+  company ||= local_assigns[:company] || (defined?(current_company) ? current_company : nil)
+  dark_theme = local_assigns.fetch(:dark_theme, true)
+  return unless company.present? && company.any_payment_method_enabled?
+
+  zelle = company.zelle_info
+  binance = company.binance_info
+  pago_movil = company.pago_movil_info
+  bank_transfer = company.bank_transfer_info
+  general_instructions = company.payment_methods["general_instructions"]
+%>
+
+<div class="payment-methods-showcase" style="<%= dark_theme ? 'color: #f8fafc;' : 'color: #0f172a;' %>">
+  
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-bottom: 16px;">
+
+    <%# --- CARD: ZELLE --- %>
+    <% if company.zelle_enabled? && (zelle["email"].present? || zelle["holder_name"].present?) %>
+      <div style="<%= dark_theme ? 'background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.35);' : 'background: #faf5ff; border: 1.5px solid #d8b4fe;' %> border-radius: 16px; padding: 18px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">🟣</span>
+              <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: <%= dark_theme ? '#c084fc' : '#6b21a8' %>; font-family: inherit;">
+                Zelle
+              </h4>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; background: rgba(139, 92, 246, 0.2); color: #c084fc; padding: 3px 8px; border-radius: 6px;">
+              USD
+            </span>
+          </div>
+
+          <% if zelle["email"].present? %>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 0.75rem; color: <%= dark_theme ? '#94a3b8' : '#64748b' %>; font-weight: 700; text-transform: uppercase;">Correo / Teléfono Zelle:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; background: <%= dark_theme ? 'rgba(0,0,0,0.35)' : 'white' %>; padding: 6px 10px; border-radius: 8px; margin-top: 3px; border: 1px solid <%= dark_theme ? 'rgba(255,255,255,0.08)' : '#e2e8f0' %>;">
+                <span style="font-weight: 800; font-size: 0.92rem; word-break: break-all;"><%= zelle["email"] %></span>
+                <button type="button" onclick="copyPaymentData(this, '<%= j zelle["email"] %>')" style="background: #7c3aed; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s;">
+                  📋 Copiar
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <% if zelle["holder_name"].present? %>
+            <div style="font-size: 0.85rem; margin-bottom: 4px;">
+              <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Titular:</strong> <%= zelle["holder_name"] %>
+            </div>
+          <% end %>
+
+          <% if zelle["bank"].present? %>
+            <div style="font-size: 0.85rem; margin-bottom: 4px;">
+              <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Banco:</strong> <%= zelle["bank"] %>
+            </div>
+          <% end %>
+        </div>
+
+        <% if zelle["notes"].present? %>
+          <div style="font-size: 0.78rem; color: <%= dark_theme ? '#a78bfa' : '#7e22ce' %>; margin-top: 10px; font-style: italic; border-top: 1px dashed <%= dark_theme ? 'rgba(139, 92, 246, 0.25)' : '#e9d5ff' %>; padding-top: 6px;">
+            📌 <%= zelle["notes"] %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# --- CARD: BINANCE PAY --- %>
+    <% if company.binance_enabled? && (binance["pay_id"].present? || binance["email"].present?) %>
+      <div style="<%= dark_theme ? 'background: rgba(234, 179, 8, 0.08); border: 1px solid rgba(234, 179, 8, 0.35);' : 'background: #fefce8; border: 1.5px solid #fde047;' %> border-radius: 16px; padding: 18px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">🟡</span>
+              <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: <%= dark_theme ? '#facc15' : '#854d0e' %>; font-family: inherit;">
+                Binance Pay
+              </h4>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; background: rgba(234, 179, 8, 0.2); color: #facc15; padding: 3px 8px; border-radius: 6px;">
+              USDT / Cripto
+            </span>
+          </div>
+
+          <% if binance["pay_id"].present? %>
+            <div style="margin-bottom: 10px;">
+              <div style="font-size: 0.75rem; color: <%= dark_theme ? '#94a3b8' : '#64748b' %>; font-weight: 700; text-transform: uppercase;">Binance Pay ID:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; background: <%= dark_theme ? 'rgba(0,0,0,0.35)' : 'white' %>; padding: 6px 10px; border-radius: 8px; margin-top: 3px; border: 1px solid <%= dark_theme ? 'rgba(255,255,255,0.08)' : '#e2e8f0' %>;">
+                <span style="font-weight: 800; font-size: 0.95rem; font-family: monospace;"><%= binance["pay_id"] %></span>
+                <button type="button" onclick="copyPaymentData(this, '<%= j binance["pay_id"] %>')" style="background: #ca8a04; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap; transition: background 0.2s;">
+                  📋 Copiar
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <% if binance["email"].present? %>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 0.75rem; color: <%= dark_theme ? '#94a3b8' : '#64748b' %>; font-weight: 700; text-transform: uppercase;">Correo Binance:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; background: <%= dark_theme ? 'rgba(0,0,0,0.35)' : 'white' %>; padding: 6px 10px; border-radius: 8px; margin-top: 3px; border: 1px solid <%= dark_theme ? 'rgba(255,255,255,0.08)' : '#e2e8f0' %>;">
+                <span style="font-weight: 700; font-size: 0.88rem; word-break: break-all;"><%= binance["email"] %></span>
+                <button type="button" onclick="copyPaymentData(this, '<%= j binance["email"] %>')" style="background: #ca8a04; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                  📋 Copiar
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <% if binance["nickname"].present? || binance["network"].present? %>
+            <div style="font-size: 0.85rem; margin-bottom: 4px;">
+              <% if binance["nickname"].present? %>
+                <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Nickname:</strong> <%= binance["nickname"] %>
+              <% end %>
+              <% if binance["network"].present? %>
+                <span style="color: <%= dark_theme ? '#94a3b8' : '#64748b' %>;">(<%= binance["network"] %>)</span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <% if binance["notes"].present? %>
+          <div style="font-size: 0.78rem; color: <%= dark_theme ? '#fde047' : '#a16207' %>; margin-top: 10px; font-style: italic; border-top: 1px dashed <%= dark_theme ? 'rgba(234, 179, 8, 0.25)' : '#fef08a' %>; padding-top: 6px;">
+            📌 <%= binance["notes"] %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# --- CARD: PAGO MÓVIL --- %>
+    <% if company.pago_movil_enabled? && (pago_movil["phone"].present? || pago_movil["id_number"].present?) %>
+      <div style="<%= dark_theme ? 'background: rgba(34, 197, 94, 0.08); border: 1px solid rgba(34, 197, 94, 0.35);' : 'background: #f0fdf4; border: 1.5px solid #86efac;' %> border-radius: 16px; padding: 18px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">🟢</span>
+              <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: <%= dark_theme ? '#4ade80' : '#15803d' %>; font-family: inherit;">
+                Pago Móvil
+              </h4>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 3px 8px; border-radius: 6px;">
+              Bolívares (Bs)
+            </span>
+          </div>
+
+          <% if pago_movil["bank"].present? %>
+            <div style="font-size: 0.88rem; margin-bottom: 8px;">
+              <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Banco:</strong> <%= pago_movil["bank"] %>
+            </div>
+          <% end %>
+
+          <% if pago_movil["phone"].present? %>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 0.75rem; color: <%= dark_theme ? '#94a3b8' : '#64748b' %>; font-weight: 700; text-transform: uppercase;">Teléfono:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; background: <%= dark_theme ? 'rgba(0,0,0,0.35)' : 'white' %>; padding: 6px 10px; border-radius: 8px; margin-top: 3px; border: 1px solid <%= dark_theme ? 'rgba(255,255,255,0.08)' : '#e2e8f0' %>;">
+                <span style="font-weight: 800; font-size: 0.95rem; font-family: monospace;"><%= pago_movil["phone"] %></span>
+                <button type="button" onclick="copyPaymentData(this, '<%= j pago_movil["phone"] %>')" style="background: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                  📋 Copiar
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <% if pago_movil["id_number"].present? %>
+            <div style="margin-bottom: 8px;">
+              <div style="font-size: 0.75rem; color: <%= dark_theme ? '#94a3b8' : '#64748b' %>; font-weight: 700; text-transform: uppercase;">Cédula / RIF:</div>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; background: <%= dark_theme ? 'rgba(0,0,0,0.35)' : 'white' %>; padding: 6px 10px; border-radius: 8px; margin-top: 3px; border: 1px solid <%= dark_theme ? 'rgba(255,255,255,0.08)' : '#e2e8f0' %>;">
+                <span style="font-weight: 800; font-size: 0.95rem; font-family: monospace;"><%= pago_movil["id_number"] %></span>
+                <button type="button" onclick="copyPaymentData(this, '<%= j pago_movil["id_number"] %>')" style="background: #16a34a; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                  📋 Copiar
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <% if pago_movil["holder_name"].present? %>
+            <div style="font-size: 0.85rem; margin-bottom: 4px;">
+              <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Titular:</strong> <%= pago_movil["holder_name"] %>
+            </div>
+          <% end %>
+        </div>
+
+        <% if pago_movil["notes"].present? %>
+          <div style="font-size: 0.78rem; color: <%= dark_theme ? '#86efac' : '#166534' %>; margin-top: 10px; font-style: italic; border-top: 1px dashed <%= dark_theme ? 'rgba(34, 197, 94, 0.25)' : '#bbf7d0' %>; padding-top: 6px;">
+            📌 <%= pago_movil["notes"] %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# --- CARD: TRANSFERENCIA BANCARIA --- %>
+    <% if company.bank_transfer_enabled? && pago_movil.present? && bank_transfer["account_number"].present? %>
+      <div style="<%= dark_theme ? 'background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.35);' : 'background: #eff6ff; border: 1.5px solid #93c5fd;' %> border-radius: 16px; padding: 18px; position: relative; display: flex; flex-direction: column; justify-content: space-between; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.3rem;">🔵</span>
+              <h4 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: <%= dark_theme ? '#60a5fa' : '#1e40af' %>; font-family: inherit;">
+                Transferencia Bancaria
+              </h4>
+            </div>
+            <span style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; background: rgba(59, 130, 246, 0.2); color: #60a5fa; padding: 3px 8px; border-radius: 6px;">
+              Banco
+            </span>
+          </div>
+
+          <% if bank_transfer["bank"].present? %>
+            <div style="font-size: 0.88rem; margin-bottom: 8px;">
+              <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Banco:</strong> <%= bank_transfer["bank"] %> (<%= bank_transfer["account_type"] || "Corriente" %>)
+            </div>
+          <% end %>
+
+          <div style="margin-bottom: 8px;">
+            <div style="font-size: 0.75rem; color: <%= dark_theme ? '#94a3b8' : '#64748b' %>; font-weight: 700; text-transform: uppercase;">Número de Cuenta:</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; background: <%= dark_theme ? 'rgba(0,0,0,0.35)' : 'white' %>; padding: 6px 10px; border-radius: 8px; margin-top: 3px; border: 1px solid <%= dark_theme ? 'rgba(255,255,255,0.08)' : '#e2e8f0' %>;">
+              <span style="font-weight: 800; font-size: 0.85rem; font-family: monospace; word-break: break-all;"><%= bank_transfer["account_number"] %></span>
+              <button type="button" onclick="copyPaymentData(this, '<%= j bank_transfer["account_number"] %>')" style="background: #2563eb; color: white; border: none; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; cursor: pointer; white-space: nowrap;">
+                📋 Copiar
+              </button>
+            </div>
+          </div>
+
+          <% if bank_transfer["id_number"].present? || bank_transfer["holder_name"].present? %>
+            <div style="font-size: 0.85rem; margin-bottom: 4px;">
+              <% if bank_transfer["id_number"].present? %>
+                <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">RIF / CI:</strong> <%= bank_transfer["id_number"] %><br>
+              <% end %>
+              <% if bank_transfer["holder_name"].present? %>
+                <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Titular:</strong> <%= bank_transfer["holder_name"] %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+
+        <% if bank_transfer["notes"].present? %>
+          <div style="font-size: 0.78rem; color: <%= dark_theme ? '#93c5fd' : '#1e3a8a' %>; margin-top: 10px; font-style: italic; border-top: 1px dashed <%= dark_theme ? 'rgba(59, 130, 246, 0.25)' : '#bfdbfe' %>; padding-top: 6px;">
+            📌 <%= bank_transfer["notes"] %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+  </div>
+
+  <% if general_instructions.present? %>
+    <div style="<%= dark_theme ? 'background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);' : 'background: #f8fafc; border: 1px solid #e2e8f0;' %> border-radius: 12px; padding: 12px 16px; font-size: 0.86rem; display: flex; align-items: center; gap: 10px;">
+      <span style="font-size: 1.2rem;">💡</span>
+      <span style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>; line-height: 1.4;"><%= general_instructions %></span>
+    </div>
+  <% end %>
+
+</div>
+
+<script>
+  if (typeof window.copyPaymentData === 'undefined') {
+    window.copyPaymentData = function(btn, text) {
+      if (!navigator.clipboard) {
+        var textArea = document.createElement("textarea");
+        textArea.value = text;
+        document.body.appendChild(textArea);
+        textArea.select();
+        try { document.execCommand('copy'); } catch (err) {}
+        document.body.removeChild(textArea);
+      } else {
+        navigator.clipboard.writeText(text);
+      }
+
+      var originalText = btn.innerHTML;
+      btn.innerHTML = "✅ ¡Copiado!";
+      btn.style.filter = "brightness(1.2)";
+      setTimeout(function() {
+        btn.innerHTML = originalText;
+        btn.style.filter = "none";
+      }, 2000);
+    };
+  }
+</script>

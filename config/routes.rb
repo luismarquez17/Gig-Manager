@@ -77,10 +77,15 @@ Rails.application.routes.draw do
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
   post '/portal/:token/request_upsell', to: 'portals#request_upsell', as: 'request_public_portal_upsell'
 
-  # Presupuestos de Clientes
+  # Presupuestos de Clientes y Métodos de Pago
   resources :client_quotes
   get '/q/:token', to: 'client_quotes#public_show', as: 'public_client_quote'
   post '/q/:token/submit', to: 'client_quotes#public_submit', as: 'submit_public_client_quote'
+  get '/q/:token/access', to: 'client_quotes#access', as: 'access_public_client_quote'
+
+  # Configuración de Métodos de Pago de la Empresa
+  get '/payment_methods_settings', to: 'payment_methods#edit', as: 'payment_methods_settings'
+  patch '/payment_methods_settings', to: 'payment_methods#update'
 
   resources :gig_upsell_requests, only: [] do
     member do

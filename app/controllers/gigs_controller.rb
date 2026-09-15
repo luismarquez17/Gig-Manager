@@ -256,22 +256,20 @@ class GigsController < ApplicationController
     if params[:quote_id].present?
       @quote = current_company.client_quotes.find_by(id: params[:quote_id])
       if @quote.present?
-        client = nil
-        if @quote.client_email.present? || @quote.client_name.present? || @quote.client_phone.present?
-          email_to_use = @quote.client_email.presence || "cliente_quote_#{@quote.id}@empresa.com"
-          name_to_use = @quote.client_name.presence || "Cliente Presupuesto ##{@quote.id}"
-          phone_to_use = @quote.client_phone.presence || "0000000000"
-
+        client = @quote.client
+        if client.nil? && (@quote.client_email.present? || @quote.client_name.present? || @quote.client_phone.present?)
           client = Client.find_or_create_for_gig(
             company: current_company,
-            email: email_to_use,
-            name: name_to_use,
-            phone: phone_to_use
+            email: @quote.client_email,
+            name: @quote.client_name,
+            phone: @quote.client_phone
           )
+          @quote.update_column(:client_id, client.id) if client.present?
         end
 
         @gig.client = client
-        @gig.client_email = @quote.client_email
+        @gig.client_id = client&.id
+        @gig.client_email = @quote.client_email.presence || client&.email
         @gig.amount = @quote.amount
         @gig.currency = @quote.currency
         @gig.location = @quote.event_location
@@ -288,13 +286,21 @@ class GigsController < ApplicationController
   def create
     @gig = current_company.gigs.build(gig_params)
 
-    if @gig.client_id.blank? && @gig.client_email.present?
-      @gig.client = Client.find_or_create_for_gig(
-        company: current_company,
-        email: @gig.client_email,
-        name: params[:client_name],
-        phone: params[:client_phone]
-      )
+    # Si no se seleccionó un client_id existente del buscador pero se escribió un nombre o vino de un presupuesto o email
+    if @gig.client_id.blank?
+      name_to_use = params[:client_name].presence || params.dig(:gig, :client_name).presence
+      email_to_use = @gig.client_email.presence || params[:client_email].presence
+      phone_to_use = params[:client_phone].presence
+
+      if name_to_use.present? || email_to_use.present?
+        matched_client = Client.find_or_create_for_gig(
+          company: current_company,
+          email: email_to_use,
+          name: name_to_use,
+          phone: phone_to_use
+        )
+        @gig.client = matched_client if matched_client.present?
+      end
     end
 
     if @gig.save

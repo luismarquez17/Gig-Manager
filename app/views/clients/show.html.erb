@@ -154,17 +154,17 @@
           </div>
 
           <%# Flyer / Image Preview %>
-          <div style="background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 200px; text-align: center; width: 100%; box-sizing: border-box;">
-            <div id="flyer-preview-placeholder">
-              <span style="font-size: 40px;">🖼️</span>
-              <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #64748b;">El paquete seleccionado no tiene flyer de imagen adjunto.</p>
+          <div style="background: #0f172a; border: 1px solid #cbd5e1; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 220px; text-align: center; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.06);">
+            <div id="flyer-preview-placeholder" style="color: #94a3b8;">
+              <span style="font-size: 45px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">🖼️</span>
+              <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #cbd5e1; font-weight: 600;">El paquete seleccionado no tiene flyer de imagen adjunto.</p>
             </div>
-            <img id="flyer-preview-image" src="" style="display: none; max-width: 100%; max-height: 220px; border-radius: 6px; box-shadow: 0 4px 8px rgba(0,0,0,0.05); margin-bottom: 12px;">
+            <img id="flyer-preview-image" src="" alt="Flyer del Paquete" style="display: none; max-width: 100%; max-height: 260px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); margin-bottom: 14px; object-fit: contain; border: 1px solid rgba(255,255,255,0.15);">
             <div id="flyer-actions" style="display: none; gap: 8px; justify-content: center; flex-wrap: wrap; width: 100%;">
-              <button onclick="copyFlyerToClipboard()" style="background: #3b82f6; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
+              <button onclick="copyFlyerToClipboard()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
                 📋 Copiar Foto
               </button>
-              <a id="download-flyer-btn" href="#" download style="background: #475569; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; text-decoration: none; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='#475569'">
+              <a id="download-flyer-btn" href="#" download style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.25); padding: 8px 16px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
                 📥 Descargar Foto
               </a>
             </div>

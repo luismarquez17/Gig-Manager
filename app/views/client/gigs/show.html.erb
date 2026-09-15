@@ -565,7 +565,14 @@
         </table>
       </div>
     <% else %>
-      <p style="text-align:center; color:var(--portal-text-muted); font-style:italic; margin:15px 0;">No se han registrado pagos todavía.</p>
+    <%# Métodos de Pago Oficiales %>
+    <% if @gig.company&.any_payment_method_enabled? %>
+      <div style="margin-top:25px; border-top:1px dashed rgba(255,255,255,0.08); padding-top:20px;">
+        <h4 style="font-family:var(--portal-font-outfit); font-size:1.05em; font-weight:700; margin:0 0 12px 0; color:#38bdf8; display:flex; align-items:center; gap:8px;">
+          <span>💳</span> Métodos de Pago Oficiales para Abonos o Saldos
+        </h4>
+        <%= render 'shared/payment_methods_cards', company: @gig.company, dark_theme: true %>
+      </div>
     <% end %>
 
     <% if @gig.remaining_amount.positive? %>

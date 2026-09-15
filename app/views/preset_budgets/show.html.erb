@@ -19,15 +19,29 @@
   <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-bottom: 40px; align-items: start; flex-wrap: wrap;">
     
     <%# Columna izquierda: Imagen o flyer %>
-    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); display: flex; justify-content: center; align-items: center; min-height: 250px;">
+    <div style="background: #0f172a; border: 1px solid #e2e8f0; border-radius: 20px; padding: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 320px; position: relative; overflow: hidden;">
       <% if @preset_budget.image.attached? %>
-        <%= image_tag @preset_budget.image, style: "max-width: 100%; height: auto; border-radius: 10px; max-height: 450px; object-fit: contain; box-shadow: 0 4px 10px rgba(0,0,0,0.05);" %>
+        <% img_url = rails_blob_path(@preset_budget.image, only_path: true) rescue url_for(@preset_budget.image) %>
+        <div style="position: relative; width: 100%; display: flex; justify-content: center;">
+          <%= image_tag @preset_budget.image, style: "max-width: 100%; height: auto; border-radius: 14px; max-height: 480px; object-fit: contain; box-shadow: 0 8px 25px rgba(0,0,0,0.4);", alt: @preset_budget.title %>
+          
+          <%# Botones flotantes de acción en imagen %>
+          <div style="position: absolute; bottom: 14px; left: 14px; right: 14px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" onclick="openImageModal('<%= img_url %>', '<%= j @preset_budget.title %>')" style="background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: all 0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='rgba(15, 23, 42, 0.82)'">
+              🔍 Ampliar Flyer HD
+            </button>
+            <a href="<%= img_url %>" download="<%= @preset_budget.title.parameterize %>-flyer" style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid rgba(255, 255, 255, 0.2); color: white; padding: 8px 16px; border-radius: 12px; font-size: 0.85rem; font-weight: 700; text-decoration: none; display: flex; align-items: center; gap: 6px; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: all 0.2s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.25)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.15)'">
+              ⬇️ Descargar
+            </a>
+          </div>
+        </div>
       <% else %>
         <div style="text-align: center; color: #94a3b8; padding: 60px 20px;">
-          <div style="font-size: 80px; margin-bottom: 15px;">🖼️</div>
-          <p style="margin: 0; font-weight: bold;">Sin Imagen o Flyer Cargado</p>
+          <div style="font-size: 70px; margin-bottom: 12px; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.3));">🎛️</div>
+          <p style="margin: 0; font-weight: 800; color: #f8fafc; font-size: 1.1rem;">Sin Flyer o Imagen Cargada</p>
           <% unless current_user.client? %>
-            <p style="margin: 5px 0 0 0; font-size: 0.85em; color: #cbd5e1;">Puedes editar este presupuesto para subir una imagen promocional.</p>
+            <p style="margin: 6px 0 16px 0; font-size: 0.88rem; color: #94a3b8; max-width: 320px;">Puedes editar este presupuesto base para subir un flyer promocional atractivo.</p>
+            <%= link_to '🖼️ Subir Imagen / Flyer', edit_preset_budget_path(@preset_budget), style: "background: #2563eb; color: white; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" %>
           <% end %>
         </div>
       <% end %>
@@ -36,17 +50,17 @@
     <%# Columna derecha: Detalles %>
     <div style="display: flex; flex-direction: column; gap: 20px;">
       
-      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
-        <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Precio del Paquete</p>
-        <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 2.2em; font-weight: 800;">
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
+        <p style="margin: 0; color: #64748b; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Precio del Paquete</p>
+        <h2 style="margin: 5px 0 0 0; color: #10b981; font-size: 2.2em; font-weight: 900; font-family: 'Outfit', sans-serif;">
           $<%= number_with_precision(@preset_budget.price, precision: 2) %> 
-          <span style="font-size: 0.55em; color: #94a3b8; font-weight: bold; vertical-align: middle;"><%= @preset_budget.currency %></span>
+          <span style="font-size: 0.55em; color: #64748b; font-weight: 700; vertical-align: middle;"><%= @preset_budget.currency %></span>
         </h2>
       </div>
 
-      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); flex-grow: 1;">
-        <p style="margin: 0 0 15px 0; color: #64748b; font-size: 0.85em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">📋 Descripción del Servicio</p>
-        <div style="color: #334155; line-height: 1.7; font-size: 1.05em; white-space: pre-line;">
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 25px; box-shadow: 0 4px 15px rgba(0,0,0,0.02); flex-grow: 1;">
+        <p style="margin: 0 0 15px 0; color: #64748b; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #f1f5f9; padding-bottom: 10px;">📋 Descripción y Equipos Incluidos</p>
+        <div style="color: #334155; line-height: 1.7; font-size: 1.02em; white-space: pre-line;">
           <%= @preset_budget.description %>
         </div>
       </div>

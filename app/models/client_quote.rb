@@ -17,6 +17,7 @@ class ClientQuote < ApplicationRecord
 
   before_validation :generate_public_token, on: :create
   before_validation :set_default_status, on: :create
+  before_save :sync_or_create_client!, if: -> { company.present? && (client_name.present? || client_phone.present?) && client_id.blank? }
 
   scope :recent_first, -> { order(created_at: :desc) }
   scope :convertible, -> { where(status: [:pending, :accepted]) }
@@ -74,7 +75,18 @@ class ClientQuote < ApplicationRecord
     end
   end
 
-  private
+  def sync_or_create_client!
+    return unless company.present?
+    return if client_name.blank? && client_phone.blank?
+
+    matched_client = Client.find_or_create_for_gig(
+      company: company,
+      name: client_name,
+      phone: client_phone,
+      email: client_email
+    )
+    self.client_id = matched_client.id if matched_client.present?
+  end
 
   def generate_public_token
     self.public_token ||= SecureRandom.hex(12)

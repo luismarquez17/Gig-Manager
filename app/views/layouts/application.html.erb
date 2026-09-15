@@ -358,6 +358,10 @@
                 <span class="icon">📋</span> <span>Presupuestos Clientes</span>
               <% end %>
 
+              <%= link_to payment_methods_settings_path, class: "sidebar-link #{'active' if controller_name == 'payment_methods'}" do %>
+                <span class="icon">💳</span> <span>Métodos de Pago</span>
+              <% end %>
+
               <%= link_to standard_upsells_path, class: "sidebar-link #{'active' if controller_name == 'standard_upsells'}" do %>
                 <span class="icon">🚀</span> <span>Adicionales (Upsells)</span>
               <% end %>

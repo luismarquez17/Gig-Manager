@@ -36,57 +36,136 @@
   /* Preset Budgets Grid */
   .preset-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 16px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 18px;
     margin-top: 14px;
   }
 
   .preset-card {
     background: rgba(255, 255, 255, 0.03);
-    border: 2px solid rgba(255, 255, 255, 0.06);
-    border-radius: 18px;
-    padding: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 16px;
     cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     position: relative;
     user-select: none;
+    overflow: hidden;
   }
 
   .preset-card:hover {
-    border-color: rgba(139, 92, 246, 0.5);
-    background: rgba(139, 92, 246, 0.05);
-    transform: translateY(-3px);
+    border-color: rgba(139, 92, 246, 0.6);
+    background: rgba(139, 92, 246, 0.08);
+    transform: translateY(-4px);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
   }
 
   .preset-card.selected {
     border-color: #8b5cf6;
-    background: rgba(139, 92, 246, 0.12);
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+    background: linear-gradient(180deg, rgba(139, 92, 246, 0.18) 0%, rgba(139, 92, 246, 0.06) 100%);
+    box-shadow: 0 0 25px rgba(139, 92, 246, 0.4), inset 0 0 15px rgba(139, 92, 246, 0.1);
   }
 
   .preset-card .check-indicator {
     position: absolute;
-    top: 12px;
-    right: 12px;
-    width: 24px;
-    height: 24px;
+    top: 14px;
+    right: 14px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 800;
     color: transparent;
-    transition: all 0.2s;
+    transition: all 0.25s;
+    z-index: 10;
   }
 
   .preset-card.selected .check-indicator {
     background: #8b5cf6;
     border-color: #8b5cf6;
     color: white;
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.6);
+  }
+
+  .preset-img-wrapper {
+    position: relative;
+    width: 100%;
+    min-height: 200px;
+    max-height: 320px;
+    border-radius: 14px;
+    overflow: hidden;
+    margin-bottom: 14px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .preset-img-blur-bg {
+    position: absolute;
+    inset: -15px;
+    width: calc(100% + 30px);
+    height: calc(100% + 30px);
+    object-fit: cover;
+    filter: blur(20px) brightness(0.35);
+    transform: scale(1.15);
+    pointer-events: none;
+  }
+
+  .preset-img {
+    position: relative;
+    max-width: 100%;
+    max-height: 300px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: 8px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+    z-index: 2;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .preset-card:hover .preset-img {
+    transform: scale(1.04);
+  }
+
+  .preset-zoom-btn {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: #f1f5f9;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 5px 11px;
+    border-radius: 99px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.2s;
+    z-index: 5;
+  }
+
+  .preset-zoom-btn:hover {
+    background: #8b5cf6;
+    color: white;
+    border-color: #8b5cf6;
+    transform: scale(1.05);
   }
 
   /* Form Elements */
@@ -306,23 +385,41 @@
               
               <div>
                 <% if preset.image.attached? %>
-                  <div style="height: 120px; border-radius: 12px; overflow: hidden; margin-bottom: 12px; background: rgba(0,0,0,0.2);">
-                    <%= image_tag preset.image, style: "width: 100%; height: 100%; object-fit: cover;" %>
+                  <% img_url = rails_blob_path(preset.image, only_path: true) rescue url_for(preset.image) %>
+                  <div class="preset-img-wrapper">
+                    <%# Fondo ambiental difuminado %>
+                    <%= image_tag preset.image, class: "preset-img-blur-bg", alt: "", "aria-hidden": "true" %>
+                    
+                    <%# Imagen completa en su proporción original %>
+                    <%= image_tag preset.image, class: "preset-img", alt: preset.title, loading: "lazy" %>
+                    
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); color: #c084fc; font-size: 0.7rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; border: 1px solid rgba(139, 92, 246, 0.35); text-transform: uppercase; letter-spacing: 0.5px; z-index: 5;">
+                      ✨ Paquete
+                    </div>
+
+                    <button type="button" class="preset-zoom-btn" onclick="event.stopPropagation(); openImageModal('<%= img_url %>', '<%= j preset.title %>')">
+                      🔍 Ver Flyer
+                    </button>
+                  </div>
+                <% else %>
+                  <div class="preset-img-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); border-color: rgba(255, 255, 255, 0.06);">
+                    <div style="font-size: 2.2rem; margin-bottom: 4px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">🎛️</div>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Paquete Estándar</span>
                   </div>
                 <% end %>
 
-                <div style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-bottom: 4px; font-family: var(--font-outfit);">
+                <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 6px; font-family: var(--font-outfit); line-height: 1.25;">
                   <%= preset.title %>
                 </div>
 
-                <p style="font-size: 0.84rem; color: #94a3b8; margin: 0 0 12px 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                <p style="font-size: 0.85rem; color: #94a3b8; margin: 0 0 14px 0; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                   <%= preset.description %>
                 </p>
               </div>
 
-              <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 8px;">
-                <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Precio Base</span>
-                <span style="font-size: 1.2rem; font-weight: 800; color: #34d399; font-family: var(--font-outfit);">
+              <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 8px;">
+                <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Precio Base</span>
+                <span style="font-size: 1.25rem; font-weight: 800; color: #34d399; font-family: var(--font-outfit);">
                   $<%= preset.price %> <span style="font-size: 0.75rem; color: #94a3b8;"><%= preset.currency %></span>
                 </span>
               </div>
@@ -334,16 +431,20 @@
                onclick="selectCustom(this)">
             <div class="check-indicator">✓</div>
             <div>
-              <div style="font-size: 2rem; margin-bottom: 8px;">⭐</div>
-              <div style="font-size: 1.1rem; font-weight: 800; color: #f8fafc; margin-bottom: 4px; font-family: var(--font-outfit);">
+              <div class="preset-img-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%); border-color: rgba(139, 92, 246, 0.3);">
+                <div style="font-size: 2.2rem; margin-bottom: 4px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">⭐</div>
+                <span style="font-size: 0.75rem; font-weight: 800; color: #c084fc; text-transform: uppercase; letter-spacing: 0.5px;">100% Personalizado</span>
+              </div>
+
+              <div style="font-size: 1.15rem; font-weight: 800; color: #f8fafc; margin-bottom: 6px; font-family: var(--font-outfit); line-height: 1.25;">
                 Servicio a Medida / Personalizado
               </div>
-              <p style="font-size: 0.84rem; color: #94a3b8; margin: 0; line-height: 1.4;">
+              <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; line-height: 1.5;">
                 ¿Tienes requerimientos especiales o quieres cotizar un número específico de horas o músicos? Elige esta opción.
               </p>
             </div>
-            <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 10px; margin-top: 12px;">
-              <span style="font-size: 0.82rem; font-weight: 800; color: #a78bfa;">A Convenir / Personalizado</span>
+            <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 14px;">
+              <span style="font-size: 0.85rem; font-weight: 800; color: #a78bfa;">A Convenir / Personalizado</span>
             </div>
           </div>
         </div>
@@ -450,6 +551,20 @@
         <label class="input-label">Requerimientos Específicos / Canciones / Observaciones</label>
         <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes preferencias musicales, canciones para la entrada o detalles del montaje técnico..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
       </div>
+
+      <% if @company.any_payment_method_enabled? %>
+        <div style="margin-top: 24px; border-top: 1px dashed rgba(255, 255, 255, 0.12); padding-top: 18px;">
+          <div style="margin-bottom: 14px;">
+            <label class="input-label" style="color: #6ee7b7; margin: 0 0 4px 0; font-size: 0.95rem; display: flex; align-items: center; gap: 8px;">
+              <span>💳</span> Cuentas & Métodos de Pago Disponibles
+            </label>
+            <p style="color: #94a3b8; font-size: 0.82rem; margin: 0;">
+              Si deseas realizar un anticipo para asegurar tu fecha, puedes utilizar cualquiera de nuestras cuentas oficiales:
+            </p>
+          </div>
+          <%= render 'shared/payment_methods_cards', company: @company, dark_theme: true %>
+        </div>
+      <% end %>
     </section>
 
     <%# --- CONFIRMACIÓN Y BOTÓN --- %>
@@ -475,6 +590,18 @@
       </h2>
       <p id="quote-success-text" style="font-size: 1.05rem; color: #e2e8f0; line-height: 1.6; max-width: 600px; margin: 0 auto 24px;">
       </p>
+
+      <% if @company.any_payment_method_enabled? %>
+        <div style="max-width: 620px; margin: 0 auto 24px; text-align: left; background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); border-radius: 20px; padding: 20px;">
+          <h4 style="font-family: var(--font-outfit); font-size: 1.1rem; font-weight: 800; color: #34d399; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
+            <span>💳</span> Datos de Pago para Formalizar tu Anticipo
+          </h4>
+          <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0 0 14px 0;">
+            Copia los datos de la cuenta que prefieras para realizar tu transferencia o abono:
+          </p>
+          <%= render 'shared/payment_methods_cards', company: @company, dark_theme: true %>
+        </div>
+      <% end %>
 
       <%# Banner que incita a usar la App e Iniciar Sesión en el Perfil de Cliente %>
       <div style="background: linear-gradient(135deg, rgba(139, 92, 246, 0.14) 0%, rgba(6, 182, 212, 0.09) 100%); border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 20px; padding: 26px 22px; max-width: 580px; margin: 0 auto 20px; text-align: center; box-shadow: 0 8px 30px rgba(139, 92, 246, 0.12);">
@@ -510,8 +637,8 @@
         </div>
 
         <div>
-          <a href="<%= new_user_session_path %>" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 14px 28px; border-radius: 14px; font-weight: 800; font-size: 1rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(37, 99, 235, 0.35); width: 100%; max-width: 420px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-            🔐 Iniciar Sesión / Mi Perfil de Cliente ➔
+          <a href="<%= access_public_client_quote_path(@quote.public_token) %>" id="instant-client-access-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 16px 28px; border-radius: 14px; font-weight: 800; font-size: 1.05rem; text-decoration: none; display: inline-flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35); width: 100%; max-width: 440px; transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+            🚀 Acceder Directamente a Mi Perfil de Cliente ➔
           </a>
         </div>
       </div>
@@ -574,6 +701,10 @@
         if (confirmedBox) confirmedBox.style.display = "none";
         successScreen.style.display = "block";
         successText.textContent = data.message;
+        if (data.access_url) {
+          var accessBtn = document.getElementById('instant-client-access-btn');
+          if (accessBtn) accessBtn.href = data.access_url;
+        }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         alert("Error: " + (data.error || "No se pudo procesar la solicitud."));
@@ -587,4 +718,37 @@
       btn.textContent = "🚀 Enviar y Confirmar Presupuesto";
     });
   });
+
+  function openImageModal(imgSrc, caption) {
+    var modal = document.getElementById('image-modal');
+    var modalImg = document.getElementById('image-modal-img');
+    var modalCap = document.getElementById('image-modal-caption');
+    if (modal && modalImg) {
+      modalImg.src = imgSrc;
+      if (modalCap) modalCap.textContent = caption || '';
+      modal.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+  }
+
+  function closeImageModal() {
+    var modal = document.getElementById('image-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      document.body.style.overflow = '';
+    }
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeImageModal();
+  });
 </script>
+
+<%# --- LIGHTBOX MODAL PARA VER FLYER / IMAGEN EN ALTA RESOLUCIÓN --- %>
+<div id="image-modal" style="display: none; position: fixed; inset: 0; background: rgba(5, 8, 18, 0.92); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); z-index: 99999; align-items: center; justify-content: center; padding: 20px;" onclick="closeImageModal()">
+  <div style="position: relative; max-width: 900px; width: 100%; max-height: 90vh; display: flex; flex-direction: column; align-items: center;" onclick="event.stopPropagation()">
+    <button type="button" onclick="closeImageModal()" style="position: absolute; top: -45px; right: 0; background: rgba(255, 255, 255, 0.15); border: 1px solid rgba(255, 255, 255, 0.3); color: white; width: 38px; height: 38px; border-radius: 50%; font-size: 1.2rem; font-weight: 800; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.8)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.15)'">✕</button>
+    <img id="image-modal-img" src="" alt="Flyer del Paquete" style="max-width: 100%; max-height: 82vh; border-radius: 16px; object-fit: contain; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7); border: 1px solid rgba(255, 255, 255, 0.15);">
+    <div id="image-modal-caption" style="color: #f8fafc; font-size: 1.05rem; font-weight: 800; margin-top: 14px; text-align: center; font-family: var(--font-outfit);"></div>
+  </div>
+</div>

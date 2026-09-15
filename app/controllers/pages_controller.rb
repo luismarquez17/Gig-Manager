@@ -64,7 +64,15 @@ class PagesController < ApplicationController
       @total_owed = current_user.pending_balance
     else
       # Client
-      @proximos_gigs = current_user.client ? current_user.client.gigs.where("date >= ?", Date.today).order(date: :asc).limit(5) : []
+      client_id = current_user.client_id
+      @proximos_gigs = client_id.present? ? Gig.where(client_id: client_id).where("date >= ?", Date.today).order(date: :asc).limit(5) : []
+      @mis_presupuestos = if client_id.present? && current_company.present?
+        current_company.client_quotes.where("client_id = ? OR client_email = ?", client_id, current_user.email).recent_first.limit(5)
+      elsif current_company.present?
+        current_company.client_quotes.where(client_email: current_user.email).recent_first.limit(5)
+      else
+        ClientQuote.none
+      end
     end
   end
 

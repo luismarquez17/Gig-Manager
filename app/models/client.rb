@@ -143,29 +143,54 @@ class Client < ApplicationRecord
     return nil if company.nil?
     return nil if email.blank? && name.blank? && phone.blank?
 
-    # Buscar cliente existente por teléfono, correo o nombre
-    existing = nil
+    # 1. Buscar primero por teléfono (identificador personal directo)
     if phone.present?
       clean_phone = phone.gsub(/\D/, '')
       if clean_phone.length >= 7
-        existing = company.clients.where.not(phone: [nil, '']).find { |c| c.phone.gsub(/\D/, '').include?(clean_phone) || clean_phone.include?(c.phone.gsub(/\D/, '')) }
+        existing = company.clients.where.not(phone: [nil, '', '0000000000']).find do |c|
+          c_digits = c.phone.gsub(/\D/, '')
+          c_digits.include?(clean_phone) || clean_phone.include?(c_digits)
+        end
       end
     end
-    existing ||= company.clients.find_by(email: email) if email.present?
-    existing ||= company.clients.find_by("LOWER(name) = ?", name.downcase.strip) if name.present?
 
-    return existing if existing.present?
+    # 2. Buscar por correo electrónico si no se encontró por teléfono
+    if existing.nil? && email.present?
+      existing = company.clients.where.not(email: [nil, '']).find_by(email: email)
+    end
+
+    # 3. Buscar por coincidencia de nombre SOLO si el cliente existente no tiene otro teléfono o correo en conflicto
+    if existing.nil? && name.present?
+      name_candidates = company.clients.where("LOWER(TRIM(name)) = ?", name.downcase.strip)
+      clean_phone = phone.to_s.gsub(/\D/, '')
+      
+      existing = name_candidates.find do |c|
+        c_digits = c.phone.to_s.gsub(/\D/, '')
+        phone_matches = c.phone.blank? || c.phone == "0000000000" || (clean_phone.length >= 7 && (c_digits.include?(clean_phone) || clean_phone.include?(c_digits)))
+        email_matches = c.email.blank? || email.blank? || c.email.downcase.strip == email.downcase.strip
+        phone_matches && email_matches
+      end
+    end
+
+    if existing.present?
+      updates = {}
+      updates[:email] = email if existing.email.blank? && email.present?
+      updates[:phone] = phone if (existing.phone.blank? || existing.phone == "0000000000") && phone.present?
+      existing.update(updates) if updates.any?
+      return existing
+    end
 
     client_name = name.presence || (email.present? ? email.split('@').first.capitalize : "Cliente #{phone}")
     client_phone = phone.presence || "0000000000"
     client_email = email.presence
 
-    company.clients.create(
+    company.clients.create!(
       name: client_name,
       email: client_email,
       phone: client_phone
     )
-  rescue StandardError
+  rescue StandardError => e
+    Rails.logger.error("Error en Client.find_or_create_for_gig: #{e.message}")
     nil
   end
 

@@ -632,12 +632,19 @@
         </table>
       </div>
     <% else %>
-      <p style="text-align: center; color: var(--text-muted); font-style: italic; margin: 20px 0;">No se han registrado pagos para este show todavía.</p>
+    <%# Métodos de Pago Oficiales %>
+    <% if @gig.company&.any_payment_method_enabled? %>
+      <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
+        <h4 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 12px 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+          <span>💳</span> Métodos de Pago Oficiales para Abonos o Saldos
+        </h4>
+        <%= render 'shared/payment_methods_cards', company: @gig.company, dark_theme: true %>
+      </div>
     <% end %>
 
     <%# Reportar nuevo pago %>
     <% if @gig.remaining_amount.positive? %>
-      <div style="margin-top: 30px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 25px;">
+      <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
         <p style="font-size: 0.9em; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
           ¿Realizaste un nuevo abono? Envíanos tu comprobante o capture por WhatsApp para que nuestro equipo lo registre.
         </p>

@@ -1,0 +1,285 @@
+<div style="max-width: 980px; margin: 0 auto; padding: 25px 20px 60px; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;">
+
+  <%# Header %>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <div style="display: inline-flex; align-items: center; gap: 8px; background: rgba(139, 92, 246, 0.12); color: #7c3aed; padding: 5px 14px; border-radius: 99px; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px;">
+        <span>💳</span> Finanzas & Cobranzas
+      </div>
+      <h1 style="font-size: 1.9rem; font-weight: 900; color: #0f172a; margin: 0; letter-spacing: -0.5px;">
+        Métodos de Pago de la Empresa
+      </h1>
+      <p style="color: #64748b; font-size: 0.95rem; margin: 6px 0 0 0;">
+        Configura los datos que verán tus clientes en los presupuestos públicos y en sus portales para abonar anticipos o saldos.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px;">
+      <%= link_to client_quotes_path, class: "btn", style: "background: #f1f5f9; color: #475569; font-weight: 700; padding: 10px 18px; border-radius: 12px; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" do %>
+        📋 Ver Presupuestos
+      <% end %>
+    </div>
+  </div>
+
+  <%= form_with url: payment_methods_settings_path, method: :patch, local: true do |f| %>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 24px; margin-bottom: 28px;">
+
+      <%# --- TARJETA 1: ZELLE --- %>
+      <div style="background: white; border-radius: 20px; border: 2px solid #e9d5ff; box-shadow: 0 10px 25px rgba(139, 92, 246, 0.06); padding: 24px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #7c3aed, #a855f7);"></div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #f3e8ff; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+              🟣
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #581c87;">Zelle</h3>
+              <span style="font-size: 0.8rem; color: #7e22ce; font-weight: 600;">Dólares USD (Transferencia directa)</span>
+            </div>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.88rem; color: #581c87; cursor: pointer; background: #faf5ff; padding: 6px 12px; border-radius: 99px; border: 1px solid #d8b4fe;">
+            <input type="checkbox" name="payment_methods[zelle][enabled]" value="1" <%= 'checked' if @payment_methods.dig('zelle', 'enabled').to_s == 'true' || @payment_methods.dig('zelle', 'enabled') == true %> style="width: 18px; height: 18px; accent-color: #7c3aed;">
+            Activo
+          </label>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Correo Electrónico / Teléfono Zelle
+            </label>
+            <input type="text" name="payment_methods[zelle][email]" value="<%= @payment_methods.dig('zelle', 'email') %>" placeholder="ejemplo@correo.com" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-weight: 600; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Nombre del Titular / Beneficiario
+            </label>
+            <input type="text" name="payment_methods[zelle][holder_name]" value="<%= @payment_methods.dig('zelle', 'holder_name') %>" placeholder="Nombre y Apellido del titular" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Banco Asociado (Opcional)
+            </label>
+            <input type="text" name="payment_methods[zelle][bank]" value="<%= @payment_methods.dig('zelle', 'bank') %>" placeholder="Ej. Bank of America / Wells Fargo / Chase" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Nota / Instrucción para el Cliente
+            </label>
+            <input type="text" name="payment_methods[zelle][notes]" value="<%= @payment_methods.dig('zelle', 'notes') %>" placeholder="Ej. Indicar nombre del evento en la nota" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+        </div>
+      </div>
+
+      <%# --- TARJETA 2: BINANCE PAY --- %>
+      <div style="background: white; border-radius: 20px; border: 2px solid #fef08a; box-shadow: 0 10px 25px rgba(234, 179, 8, 0.06); padding: 24px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #eab308, #ca8a04);"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #fef9c3; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+              🟡
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #713f12;">Binance Pay</h3>
+              <span style="font-size: 0.8rem; color: #854d0e; font-weight: 600;">Cripto / USDT (Sin comisiones)</span>
+            </div>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.88rem; color: #713f12; cursor: pointer; background: #fefce8; padding: 6px 12px; border-radius: 99px; border: 1px solid #fde047;">
+            <input type="checkbox" name="payment_methods[binance][enabled]" value="1" <%= 'checked' if @payment_methods.dig('binance', 'enabled').to_s == 'true' || @payment_methods.dig('binance', 'enabled') == true %> style="width: 18px; height: 18px; accent-color: #eab308;">
+            Activo
+          </label>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Binance Pay ID
+            </label>
+            <input type="text" name="payment_methods[binance][pay_id]" value="<%= @payment_methods.dig('binance', 'pay_id') %>" placeholder="Ej. 123456789" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-weight: 600; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Correo Registrado en Binance
+            </label>
+            <input type="text" name="payment_methods[binance][email]" value="<%= @payment_methods.dig('binance', 'email') %>" placeholder="binance@correo.com" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Nickname / Usuario
+              </label>
+              <input type="text" name="payment_methods[binance][nickname]" value="<%= @payment_methods.dig('binance', 'nickname') %>" placeholder="Ej. MarquezMusica" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Red / Criptomoneda
+              </label>
+              <input type="text" name="payment_methods[binance][network]" value="<%= @payment_methods.dig('binance', 'network') %>" placeholder="USDT (TRC20 / BEP20)" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Nota / Instrucción para el Cliente
+            </label>
+            <input type="text" name="payment_methods[binance][notes]" value="<%= @payment_methods.dig('binance', 'notes') %>" placeholder="Ej. Enviar comprobante con el número de orden" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+        </div>
+      </div>
+
+      <%# --- TARJETA 3: PAGO MÓVIL --- %>
+      <div style="background: white; border-radius: 20px; border: 2px solid #bbf7d0; box-shadow: 0 10px 25px rgba(34, 197, 94, 0.06); padding: 24px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #16a34a, #22c55e);"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+              🟢
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #14532d;">Pago Móvil</h3>
+              <span style="font-size: 0.8rem; color: #15803d; font-weight: 600;">Bolívares (Bs) - Venezuela</span>
+            </div>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.88rem; color: #14532d; cursor: pointer; background: #f0fdf4; padding: 6px 12px; border-radius: 99px; border: 1px solid #86efac;">
+            <input type="checkbox" name="payment_methods[pago_movil][enabled]" value="1" <%= 'checked' if @payment_methods.dig('pago_movil', 'enabled').to_s == 'true' || @payment_methods.dig('pago_movil', 'enabled') == true %> style="width: 18px; height: 18px; accent-color: #16a34a;">
+            Activo
+          </label>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Banco (Código y Nombre)
+            </label>
+            <input type="text" name="payment_methods[pago_movil][bank]" value="<%= @payment_methods.dig('pago_movil', 'bank') %>" placeholder="Ej. 0102 - Banco de Venezuela / 0134 - Banesco" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-weight: 600; box-sizing: border-box;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Teléfono
+              </label>
+              <input type="text" name="payment_methods[pago_movil][phone]" value="<%= @payment_methods.dig('pago_movil', 'phone') %>" placeholder="04141234567" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-weight: 600; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Cédula / RIF
+              </label>
+              <input type="text" name="payment_methods[pago_movil][id_number]" value="<%= @payment_methods.dig('pago_movil', 'id_number') %>" placeholder="V-12345678 / J-12345678-0" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-weight: 600; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Nombre del Titular
+            </label>
+            <input type="text" name="payment_methods[pago_movil][holder_name]" value="<%= @payment_methods.dig('pago_movil', 'holder_name') %>" placeholder="Nombre del beneficiario" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Nota / Tasa de Cambio
+            </label>
+            <input type="text" name="payment_methods[pago_movil][notes]" value="<%= @payment_methods.dig('pago_movil', 'notes') %>" placeholder="Ej. Tasa BCV del día" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+        </div>
+      </div>
+
+      <%# --- TARJETA 4: TRANSFERENCIA BANCARIA --- %>
+      <div style="background: white; border-radius: 20px; border: 2px solid #bfdbfe; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.06); padding: 24px; position: relative; overflow: hidden;">
+        <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #2563eb, #3b82f6);"></div>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div style="width: 44px; height: 44px; border-radius: 12px; background: #dbeafe; display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+              🔵
+            </div>
+            <div>
+              <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: #1e3a8a;">Transferencia Bancaria</h3>
+              <span style="font-size: 0.8rem; color: #1d4ed8; font-weight: 600;">Cuenta Corriente / Ahorro</span>
+            </div>
+          </div>
+
+          <label style="display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 0.88rem; color: #1e3a8a; cursor: pointer; background: #eff6ff; padding: 6px 12px; border-radius: 99px; border: 1px solid #93c5fd;">
+            <input type="checkbox" name="payment_methods[bank_transfer][enabled]" value="1" <%= 'checked' if @payment_methods.dig('bank_transfer', 'enabled').to_s == 'true' || @payment_methods.dig('bank_transfer', 'enabled') == true %> style="width: 18px; height: 18px; accent-color: #2563eb;">
+            Activo
+          </label>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Banco
+              </label>
+              <input type="text" name="payment_methods[bank_transfer][bank]" value="<%= @payment_methods.dig('bank_transfer', 'bank') %>" placeholder="Nombre del Banco" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Tipo
+              </label>
+              <input type="text" name="payment_methods[bank_transfer][account_type]" value="<%= @payment_methods.dig('bank_transfer', 'account_type') || 'Corriente' %>" placeholder="Corriente / Ahorro" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+              Número de Cuenta (20 Dígitos)
+            </label>
+            <input type="text" name="payment_methods[bank_transfer][account_number]" value="<%= @payment_methods.dig('bank_transfer', 'account_number') %>" placeholder="0102-0000-00-0000000000" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; font-family: monospace; font-weight: 600; box-sizing: border-box;">
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Cédula / RIF
+              </label>
+              <input type="text" name="payment_methods[bank_transfer][id_number]" value="<%= @payment_methods.dig('bank_transfer', 'id_number') %>" placeholder="J-12345678-0" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.83rem; font-weight: 700; color: #374151; margin-bottom: 5px;">
+                Titular de la Cuenta
+              </label>
+              <input type="text" name="payment_methods[bank_transfer][holder_name]" value="<%= @payment_methods.dig('bank_transfer', 'holder_name') %>" placeholder="Empresa o Persona" style="width: 100%; padding: 11px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <%# --- INSTRUCCIONES GENERALES --- %>
+    <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+      <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
+        <span>📝</span> Instrucciones Generales para Clientes
+      </h3>
+      <p style="color: #64748b; font-size: 0.88rem; margin: 0 0 12px 0;">
+        Este texto se mostrará como pie de página debajo de las cuentas de pago en los presupuestos y portales.
+      </p>
+      <textarea name="payment_methods[general_instructions]" rows="2" placeholder="Ej. Una vez realizado tu pago, por favor envía el capture o comprobante por WhatsApp para registrar tu fecha o saldo." style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; resize: vertical; box-sizing: border-box; font-family: inherit;"><%= @payment_methods.dig('general_instructions') %></textarea>
+    </div>
+
+    <%# Botón Guardar %>
+    <div style="display: flex; gap: 15px; align-items: center;">
+      <button type="submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 16px 36px; border-radius: 14px; font-weight: 800; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
+        💾 Guardar Configuración de Métodos de Pago
+      </button>
+
+      <%= link_to "Cancelar", root_path, style: "color: #64748b; font-weight: 700; text-decoration: none; padding: 12px 20px;" %>
+    </div>
+
+  <% end %>
+
+</div>

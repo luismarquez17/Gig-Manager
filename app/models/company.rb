@@ -80,6 +80,83 @@ class Company < ApplicationRecord
     end
   end
 
+  DEFAULT_PAYMENT_METHODS = {
+    "zelle" => {
+      "enabled" => true,
+      "email" => "",
+      "holder_name" => "",
+      "bank" => "",
+      "notes" => "Indicar el nombre del titular o evento en la descripción de Zelle."
+    },
+    "binance" => {
+      "enabled" => true,
+      "pay_id" => "",
+      "email" => "",
+      "network" => "USDT (TRC20 / BEP20)",
+      "nickname" => "",
+      "notes" => "Transferencia directa por Binance Pay sin comisiones."
+    },
+    "pago_movil" => {
+      "enabled" => true,
+      "bank" => "",
+      "id_number" => "",
+      "phone" => "",
+      "holder_name" => "",
+      "notes" => "Calcular al monto en Bolívares según la tasa del día."
+    },
+    "bank_transfer" => {
+      "enabled" => false,
+      "bank" => "",
+      "account_number" => "",
+      "account_type" => "Corriente",
+      "id_number" => "",
+      "holder_name" => "",
+      "notes" => ""
+    },
+    "general_instructions" => "Una vez realizado tu pago o anticipo, por favor envía el capture o comprobante por WhatsApp para registrar tu fecha o saldo."
+  }.freeze
+
+  def payment_methods
+    cfg = (has_attribute?(:payment_methods_config) && payment_methods_config.is_a?(Hash)) ? payment_methods_config : {}
+    DEFAULT_PAYMENT_METHODS.deep_merge(cfg)
+  end
+
+  def zelle_info
+    payment_methods["zelle"] || {}
+  end
+
+  def binance_info
+    payment_methods["binance"] || {}
+  end
+
+  def pago_movil_info
+    payment_methods["pago_movil"] || {}
+  end
+
+  def bank_transfer_info
+    payment_methods["bank_transfer"] || {}
+  end
+
+  def any_payment_method_enabled?
+    zelle_enabled? || binance_enabled? || pago_movil_enabled? || bank_transfer_enabled?
+  end
+
+  def zelle_enabled?
+    zelle_info["enabled"].to_s == "true" || zelle_info["enabled"] == true
+  end
+
+  def binance_enabled?
+    binance_info["enabled"].to_s == "true" || binance_info["enabled"] == true
+  end
+
+  def pago_movil_enabled?
+    pago_movil_info["enabled"].to_s == "true" || pago_movil_info["enabled"] == true
+  end
+
+  def bank_transfer_enabled?
+    bank_transfer_info["enabled"].to_s == "true" || bank_transfer_info["enabled"] == true
+  end
+
   private
 
   def generate_slug_and_token

@@ -336,19 +336,59 @@
 <% elsif current_user.musician? %>
   <%= render 'musician_dashboard' %>
 <% else %>
-  <div style="max-width: 900px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+  <div style="max-width: 960px; margin: 0 auto; font-family: 'Inter', sans-serif;">
     
     <%# --- BIENVENIDA --- %>
-    <header style="margin-bottom: 35px;">
-      <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.email.split('@').first.capitalize %>! 👋</h1>
-      <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Bienvenido a tu portal de cliente. Aquí puedes hacer seguimiento de tus eventos programados.</p>
+    <header style="margin-bottom: 28px;">
+      <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.display_name %>! 👋</h1>
+      <p style="color: #64748b; font-size: 1.05em; margin-top: 5px;">Bienvenido a tu portal de cliente en <%= current_company&.name || 'Gig Manager' %>. Aquí puedes dar seguimiento a tus presupuestos y eventos.</p>
     </header>
 
+    <%# --- TUS PRESUPUESTOS Y COTIZACIONES --- %>
+    <% if defined?(@mis_presupuestos) && @mis_presupuestos.present? && @mis_presupuestos.any? %>
+      <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 26px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+            📋 Tus Presupuestos y Solicitudes
+          </h3>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <% @mis_presupuestos.each do |quote| %>
+            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+              <div>
+                <div style="font-weight: 800; font-size: 1.05em; color: #0f172a; margin-bottom: 4px;">
+                  <%= quote.package_display_title %>
+                </div>
+                <div style="font-size: 0.88em; color: #64748b; display: flex; gap: 14px; flex-wrap: wrap;">
+                  <span>📅 <%= quote.event_date ? quote.event_date.strftime("%d/%m/%Y") : "Fecha por confirmar" %></span>
+                  <% if quote.event_location.present? %>
+                    <span>📍 <%= quote.event_location %></span>
+                  <% end %>
+                  <span>💰 $<%= quote.amount %> <%= quote.currency %></span>
+                </div>
+              </div>
+
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <span style="<%= quote.status_badge_style %> padding: 6px 14px; border-radius: 99px; font-weight: 700; font-size: 0.82em;">
+                  <%= quote.status_label %>
+                </span>
+
+                <%= link_to public_client_quote_path(quote.public_token), target: "_blank", style: "background: #eff6ff; color: #2563eb; padding: 8px 14px; border-radius: 10px; font-size: 0.84em; font-weight: 700; text-decoration: none; border: 1px solid #bfdbfe;" do %>
+                  👁️ Ver Formulario
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <%# --- PRÓXIMOS EVENTOS --- %>
-    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 26px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 28px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
-          🗓️ Tus Próximos Eventos
+          🗓️ Tus Próximos Eventos (Shows Confirmados)
         </h3>
         <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: #2563eb; font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
       </div>
@@ -384,10 +424,23 @@
       <% else %>
         <div style="text-align: center; padding: 30px; color: #94a3b8;">
           <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
-          No tienes eventos próximos programados en este momento.
+          No tienes eventos confirmados en este momento. Una vez que la agrupación formalice tu fecha, aparecerá aquí.
         </div>
       <% end %>
     </div>
+
+    <%# --- MÉTODOS DE PAGO DISPONIBLES --- %>
+    <% if defined?(current_company) && current_company&.any_payment_method_enabled? %>
+      <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 26px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
+          <span>💳</span> Cuentas Oficiales para Transferencias & Anticipos
+        </h3>
+        <p style="color: #64748b; font-size: 0.88rem; margin: 0 0 16px 0;">
+          Utiliza estos datos bancarios para realizar tus anticipos o pagos y notifícanos por WhatsApp para acreditarlos de inmediato.
+        </p>
+        <%= render 'shared/payment_methods_cards', company: current_company, dark_theme: false %>
+      </div>
+    <% end %>
 
   </div>
 <% end %>
