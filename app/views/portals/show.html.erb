@@ -632,6 +632,11 @@
         </table>
       </div>
     <% else %>
+      <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.9em;">
+        ℹ️ Aún no se han registrado abonos para este evento.
+      </div>
+    <% end %>
+
     <%# Métodos de Pago Oficiales %>
     <% if @gig.company&.any_payment_method_enabled? %>
       <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
