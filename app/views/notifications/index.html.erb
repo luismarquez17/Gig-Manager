@@ -46,34 +46,34 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
       
       <%# Notificaciones del Sistema %>
-      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
         <div>
           <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Avisos del Sistema</div>
           <div id="notif-permission-status" style="font-size: 0.74rem; color: #94a3b8;">Comprobando permiso...</div>
         </div>
-        <button id="notif-permission-btn" onclick="requestNotificationPermission().then(updateControlStatus)" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+        <button id="notif-permission-btn" onclick="handleNotificationPermissionClick()" style="background: #2563eb; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">
           Activar
         </button>
       </div>
 
       <%# Sonidos de la App %>
-      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
         <div>
           <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Efectos de Sonido</div>
           <div id="sound-status-label" style="font-size: 0.74rem; color: #22c55e;">Sonido Activado 🔊</div>
         </div>
-        <button id="sound-toggle-btn" onclick="toggleSoundPreference(); updateControlStatus();" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+        <button id="sound-toggle-btn" onclick="toggleSoundPreference(); updateControlStatus();" style="background: #334155; color: white; border: none; padding: 7px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">
           Silenciar
         </button>
       </div>
 
       <%# Probar Notificación y Sonido %>
-      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
         <div>
-          <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Probar en este móvil</div>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Probar en este equipo</div>
           <div style="font-size: 0.74rem; color: #94a3b8;">Sonido + Alerta</div>
         </div>
-        <button onclick="triggerNotificationAlert('¡Prueba Gig Manager! 🎸', 'Tu sonido y notificaciones están funcionando perfectamente.', 'success')" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+        <button onclick="triggerNotificationAlert('¡Prueba Gig Manager! 🎸', 'Tu sonido y notificaciones están funcionando correctamente en tu equipo.', 'success', true)" style="background: rgba(59, 130, 246, 0.25); color: #93c5fd; border: 1px solid rgba(59, 130, 246, 0.5); padding: 7px 14px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer; flex-shrink: 0; transition: all 0.2s;">
           Probar 🔔
         </button>
       </div>
@@ -82,6 +82,21 @@
   </div>
 
   <script>
+    function handleNotificationPermissionClick() {
+      if (typeof requestNotificationPermission === 'function') {
+        requestNotificationPermission().then(function(perm) {
+          updateControlStatus();
+        });
+      } else if ('Notification' in window) {
+        Notification.requestPermission().then(function(perm) {
+          if (perm === 'granted') {
+            new Notification('¡Gig Manager! 🔔', { body: 'Notificaciones activadas.' });
+          }
+          updateControlStatus();
+        });
+      }
+    }
+
     function updateControlStatus() {
       // Estado de Permiso de Notificación
       var statusEl = document.getElementById('notif-permission-status');
@@ -90,20 +105,23 @@
         if (!('Notification' in window)) {
           statusEl.textContent = 'No soportado en este navegador';
           statusEl.style.color = '#ef4444';
-          notifBtn.style.display = 'none';
+          notifBtn.textContent = 'No disponible';
+          notifBtn.disabled = true;
+          notifBtn.style.background = '#475569';
         } else if (Notification.permission === 'granted') {
-          statusEl.textContent = 'Permitidas en este dispositivo ✓';
+          statusEl.textContent = 'Permitidas en este equipo ✓';
           statusEl.style.color = '#22c55e';
-          notifBtn.textContent = 'Activas';
+          notifBtn.textContent = 'Verificar 🔔';
           notifBtn.style.background = '#15803d';
-          notifBtn.disabled = true;
+          notifBtn.disabled = false;
         } else if (Notification.permission === 'denied') {
-          statusEl.textContent = 'Bloqueadas en ajustes';
+          statusEl.textContent = 'Bloqueadas en ajustes del navegador';
           statusEl.style.color = '#ef4444';
-          notifBtn.textContent = 'Bloqueadas';
-          notifBtn.disabled = true;
+          notifBtn.textContent = 'Bloqueadas 🔒';
+          notifBtn.style.background = '#991b1b';
+          notifBtn.disabled = false;
         } else {
-          statusEl.textContent = 'Permiso no solicitado';
+          statusEl.textContent = 'Permiso pendiente de solicitar';
           statusEl.style.color = '#f59e0b';
           notifBtn.textContent = 'Activar';
           notifBtn.style.background = '#2563eb';
@@ -115,7 +133,7 @@
       var soundLabel = document.getElementById('sound-status-label');
       var soundBtn = document.getElementById('sound-toggle-btn');
       if (soundLabel && soundBtn) {
-        var soundOn = (typeof isSoundEnabled === 'function') ? isSoundEnabled() : true;
+        var soundOn = (typeof isSoundEnabled === 'function') ? isSoundEnabled() : (localStorage.getItem('gig_sound_enabled') !== 'false');
         if (soundOn) {
           soundLabel.textContent = 'Sonido Activado 🔊';
           soundLabel.style.color = '#22c55e';
@@ -124,7 +142,7 @@
         } else {
           soundLabel.textContent = 'Sonido Silenciado 🔇';
           soundLabel.style.color = '#94a3b8';
-          soundBtn.textContent = 'Activar';
+          soundBtn.textContent = 'Activar 🔊';
           soundBtn.style.background = '#2563eb';
         }
       }
@@ -134,7 +152,6 @@
       if (installBtn && typeof isStandalone === 'function' && isStandalone()) {
         installBtn.innerHTML = '<span>✓</span> App Instalada';
         installBtn.style.background = '#15803d';
-        installBtn.disabled = true;
       }
     }
 

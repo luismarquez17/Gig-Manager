@@ -588,8 +588,7 @@
             <% end %>
           <% end %>
 
-          <%# ── Toast container (fixed, top-right) ── %>
-          <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:99999; display:flex; flex-direction:column; gap:10px; pointer-events:none; max-width:400px; width:calc(100vw - 40px);"></div>
+          <%# ── Flash notices ── %>
 
           <% if notice.present? %>
             <script>
@@ -778,6 +777,9 @@
       })();
     </script>
 
+    <%# ── TOAST CONTAINER (Root level para visibilidad global) ── %>
+    <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:999999; display:flex; flex-direction:column; gap:10px; pointer-events:none; max-width:400px; width:calc(100vw - 40px);"></div>
+
     <%# ── BANNER DE INSTALACIÓN PWA (Android / Desktop) ── %>
     <div id="pwa-install-banner" style="display: none; position: fixed; bottom: 20px; left: 16px; right: 16px; max-width: 440px; margin: 0 auto; background: #0f172a; border: 1px solid #334155; border-radius: 18px; padding: 14px 18px; box-shadow: 0 16px 36px rgba(0,0,0,0.45); z-index: 10000; align-items: center; justify-content: space-between; gap: 12px; transform: translateY(100%); opacity: 0; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s ease; color: white; font-family: 'Inter', system-ui, sans-serif;">
       <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
@@ -795,30 +797,111 @@
       </div>
     </div>
 
-    <%# ── MODAL GUÍA DE INSTALACIÓN IOS (Safari) ── %>
-    <div id="pwa-ios-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10001; align-items: flex-end; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.25s ease; font-family: 'Inter', system-ui, sans-serif;">
-      <div style="background: #1e293b; border: 1px solid #334155; border-radius: 24px; padding: 24px; width: 100%; max-width: 440px; color: white; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+    <%# ── MODAL GUÍA DE INSTALACIÓN MULTIPLATAFORMA (PC, iPhone, Android) ── %>
+    <div id="pwa-install-guide-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); z-index: 10001; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.25s ease; font-family: 'Inter', system-ui, sans-serif;">
+      <div style="background: #1e293b; border: 1px solid #334155; border-radius: 24px; padding: 24px; width: 100%; max-width: 480px; color: white; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); max-height: 90vh; overflow-y: auto;">
+        
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="/icons/icon-192.png" alt="Gig Manager" style="width: 36px; height: 36px; border-radius: 8px;">
-            <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #ffffff;">Instalar en tu iPhone</h3>
+            <img src="/icons/icon-192.png" alt="Gig Manager" style="width: 40px; height: 40px; border-radius: 10px; box-shadow: 0 4px 12px rgba(59,130,246,0.3);">
+            <div>
+              <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #ffffff;">Instalar Gig Manager</h3>
+              <p style="margin: 0; font-size: 0.78rem; color: #94a3b8;">Acceso directo como app nativa</p>
+            </div>
           </div>
-          <button onclick="hideIOSInstallModal()" style="background: rgba(255,255,255,0.08); border: none; border-radius: 50%; width: 30px; height: 30px; color: #94a3b8; font-size: 1rem; cursor: pointer;">✕</button>
+          <button onclick="hideInstallGuideModal()" style="background: rgba(255,255,255,0.08); border: none; border-radius: 50%; width: 32px; height: 32px; color: #94a3b8; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
         </div>
-        <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.45; margin-bottom: 20px;">
-          Para usar Gig Manager como app descargada en tu iPhone sin necesidad de buscar en Google:
-        </p>
-        <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
-          <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">1</div>
-            <div style="font-size: 0.86rem; color: #f1f5f9;">Toca el botón <strong>Compartir</strong> (icono <span style="font-size: 1.1rem;">⎋</span> o flecha hacia arriba) en Safari.</div>
+
+        <%# Selector de dispositivo %>
+        <div style="display: flex; gap: 6px; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 12px; margin-bottom: 18px;">
+          <button id="tab-btn-pc" onclick="switchInstallTab('pc')" style="flex: 1; padding: 8px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; background: #3b82f6; color: white;">💻 PC / Mac</button>
+          <button id="tab-btn-ios" onclick="switchInstallTab('ios')" style="flex: 1; padding: 8px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; background: transparent; color: #94a3b8;">🍏 iPhone</button>
+          <button id="tab-btn-android" onclick="switchInstallTab('android')" style="flex: 1; padding: 8px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; background: transparent; color: #94a3b8;">🤖 Android</button>
+        </div>
+
+        <%# Contenido Tab PC %>
+        <div id="tab-content-pc" style="display: block;">
+          <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.45; margin-bottom: 16px;">
+            En tu computadora (Chrome, Edge o Safari en Mac):
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">1</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">Haz clic en el icono <strong>Instalar (⊕ o 📲)</strong> en la barra de direcciones superior del navegador.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">2</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">O abre el menú <strong>(⋮)</strong> de tu navegador y selecciona <strong>"Instalar Gig Manager"</strong>.</div>
+            </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">2</div>
-            <div style="font-size: 0.86rem; color: #f1f5f9;">Desliza y selecciona <strong>"Agregar a pantalla de inicio"</strong> ➕.</div>
+        </div>
+
+        <%# Contenido Tab iOS %>
+        <div id="tab-content-ios" style="display: none;">
+          <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.45; margin-bottom: 16px;">
+            En tu iPhone o iPad (usando Safari):
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">1</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">Toca el botón <strong>Compartir</strong> (icono <span style="font-size: 1.1rem;">⎋</span> o flecha arriba) en Safari.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">2</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">Desliza hacia abajo y toca <strong>"Agregar a pantalla de inicio"</strong> ➕.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">3</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">Toca <strong>"Agregar"</strong> arriba a la derecha. ¡Listo! 🎉</div>
+            </div>
           </div>
-          <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 10px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
-            <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">3</div>
+        </div>
+
+        <%# Contenido Tab Android %>
+        <div id="tab-content-android" style="display: none;">
+          <p style="color: #cbd5e1; font-size: 0.88rem; line-height: 1.45; margin-bottom: 16px;">
+            En tu teléfono Android (Chrome o Edge):
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">1</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">Toca el menú <strong>(⋮)</strong> de tres puntos en la esquina superior de Chrome.</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.04); padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+              <div style="font-size: 1rem; font-weight: 800; background: #334155; width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #60a5fa;">2</div>
+              <div style="font-size: 0.86rem; color: #f1f5f9;">Selecciona <strong>"Instalar aplicación"</strong> o <strong>"Agregar a la pantalla principal"</strong>.</div>
+            </div>
+          </div>
+        </div>
+
+        <button onclick="hideInstallGuideModal()" style="width: 100%; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 12px; border-radius: 12px; font-weight: 700; font-size: 0.92rem; cursor: pointer;">
+          Entendido
+        </button>
+      </div>
+    </div>
+
+    <script>
+      function switchInstallTab(tabName) {
+        ['pc', 'ios', 'android'].forEach(function(name) {
+          var content = document.getElementById('tab-content-' + name);
+          var btn = document.getElementById('tab-btn-' + name);
+          if (content && btn) {
+            if (name === tabName) {
+              content.style.display = 'block';
+              btn.style.background = '#3b82f6';
+              btn.style.color = '#ffffff';
+            } else {
+              content.style.display = 'none';
+              btn.style.background = 'transparent';
+              btn.style.color = '#94a3b8';
+            }
+          }
+        });
+      }
+    </script>
+  </body>
+</html>
+lor: #60a5fa;">3</div>
             <div style="font-size: 0.86rem; color: #f1f5f9;">Toca <strong>"Agregar"</strong> en la esquina superior derecha. ¡Listo! 🎉</div>
           </div>
         </div>

@@ -1,19 +1,19 @@
 // Gig Manager - PWA & Notification & Audio Manager
 
 (function() {
-  // ─── 1. AUDIO SYNTHESIS & SOUND EFFECTS ──────────────────────────────
+  // ─── 1. AUDIO SYNTHESIS & SOUND EFFECTS (Web Audio API) ─────────────
   let audioCtx = null;
 
   function getAudioContext() {
     try {
       if (!audioCtx) {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if (AudioContext) {
-          audioCtx = new AudioContext();
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          audioCtx = new AudioContextClass();
         }
       }
       if (audioCtx && audioCtx.state === 'suspended') {
-        audioCtx.resume();
+        audioCtx.resume().catch(() => {});
       }
     } catch (e) {
       console.warn('AudioContext no disponible:', e);
@@ -21,16 +21,16 @@
     return audioCtx;
   }
 
-  // Pre-unlock audio on user gestures
+  // Pre-unlock audio on any user interaction
   function unlockAudio() {
     const ctx = getAudioContext();
     if (ctx && ctx.state === 'suspended') {
       ctx.resume().catch(() => {});
     }
   }
-  document.addEventListener('click', unlockAudio, { once: true });
-  document.addEventListener('touchstart', unlockAudio, { once: true });
-  document.addEventListener('keydown', unlockAudio, { once: true });
+  ['click', 'touchstart', 'touchend', 'keydown', 'mousedown'].forEach((evt) => {
+    document.addEventListener(evt, unlockAudio, { passive: true });
+  });
 
   function isSoundEnabled() {
     const setting = localStorage.getItem('gig_sound_enabled');
@@ -48,23 +48,34 @@
     setSoundEnabled(next);
     if (next) {
       playNotificationSound('pop');
+      if (typeof showToast === 'function') {
+        showToast('🔊 Efectos de sonido activados', 'success');
+      }
+    } else {
+      if (typeof showToast === 'function') {
+        showToast('🔇 Efectos de sonido silenciados', 'error');
+      }
     }
     return next;
   }
 
-  function playTone(freq, startTime, duration, type = 'sine', gainVal = 0.15) {
+  function playTone(freq, startTime, duration, type = 'sine', gainVal = 0.25) {
     const ctx = getAudioContext();
     if (!ctx) return;
 
     try {
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
 
       osc.type = type;
       osc.frequency.setValueAtTime(freq, startTime);
 
-      // Volume envelope (smooth attack and exponential decay)
-      gain.gain.setValueAtTime(0.001, startTime);
+      // Smooth attack and exponential release envelope
+      gain.gain.setValueAtTime(0.0001, startTime);
       gain.gain.exponentialRampToValueAtTime(gainVal, startTime + 0.02);
       gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
 
@@ -84,30 +95,38 @@
     const ctx = getAudioContext();
     if (!ctx) return;
 
+    if (ctx.state === 'suspended') {
+      ctx.resume().then(() => doPlaySound(ctx, soundType)).catch(() => {});
+    } else {
+      doPlaySound(ctx, soundType);
+    }
+  }
+
+  function doPlaySound(ctx, soundType) {
     const now = ctx.currentTime;
 
     if (soundType === 'urgent' || soundType === 'error') {
       // 3 rápidas notas de alerta (G5 -> A5 -> C6)
-      playTone(784.0, now, 0.12, 'triangle', 0.2);
-      playTone(880.0, now + 0.10, 0.12, 'triangle', 0.22);
-      playTone(1046.5, now + 0.20, 0.35, 'sine', 0.25);
+      playTone(784.0, now, 0.12, 'triangle', 0.28);
+      playTone(880.0, now + 0.11, 0.12, 'triangle', 0.30);
+      playTone(1046.5, now + 0.22, 0.38, 'sine', 0.35);
     } else if (soundType === 'payment' || soundType === 'cash') {
-      // Melodía tipo 'cha-ching'
-      playTone(523.25, now, 0.09, 'sine', 0.18);
-      playTone(659.25, now + 0.08, 0.09, 'sine', 0.18);
-      playTone(783.99, now + 0.16, 0.12, 'triangle', 0.22);
-      playTone(1046.5, now + 0.24, 0.45, 'sine', 0.25);
+      // Melodía de cobro / éxito
+      playTone(523.25, now, 0.09, 'sine', 0.22);
+      playTone(659.25, now + 0.08, 0.09, 'sine', 0.25);
+      playTone(783.99, now + 0.16, 0.12, 'triangle', 0.28);
+      playTone(1046.5, now + 0.24, 0.45, 'sine', 0.32);
     } else if (soundType === 'pop') {
       // Pop suave para clicks o toggles
-      playTone(587.33, now, 0.08, 'sine', 0.12);
+      playTone(587.33, now, 0.08, 'sine', 0.20);
     } else {
-      // 'default' / 'success': Campana suave y elegante de 2 tonos
-      playTone(659.25, now, 0.15, 'sine', 0.18);
-      playTone(987.77, now + 0.12, 0.45, 'sine', 0.22);
+      // 'default' / 'success': Campana suave y nítida de 2 tonos
+      playTone(659.25, now, 0.14, 'sine', 0.25);
+      playTone(987.77, now + 0.12, 0.48, 'sine', 0.30);
     }
   }
 
-  // ─── 2. SISTEMA DE NOTIFICACIONES DEL DISPOSITIVO (NATIVAS) ──────────
+  // ─── 2. SISTEMA DE NOTIFICACIONES DEL DISPOSITIVO ────────────────────
   function getNotificationPermission() {
     if (!('Notification' in window)) return 'unsupported';
     return Notification.permission;
@@ -121,13 +140,29 @@
       return 'unsupported';
     }
 
+    if (Notification.permission === 'granted') {
+      playNotificationSound('default');
+      if (typeof showToast === 'function') {
+        showToast('✅ Las notificaciones ya están activadas en este equipo.', 'success');
+      }
+      sendDeviceNotification('¡Gig Manager Notificaciones! 🔔', 'Este equipo ya tiene los avisos del sistema activados.');
+      return 'granted';
+    }
+
     try {
       const permission = await Notification.requestPermission();
       window.dispatchEvent(new CustomEvent('gig:notification_permission_changed', { detail: { permission } }));
       
       if (permission === 'granted') {
         playNotificationSound('default');
-        sendDeviceNotification('¡Notificaciones Activadas! 🔔', 'Ahora recibirás avisos de eventos, pagos y alertas de Gig Manager en tu dispositivo.');
+        if (typeof showToast === 'function') {
+          showToast('🎉 ¡Notificaciones del sistema activadas!', 'success');
+        }
+        sendDeviceNotification('¡Notificaciones Activadas! 🔔', 'Ahora recibirás avisos de eventos, pagos y alertas de Gig Manager.');
+      } else if (permission === 'denied') {
+        if (typeof showToast === 'function') {
+          showToast('⚠️ Permiso denegado. Habilítalo en los ajustes o candado 🔒 de tu navegador.', 'error');
+        }
       }
       return permission;
     } catch (e) {
@@ -152,7 +187,7 @@
 
     const finalOptions = Object.assign(defaultOptions, options);
 
-    // Intentar con Service Worker primero (ideal para móviles y PWA)
+    // Intentar con Service Worker primero (PWA / background)
     if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
       navigator.serviceWorker.ready.then((registration) => {
         if (registration && registration.showNotification) {
@@ -183,22 +218,23 @@
     }
   }
 
-  // Alerta unificada: reproduce sonido, lanza notificación de sistema y muestra toast en pantalla
-  function triggerNotificationAlert(title, message, type = 'default') {
+  // Alerta unificada
+  function triggerNotificationAlert(title, message, type = 'default', forceDeviceNotification = false) {
     const soundType = (type === 'urgent' || type === 'error') ? 'urgent' : (type === 'payment' ? 'payment' : 'default');
     playNotificationSound(soundType);
 
-    // Si el usuario no tiene la ventana enfocada o está en móvil, mandar notificación nativa
-    if (document.hidden || !document.hasFocus()) {
-      sendDeviceNotification(title, message, { url: '/notifications' });
-    }
-
+    // Mostrar Toast en pantalla
     if (typeof showToast === 'function') {
       showToast(`${title}: ${message}`, type === 'urgent' ? 'error' : 'success');
     }
+
+    // Enviar notificación del sistema
+    if (forceDeviceNotification || document.hidden || !document.hasFocus() || ('Notification' in window && Notification.permission === 'granted')) {
+      sendDeviceNotification(title, message, { url: '/notifications' });
+    }
   }
 
-  // ─── 3. GESTOR PWA & INSTALACIÓN INTELIGENTE ─────────────────────────
+  // ─── 3. GESTOR PWA & INSTALACIÓN MULTIPLATAFORMA ────────────────────
   let deferredPrompt = null;
 
   function isStandalone() {
@@ -214,7 +250,6 @@
   }
 
   window.addEventListener('beforeinstallprompt', (e) => {
-    // Prevenir el banner por defecto del navegador para mostrar el nuestro con estilo nativo
     e.preventDefault();
     deferredPrompt = e;
     window.dispatchEvent(new CustomEvent('gig:install_prompt_available'));
@@ -238,21 +273,17 @@
       }
       deferredPrompt = null;
       hideInstallBanner();
-    } else if (isIOS()) {
-      showIOSInstallModal();
     } else {
-      if (typeof showToast === 'function') {
-        showToast('Para instalar: abre el menú de tu navegador y selecciona "Instalar aplicación" o "Agregar a pantalla de inicio".', 'success');
-      }
+      // Mostrar modal instructivo con pestañas según el dispositivo (PC, iPhone, Android)
+      showInstallGuideModal();
     }
   }
 
   function showInstallBanner() {
     if (isStandalone()) return;
 
-    // Si fue descartado hace menos de 5 días, no molestar
     const dismissedAt = localStorage.getItem('gig_install_banner_dismissed');
-    if (dismissedAt && (Date.now() - parseInt(dismissedAt, 10)) < (5 * 24 * 60 * 60 * 1000)) {
+    if (dismissedAt && (Date.now() - parseInt(dismissedAt, 10)) < (3 * 24 * 60 * 60 * 1000)) {
       return;
     }
 
@@ -278,8 +309,8 @@
     }
   }
 
-  function showIOSInstallModal() {
-    const modal = document.getElementById('pwa-ios-modal');
+  function showInstallGuideModal() {
+    const modal = document.getElementById('pwa-install-guide-modal') || document.getElementById('pwa-ios-modal');
     if (modal) {
       modal.style.display = 'flex';
       requestAnimationFrame(() => {
@@ -288,8 +319,8 @@
     }
   }
 
-  function hideIOSInstallModal() {
-    const modal = document.getElementById('pwa-ios-modal');
+  function hideInstallGuideModal() {
+    const modal = document.getElementById('pwa-install-guide-modal') || document.getElementById('pwa-ios-modal');
     if (modal) {
       modal.style.opacity = '0';
       setTimeout(() => { modal.style.display = 'none'; }, 250);
@@ -328,11 +359,11 @@
     isIOS,
     showInstallBanner,
     hideInstallBanner,
-    showIOSInstallModal,
-    hideIOSInstallModal
+    showInstallGuideModal,
+    hideInstallGuideModal
   };
 
-  // Atajos directos
+  // Asignaciones globales directas
   window.playNotificationSound = playNotificationSound;
   window.triggerNotificationAlert = triggerNotificationAlert;
   window.requestNotificationPermission = requestNotificationPermission;
@@ -340,12 +371,12 @@
   window.toggleSoundPreference = toggleSoundPreference;
   window.isSoundEnabled = isSoundEnabled;
   window.hideInstallBanner = hideInstallBanner;
-  window.showIOSInstallModal = showIOSInstallModal;
-  window.hideIOSInstallModal = hideIOSInstallModal;
+  window.showIOSInstallModal = showInstallGuideModal;
+  window.hideIOSInstallModal = hideInstallGuideModal;
+  window.showInstallGuideModal = showInstallGuideModal;
+  window.hideInstallGuideModal = hideInstallGuideModal;
 
-  // Actualizar UI al cargar la página o navegar con Turbo
   function updateUIState() {
-    // Si no está instalada y es iOS, podemos mostrar el banner si no fue descartado
     if (!isStandalone() && isIOS()) {
       showInstallBanner();
     }
