@@ -78,7 +78,11 @@ class ClientQuotesController < ApplicationController
     end
 
     if @quote.update(update_data)
-      @quote.notify_leaders_of_acceptance!
+      begin
+        @quote.notify_leaders_of_acceptance!
+      rescue Exception => notif_err
+        Rails.logger.error("Error al notificar líderes tras envío de cotización: #{notif_err.message}")
+      end
 
       date_formatted = @quote.event_date ? @quote.event_date.strftime('%d/%m/%Y') : 'tu evento'
       access_url = access_public_client_quote_path(@quote.public_token)
@@ -90,7 +94,7 @@ class ClientQuotesController < ApplicationController
     else
       render json: { success: false, error: @quote.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
-  rescue StandardError => e
+  rescue Exception => e
     Rails.logger.error("Error en ClientQuotesController#public_submit: #{e.class}: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
     render json: { success: false, error: "Ocurrió un error al procesar el presupuesto: #{e.message}" }, status: :unprocessable_entity
   end
