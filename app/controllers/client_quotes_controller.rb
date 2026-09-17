@@ -1,5 +1,6 @@
 class ClientQuotesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:public_show, :public_submit, :access]
+  skip_before_action :verify_authenticity_token, only: [:public_submit]
   before_action :authenticate_user!, except: [:public_show, :public_submit, :access]
   before_action :set_quote, only: [:show, :destroy]
   before_action :set_public_quote, only: [:public_show, :public_submit, :access]
@@ -90,55 +91,63 @@ class ClientQuotesController < ApplicationController
     else
       render json: { success: false, error: @quote.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    Rails.logger.error("Error en ClientQuotesController#public_submit: #{e.class}: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
+    render json: { success: false, error: "Ocurrió un error al procesar el presupuesto: #{e.message}" }, status: :unprocessable_entity
   end
 
   def access
-    client = @quote.client
-    if client.nil?
-      client = Client.find_or_create_for_gig(
-        company: @quote.company,
-        name: @quote.client_name,
-        phone: @quote.client_phone,
-        email: @quote.client_email
-      )
-      @quote.update_column(:client_id, client.id) if client.present?
-    end
-
-    # Buscar usuario existente vinculado a este cliente o a su email
-    user = nil
-    if client.present?
-      user = User.where(company_id: @quote.company_id, client_id: client.id).first
-      user ||= User.where(company_id: @quote.company_id, email: client.email).first if client.email.present?
-    end
-
-    # Si aún no tiene cuenta de usuario, crearla de inmediato sin fricción
-    if user.nil? && client.present?
-      user_email = client.email.presence || @quote.client_email.presence || "cliente_#{client.id}@#{@quote.company.slug.presence || 'app'}.com"
-      user_name = client.name.presence || @quote.client_name.presence || "Cliente"
-
-      user = User.find_by(email: user_email)
-      if user.nil?
-        random_pass = SecureRandom.hex(14)
-        user = User.new(
-          name: user_name,
-          email: user_email,
+    begin
+      client = @quote.client
+      if client.nil?
+        client = Client.find_or_create_for_gig(
           company: @quote.company,
-          client: client,
-          role: :client,
-          password: random_pass,
-          password_confirmation: random_pass
+          name: @quote.client_name,
+          phone: @quote.client_phone,
+          email: @quote.client_email
         )
-        user.save!
-      else
-        user.update_column(:client_id, client.id) if user.client_id != client.id
+        @quote.update_column(:client_id, client.id) if client.present?
       end
-    end
 
-    if user.present?
-      sign_in(user)
-      redirect_to root_path, notice: "🎉 ¡Hola #{user.display_name}! Has accedido exitosamente a tu portal de cliente."
-    else
-      redirect_to root_path, alert: "No se pudo iniciar sesión automáticamente. Por favor contacta a la agrupación."
+      # Buscar usuario existente vinculado a este cliente o a su email
+      user = nil
+      if client.present?
+        user = User.where(company_id: @quote.company_id, client_id: client.id).first
+        user ||= User.where(company_id: @quote.company_id, email: client.email).first if client.email.present?
+      end
+
+      # Si aún no tiene cuenta de usuario, crearla de inmediato sin fricción
+      if user.nil? && client.present?
+        user_email = client.email.presence || @quote.client_email.presence || "cliente_#{client.id}@#{@quote.company.slug.presence || 'app'}.com"
+        user_name = client.name.presence || @quote.client_name.presence || "Cliente"
+
+        user = User.find_by(email: user_email)
+        if user.nil?
+          random_pass = SecureRandom.hex(14)
+          user = User.new(
+            name: user_name,
+            email: user_email,
+            company: @quote.company,
+            client: client,
+            role: :client,
+            password: random_pass,
+            password_confirmation: random_pass
+          )
+          user.save!
+        else
+          user.update_column(:client_id, client.id) if user.client_id != client.id
+        end
+      end
+
+      if user.present?
+        sign_in(user)
+        redirect_to root_path, notice: "🎉 ¡Hola #{user.display_name}! Has accedido exitosamente a tu portal de cliente."
+      else
+        redirect_to root_path, alert: "No se pudo iniciar sesión automáticamente. Por favor contacta a la agrupación."
+      end
+    rescue StandardError => e
+      Rails.logger.error("Error en ClientQuotesController#access: #{e.class}: #{e.message}")
+      redirect_to root_path, alert: "Ocurrió un error al ingresar al portal: #{e.message}"
     end
   end
 
@@ -156,7 +165,7 @@ class ClientQuotesController < ApplicationController
   end
 
   def quote_params
-    if params[:client_quote].present?
+    raw = if params[:client_quote].present?
       params.require(:client_quote).permit(
         :client_name, :client_email, :client_phone,
         :event_type, :event_date, :event_location,
@@ -171,14 +180,33 @@ class ClientQuotesController < ApplicationController
         :advance_amount, :details, :preset_budget_id, :package_name
       )
     end
+    sanitize_quote_data(raw)
   end
 
   def public_quote_params
-    params.permit(
+    raw = params.permit(
       :client_name, :client_email, :client_phone,
       :event_type, :event_date, :event_location,
       :start_time, :end_time, :amount, :currency,
       :advance_amount, :details, :preset_budget_id, :package_name
     )
+    sanitize_quote_data(raw)
+  end
+
+  def sanitize_quote_data(raw)
+    sanitized = raw.respond_to?(:to_h) ? raw.to_h.with_indifferent_access : raw.dup
+
+    if sanitized[:amount].present? && sanitized[:amount].is_a?(String)
+      sanitized[:amount] = sanitized[:amount].tr(',', '.').gsub(/[^\d.]/, '')
+    end
+    if sanitized[:advance_amount].present? && sanitized[:advance_amount].is_a?(String)
+      sanitized[:advance_amount] = sanitized[:advance_amount].tr(',', '.').gsub(/[^\d.]/, '')
+    end
+
+    sanitized[:start_time] = nil if sanitized[:start_time].blank?
+    sanitized[:end_time] = nil if sanitized[:end_time].blank?
+    sanitized[:event_date] = nil if sanitized[:event_date].blank?
+
+    sanitized
   end
 end

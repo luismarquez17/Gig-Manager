@@ -1,5 +1,6 @@
 class PortalsController < ApplicationController
   skip_before_action :authenticate_user!
+  skip_before_action :verify_authenticity_token, only: [:sign_contract, :request_upsell]
   layout 'portal'
 
   before_action :set_gig
@@ -47,8 +48,11 @@ class PortalsController < ApplicationController
         name: @gig.contract_signed_name
       }
     else
-      render json: { success: false, error: "No se pudo registrar la firma." }, status: :unprocessable_entity
+      render json: { success: false, error: @gig.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    Rails.logger.error("Error en PortalsController#sign_contract: #{e.class}: #{e.message}")
+    render json: { success: false, error: "Ocurrió un error al firmar el contrato: #{e.message}" }, status: :unprocessable_entity
   end
 
   def request_upsell
@@ -116,6 +120,9 @@ class PortalsController < ApplicationController
     else
       render json: { success: false, error: req.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
+  rescue StandardError => e
+    Rails.logger.error("Error en PortalsController#request_upsell: #{e.class}: #{e.message}")
+    render json: { success: false, error: "Ocurrió un error al solicitar el adicional: #{e.message}" }, status: :unprocessable_entity
   end
 
   private

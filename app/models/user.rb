@@ -153,60 +153,62 @@ class User < ApplicationRecord
   def associate_and_claim_gigs
     return unless company_id.present?
 
-    # 1. Buscar un Client existente por email dentro de la MISMA empresa
-    existing_client = Client.where(company_id: company_id).where.not(email: [nil, '']).find_by(email: email) if email.present?
+    if client_id.blank?
+      # 1. Buscar un Client existente por email dentro de la MISMA empresa
+      existing_client = Client.where(company_id: company_id).where.not(email: [nil, '']).find_by(email: email) if email.present?
 
-    # 2. Buscar por coincidencia exacta de Nombre (solo si no está ya reclamado por otro usuario registrado)
-    if existing_client.nil? && (name.present? || display_name.present?)
-      target_name = (name.presence || display_name).downcase.strip
-      name_candidates = Client.where(company_id: company_id).where("LOWER(TRIM(name)) = ?", target_name)
-      
-      # Excluir clientes que ya están vinculados a OTRA cuenta de usuario distinta
-      unclaimed = name_candidates.reject do |c|
-        User.where(company_id: company_id, client_id: c.id).where.not(id: id).exists?
+      # 2. Buscar por coincidencia exacta de Nombre (solo si no está ya reclamado por otro usuario registrado)
+      if existing_client.nil? && (name.present? || display_name.present?)
+        target_name = (name.presence || display_name).downcase.strip
+        name_candidates = Client.where(company_id: company_id).where("LOWER(TRIM(name)) = ?", target_name)
+        
+        # Excluir clientes que ya están vinculados a OTRA cuenta de usuario distinta
+        unclaimed = name_candidates.reject do |c|
+          User.where(company_id: company_id, client_id: c.id).where.not(id: id).exists?
+        end
+
+        # Elegir aquel cuyo correo esté en blanco o coincida con el del usuario
+        existing_client = unclaimed.find { |c| c.email.blank? || (email.present? && c.email.downcase == email.downcase) }
       end
 
-      # Elegir aquel cuyo correo esté en blanco o coincida con el del usuario
-      existing_client = unclaimed.find { |c| c.email.blank? || (email.present? && c.email.downcase == email.downcase) }
-    end
-
-    # 3. Buscar a través de cotizaciones (ClientQuote) con el mismo email
-    if existing_client.nil? && email.present?
-      quote_match = ClientQuote.where(company_id: company_id, client_email: email)
-                               .where.not(client_id: nil)
-                               .first
-      if quote_match&.client
-        is_claimed = User.where(company_id: company_id, client_id: quote_match.client_id).where.not(id: id).exists?
-        existing_client = quote_match.client unless is_claimed
+      # 3. Buscar a través de cotizaciones (ClientQuote) con el mismo email
+      if existing_client.nil? && email.present?
+        quote_match = ClientQuote.where(company_id: company_id, client_email: email)
+                                 .where.not(client_id: nil)
+                                 .first
+        if quote_match&.client
+          is_claimed = User.where(company_id: company_id, client_id: quote_match.client_id).where.not(id: id).exists?
+          existing_client = quote_match.client unless is_claimed
+        end
       end
-    end
 
-    # 4. Buscar a través de gigs de la misma empresa con el mismo email
-    if existing_client.nil? && email.present?
-      gig_with_client = Gig.where(company_id: company_id, client_email: email).where.not(client_id: nil).first
-      if gig_with_client&.client
-        is_claimed = User.where(company_id: company_id, client_id: gig_with_client.client_id).where.not(id: id).exists?
-        existing_client = gig_with_client.client unless is_claimed
+      # 4. Buscar a través de gigs de la misma empresa con el mismo email
+      if existing_client.nil? && email.present?
+        gig_with_client = Gig.where(company_id: company_id, client_email: email).where.not(client_id: nil).first
+        if gig_with_client&.client
+          is_claimed = User.where(company_id: company_id, client_id: gig_with_client.client_id).where.not(id: id).exists?
+          existing_client = gig_with_client.client unless is_claimed
+        end
       end
-    end
 
-    if existing_client
-      # Vinculamos al cliente existente y actualizamos su email o nombre si estaban vacíos
-      updates = {}
-      updates[:email] = email if existing_client.email.blank? && email.present?
-      updates[:name] = name if existing_client.name.blank? && name.present?
-      existing_client.update(updates) if updates.any?
-      
-      self.update_column(:client_id, existing_client.id) unless client_id == existing_client.id
-    else
-      # Último recurso: crear un nuevo Client para esta empresa
-      new_client = Client.create!(
-        email: email,
-        name: display_name,
-        phone: "0000000000",
-        company_id: company_id
-      )
-      self.update_column(:client_id, new_client.id)
+      if existing_client
+        # Vinculamos al cliente existente y actualizamos su email o nombre si estaban vacíos
+        updates = {}
+        updates[:email] = email if existing_client.email.blank? && email.present?
+        updates[:name] = name if existing_client.name.blank? && name.present?
+        existing_client.update(updates) if updates.any?
+        
+        self.update_column(:client_id, existing_client.id) unless client_id == existing_client.id
+      else
+        # Último recurso: crear un nuevo Client para esta empresa
+        new_client = Client.create!(
+          email: email,
+          name: display_name,
+          phone: "0000000000",
+          company_id: company_id
+        )
+        self.update_column(:client_id, new_client.id)
+      end
     end
 
     # 5. Reclamar los Gigs y Presupuestos con este correo dentro de la misma empresa

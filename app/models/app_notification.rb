@@ -130,5 +130,7 @@ class AppNotification < ApplicationRecord
         html: script_html
       )
     end
+  rescue StandardError => e
+    Rails.logger.error("Error en AppNotification#broadcast_notification: #{e.message}")
   end
 end
