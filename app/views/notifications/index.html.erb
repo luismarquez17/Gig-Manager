@@ -25,6 +25,126 @@
     </div>
   </div>
 
+  <%# ── CONFIGURACIÓN DE DISPOSITIVO: PWA, SONIDOS Y NOTIFICACIONES PUSH ── %>
+  <div style="background: linear-gradient(135deg, #1e293b, #0f172a); border: 1px solid #334155; border-radius: 20px; padding: 20px 24px; margin-bottom: 24px; color: white; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.12);">
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.4rem;">📱</span>
+        <div>
+          <h3 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #ffffff;">App Móvil y Notificaciones</h3>
+          <p style="margin: 0; font-size: 0.82rem; color: #94a3b8;">Instala Gig Manager en tu Android o iPhone y recibe alertas con sonido.</p>
+        </div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <button id="pwa-install-header-btn" onclick="promptPWAInstall()" style="background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; padding: 8px 14px; border-radius: 12px; font-weight: 700; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 10px rgba(37,99,235,0.3);">
+          <span>📲</span> Instalar App en Teléfono
+        </button>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 16px;">
+      
+      <%# Notificaciones del Sistema %>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Avisos del Sistema</div>
+          <div id="notif-permission-status" style="font-size: 0.74rem; color: #94a3b8;">Comprobando permiso...</div>
+        </div>
+        <button id="notif-permission-btn" onclick="requestNotificationPermission().then(updateControlStatus)" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+          Activar
+        </button>
+      </div>
+
+      <%# Sonidos de la App %>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Efectos de Sonido</div>
+          <div id="sound-status-label" style="font-size: 0.74rem; color: #22c55e;">Sonido Activado 🔊</div>
+        </div>
+        <button id="sound-toggle-btn" onclick="toggleSoundPreference(); updateControlStatus();" style="background: #334155; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+          Silenciar
+        </button>
+      </div>
+
+      <%# Probar Notificación y Sonido %>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between;">
+        <div>
+          <div style="font-size: 0.85rem; font-weight: 700; color: #f1f5f9;">Probar en este móvil</div>
+          <div style="font-size: 0.74rem; color: #94a3b8;">Sonido + Alerta</div>
+        </div>
+        <button onclick="triggerNotificationAlert('¡Prueba Gig Manager! 🎸', 'Tu sonido y notificaciones están funcionando perfectamente.', 'success')" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.4); padding: 6px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+          Probar 🔔
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function updateControlStatus() {
+      // Estado de Permiso de Notificación
+      var statusEl = document.getElementById('notif-permission-status');
+      var notifBtn = document.getElementById('notif-permission-btn');
+      if (statusEl && notifBtn) {
+        if (!('Notification' in window)) {
+          statusEl.textContent = 'No soportado en este navegador';
+          statusEl.style.color = '#ef4444';
+          notifBtn.style.display = 'none';
+        } else if (Notification.permission === 'granted') {
+          statusEl.textContent = 'Permitidas en este dispositivo ✓';
+          statusEl.style.color = '#22c55e';
+          notifBtn.textContent = 'Activas';
+          notifBtn.style.background = '#15803d';
+          notifBtn.disabled = true;
+        } else if (Notification.permission === 'denied') {
+          statusEl.textContent = 'Bloqueadas en ajustes';
+          statusEl.style.color = '#ef4444';
+          notifBtn.textContent = 'Bloqueadas';
+          notifBtn.disabled = true;
+        } else {
+          statusEl.textContent = 'Permiso no solicitado';
+          statusEl.style.color = '#f59e0b';
+          notifBtn.textContent = 'Activar';
+          notifBtn.style.background = '#2563eb';
+          notifBtn.disabled = false;
+        }
+      }
+
+      // Estado de Sonido
+      var soundLabel = document.getElementById('sound-status-label');
+      var soundBtn = document.getElementById('sound-toggle-btn');
+      if (soundLabel && soundBtn) {
+        var soundOn = (typeof isSoundEnabled === 'function') ? isSoundEnabled() : true;
+        if (soundOn) {
+          soundLabel.textContent = 'Sonido Activado 🔊';
+          soundLabel.style.color = '#22c55e';
+          soundBtn.textContent = 'Silenciar';
+          soundBtn.style.background = '#334155';
+        } else {
+          soundLabel.textContent = 'Sonido Silenciado 🔇';
+          soundLabel.style.color = '#94a3b8';
+          soundBtn.textContent = 'Activar';
+          soundBtn.style.background = '#2563eb';
+        }
+      }
+
+      // Botón Instalar si ya está instalada
+      var installBtn = document.getElementById('pwa-install-header-btn');
+      if (installBtn && typeof isStandalone === 'function' && isStandalone()) {
+        installBtn.innerHTML = '<span>✓</span> App Instalada';
+        installBtn.style.background = '#15803d';
+        installBtn.disabled = true;
+      }
+    }
+
+    document.addEventListener('turbo:load', updateControlStatus);
+    document.addEventListener('DOMContentLoaded', updateControlStatus);
+    window.addEventListener('gig:notification_permission_changed', updateControlStatus);
+    window.addEventListener('gig:sound_setting_changed', updateControlStatus);
+    updateControlStatus();
+  </script>
+
   <%# ── PESTAÑAS DE NAVEGACIÓN SEGMENTADA (SCROLLABLE EN MÓVIL) ── %>
   <div class="nav-tabs-scroll" style="background: #ffffff; padding: 6px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04); display: flex; align-items: center; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
     

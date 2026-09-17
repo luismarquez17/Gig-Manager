@@ -122,7 +122,7 @@ class AppNotification < ApplicationRecord
       clean_msg = ActionController::Base.helpers.j(message.to_s.truncate(80))
       toast_type = notification_type == 'urgent' ? 'error' : 'success'
       
-      script_html = "<script>if (typeof showToast === 'function') { showToast('#{clean_title}: #{clean_msg}', '#{toast_type}'); } if (typeof updateUnreadBadge === 'function') { updateUnreadBadge(1); }</script>"
+      script_html = "<script>if (typeof triggerNotificationAlert === 'function') { triggerNotificationAlert('#{clean_title}', '#{clean_msg}', '#{notification_type}'); } else if (typeof showToast === 'function') { showToast('#{clean_title}: #{clean_msg}', '#{toast_type}'); } if (typeof updateUnreadBadge === 'function') { updateUnreadBadge(1); }</script>"
 
       Turbo::StreamsChannel.broadcast_append_to(
         stream_name,
