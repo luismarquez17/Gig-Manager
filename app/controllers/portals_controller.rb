@@ -131,6 +131,9 @@ class PortalsController < ApplicationController
     @gig = Gig.find_by(portal_token: params[:token])
     if @gig.nil?
       render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
+    else
+      ActsAsTenant.current_tenant = @gig.company
+      Current.company = @gig.company
     end
   end
 end

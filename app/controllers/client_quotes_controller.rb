@@ -161,6 +161,9 @@ class ClientQuotesController < ApplicationController
     @quote = ClientQuote.find_by(public_token: params[:token])
     if @quote.nil?
       render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
+    else
+      ActsAsTenant.current_tenant = @quote.company
+      Current.company = @quote.company
     end
   end
 

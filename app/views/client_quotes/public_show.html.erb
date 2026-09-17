@@ -693,9 +693,18 @@
         'Accept': 'application/json'
       }
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) {
+      return res.json().then(function(data) {
+        if (!res.ok && data.error) {
+          return data;
+        }
+        return data;
+      }).catch(function() {
+        return { success: false, error: "Error en el servidor (" + res.status + " " + res.statusText + ")" };
+      });
+    })
     .then(function(data) {
-      if (data.success) {
+      if (data && data.success) {
         form.style.display = "none";
         var confirmedBox = document.getElementById('already-confirmed-box');
         if (confirmedBox) confirmedBox.style.display = "none";
@@ -707,13 +716,13 @@
         }
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
-        alert("Error: " + (data.error || "No se pudo procesar la solicitud."));
+        alert(data && data.error ? data.error : "No se pudo procesar la solicitud. Por favor intenta de nuevo.");
         btn.disabled = false;
         btn.textContent = "🚀 Enviar y Confirmar Presupuesto";
       }
     })
     .catch(function(err) {
-      alert("Error de conexión al enviar el presupuesto.");
+      alert("Error de conexión al enviar el presupuesto. Por favor verifica tu conexión a internet.");
       btn.disabled = false;
       btn.textContent = "🚀 Enviar y Confirmar Presupuesto";
     });
