@@ -83,8 +83,9 @@ class GigsController < ApplicationController
     # 5. Cálculos para el resumen (basados en la lista ya filtrada)
     # Mostramos dinero REALMENTE COBRADO (gig_payments), no el presupuesto acordado
     gig_ids = @gigs.pluck(:id)
-    @total_usd = GigPayment.where(gig_id: gig_ids, currency: 'USD').sum(:amount).to_f
-    @total_bs = GigPayment.where(gig_id: gig_ids, currency: 'BS').sum(:amount).to_f
+    payments_by_currency = GigPayment.where(gig_id: gig_ids).group(:currency).sum(:amount)
+    @total_usd = payments_by_currency['USD'].to_f
+    @total_bs = payments_by_currency['BS'].to_f
   end
 
   def show
@@ -256,12 +257,15 @@ class GigsController < ApplicationController
     if params[:quote_id].present?
       @quote = current_company.client_quotes.find_by(id: params[:quote_id])
       if @quote.present?
+        quote_name = @quote.client_name.to_s.strip
         client = @quote.client
-        if client.nil? && (@quote.client_email.present? || @quote.client_name.present? || @quote.client_phone.present?)
+
+        # Si el cliente asignado no coincide con el nombre especificado en el formulario
+        if quote_name.present? && (client.nil? || client.name.to_s.strip.downcase != quote_name.downcase)
           client = Client.find_or_create_for_gig(
             company: current_company,
             email: @quote.client_email,
-            name: @quote.client_name,
+            name: quote_name,
             phone: @quote.client_phone
           )
           @quote.update_column(:client_id, client.id) if client.present?
@@ -286,13 +290,14 @@ class GigsController < ApplicationController
   def create
     @gig = current_company.gigs.build(gig_params)
 
-    # Si no se seleccionó un client_id existente del buscador pero se escribió un nombre o vino de un presupuesto o email
-    if @gig.client_id.blank?
-      name_to_use = params[:client_name].presence || params.dig(:gig, :client_name).presence
-      email_to_use = @gig.client_email.presence || params[:client_email].presence
-      phone_to_use = params[:client_phone].presence
+    name_to_use = params[:client_name].presence || params.dig(:gig, :client_name).presence
+    email_to_use = @gig.client_email.presence || params[:client_email].presence
+    phone_to_use = params[:client_phone].presence
 
-      if name_to_use.present? || email_to_use.present?
+    if name_to_use.present?
+      current_client = current_company.clients.find_by(id: @gig.client_id)
+      # Si no hay cliente o el cliente seleccionado no coincide con el nombre ingresado
+      if current_client.nil? || current_client.name.to_s.strip.downcase != name_to_use.to_s.strip.downcase
         matched_client = Client.find_or_create_for_gig(
           company: current_company,
           email: email_to_use,
@@ -300,7 +305,17 @@ class GigsController < ApplicationController
           phone: phone_to_use
         )
         @gig.client = matched_client if matched_client.present?
+        @gig.client_id = matched_client&.id
       end
+    elsif @gig.client_id.blank? && email_to_use.present?
+      matched_client = Client.find_or_create_for_gig(
+        company: current_company,
+        email: email_to_use,
+        name: nil,
+        phone: phone_to_use
+      )
+      @gig.client = matched_client if matched_client.present?
+      @gig.client_id = matched_client&.id
     end
 
     if @gig.save

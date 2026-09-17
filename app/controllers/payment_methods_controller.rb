@@ -1,7 +1,6 @@
 # frozen_string_literal: true
 
 class PaymentMethodsController < ApplicationController
-  before_action :authenticate_user!
   before_action :require_leader!
   before_action :set_company
 

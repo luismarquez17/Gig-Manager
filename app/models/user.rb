@@ -221,6 +221,43 @@ class User < ApplicationRecord
     ClientQuote.where(company_id: company_id, client_email: email).update_all(client_id: client_id)
   end
 
+  def self.find_or_create_client_user(company:, client:, email: nil, name: nil)
+    return nil if company.nil? || client.nil?
+
+    # Buscar usuario existente vinculado a este cliente o a su email
+    user = User.where(company_id: company.id, client_id: client.id).first
+    user ||= User.where(company_id: company.id, email: client.email).first if client.email.present?
+
+    if user.nil?
+      user_email = client.email.presence || email.presence || "cliente_#{client.id}@#{company.slug.presence || 'app'}.com"
+      user_name = client.name.presence || name.presence || "Cliente"
+
+      user = User.find_by(email: user_email)
+      if user.nil?
+        random_pass = SecureRandom.hex(14)
+        user = User.new(
+          name: user_name,
+          email: user_email,
+          company: company,
+          client: client,
+          role: :client,
+          password: random_pass,
+          password_confirmation: random_pass
+        )
+        user.save!
+      else
+        user.update_column(:client_id, client.id) if user.client_id != client.id
+      end
+    else
+      user.update_column(:client_id, client.id) if user.client_id != client.id
+    end
+
+    user
+  rescue StandardError => e
+    Rails.logger.error("Error en User.find_or_create_client_user: #{e.class}: #{e.message}")
+    nil
+  end
+
   private
 
   def assign_default_company

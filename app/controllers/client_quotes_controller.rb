@@ -1,7 +1,6 @@
 class ClientQuotesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:public_show, :public_submit, :access]
   skip_before_action :verify_authenticity_token, only: [:public_submit]
-  before_action :authenticate_user!, except: [:public_show, :public_submit, :access]
   before_action :set_quote, only: [:show, :destroy]
   before_action :set_public_quote, only: [:public_show, :public_submit, :access]
   layout 'portal', only: [:public_show, :public_submit]
@@ -109,35 +108,12 @@ class ClientQuotesController < ApplicationController
         @quote.update_column(:client_id, client.id) if client.present?
       end
 
-      # Buscar usuario existente vinculado a este cliente o a su email
-      user = nil
-      if client.present?
-        user = User.where(company_id: @quote.company_id, client_id: client.id).first
-        user ||= User.where(company_id: @quote.company_id, email: client.email).first if client.email.present?
-      end
-
-      # Si aún no tiene cuenta de usuario, crearla de inmediato sin fricción
-      if user.nil? && client.present?
-        user_email = client.email.presence || @quote.client_email.presence || "cliente_#{client.id}@#{@quote.company.slug.presence || 'app'}.com"
-        user_name = client.name.presence || @quote.client_name.presence || "Cliente"
-
-        user = User.find_by(email: user_email)
-        if user.nil?
-          random_pass = SecureRandom.hex(14)
-          user = User.new(
-            name: user_name,
-            email: user_email,
-            company: @quote.company,
-            client: client,
-            role: :client,
-            password: random_pass,
-            password_confirmation: random_pass
-          )
-          user.save!
-        else
-          user.update_column(:client_id, client.id) if user.client_id != client.id
-        end
-      end
+      user = User.find_or_create_client_user(
+        company: @quote.company,
+        client: client,
+        email: @quote.client_email,
+        name: @quote.client_name
+      ) if client.present?
 
       if user.present?
         sign_in(user)

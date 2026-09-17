@@ -32,7 +32,7 @@
         <input list="clients-list" 
                id="client-search" 
                name="client_name"
-               value="<%= gig.client&.name %>"
+               value="<%= @quote&.client_name.presence || gig.client&.name %>"
                placeholder="🔍 Escribe el nombre del cliente..." 
                style="width: 100%; padding: 14px; border-radius: 10px; border: 2px solid #f97316; font-size: 1.1em; outline: none; box-sizing: border-box; transition: all 0.3s;"
                oninput="validateClient(this)"

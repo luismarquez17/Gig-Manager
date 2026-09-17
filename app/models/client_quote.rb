@@ -17,7 +17,7 @@ class ClientQuote < ApplicationRecord
 
   before_validation :generate_public_token, on: :create
   before_validation :set_default_status, on: :create
-  before_save :sync_or_create_client!, if: -> { company.present? && (client_name.present? || client_phone.present?) && client_id.blank? }
+  before_save :sync_or_create_client!, if: -> { company.present? && (client_name.present? || client_phone.present?) }
 
   scope :recent_first, -> { order(created_at: :desc) }
   scope :convertible, -> { where(status: [:pending, :accepted]) }
@@ -78,6 +78,13 @@ class ClientQuote < ApplicationRecord
   def sync_or_create_client!
     return unless company.present?
     return if client_name.blank? && client_phone.blank?
+
+    # Si ya tiene un client_id asignado pero el nombre del cliente no coincide con client_name
+    if client.present? && client_name.present? && client.name.to_s.strip.downcase != client_name.to_s.strip.downcase
+      self.client_id = nil
+    end
+
+    return if client_id.present?
 
     matched_client = Client.find_or_create_for_gig(
       company: company,

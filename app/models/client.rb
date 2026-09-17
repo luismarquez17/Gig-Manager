@@ -143,32 +143,65 @@ class Client < ApplicationRecord
     return nil if company.nil?
     return nil if email.blank? && name.blank? && phone.blank?
 
-    # 1. Buscar primero por teléfono (identificador personal directo)
-    if phone.present?
-      clean_phone = phone.gsub(/\D/, '')
-      if clean_phone.length >= 7
-        existing = company.clients.where.not(phone: [nil, '', '0000000000']).find do |c|
-          c_digits = c.phone.gsub(/\D/, '')
-          c_digits.include?(clean_phone) || clean_phone.include?(c_digits)
+    name_clean = name.to_s.strip
+    email_clean = email.to_s.strip.downcase
+    phone_digits = phone.to_s.gsub(/\D/, '')
+
+    existing = nil
+
+    # 1. Si tenemos nombre especificado, buscar primero coincidencia de nombre exacto dentro de la empresa
+    if name_clean.present?
+      name_candidates = company.clients.where("LOWER(TRIM(name)) = ?", name_clean.downcase)
+      if name_candidates.any?
+        # Si hay varios con el mismo nombre, preferir el que coincida en teléfono o email
+        if phone_digits.length >= 7
+          existing = name_candidates.find { |c| c.phone.to_s.gsub(/\D/, '').include?(phone_digits) || phone_digits.include?(c.phone.to_s.gsub(/\D/, '')) }
+        end
+        if existing.nil? && email_clean.present?
+          existing = name_candidates.find { |c| c.email.to_s.strip.downcase == email_clean }
+        end
+        existing ||= name_candidates.first
+      end
+    end
+
+    # 2. Si no se encontró por nombre pero hay teléfono, buscar por teléfono SOLO si el nombre es compatible o no se dio nombre
+    if existing.nil? && phone_digits.length >= 7
+      phone_matches = company.clients.where.not(phone: [nil, '', '0000000000']).select do |c|
+        c_digits = c.phone.to_s.gsub(/\D/, '')
+        c_digits == phone_digits || (c_digits.length >= 10 && phone_digits.length >= 10 && (c_digits.end_with?(phone_digits[-7..]) || phone_digits.end_with?(c_digits[-7..])))
+      end
+
+      if phone_matches.any?
+        if name_clean.blank?
+          existing = phone_matches.first
+        else
+          # Solo vincular si el nombre del cliente existente coincide, es compatible o era genérico ("Cliente ...")
+          existing = phone_matches.find do |c|
+            c_name = c.name.to_s.strip.downcase
+            c_name == name_clean.downcase ||
+              c_name.include?(name_clean.downcase) ||
+              name_clean.downcase.include?(c_name) ||
+              c_name.start_with?("cliente")
+          end
         end
       end
     end
 
-    # 2. Buscar por correo electrónico si no se encontró por teléfono
-    if existing.nil? && email.present?
-      existing = company.clients.where.not(email: [nil, '']).find_by(email: email)
-    end
-
-    # 3. Buscar por coincidencia de nombre SOLO si el cliente existente no tiene otro teléfono o correo en conflicto
-    if existing.nil? && name.present?
-      name_candidates = company.clients.where("LOWER(TRIM(name)) = ?", name.downcase.strip)
-      clean_phone = phone.to_s.gsub(/\D/, '')
-      
-      existing = name_candidates.find do |c|
-        c_digits = c.phone.to_s.gsub(/\D/, '')
-        phone_matches = c.phone.blank? || c.phone == "0000000000" || (clean_phone.length >= 7 && (c_digits.include?(clean_phone) || clean_phone.include?(c_digits)))
-        email_matches = c.email.blank? || email.blank? || c.email.downcase.strip == email.downcase.strip
-        phone_matches && email_matches
+    # 3. Si no se encontró, buscar por correo SOLO si el nombre es compatible o no se dio nombre
+    if existing.nil? && email_clean.present?
+      email_matches = company.clients.where.not(email: [nil, '']).where("LOWER(TRIM(email)) = ?", email_clean)
+      if email_matches.any?
+        if name_clean.blank?
+          existing = email_matches.first
+        else
+          existing = email_matches.find do |c|
+            c_name = c.name.to_s.strip.downcase
+            c_name == name_clean.downcase ||
+              c_name.include?(name_clean.downcase) ||
+              name_clean.downcase.include?(c_name) ||
+              c_name.start_with?("cliente")
+          end
+        end
       end
     end
 
@@ -176,11 +209,15 @@ class Client < ApplicationRecord
       updates = {}
       updates[:email] = email if existing.email.blank? && email.present?
       updates[:phone] = phone if (existing.phone.blank? || existing.phone == "0000000000") && phone.present?
+      # Si el cliente existente tenía nombre genérico como "Cliente 0414...", actualizar con el nombre real ingresado
+      if name_clean.present? && (existing.name.blank? || existing.name.downcase.start_with?("cliente"))
+        updates[:name] = name_clean
+      end
       existing.update(updates) if updates.any?
       return existing
     end
 
-    client_name = name.presence || (email.present? ? email.split('@').first.capitalize : "Cliente #{phone}")
+    client_name = name_clean.presence || (email_clean.present? ? email_clean.split('@').first.capitalize : "Cliente #{phone}")
     client_phone = phone.presence || "0000000000"
     client_email = email.presence
 

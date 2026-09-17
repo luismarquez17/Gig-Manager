@@ -550,9 +550,10 @@
               </div>
             <% end %>
 
-            <% pending_upsell_requests_count = current_company&.gig_upsell_requests&.pending&.count rescue 0 %>
-            <% if pending_upsell_requests_count.to_i > 0 && !(controller_name == 'gigs' && action_name == 'show') %>
-              <% first_pending_gig = current_company&.gig_upsell_requests&.pending&.first&.gig %>
+            <% pending_upsells = (current_company&.gig_upsell_requests&.pending&.includes(:gig)&.limit(10)&.to_a rescue []) || [] %>
+            <% pending_upsell_requests_count = pending_upsells.size %>
+            <% if pending_upsell_requests_count.positive? && !(controller_name == 'gigs' && action_name == 'show') %>
+              <% first_pending_gig = pending_upsells.first&.gig %>
               <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);">
                 <div style="display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 0.92rem; font-weight: 600;">
                   <span style="font-size: 1.3rem;">🚀</span>
