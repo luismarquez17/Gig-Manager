@@ -166,8 +166,12 @@
                 </td>
                 <td><%= p.date_paid&.strftime('%d/%m/%Y') || '---' %></td>
                 <td class="text-center">
-                  <%= link_to 'Ver pagos del show', gig_gig_payments_path(p.gig), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
-                  <%= link_to 'Registrar pago', new_gig_gig_payment_path(p.gig), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
+                  <% if p.gig.present? %>
+                    <%= link_to 'Ver pagos del show', gig_gig_payments_path(p.gig), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+                    <%= link_to 'Registrar pago', new_gig_gig_payment_path(p.gig), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
+                  <% else %>
+                    <span style="color: #94a3b8; font-size: 0.85em;">---</span>
+                  <% end %>
                 </td>
               </tr>
             <% end %>

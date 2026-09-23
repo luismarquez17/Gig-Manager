@@ -10,10 +10,11 @@ module Superadmin
     def approve
       @payment.approve!
       wa_url = @payment.whatsapp_confirmation_url
+      company_name = @payment.company&.name || "Empresa"
       if wa_url.present?
-        redirect_to superadmin_subscription_payments_path, notice: "✅ Pago ##{@payment.reference_number} de #{@payment.company.name} APROBADO exitosamente. <a href='#{wa_url}' target='_blank' class='underline font-bold text-emerald-300 ml-2'>Enviar WhatsApp de Confirmación 💬</a>".html_safe
+        redirect_to superadmin_subscription_payments_path, notice: "✅ Pago ##{@payment.reference_number} de #{company_name} APROBADO exitosamente. <a href='#{wa_url}' target='_blank' class='underline font-bold text-emerald-300 ml-2'>Enviar WhatsApp de Confirmación 💬</a>".html_safe
       else
-        redirect_to superadmin_subscription_payments_path, notice: "✅ Pago ##{@payment.reference_number} de #{@payment.company.name} APROBADO exitosamente."
+        redirect_to superadmin_subscription_payments_path, notice: "✅ Pago ##{@payment.reference_number} de #{company_name} APROBADO exitosamente."
       end
     rescue => e
       redirect_to superadmin_subscription_payments_path, alert: "Error al aprobar pago: #{e.message}"

@@ -68,9 +68,9 @@
                 <span style="font-size: 0.85rem; font-weight: 800; color: #4338ca;">Plan <%= payment.plan_tier.to_s.capitalize %></span>
                 <span style="font-size: 0.78rem; color: #94a3b8;">hace <%= time_ago_in_words(payment.created_at) %></span>
               </div>
-              <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 2px 0;"><%= payment.company.name %></h3>
+              <h3 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 2px 0;"><%= payment.company&.name || 'Empresa' %></h3>
               <div style="font-size: 0.88rem; color: #334155; display: flex; flex-wrap: wrap; gap: 15px;">
-                <span>👤 Reportado por: <strong><%= payment.user.display_name %></strong> (<%= payment.user.email %>)</span>
+                <span>👤 Reportado por: <strong><%= payment.user&.display_name || 'Usuario' %></strong> (<%= payment.user&.email || 'N/A' %>)</span>
                 <span>💳 Método: <strong><%= payment.payment_method_label %></strong></span>
                 <span>🔢 Ref #: <strong style="color: #0284c7; font-family: monospace; font-size: 1rem;"><%= payment.reference_number %></strong></span>
                 <span>💰 Monto: <strong style="color: #059669; font-weight: 800;">$<%= '%.2f' % payment.amount %> USD</strong></span>
@@ -122,7 +122,7 @@
           <% else %>
             <% @recent_payments.each do |payment| %>
               <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 14px 18px; font-weight: 700; color: #0f172a;"><%= payment.company.name %></td>
+                <td style="padding: 14px 18px; font-weight: 700; color: #0f172a;"><%= payment.company&.name || 'Empresa' %></td>
                 <td style="padding: 14px 18px;"><span style="padding: 3px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;"><%= payment.plan_tier.to_s.capitalize %></span></td>
                 <td style="padding: 14px 18px;">
                   <div style="font-weight: 600; color: #1e293b;"><%= payment.payment_method_label %></div>
