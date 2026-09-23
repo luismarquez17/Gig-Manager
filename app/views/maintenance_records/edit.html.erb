@@ -14,7 +14,7 @@
       <h1 style="margin: 12px 0 0 0; font-size: 1.8em; font-weight: 800;"><%= @maintenance_record.item.name %></h1>
       <p style="margin: 5px 0 0 0; color: #94a3b8; font-size: 0.9em; font-weight: 500;">
         Categoría: <%= @maintenance_record.item.category %> | Reportado desde: 
-        <%= @maintenance_record.gig.present? ? "Show con #{@maintenance_record.gig.client.name}" : "Depósito (Manual)" %>
+        <%= @maintenance_record.gig.present? ? "Show con #{@maintenance_record.gig.client_display_name}" : "Depósito (Manual)" %>
       </p>
     </div>
 

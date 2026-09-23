@@ -8,7 +8,7 @@
         <div style="background:white; padding:12px; border-radius:8px; border:1px solid #eef2ff; margin-bottom:12px;">
           <div style="display:flex; justify-content:space-between; gap:12px; align-items:center;">
             <div>
-              <div style="font-weight:800; color:#0f172a;"><%= fa.gig.client.name %> — <%= fa.gig.date&.strftime('%d/%m/%Y') %></div>
+              <div style="font-weight:800; color:#0f172a;"><%= fa.gig&.client_display_name || 'Show' %> — <%= fa.gig&.date&.strftime('%d/%m/%Y') %></div>
               <div style="color:#64748b; font-size:0.9em;">Notas: <%= fa.notes.presence || '-' %></div>
             </div>
             <div style="text-align:right;">

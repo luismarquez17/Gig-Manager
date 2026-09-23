@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Checklist: <%= @gig.client.name %> - <%= @gig.date %></title>
+  <title>Checklist: <%= @gig.client_display_name %> - <%= @gig.date %></title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     /* Estilos base de la página (para visualización en pantalla) */
@@ -133,7 +133,7 @@
 
   <div class="header">
     <h1>📋 Checklist de Carga y Descarga</h1>
-    <p><strong>Cliente:</strong> <%= @gig.client.name %></p>
+    <p><strong>Cliente:</strong> <%= @gig.client_display_name %></p>
     <p><strong>Fecha del Evento:</strong> <%= @gig.date %></p>
     <% if @gig.location.present? %>
       <p><strong>Ubicación:</strong> <%= @gig.location %></p>

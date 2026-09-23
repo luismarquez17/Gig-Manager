@@ -4,7 +4,7 @@
       <div>
         <%= link_to '← Volver al Show', gig_path(@gig), style: "text-decoration: none; color: #64748b; font-weight: 700; font-size: 0.9em;" %>
         <h1 style="color: #0f172a; margin: 5px 0 0 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">
-          💳 Pagos para el show: <%= @gig.client.name %>
+          💳 Pagos para el show: <%= @gig.client_display_name %>
         </h1>
         <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1em;">Fecha del evento: <strong><%= @gig.date&.strftime('%d/%m/%Y') %></strong></p>
       </div>
@@ -124,7 +124,7 @@
               <% remaining = g.amount.to_f - g.gig_payments.sum(:amount).to_f %>
               <li style="margin-bottom: 6px;">
                 <%= link_to gig_path(g), style: 'text-decoration: none; color: #2563eb; font-weight: 700;' do %>
-                  <%= g.client.name %> — <span style="font-weight: 600; color: #64748b;"><%= g.date&.strftime('%d/%m/%Y') %></span>
+                  <%= g.client_display_name %> — <span style="font-weight: 600; color: #64748b;"><%= g.date&.strftime('%d/%m/%Y') %></span>
                   <span style="margin-left:8px; font-weight:800; color:#0f172a;">Falta: $ <%= number_with_precision(remaining, precision: 2) %></span>
                 <% end %>
               </li>
@@ -150,8 +150,12 @@
             <% @payments.each do |p| %>
               <tr>
                 <td>
-                  <%= link_to gig_path(p.gig), style: "text-decoration: none; color: #2563eb; font-weight: 700;" do %>
-                    <%= p.gig.client.name %> — <span style="font-weight: 600; color: #64748b;"><%= p.gig.date&.strftime('%d/%m/%Y') %></span>
+                  <% if p.gig.present? %>
+                    <%= link_to gig_path(p.gig), style: "text-decoration: none; color: #2563eb; font-weight: 700;" do %>
+                      <%= p.gig.client_display_name %> — <span style="font-weight: 600; color: #64748b;"><%= p.gig.date&.strftime('%d/%m/%Y') %></span>
+                    <% end %>
+                  <% else %>
+                    <span style="color: #64748b; font-weight: 600;">Pago General</span>
                   <% end %>
                 </td>
                 <td style="font-weight: 800; color: #0f172a;">$ <%= number_with_precision(p.amount, precision: 2) %></td>

@@ -48,6 +48,10 @@ class Gig < ApplicationRecord
   }
 
   # Financial helpers
+  def client_display_name
+    client&.name.presence || client_email.presence || "Cliente (Sin Nombre)"
+  end
+
   def total_received
     if gig_payments.loaded?
       gig_payments.sum { |p| p.amount.to_f }

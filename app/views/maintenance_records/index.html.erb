@@ -70,7 +70,7 @@
               </td>
               <td style="padding: 18px 0; color: #475569; font-size: 0.9em;">
                 <% if record.gig.present? %>
-                  Show: <%= link_to record.gig.client.name, gig_path(record.gig), style: "color: #0ea5e9; text-decoration: none; font-weight: 600;" %>
+                  Show: <%= link_to record.gig.client_display_name, gig_path(record.gig), style: "color: #0ea5e9; text-decoration: none; font-weight: 600;" %>
                   <br>
                   <small style="color: #94a3b8;"><%= record.gig.date&.strftime("%d/%m/%Y") %></small>
                 <% else %>

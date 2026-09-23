@@ -5,7 +5,7 @@
       ✏️ Editar Pago
     </h1>
     <p style="color: #64748b; margin: 5px 0 0 0;">
-      Show: <strong><%= @payment.gig.client.name %></strong> — <%= @payment.gig.date&.strftime('%d/%m/%Y') %>
+      Show: <strong><%= @payment.gig&.client_display_name || 'Show' %></strong> — <%= @payment.gig&.date&.strftime('%d/%m/%Y') %>
     </p>
   </div>
 

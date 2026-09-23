@@ -82,7 +82,7 @@ class GigItemsController < ApplicationController
     end
 
     # Construimos la nota de daño con contexto completo
-    damage_entry = "[#{Date.today.strftime('%d/%m/%Y')}] Daño en Show con #{@gig.client.name}"
+    damage_entry = "[#{Date.today.strftime('%d/%m/%Y')}] Daño en Show con #{@gig.client_display_name}"
     damage_entry += " (#{@gig.date&.strftime('%d/%m/%Y')})" if @gig.date.present?
     damage_entry += ": #{damage_notes}"
 
@@ -132,7 +132,7 @@ class GigItemsController < ApplicationController
       @gig_item.update!(returned_quantity: new_returned)
 
       # Registramos la pérdida en las notas del ítem
-      lost_entry = "[#{Date.today.strftime('%d/%m/%Y')}][PÉRDIDA] #{lost_qty} ud(s) en Show con #{@gig.client.name} (#{@gig.date&.strftime('%d/%m/%Y')}): #{lost_notes}"
+      lost_entry = "[#{Date.today.strftime('%d/%m/%Y')}][PÉRDIDA] #{lost_qty} ud(s) en Show con #{@gig.client_display_name} (#{@gig.date&.strftime('%d/%m/%Y')}): #{lost_notes}"
       existing_notes = @item.notes.presence || ""
       new_notes = existing_notes.empty? ? lost_entry : "#{existing_notes}\n#{lost_entry}"
       @item.update!(notes: new_notes)

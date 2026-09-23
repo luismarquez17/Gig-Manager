@@ -56,7 +56,7 @@
                      onmouseout="this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';">
                   <div>
                     <h5 style="margin: 0; font-size: 1em; color: #1e293b; font-weight: bold;">
-                      <%= link_to gig.client.name, gig_path(gig), style: "color: #2563eb; text-decoration: none;" %>
+                      <%= link_to gig.client_display_name, gig_path(gig), style: "color: #2563eb; text-decoration: none;" %>
                     </h5>
                     <small style="color: #64748b; display: block; margin-top: 4px;">📍 <%= gig.location.presence || "Locación no especificada" %></small>
                   </div>

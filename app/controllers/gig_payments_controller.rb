@@ -9,12 +9,12 @@ class GigPaymentsController < ApplicationController
       @payment_status = @gig.payment_status
       @remaining_amount = @gig.remaining_amount
     else
-      @payments = GigPayment.includes(:gig).order(date_paid: :desc)
-      received_by_gig = GigPayment.group(:gig_id).sum(:amount)
-      @unpaid_gigs = Gig.all.select { |g| (received_by_gig[g.id] || 0).to_f < g.amount.to_f }
+      @payments = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).includes(gig: :client).order(date_paid: :desc)
+      received_by_gig = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).group(:gig_id).sum(:amount)
+      @unpaid_gigs = current_company.gigs.includes(:client, :gig_payments).select { |g| (received_by_gig[g.id] || 0).to_f < g.amount.to_f }
 
       @payment_status_counts = { paid: 0, partial: 0, unpaid: 0 }
-      Gig.find_each do |gig|
+      current_company.gigs.find_each do |gig|
         status = if (received_by_gig[gig.id] || 0).to_f.zero?
                    :unpaid
                  elsif (gig.amount.to_f - (received_by_gig[gig.id] || 0).to_f).positive?
@@ -32,13 +32,10 @@ class GigPaymentsController < ApplicationController
   end
 
   def create
-    Rails.logger.debug "[GigPaymentsController#create] current_user=#{current_user&.id}-#{current_user&.role.inspect} params=#{params.inspect}"
     @payment = @gig.gig_payments.new(payment_params)
     if @payment.save
-      Rails.logger.debug "[GigPaymentsController#create] saved gig_payment id=#{@payment.id}"
       redirect_to gig_path(@gig), notice: "Pago registrado con éxito."
     else
-      Rails.logger.debug "[GigPaymentsController#create] validation errors=#{@payment.errors.full_messages}"
       render :new, status: :unprocessable_entity
     end
   rescue ActiveRecord::RecordNotFound => e
@@ -46,7 +43,7 @@ class GigPaymentsController < ApplicationController
     redirect_to gig_payments_path, alert: "No se encontró el show para registrar el pago."
   rescue => e
     Rails.logger.error "[GigPaymentsController#create] Exception: #{e.class} - #{e.message}\n#{e.backtrace[0..5].join("\n")}" 
-    redirect_to gig_payments_path, alert: "Ocurrió un error al registrar el pago. Revisa la consola del servidor."
+    redirect_to gig_payments_path, alert: "Ocurrió un error al registrar el pago."
   end
 
   def edit
@@ -69,11 +66,11 @@ class GigPaymentsController < ApplicationController
   private
 
   def set_gig
-    @gig = Gig.find(params[:gig_id])
+    @gig = current_company.gigs.includes(:client).find(params[:gig_id])
   end
 
   def set_payment
-    @payment = GigPayment.find(params[:id])
+    @payment = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).find(params[:id])
   end
 
   def payment_params
