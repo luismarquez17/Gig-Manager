@@ -70,6 +70,33 @@ class User < ApplicationRecord
     name.presence || email.split('@').first.capitalize
   end
 
+  def phone_number
+    client&.phone.presence || company&.whatsapp_number.presence || company&.contact_phone.presence
+  end
+
+  def formatted_phone_for_whatsapp
+    raw_phone = phone_number
+    return nil if raw_phone.blank?
+
+    digits = raw_phone.to_s.gsub(/\D/, '')
+    if digits.start_with?('0') && digits.length == 11
+      "58#{digits[1..]}"
+    elsif digits.length == 10 && digits.start_with?('4')
+      "58#{digits}"
+    else
+      digits
+    end
+  end
+
+  def whatsapp_url(text: nil)
+    number = formatted_phone_for_whatsapp
+    return nil if number.blank?
+
+    url = "https://wa.me/#{number}"
+    url += "?text=#{ERB::Util.url_encode(text)}" if text.present?
+    url
+  end
+
   def total_agreed_amount
     assignment_total = staff_assignments.sum(:agreed_amount).to_f
     assigned_gig_ids = staff_assignments.pluck(:gig_id)
