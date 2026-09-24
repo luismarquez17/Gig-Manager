@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_14_220000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_24_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -57,6 +57,22 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_14_220000) do
     t.index ["notification_type"], name: "index_app_notifications_on_notification_type"
     t.index ["sender_id"], name: "index_app_notifications_on_sender_id"
     t.index ["target_area"], name: "index_app_notifications_on_target_area"
+  end
+
+  create_table "cash_adjustments", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD", null: false
+    t.integer "adjustment_type", default: 0, null: false
+    t.date "date", null: false
+    t.text "description", null: false
+    t.bigint "user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["adjustment_type"], name: "index_cash_adjustments_on_adjustment_type"
+    t.index ["company_id"], name: "index_cash_adjustments_on_company_id"
+    t.index ["date"], name: "index_cash_adjustments_on_date"
+    t.index ["user_id"], name: "index_cash_adjustments_on_user_id"
   end
 
   create_table "categories", force: :cascade do |t|
@@ -549,6 +565,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_14_220000) do
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "app_notifications", "companies"
   add_foreign_key "app_notifications", "users", column: "sender_id"
+  add_foreign_key "cash_adjustments", "companies"
+  add_foreign_key "cash_adjustments", "users"
   add_foreign_key "client_quotes", "clients"
   add_foreign_key "client_quotes", "companies"
   add_foreign_key "client_quotes", "gigs"

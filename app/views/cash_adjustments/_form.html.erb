@@ -1,0 +1,61 @@
+<%= form_with(model: @cash_adjustment, local: true) do |f| %>
+  <% if @cash_adjustment.errors.any? %>
+    <div style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+      <div style="font-weight: 800; font-size: 0.95em; margin-bottom: 6px;">⚠️ Por favor corrige los siguientes errores:</div>
+      <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+        <% @cash_adjustment.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    
+    <%# Tipo de Movimiento %>
+    <div>
+      <%= f.label :adjustment_type, "Tipo de Movimiento *", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
+      <%= f.select :adjustment_type, [
+            ["💵 Ingresar Dinero a Caja (Aporte / Saldo)", "deposit"],
+            ["💸 Retirar Dinero de Caja (Salida)", "withdrawal"]
+          ], {}, { class: "form-control", style: "width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; font-weight: 600;" } %>
+      <small style="color: #64748b; font-size: 0.8em; margin-top: 4px; display: block;">
+        <strong>Ingreso:</strong> suma dinero a la caja. <strong>Retiro:</strong> resta dinero de la caja.
+      </small>
+    </div>
+
+    <%# Monto y Moneda %>
+    <div style="display: grid; grid-template-columns: 1fr 120px; gap: 14px;">
+      <div>
+        <%= f.label :amount, "Monto ($) *", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
+        <div style="position: relative;">
+          <span style="position: absolute; left: 14px; top: 12px; color: #64748b; font-weight: 700;">$</span>
+          <%= f.number_field :amount, step: "0.01", min: "0.01", placeholder: "Ej. 150.00", required: true, style: "width: 100%; padding: 12px 14px 12px 30px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1.05em; font-weight: 700; box-sizing: border-box;" %>
+        </div>
+      </div>
+      <div>
+        <%= f.label :currency, "Moneda", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
+        <%= f.text_field :currency, value: "USD", readonly: true, style: "width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; background: #f8fafc; font-weight: 700; text-align: center; box-sizing: border-box;" %>
+      </div>
+    </div>
+
+    <%# Fecha %>
+    <div>
+      <%= f.label :date, "Fecha del Movimiento *", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
+      <%= f.date_field :date, value: @cash_adjustment.date || Date.today, required: true, style: "width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; font-weight: 600; box-sizing: border-box;" %>
+    </div>
+
+    <%# Descripción / Motivo %>
+    <div>
+      <%= f.label :description, "Motivo o Concepto *", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
+      <%= f.text_area :description, rows: 3, placeholder: "Ej: Saldo en cuenta bancaria al iniciar el mes, Aporte de socio para compra de micrófonos, Retiro de utilidades Luis...", required: true, style: "width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; box-sizing: border-box;" %>
+    </div>
+
+    <%# Botones %>
+    <div style="display: flex; gap: 12px; margin-top: 10px; justify-content: flex-end;">
+      <%= link_to "Cancelar", cash_adjustments_path, style: "background: #f1f5f9; color: #475569; padding: 12px 20px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center;" %>
+      <%= f.submit @cash_adjustment.persisted? ? "Guardar Cambios" : "Registrar en Caja", style: "background: #10b981; color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 800; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);" %>
+    </div>
+
+  </div>
+<% end %>

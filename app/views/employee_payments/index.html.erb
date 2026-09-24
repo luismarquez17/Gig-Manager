@@ -98,7 +98,7 @@
       <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
     </div>
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (shows pasados)</div>
+      <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (shows asignados)</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #ea580c; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:past_balance] }, unit: 'USD') %></div>
     </div>
     <% settled_count = @worker_metrics.count { |m| m[:past_balance] <= 0 && m[:overpaid] <= 0 } %>
@@ -139,13 +139,13 @@
           <%# ── Apartados de estado y deuda ── %>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 
-            <%# 1. DEUDA: shows pasados sin pagar %>
+            <%# 1. DEUDA: shows asignados sin pagar %>
             <% if past_balance > 0 %>
               <div style="display: flex; align-items: center; gap: 6px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 13px;">
                 <div>
                   <div style="font-size: 0.7em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
                   <div style="font-size: 1em; font-weight: 900; color: #ea580c;"><%= number_to_currency(past_balance, unit: 'USD') %></div>
-                  <div style="font-size: 0.7em; color: #fdba74;">Shows pasados</div>
+                  <div style="font-size: 0.7em; color: #fdba74;">Shows asignados</div>
                 </div>
               </div>
             <% else %>
@@ -153,7 +153,7 @@
                 <div>
                   <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
                   <div style="font-size: 1em; font-weight: 900; color: #cbd5e1;">$0.00</div>
-                  <div style="font-size: 0.7em; color: #cbd5e1;">Shows pasados</div>
+                  <div style="font-size: 0.7em; color: #cbd5e1;">Shows asignados</div>
                 </div>
               </div>
             <% end %>
@@ -197,8 +197,8 @@
               type="button"
               class="btn-main py-1 px-3 fs-7"
               style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700; cursor: pointer;"
-              onclick="openResetModal('<%= metric[:worker].id %>', '<%= j(worker_display) %>', '<%= metric[:past_balance].round(2) %>')"
-              title="Editar la deuda de shows pasados de este trabajador"
+              onclick="openResetModal('<%= metric[:worker].id %>', '<%= j(worker_display) %>', '<%= metric[:past_balance].round(2) %>', '<%= metric[:overpaid].round(2) %>')"
+              title="Editar la deuda o saldo de este trabajador"
             >
               ✏️ Editar deuda
             </button>
@@ -220,7 +220,7 @@
         <% if gig_debts.any? %>
           <div id="debt-<%= idx %>" style="display:none; border-top: 1px solid #fed7aa; background: #fff7ed; padding: 14px 18px;">
             <div style="font-size: 0.75em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
-              ⏳ Deuda — shows ya ocurridos sin pagar
+              ⏳ Deuda — shows asignados sin pagar
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <% gig_debts.each do |debt| %>
@@ -268,68 +268,150 @@
 </script>
 
 
-<%# ===== MODAL: AJUSTE DE SALDO POR EL LÍDER ===== %>
+<%# ===== MODAL: AJUSTE DE SALDO / DEUDA POR EL LÍDER ===== %>
 <div id="reset-balance-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:20px; padding:32px 28px; max-width:480px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.18); position:relative; animation: slideUpModal 0.22s ease;">
+  <div style="background:#fff; border-radius:20px; padding:30px 26px; max-width:520px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.18); position:relative; animation: slideUpModal 0.22s ease;">
     
     <%# Botón cerrar %>
     <button onclick="closeResetModal()" type="button" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4em; color:#94a3b8; cursor:pointer; line-height:1;" title="Cerrar">✕</button>
 
     <%# Encabezado %>
-    <div style="margin-bottom:20px;">
-      <div style="font-size:2em; margin-bottom:8px;">✏️</div>
-      <h2 style="margin:0 0 4px 0; font-size:1.25em; font-weight:900; color:#0f172a;">Editar deuda del trabajador</h2>
-      <p id="reset-modal-subtitle" style="margin:0; font-size:0.9em; color:#64748b;"></p>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:1.8em; margin-bottom:4px;">✏️</div>
+      <h2 style="margin:0 0 4px 0; font-size:1.25em; font-weight:900; color:#0f172a;">Editar deudas y saldos del trabajador</h2>
+      <p id="reset-modal-subtitle" style="margin:0; font-size:0.88em; color:#64748b;"></p>
     </div>
 
-    <%# Deuda actual %>
-    <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:14px 16px; margin-bottom:18px;">
-      <div style="font-size:0.78em; font-weight:700; color:#c2410c; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px;">Deuda actual (shows pasados)</div>
-      <div id="reset-modal-current-balance" style="font-size:1.4em; font-weight:900; color:#0f172a;"></div>
-      <div style="font-size:0.8em; color:#94a3b8; margin-top:2px;">Lo que la empresa le debe al trabajador por shows ya realizados</div>
+    <%# Resumen de saldos actuales %>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
+      <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:10px 12px;">
+        <div style="font-size:0.72em; font-weight:800; color:#c2410c; text-transform:uppercase; letter-spacing:0.4px;">⏳ Le debemos (shows)</div>
+        <div id="reset-modal-company-debt-display" style="font-size:1.2em; font-weight:900; color:#ea580c; margin-top:2px;">$0.00</div>
+        <div style="font-size:0.72em; color:#9a3412;">Deuda de la empresa</div>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:10px 12px;">
+        <div style="font-size:0.72em; font-weight:800; color:#b91c1c; text-transform:uppercase; letter-spacing:0.4px;">⚠️ Nos debe</div>
+        <div id="reset-modal-worker-owes-display" style="font-size:1.2em; font-weight:900; color:#dc2626; margin-top:2px;">$0.00</div>
+        <div style="font-size:0.72em; color:#991b1b;">Pagado de más / anticipo</div>
+      </div>
     </div>
 
     <%# Formulario %>
     <%= form_with url: reset_balance_employee_payments_path, method: :post, local: true, id: "reset-balance-form" do |f| %>
       <%= f.hidden_field :user_id, id: "reset-user-id" %>
+      <%= f.hidden_field :adjustment_mode, id: "reset-adjustment-mode", value: "company_debt" %>
 
-      <div style="margin-bottom:18px;">
-        <label for="reset-new-balance" style="display:block; font-size:0.88em; font-weight:700; color:#374151; margin-bottom:6px;">
-          Nueva deuda (el trabajador quedará con este monto pendiente por cobrar)
+      <%# Selector de pestaña / modo de ajuste %>
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.82em; font-weight:800; color:#334155; margin-bottom:6px;">
+          ¿Qué apartado deseas ajustar?
         </label>
-        <div style="position:relative;">
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; background:#f1f5f9; padding:4px; border-radius:12px;">
+          <button
+            type="button"
+            id="tab-btn-company-debt"
+            onclick="setResetMode('company_debt')"
+            style="padding:8px 4px; border:none; border-radius:8px; font-weight:700; font-size:0.78em; cursor:pointer; background:#fff; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:all 0.15s;"
+          >
+            ⏳ Le debemos
+          </button>
+          <button
+            type="button"
+            id="tab-btn-worker-owes"
+            onclick="setResetMode('worker_owes')"
+            style="padding:8px 4px; border:none; border-radius:8px; font-weight:700; font-size:0.78em; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s;"
+          >
+            ⚠️ Nos debe
+          </button>
+          <button
+            type="button"
+            id="tab-btn-settle-all"
+            onclick="setResetMode('settle_all')"
+            style="padding:8px 4px; border:none; border-radius:8px; font-weight:700; font-size:0.78em; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s;"
+          >
+            ✅ Dejar al día
+          </button>
+        </div>
+      </div>
+
+      <%# Panel 1: Ajustar lo que la empresa le debe %>
+      <div id="panel-company-debt" style="margin-bottom:14px;">
+        <label for="reset-company-debt-input" style="display:block; font-size:0.84em; font-weight:700; color:#1e293b; margin-bottom:6px;">
+          Nueva deuda de la empresa (lo que le quedaremos debiendo):
+        </label>
+        <div style="position:relative; margin-bottom:6px;">
           <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; font-weight:700; font-size:1em;">$</span>
           <input
             type="number"
-            name="new_balance"
-            id="reset-new-balance"
+            name="company_debt"
+            id="reset-company-debt-input"
             step="0.01"
             min="0"
             placeholder="0.00"
-            required
-            style="width:100%; padding:12px 14px 12px 30px; border:2px solid #e2e8f0; border-radius:10px; font-size:1.05em; font-weight:700; color:#0f172a; outline:none; box-sizing:border-box; transition:border-color 0.15s;"
+            style="width:100%; padding:10px 14px 10px 30px; border:2px solid #e2e8f0; border-radius:10px; font-size:1.05em; font-weight:700; color:#0f172a; outline:none; box-sizing:border-box; transition:border-color 0.15s;"
             onfocus="this.style.borderColor='#3b82f6'"
             onblur="this.style.borderColor='#e2e8f0'"
           >
         </div>
-        <p style="margin:6px 0 0 0; font-size:0.8em; color:#64748b;">
-          Ingresa <strong>$0</strong> para saldar la deuda completamente, o el monto real que sigue pendiente.
-        </p>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <p style="margin:0; font-size:0.76em; color:#64748b;">
+            Ingresa <strong>$0</strong> para saldar toda la deuda de shows pasados.
+          </p>
+          <button type="button" onclick="document.getElementById('reset-company-debt-input').value='0.00'" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 8px; border-radius:6px; font-size:0.74em; font-weight:700; cursor:pointer;">
+            ✨ Poner $0.00
+          </button>
+        </div>
+      </div>
+
+      <%# Panel 2: Ajustar lo que el trabajador nos debe %>
+      <div id="panel-worker-owes" style="display:none; margin-bottom:14px;">
+        <label for="reset-worker-owes-input" style="display:block; font-size:0.84em; font-weight:700; color:#1e293b; margin-bottom:6px;">
+          Nuevo monto que el trabajador nos debe (pagado de más o anticipo):
+        </label>
+        <div style="position:relative; margin-bottom:6px;">
+          <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; font-weight:700; font-size:1em;">$</span>
+          <input
+            type="number"
+            name="worker_owes"
+            id="reset-worker-owes-input"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            style="width:100%; padding:10px 14px 10px 30px; border:2px solid #e2e8f0; border-radius:10px; font-size:1.05em; font-weight:700; color:#0f172a; outline:none; box-sizing:border-box; transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='#ef4444'"
+            onblur="this.style.borderColor='#e2e8f0'"
+          >
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <p style="margin:0; font-size:0.76em; color:#64748b;">
+            Ingresa <strong>$0</strong> para saldar/perdonar lo que nos debe.
+          </p>
+          <button type="button" onclick="document.getElementById('reset-worker-owes-input').value='0.00'" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 8px; border-radius:6px; font-size:0.74em; font-weight:700; cursor:pointer;">
+            ✨ Poner $0.00
+          </button>
+        </div>
+      </div>
+
+      <%# Panel 3: Dejar al día %>
+      <div id="panel-settle-all" style="display:none; margin-bottom:14px;">
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 14px; color:#15803d; font-size:0.85em; line-height:1.4;">
+          <strong>✅ Cuenta completamente saldada ($0.00)</strong><br>
+          Se cancelarán todas las deudas mutuas de shows pasados y anticipos. El trabajador quedará en estado <strong>Al día</strong>.
+        </div>
       </div>
 
       <%# Aviso %>
-      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:12px 14px; margin-bottom:20px; font-size:0.83em; color:#1d4ed8; line-height:1.5;">
-        📋 <strong>El historial anterior se conserva para auditoría.</strong><br>
-        Se registrará un ajuste contable etiquetado como "Ajuste por el Líder" en el historial. El trabajador <strong>no necesita aprobar</strong> este cambio.
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 12px; margin-bottom:16px; font-size:0.78em; color:#1d4ed8; line-height:1.4;">
+        📋 <strong>Historial contable:</strong> Se registrará un ajuste con auditoría etiquetado como "Ajuste por el Líder". El trabajador no necesita aprobar este cambio.
       </div>
 
       <%# Botones %>
       <div style="display:flex; gap:10px; justify-content:flex-end;">
-        <button type="button" onclick="closeResetModal()" style="padding:10px 20px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#64748b; font-weight:700; cursor:pointer; font-size:0.92em;">
+        <button type="button" onclick="closeResetModal()" style="padding:9px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#64748b; font-weight:700; cursor:pointer; font-size:0.88em;">
           Cancelar
         </button>
-        <button type="submit" style="padding:10px 22px; border:none; border-radius:10px; background:#2563eb; color:#fff; font-weight:800; cursor:pointer; font-size:0.92em; display:flex; align-items:center; gap:6px;">
-          ✅ Guardar cambio
+        <button type="submit" style="padding:9px 20px; border:none; border-radius:10px; background:#2563eb; color:#fff; font-weight:800; cursor:pointer; font-size:0.88em; display:flex; align-items:center; gap:6px;">
+          ✅ Guardar ajuste
         </button>
       </div>
     <% end %>
@@ -344,28 +426,58 @@
 </style>
 
 <script>
-  function openResetModal(workerId, workerName, currentDebt) {
-    var debt = parseFloat(currentDebt);
+  function setResetMode(mode) {
+    document.getElementById('reset-adjustment-mode').value = mode;
+
+    var modes = ['company_debt', 'worker_owes', 'settle_all'];
+    modes.forEach(function(m) {
+      var panel = document.getElementById('panel-' + m.replace('_', '-'));
+      var btn = document.getElementById('tab-btn-' + m.replace('_', '-'));
+      if (panel) panel.style.display = (m === mode) ? 'block' : 'none';
+      if (btn) {
+        if (m === mode) {
+          btn.style.background = '#fff';
+          btn.style.color = '#1e293b';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = '#64748b';
+          btn.style.boxShadow = 'none';
+        }
+      }
+    });
+
+    if (mode === 'company_debt') {
+      var input = document.getElementById('reset-company-debt-input');
+      setTimeout(function() { input.focus(); input.select(); }, 50);
+    } else if (mode === 'worker_owes') {
+      var input = document.getElementById('reset-worker-owes-input');
+      setTimeout(function() { input.focus(); input.select(); }, 50);
+    }
+  }
+
+  function openResetModal(workerId, workerName, currentCompanyDebt, currentWorkerOwes) {
+    var cDebt = parseFloat(currentCompanyDebt) || 0;
+    var wOwes = parseFloat(currentWorkerOwes) || 0;
+
     document.getElementById('reset-user-id').value = workerId;
     document.getElementById('reset-modal-subtitle').textContent = 'Trabajador: ' + workerName;
 
-    var formatted = '$' + debt.toFixed(2);
-    var label = debt > 0
-      ? 'Le debemos: ' + formatted
-      : '✅ Sin deuda pendiente';
-    document.getElementById('reset-modal-current-balance').textContent = label;
-    document.getElementById('reset-modal-current-balance').style.color =
-      debt > 0 ? '#ea580c' : '#15803d';
+    document.getElementById('reset-modal-company-debt-display').textContent = '$' + cDebt.toFixed(2);
+    document.getElementById('reset-modal-worker-owes-display').textContent = '$' + wOwes.toFixed(2);
 
-    // Precargar con 0 como punto de partida
-    document.getElementById('reset-new-balance').value = '0.00';
+    document.getElementById('reset-company-debt-input').value = cDebt.toFixed(2);
+    document.getElementById('reset-worker-owes-input').value = wOwes.toFixed(2);
+
+    // Seleccionar automáticamente la pestaña más relevante según la situación del trabajador
+    if (wOwes > 0 && cDebt <= 0) {
+      setResetMode('worker_owes');
+    } else {
+      setResetMode('company_debt');
+    }
 
     var modal = document.getElementById('reset-balance-modal');
     modal.style.display = 'flex';
-    setTimeout(function() {
-      document.getElementById('reset-new-balance').focus();
-      document.getElementById('reset-new-balance').select();
-    }, 80);
   }
 
   function closeResetModal() {
@@ -464,7 +576,7 @@
                     </span>
                   <% else %>
                     <span style="background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
-                      🏢 Fondo Nómina
+                      🏢 Fondo de la Empresa
                     </span>
                   <% end %>
                 </td>

@@ -35,7 +35,7 @@ class Client < ApplicationRecord
 
   # 1. Presupuesto Total (Usado para el ordenamiento del Index)
   def total_spent
-    gigs.sum(:amount).to_f
+    read_attribute(:total_spent)&.to_f || gigs.sum(:amount).to_f
   end
 
   # 2. Método para calcular el presupuesto promedio de los últimos 3 shows

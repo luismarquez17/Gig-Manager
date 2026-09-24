@@ -32,4 +32,10 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h4", "Conflictos detectados en el calendario"
   end
+
+  test "should get financials" do
+    get financials_dashboard_url
+    assert_response :success
+    assert_select "h1", /Métricas Financieras/
+  end
 end

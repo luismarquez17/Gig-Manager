@@ -468,165 +468,117 @@
       }
     </script>
 
-    <%# --- BALANCE FINANCIERO DEL SHOW --- %>
+    <%# --- BALANCE FINANCIERO Y RENTABILIDAD DEL SHOW --- %>
     <div style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
-        <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-          <span>💰</span> Balance Financiero del Show
-        </h3>
+        <div>
+          <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+            <span>📊</span> Rentabilidad & Finanzas del Show
+          </h3>
+          <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.85em;">
+            Desglose en tiempo real de ingresos cobrados, costos de nómina y ganancia neta para la empresa.
+          </p>
+        </div>
         <% if current_user.leader? %>
           <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "margin: 0;" do |f| %>
             <%= hidden_field_tag :upsell_key, 'extra_time' %>
-            <button type="submit" onclick="return confirm('¿Añadir 1 Hora Extra a este evento? Se sumará la tarifa correspondiente al monto del toque y 1 hora al horario final.');" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 6px 14px; border-radius: 10px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
+            <button type="submit" onclick="return confirm('¿Añadir 1 Hora Extra a este evento? Se sumará la tarifa correspondiente al monto del toque y 1 hora al horario final.');" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 7px 14px; border-radius: 10px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
               🎵 + Añadir Hora Extra
             </button>
           <% end %>
         <% end %>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: start;">
-        <%# Columna Izquierda: Métricas, Progreso y Formulario de Asignación %>
-        <div>
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px; margin-bottom: 16px;">
-            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 10px;">
-              <span style="font-size: 0.85em; color: #64748b; font-weight: 700; text-transform: uppercase;">Monto Acordado</span>
-              <span style="font-size: 1.3em; font-weight: 800; color: #10b981;">
-                <%= number_with_precision(@gig.amount, precision: 2) %> 
-                <span style="font-size: 0.65em; color: #94a3b8; font-weight: 600;"><%= @gig.currency %></span>
-              </span>
-            </div>
-
-            <div style="margin-bottom: 12px;">
-              <%= render 'gigs/payment_progress', gig: @gig, size: :compact, show_details: true, show_footer: false %>
-            </div>
-
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px;">
-              <div style="background: white; padding: 10px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                <div style="font-size: 0.78em; color: #64748b; font-weight: 700;">Pagos a Agrupación</div>
-                <div style="font-size: 1.05em; font-weight: 800; color: #ef4444; margin-top: 2px;">
-                  <%= number_with_precision(@gig.total_employee_payouts || 0, precision: 2) %> <%= @gig.currency %>
-                </div>
-              </div>
-              <div style="background: white; padding: 10px 12px; border-radius: 10px; border: 1px solid #e2e8f0;">
-                <div style="font-size: 0.78em; color: #64748b; font-weight: 700;">Asignado a Fondos</div>
-                <div style="font-size: 1.05em; font-weight: 800; color: #0ea5e9; margin-top: 2px;">
-                  <%= number_with_precision(@gig.total_allocated || 0, precision: 2) %> <%= @gig.currency %>
-                </div>
-              </div>
-            </div>
-
-            <div style="margin-top: 14px; border-top: 1px dashed #cbd5e1; padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-              <span style="font-weight: 800; color: #1e293b; font-size: 0.95em;">💵 Saldo Disponible:</span>
-              <span style="font-weight: 900; color: #065f46; font-size: 1.2em;">
-                <%= number_with_precision(@gig.remaining_balance || 0, precision: 2) %> <%= @gig.currency %>
-              </span>
-            </div>
-          </div>
-
-          <%# Formulario de asignación de sobrante %>
-          <div style="background: white; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px;">
-            <div style="font-weight: 800; color: #334155; font-size: 0.9em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;">
-              <span>📥 Asignar Dinero a Fondos</span>
-            </div>
-            <%= form_with model: [@gig, FundAllocation.new], local: true do |f| %>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
-                <div>
-                  <%= f.label :amount, 'Monto ($)', style: 'display:block; font-weight:700; color:#475569; font-size:0.8em; margin-bottom:4px;' %>
-                  <%= f.text_field :amount,
-                    inputmode: 'numeric',
-                    data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
-                    placeholder: '0.00',
-                    style: 'width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em;' %>
-                </div>
-                <div>
-                  <%= f.label :fund_type, 'Fondo Destino', style: 'display:block; font-weight:700; color:#475569; font-size:0.8em; margin-bottom:4px;' %>
-                  <%= f.select :fund_type, FundAllocation::FUND_TYPES.map { |t| [FundAllocation.fund_label_for(t), t] }, {}, style: 'width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em; background: white;' %>
-                </div>
-              </div>
-              <div style="margin-bottom: 12px;">
-                <%= f.label :notes, 'Notas / Concepto (opcional)', style: 'display:block; font-weight:700; color:#475569; font-size:0.8em; margin-bottom:4px;' %>
-                <%= f.text_field :notes, placeholder: 'Ej. Para nómina del staff, reparaciones...', style: 'width: 100%; box-sizing: border-box; padding: 8px 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.9em;' %>
-              </div>
-              <%= f.submit '💾 Asignar a Fondo', style: 'width: 100%; background: #10b981; color: white; padding: 10px; border-radius: 8px; font-weight: 800; border: none; cursor: pointer; font-size: 0.9em; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.2);' %>
-            <% end %>
-          </div>
-        </div>
-
-        <%# Columna Derecha: Historial de Asignaciones y Gastos Desglosados %>
-        <div>
-          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px;">
-            <div style="font-weight: 800; color: #1e293b; font-size: 0.95em; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-              <span>📜 Historial de Asignaciones</span>
-              <span style="font-size: 0.8em; font-weight: 700; color: #64748b; background: #e2e8f0; padding: 2px 8px; border-radius: 99px;">
-                <%= @gig.fund_allocations.size %> registro(s)
-              </span>
-            </div>
-
-            <% if @gig.fund_allocations.empty? %>
-              <p style="color: #94a3b8; font-size: 0.88em; margin: 0; font-style: italic; text-align: center; padding: 20px 0;">
-                No hay fondos asignados para este evento todavía.
-              </p>
-            <% else %>
-              <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
-                <% @gig.fund_allocations.order(created_at: :desc).each do |fa| %>
-                  <div style="background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 10px 14px; display: flex; justify-content: space-between; align-items: flex-start; gap: 12px;">
-                    <div style="min-width: 0; flex: 1;">
-                      <div style="font-weight: 800; color: #1e293b; font-size: 0.92em;"><%= fa.fund_label %></div>
-                      <div style="font-size: 0.82em; color: #64748b; margin-top: 2px; word-break: break-word;"><%= fa.notes.presence || '-' %></div>
-                    </div>
-                    <div style="text-align: right; white-space: nowrap; flex-shrink: 0;">
-                      <div style="font-weight: 800; color: #0284c7; font-size: 0.95em;">
-                        <%= number_with_precision(fa.amount, precision: 2) %> <%= fa.currency %>
-                      </div>
-                      <div style="font-size: 0.78em; color: #94a3b8; margin-top: 2px;">
-                        <%= fa.created_at.strftime('%d/%m/%Y') %>
-                      </div>
-                    </div>
-                  </div>
-                <% end %>
-              </div>
-            <% end %>
-
-            <%# Desglose de Gastos por Fondo %>
-            <% active_allocations = @gig.fund_allocations.select { |fa| fa.fund_expenses.any? } %>
-            <% if active_allocations.any? %>
-              <div style="border-top: 1px dashed #cbd5e1; padding-top: 14px; margin-top: 10px;">
-                <div style="font-weight: 800; color: #475569; font-size: 0.88em; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
-                  💸 Gastos Aplicados a Fondos
-                </div>
-
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                  <% active_allocations.each do |fa| %>
-                    <div style="background: white; border-radius: 10px; border: 1px solid #e2e8f0; padding: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.02);">
-                      <div style="font-weight: 800; color: #1e293b; font-size: 0.88em; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
-                        <span>Gastos para: <%= fa.fund_label %></span>
-                        <span style="font-size: 0.8em; font-weight: 700; color: <%= fa.remaining.to_f > 0 ? '#059669' : '#64748b' %>; background: <%= fa.remaining.to_f > 0 ? '#ecfdf5' : '#f1f5f9' %>; padding: 2px 8px; border-radius: 99px;">
-                          Saldo: $<%= number_with_precision(fa.remaining, precision: 2) %>
-                        </span>
-                      </div>
-
-                      <div style="display: flex; flex-direction: column; gap: 6px;">
-                        <% fa.fund_expenses.order(created_at: :desc).each do |exp| %>
-                          <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 6px 8px; background: #f8fafc; border-radius: 6px; font-size: 0.85em;">
-                            <div style="color: #334155; min-width: 0; word-break: break-word; flex: 1; line-height: 1.3;">
-                              <%= exp.notes.presence || 'Sin nota de concepto' %>
-                            </div>
-                            <div style="text-align: right; white-space: nowrap; flex-shrink: 0;">
-                              <span style="color: #ef4444; font-weight: 800; font-size: 0.92em;">-$<%= number_with_precision(exp.amount, precision: 2) %></span>
-                              <div style="font-size: 0.76em; color: #94a3b8;"><%= exp.spent_at&.strftime('%d/%m/%Y') || exp.created_at&.strftime('%d/%m/%Y') %></div>
-                            </div>
-                          </div>
-                        <% end %>
-                      </div>
-                    </div>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-
-          </div>
-        </div>
+      <%# Progreso de Cobro al Cliente %>
+      <div style="margin-bottom: 20px;">
+        <%= render 'gigs/payment_progress', gig: @gig, size: :compact, show_details: true, show_footer: false %>
       </div>
+
+      <%# Tarjetas de Resumen Financiero %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+        
+        <%# 1. Presupuesto Cliente %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px;">
+          <div style="font-size: 0.78em; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">💵 Presupuesto Cliente</div>
+          <div style="font-size: 1.4em; font-weight: 900; color: #0f172a; margin-top: 4px;">
+            <%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size: 0.65em; color: #94a3b8;"><%= @gig.currency %></span>
+          </div>
+          <div style="font-size: 0.8em; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between;">
+            <span>Cobrado: <strong style="color: #16a34a;">$<%= number_with_precision(@gig.total_received, precision: 2) %></strong></span>
+            <span>Resta: <strong style="color: <%= @gig.remaining_amount > 0 ? '#ea580c' : '#16a34a' %>;">$<%= number_with_precision(@gig.remaining_amount, precision: 2) %></strong></span>
+          </div>
+        </div>
+
+        <%# 2. Costo Total de Nómina %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px;">
+          <div style="font-size: 0.78em; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">👥 Nómina del Show</div>
+          <div style="font-size: 1.4em; font-weight: 900; color: #dc2626; margin-top: 4px;">
+            - $<%= number_with_precision(@gig.total_payroll_agreed, precision: 2) %> <span style="font-size: 0.65em; color: #94a3b8;"><%= @gig.currency %></span>
+          </div>
+          <div style="font-size: 0.8em; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between;">
+            <span>Pagado: <strong style="color: #059669;">$<%= number_with_precision(@gig.total_payroll_paid, precision: 2) %></strong></span>
+            <span>Pendiente: <strong style="color: <%= @gig.pending_payroll_amount > 0 ? '#dc2626' : '#16a34a' %>;">$<%= number_with_precision(@gig.pending_payroll_amount, precision: 2) %></strong></span>
+          </div>
+        </div>
+
+        <%# 3. Ganancia Neta Estimada (Banda) %>
+        <%
+          is_profitable = @gig.projected_net_profit >= 0
+          margin = @gig.projected_profit_margin
+          margin_badge_bg = margin >= 30 ? '#dcfce7' : (margin >= 10 ? '#fef9c3' : '#fee2e2')
+          margin_badge_color = margin >= 30 ? '#166534' : (margin >= 10 ? '#854d0e' : '#991b1b')
+        %>
+        <div style="background: <%= is_profitable ? '#f0fdf4' : '#fff1f2' %>; border: 2px solid <%= is_profitable ? '#86efac' : '#fecaca' %>; border-radius: 14px; padding: 16px 18px; position: relative;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="font-size: 0.78em; color: <%= is_profitable ? '#15803d' : '#991b1b' %>; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+              📈 Ganancia Neta Banda
+            </div>
+            <span style="background: <%= margin_badge_bg %>; color: <%= margin_badge_color %>; font-size: 0.75em; font-weight: 900; padding: 2px 8px; border-radius: 99px;">
+              <%= margin %>% Margen
+            </span>
+          </div>
+          <div style="font-size: 1.4em; font-weight: 900; color: <%= is_profitable ? '#16a34a' : '#dc2626' %>; margin-top: 4px;">
+            <%= is_profitable ? '+' : '' %>$<%= number_with_precision(@gig.projected_net_profit, precision: 2) %> <span style="font-size: 0.65em; color: #64748b;"><%= @gig.currency %></span>
+          </div>
+          <div style="font-size: 0.8em; color: <%= is_profitable ? '#166534' : '#991b1b' %>; margin-top: 6px;">
+            💡 Limpio para la empresa tras pagar nómina acordada.
+          </div>
+        </div>
+
+        <%# 4. Flujo Real en Mano (Cobrado vs Pagado Hoy) %>
+        <% cash_in_hand = @gig.actual_cash_profit %>
+        <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 16px 18px;">
+          <div style="font-size: 0.78em; color: #1e40af; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+            💵 Flujo Real en Mano
+          </div>
+          <div style="font-size: 1.4em; font-weight: 900; color: <%= cash_in_hand >= 0 ? '#2563eb' : '#dc2626' %>; margin-top: 4px;">
+            <%= cash_in_hand >= 0 ? '+' : '' %>$<%= number_with_precision(cash_in_hand, precision: 2) %> <span style="font-size: 0.65em; color: #64748b;"><%= @gig.currency %></span>
+          </div>
+          <div style="font-size: 0.8em; color: #3b82f6; margin-top: 6px;">
+            Total Cobrado ($<%= number_with_precision(@gig.total_received, precision: 2) %>) - Nómina Pagada ($<%= number_with_precision(@gig.total_payroll_paid, precision: 2) %>).
+          </div>
+        </div>
+
+      </div>
+
+      <%# Barra Visual de Distribución del Presupuesto (Nómina vs Ganancia) %>
+      <% if @gig.amount.to_f > 0 %>
+        <%
+          payroll_pct = [((@gig.total_payroll_agreed / @gig.amount.to_f) * 100).round(1), 100.0].min
+          profit_pct = [100.0 - payroll_pct, 0.0].max.round(1)
+        %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+          <div style="display: flex; justify-content: space-between; font-size: 0.82em; font-weight: 700; margin-bottom: 6px;">
+            <span style="color: #dc2626;">👥 Costo Nómina: <%= payroll_pct %>% ($<%= number_with_precision(@gig.total_payroll_agreed, precision: 2) %>)</span>
+            <span style="color: #16a34a;">🏢 Margen Ganancia Empresa: <%= profit_pct %>% ($<%= number_with_precision(@gig.projected_net_profit, precision: 2) %>)</span>
+          </div>
+          <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden; display: flex;">
+            <div style="width: <%= payroll_pct %>%; background: #ef4444; height: 100%;" title="Costo Nómina (<%= payroll_pct %>%)"></div>
+            <div style="width: <%= profit_pct %>%; background: #22c55e; height: 100%;" title="Margen Empresa (<%= profit_pct %>%)"></div>
+          </div>
+        </div>
+      <% end %>
+
     </div>
     <%# --- ASIGNACIÓN DE TRABAJADORES --- %>
     <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">

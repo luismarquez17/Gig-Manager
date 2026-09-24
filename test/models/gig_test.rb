@@ -140,4 +140,29 @@ class GigTest < ActiveSupport::TestCase
     assert_not_includes fully_allocated_gigs, gig1
     assert_not_includes fully_allocated_gigs, gig2
   end
+
+  test "profitability and margin calculations for show" do
+    company = companies(:one)
+    worker1 = users(:musician)
+    worker2 = users(:two)
+
+    gig = Gig.create!(company: company, amount: 500.0, client_email: "profit@example.com")
+    gig.staff_assignments.create!(user: worker1, agreed_amount: 150.0)
+    gig.staff_assignments.create!(user: worker2, agreed_amount: 150.0)
+
+    # 1. Projected metrics
+    assert_equal 300.0, gig.total_payroll_agreed
+    assert_equal 200.0, gig.projected_net_profit
+    assert_equal 40.0, gig.projected_profit_margin
+    assert_equal 300.0, gig.pending_payroll_amount
+
+    # 2. Client pays partial ($250) and leader pays 1 worker ($150)
+    gig.gig_payments.create!(amount: 250.0, date_paid: Date.today)
+    gig.employee_payments.create!(company: company, user: worker1, amount: 150.0, date_paid: Date.today, status: 'approved')
+
+    gig.reload
+    assert_equal 150.0, gig.total_payroll_paid
+    assert_equal 150.0, gig.pending_payroll_amount
+    assert_equal 100.0, gig.actual_cash_profit # $250 received - $150 paid
+  end
 end

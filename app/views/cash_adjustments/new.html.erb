@@ -1,0 +1,17 @@
+<div style="max-width: 600px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+  
+  <div style="margin-bottom: 24px;">
+    <%= link_to "← Volver a Caja General", cash_adjustments_path, style: "color: #2563eb; text-decoration: none; font-weight: 700; font-size: 0.9em;" %>
+    <h1 style="color: #0f172a; font-size: 1.8em; font-weight: 800; margin: 12px 0 4px 0;">
+      ➕ Registrar Movimiento de Caja
+    </h1>
+    <p style="color: #64748b; font-size: 0.95em; margin: 0;">
+      Registra dinero que ingresa o sale de la caja general y detalla el motivo en la descripción.
+    </p>
+  </div>
+
+  <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+    <%= render 'form' %>
+  </div>
+
+</div>

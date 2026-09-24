@@ -19,23 +19,28 @@ class PagesController < ApplicationController
       @proximos_gigs        = gigs_scope.where("date >= ?", Date.today).order(date: :asc).limit(5)
       @total_clients        = current_company.clients.count
 
-      @total_received = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
-      @total_payroll_reserved = FundAllocation.joins(:gig).where(gigs: { company_id: current_company.id }, fund_type: 'payroll').sum(:amount).to_f
-      @total_payroll_spent = FundAllocation.joins(:gig, :fund_expenses).where(gigs: { company_id: current_company.id }, fund_type: 'payroll').sum('fund_expenses.amount').to_f
-      @total_payroll_available = @total_payroll_reserved - @total_payroll_spent
-      @total_funds_allocated = FundAllocation.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
+      # Flujo de Caja Real (Fondo de la Banda / Universal)
+      @total_received          = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
+      @total_cash_deposits     = current_company.cash_adjustments.inflows.sum(:amount).to_f
+      @total_inflow            = (@total_received + @total_cash_deposits).round(2)
 
-      # Calculamos los balances pendientes de nómina directamente en SQL,
-      # en lugar de cargar todos los workers con .to_a.sum(&:pending_balance)
-      worker_ids = current_company.users.workers.pluck(:id)
-      agreed_by_user = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
-      paid_by_user   = current_company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).sum(:amount)
-      @total_pending_worker_payments = worker_ids.sum do |uid|
-        [(agreed_by_user[uid].to_f - paid_by_user[uid].to_f), 0].max
-      end
+      @total_payroll_paid      = current_company.employee_payments.approved.sum(:amount).to_f
+      @total_maintenance_spent = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id }).sum(:cost).to_f
+      @total_investments_spent = current_company.investments.sum(:amount).to_f
+      @total_cash_withdrawals  = current_company.cash_adjustments.outflows.sum(:amount).to_f
+      @total_expenses          = (@total_payroll_paid + @total_maintenance_spent + @total_investments_spent + @total_cash_withdrawals).round(2)
 
-      @needed_payroll = [@total_pending_worker_payments - @total_payroll_available, 0].max
-      @shows_with_payroll = current_company.gigs.joins(:fund_allocations).where(fund_allocations: { fund_type: 'payroll' }).distinct.count
+      @universal_fund_balance  = (@total_inflow - @total_expenses).round(2)
+
+      # Cuentas por cobrar a clientes
+      all_gigs = current_company.gigs.includes(:gig_payments)
+      @total_client_receivables = all_gigs.sum { |g| [g.amount.to_f - g.gig_payments.sum(&:amount).to_f, 0.0].max }
+
+      # Deudas y compromisos con trabajadores
+      @worker_metrics = WorkerBalanceService.build_metrics_for_company(current_company)
+      @total_pending_worker_payments = @worker_metrics.sum { |m| m[:past_balance] }
+      @total_worker_owes = @worker_metrics.sum { |m| m[:overpaid] }
+
       @pending_worker_reports = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc)
       @pending_upsell_requests = current_company.gig_upsell_requests.pending.includes(:gig).order(created_at: :desc)
     elsif current_user.staff?
@@ -109,114 +114,182 @@ class PagesController < ApplicationController
     company_gigs = current_company.gigs
     company_gig_payments = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id })
 
-    # 1. Dinero REALMENTE COBRADO por moneda
-    @total_received_usd = company_gig_payments.where(currency: 'USD').sum(:amount).to_f
-    @total_received_bs = company_gig_payments.where(currency: 'BS').sum(:amount).to_f
+    # 1. Cobros en USD (Moneda única del sistema)
+    @total_received_usd  = company_gig_payments.sum(:amount).to_f
+    @total_cash_deposits = current_company.cash_adjustments.inflows.sum(:amount).to_f
+    @total_inflow_usd    = (@total_received_usd + @total_cash_deposits).round(2)
+    @budgeted_usd        = company_gigs.sum(:amount).to_f
+    @upcoming_usd        = company_gigs.where("date >= ?", Date.today).sum(:amount).to_f
 
-    # Presupuesto acordado por moneda
-    @budgeted_usd = company_gigs.where(currency: 'USD').sum(:amount).to_f
-    @budgeted_bs = company_gigs.where(currency: 'BS').sum(:amount).to_f
+    # 2. Nómina Pagada a Trabajadores (Músicos y Staff)
+    @total_payroll_paid = current_company.employee_payments.approved.sum(:amount).to_f
 
-    # Proyecciones (gigs futuros)
-    @upcoming_usd = company_gigs.where("date >= ?", Date.today).where(currency: 'USD').sum(:amount).to_f
-    @upcoming_bs = company_gigs.where("date >= ?", Date.today).where(currency: 'BS').sum(:amount).to_f
-
-    # 2. Gastos de mantenimiento
+    # 3. Gastos de Mantenimiento y Reparaciones (Taller)
     company_maintenance = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id })
-    @total_maintenance_cost = company_maintenance.sum(:cost)
-    @maintenance_by_status = company_maintenance.group(:status).sum(:cost)
+    @total_maintenance_cost = company_maintenance.sum(:cost).to_f
+    @maintenance_count = company_maintenance.count
 
-    # 3. Top Clientes
-    @top_clients = current_company.clients.joins(:gigs)
+    # 4. Total Inversiones en Equipos / Activos
+    @total_invested_usd = current_company.investments.sum(:amount).to_f
+    @investments_count  = current_company.investments.count
+
+    # 5. Retiros directos de caja
+    @total_cash_withdrawals = current_company.cash_adjustments.outflows.sum(:amount).to_f
+
+    # 6. Ganancia Neta Real y Rentabilidad (Flujo Real de Caja)
+    # Total Entradas - Nómina - Reparaciones - Inversiones - Retiros
+    @total_expenses_usd = (@total_payroll_paid + @total_maintenance_cost + @total_invested_usd + @total_cash_withdrawals).round(2)
+    @net_profit_usd     = (@total_inflow_usd - @total_expenses_usd).round(2)
+    @profit_margin_pct  = @total_inflow_usd > 0 ? ((@net_profit_usd / @total_inflow_usd) * 100).round(1) : 0.0
+    @roi_usd            = @total_invested_usd > 0 ? (((@total_inflow_usd - @total_payroll_paid - @total_maintenance_cost) / @total_invested_usd) * 100).round(1) : 0.0
+
+    # 7. Historial Mensual Detallado
+    months_hash = {}
+
+    # Cobros por mes de pago
+    company_gig_payments.where.not(date_paid: nil).find_each do |p|
+      month_date = p.date_paid.beginning_of_month
+      key = month_date.strftime("%Y-%m")
+      months_hash[key] ||= {
+        date: month_date,
+        month_label: month_date.strftime("%m/%Y"),
+        month_name: month_date.strftime("%B %Y"),
+        received: 0.0,
+        payroll: 0.0,
+        maintenance: 0.0,
+        investments: 0.0,
+        adjustments_in: 0.0,
+        adjustments_out: 0.0,
+        gigs_count: 0
+      }
+      months_hash[key][:received] += p.amount.to_f
+    end
+
+    # Aportes y retiros de caja por mes
+    current_company.cash_adjustments.find_each do |adj|
+      month_date = adj.date.beginning_of_month
+      key = month_date.strftime("%Y-%m")
+      months_hash[key] ||= {
+        date: month_date,
+        month_label: month_date.strftime("%m/%Y"),
+        month_name: month_date.strftime("%B %Y"),
+        received: 0.0,
+        payroll: 0.0,
+        maintenance: 0.0,
+        investments: 0.0,
+        adjustments_in: 0.0,
+        adjustments_out: 0.0,
+        gigs_count: 0
+      }
+      if adj.inflow?
+        months_hash[key][:received] += adj.amount.to_f
+        months_hash[key][:adjustments_in] += adj.amount.to_f
+      else
+        months_hash[key][:adjustments_out] += adj.amount.to_f
+      end
+    end
+
+    # Nómina pagada por mes
+    current_company.employee_payments.approved.where.not(date_paid: nil).find_each do |ep|
+      month_date = ep.date_paid.beginning_of_month
+      key = month_date.strftime("%Y-%m")
+      months_hash[key] ||= {
+        date: month_date,
+        month_label: month_date.strftime("%m/%Y"),
+        month_name: month_date.strftime("%B %Y"),
+        received: 0.0,
+        payroll: 0.0,
+        maintenance: 0.0,
+        investments: 0.0,
+        adjustments_in: 0.0,
+        adjustments_out: 0.0,
+        gigs_count: 0
+      }
+      months_hash[key][:payroll] += ep.amount.to_f
+    end
+
+    # Reparaciones por mes
+    company_maintenance.find_each do |mr|
+      next unless mr.cost.to_f > 0
+      date = mr.completed_at || mr.created_at&.to_date || Date.today
+      month_date = date.beginning_of_month
+      key = month_date.strftime("%Y-%m")
+      months_hash[key] ||= {
+        date: month_date,
+        month_label: month_date.strftime("%m/%Y"),
+        month_name: month_date.strftime("%B %Y"),
+        received: 0.0,
+        payroll: 0.0,
+        maintenance: 0.0,
+        investments: 0.0,
+        adjustments_in: 0.0,
+        adjustments_out: 0.0,
+        gigs_count: 0
+      }
+      months_hash[key][:maintenance] += mr.cost.to_f
+    end
+
+    # Inversiones por mes
+    current_company.investments.find_each do |inv|
+      next unless inv.amount.to_f > 0
+      date = inv.date || inv.created_at&.to_date || Date.today
+      month_date = date.beginning_of_month
+      key = month_date.strftime("%Y-%m")
+      months_hash[key] ||= {
+        date: month_date,
+        month_label: month_date.strftime("%m/%Y"),
+        month_name: month_date.strftime("%B %Y"),
+        received: 0.0,
+        payroll: 0.0,
+        maintenance: 0.0,
+        investments: 0.0,
+        adjustments_in: 0.0,
+        adjustments_out: 0.0,
+        gigs_count: 0
+      }
+      months_hash[key][:investments] += inv.amount.to_f
+    end
+
+    # Shows por mes
+    company_gigs.where.not(date: nil).find_each do |gig|
+      month_date = gig.date.beginning_of_month
+      key = month_date.strftime("%Y-%m")
+      months_hash[key] ||= {
+        date: month_date,
+        month_label: month_date.strftime("%m/%Y"),
+        month_name: month_date.strftime("%B %Y"),
+        received: 0.0,
+        payroll: 0.0,
+        maintenance: 0.0,
+        investments: 0.0,
+        adjustments_in: 0.0,
+        adjustments_out: 0.0,
+        gigs_count: 0
+      }
+      months_hash[key][:gigs_count] += 1
+    end
+
+    @monthly_breakdown = months_hash.values.sort_by { |m| m[:date] }.reverse
+    @monthly_breakdown.each do |m|
+      m[:total_outflow] = (m[:payroll] + m[:maintenance] + m[:investments] + m[:adjustments_out]).round(2)
+      m[:net_profit] = (m[:received] - m[:total_outflow]).round(2)
+      m[:margin_pct] = m[:received] > 0 ? ((m[:net_profit] / m[:received]) * 100).round(1) : 0.0
+    end
+
+    # 7. Clientes Clave (Mayor Facturación Real)
+    @top_clients = current_company.clients
+                         .joins(:gigs)
                          .group("clients.id")
-                         .select("clients.name, SUM(gigs.amount) as total_spent, COUNT(gigs.id) as gigs_count")
+                         .select("clients.*, SUM(gigs.amount) AS total_spent, COUNT(gigs.id) AS gigs_count")
                          .order("total_spent DESC")
                          .limit(5)
 
-    # 4. Locaciones más frecuentes
+    # 8. Locaciones más frecuentes
     @top_locations = company_gigs.where.not(location: [nil, ""])
                         .group(:location)
                         .order("count_all DESC")
                         .limit(5)
                         .count
-
-    # 5. Ingresos mensuales históricos
-    payments_by_month_usd = company_gig_payments.where(currency: 'USD').group("TO_CHAR(date_paid, 'MM/YYYY')").sum(:amount)
-    payments_by_month_bs = company_gig_payments.where(currency: 'BS').group("TO_CHAR(date_paid, 'MM/YYYY')").sum(:amount)
-    @monthly_revenue = {}
-    (payments_by_month_usd.keys | payments_by_month_bs.keys).each do |month|
-      @monthly_revenue[month] = {
-        usd: payments_by_month_usd[month].to_f,
-        bs: payments_by_month_bs[month].to_f
-      }
-    end
-    @monthly_revenue = @monthly_revenue.sort_by { |k, _| Date.strptime(k, "%m/%Y") rescue Date.today }.to_h
-
-    # 6. Total inversiones del grupo
-    @total_invested_usd = current_company.investments.where(currency: 'USD').sum(:amount).to_f
-    @total_invested_bs = current_company.investments.where(currency: 'BS').sum(:amount).to_f
-
-    # 7. Pagos registrados para shows
-    @total_gig_payments = company_gig_payments.count
-    @paid_shows_count = company_gigs.joins(:gig_payments).distinct.count
-
-    received_by_gig = company_gig_payments.group(:gig_id).sum(:amount)
-    @gig_payment_status_counts = { paid: 0, partial: 0, unpaid: 0 }
-    @total_unpaid_amount_by_currency = Hash.new(0.0)
-
-    company_gigs.includes(:client).find_each do |gig|
-      received = received_by_gig[gig.id].to_f
-      remaining = gig.amount.to_f - received
-      currency = gig.currency.presence || 'USD'
-
-      if received.zero?
-        @gig_payment_status_counts[:unpaid] += 1
-      elsif remaining.positive?
-        @gig_payment_status_counts[:partial] += 1
-      else
-        @gig_payment_status_counts[:paid] += 1
-      end
-
-      @total_unpaid_amount_by_currency[currency] += remaining.positive? ? remaining : 0.0
-    end
-
-    @top_unpaid_gigs = company_gigs.left_joins(:gig_payments)
-                          .select('gigs.*, COALESCE(SUM(gig_payments.amount), 0) AS total_received')
-                          .group('gigs.id')
-                          .order(Arel.sql('gigs.amount - COALESCE(SUM(gig_payments.amount), 0) DESC'))
-                          .limit(5)
-
-    # 8. Pagos a empleados
-    @total_employee_payments = current_company.employee_payments.approved.sum(:amount).to_f
-    @total_external_worker_payments = current_company.employee_payments.approved.where(funding_source: 'external_capital').sum(:amount).to_f
-    @total_payroll_worker_payments = current_company.employee_payments.approved.where.not(funding_source: 'external_capital').sum(:amount).to_f
-
-    # 9. Tasa de reinversión configurada
-    @reinvest_rate = FinanceSetting.instance.reinvest_rate.to_f
-
-    # 10. Fondos y capital acumulado
-    company_fund_allocations = FundAllocation.joins(:gig).where(gigs: { company_id: current_company.id })
-    @total_funds_by_type = company_fund_allocations.group(:fund_type).sum(:amount)
-    @funds_by_type_and_currency = company_fund_allocations.group(:fund_type, :currency).sum(:amount)
-    @capital_total = company_fund_allocations.where(fund_type: 'capital').sum(:amount).to_f
-    @repairs_fund = company_fund_allocations.where(fund_type: 'repairs').sum(:amount).to_f
-    @savings_fund = company_fund_allocations.where(fund_type: 'savings').sum(:amount).to_f
-    @total_funds = company_fund_allocations.sum(:amount).to_f
-
-    # 11. Gastos por tipo de fondo
-    @spent_by_type = company_fund_allocations.joins(:fund_expenses).group('fund_allocations.fund_type').sum('fund_expenses.amount')
-
-    total_received = company_gig_payments.sum(:amount)
-    total_paid_employees_from_funds = @total_payroll_worker_payments
-    total_allocated = company_fund_allocations.sum(:amount)
-    @unallocated_surplus = total_received - total_paid_employees_from_funds - total_allocated
-
-    # ROI / Ganancia Neta por moneda
-    @net_gain_usd = @total_received_usd - @total_invested_usd
-    @roi_usd      = @total_invested_usd > 0 ? (@net_gain_usd / @total_invested_usd) * 100 : 0
-
-    @net_gain_bs  = @total_received_bs - @total_invested_bs
-    @roi_bs       = @total_invested_bs > 0 ? (@net_gain_bs / @total_invested_bs) * 100 : 0
   end
 
   def my_payments

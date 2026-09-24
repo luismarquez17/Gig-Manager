@@ -1,0 +1,180 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', sans-serif;">
+
+  <%# --- HEADER --- %>
+  <header style="margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0; letter-spacing: -0.5px;">
+          🏦 Caja General (Fondo de la Banda)
+        </h1>
+        <p style="color: #64748b; font-size: 1.05em; margin-top: 6px;">
+          Control centralizado de fondos disponibles, aportes de capital, retiros y libro diario de caja unificado.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <%= link_to new_cash_adjustment_path(adjustment_type: :deposit), style: "background: #10b981; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);" do %>
+          <span>➕</span> Ingresar Dinero a Caja
+        <% end %>
+
+        <%= link_to new_cash_adjustment_path(adjustment_type: :withdrawal), style: "background: #ef4444; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(239, 68, 68, 0.2);" do %>
+          <span>➖</span> Retirar Dinero de Caja
+        <% end %>
+      </div>
+    </div>
+  </header>
+
+  <%# --- GRAN TARJETA DE SALDO TOTAL EN CAJA --- %>
+  <div style="background: <%= @current_cash_balance >= 0 ? 'linear-gradient(135deg, #064e3b 0%, #047857 100%)' : 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%)' %>; color: white; border-radius: 24px; padding: 32px 36px; margin-bottom: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.12);">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
+      <div>
+        <span style="font-size: 0.8em; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; opacity: 0.85; display: block; margin-bottom: 6px;">
+          💰 Saldo Disponible Real en Caja (Fondo General)
+        </span>
+        <h2 style="font-size: 3em; font-weight: 900; margin: 0; line-height: 1.1;">
+          $ <%= number_with_precision(@current_cash_balance, precision: 2) %> <span style="font-size: 0.45em; opacity: 0.8;">USD</span>
+        </h2>
+        <p style="margin: 10px 0 0 0; font-size: 0.95em; opacity: 0.9;">
+          Dinero total neto disponible en cuenta y efectivo después de todos los ingresos y egresos registrados.
+        </p>
+      </div>
+
+      <div style="background: rgba(255,255,255,0.12); backdrop-filter: blur(10px); border-radius: 16px; padding: 18px 22px; border: 1px solid rgba(255,255,255,0.2); min-width: 240px;">
+        <div style="font-size: 0.75em; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px; opacity: 0.8; margin-bottom: 8px;">
+          Resumen de Flujo Consolidado
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.95em;">
+          <span style="opacity: 0.9;">🟢 Total Entradas:</span>
+          <strong>+$ <%= number_with_precision(@total_inflow, precision: 2) %></strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.95em;">
+          <span style="opacity: 0.9;">🔴 Total Salidas:</span>
+          <strong>-$ <%= number_with_precision(@total_outflow, precision: 2) %></strong>
+        </div>
+      </div>
+    </div>
+
+    <%# Desglose de componentes %>
+    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; font-size: 0.85em;">
+      <div>
+        <div style="opacity: 0.75;">🎸 Shows Cobrados</div>
+        <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_gigs_received, precision: 2) %></div>
+      </div>
+      <div>
+        <div style="opacity: 0.75;">💵 Ingresos Directos a Caja</div>
+        <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_cash_deposits, precision: 2) %></div>
+      </div>
+      <div>
+        <div style="opacity: 0.75;">👥 Nómina Pagada</div>
+        <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_payroll_paid, precision: 2) %></div>
+      </div>
+      <div>
+        <div style="opacity: 0.75;">🔧 Taller / Reparaciones</div>
+        <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_maintenance, precision: 2) %></div>
+      </div>
+      <div>
+        <div style="opacity: 0.75;">📦 Inversión en Equipos</div>
+        <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_investments, precision: 2) %></div>
+      </div>
+      <div>
+        <div style="opacity: 0.75;">💸 Retiros Directos de Caja</div>
+        <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_cash_withdrawals, precision: 2) %></div>
+      </div>
+    </div>
+  </div>
+
+  <%# --- LIBRO DIARIO UNIFICADO DE MOVIMIENTOS --- %>
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 40px;">
+    
+    <%# Filtros y Título %>
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; margin-bottom: 24px;">
+      <div>
+        <h3 style="margin: 0; font-size: 1.25em; color: #1e293b; font-weight: 800;">
+          📖 Libro Diario Unificado de Movimientos de Caja
+        </h3>
+        <p style="margin: 4px 0 0 0; font-size: 0.9em; color: #64748b;">
+          Historial cronológico de todos los cobros, pagos, gastos, compras, aportes y retiros.
+        </p>
+      </div>
+
+      <%# Barra de Filtros %>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <%= link_to "Todos", cash_adjustments_path, style: "padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; text-decoration: none; #{params[:filter].blank? ? 'background: #0f172a; color: white;' : 'background: #f1f5f9; color: #475569;'}" %>
+        <%= link_to "🟢 Solo Entradas", cash_adjustments_path(filter: :inflows), style: "padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; text-decoration: none; #{params[:filter] == 'inflows' ? 'background: #10b981; color: white;' : 'background: #f1f5f9; color: #475569;'}" %>
+        <%= link_to "🔴 Solo Salidas", cash_adjustments_path(filter: :outflows), style: "padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; text-decoration: none; #{params[:filter] == 'outflows' ? 'background: #ef4444; color: white;' : 'background: #f1f5f9; color: #475569;'}" %>
+        <%= link_to "⚙️ Solo Ajustes Directos", cash_adjustments_path(filter: :adjustments), style: "padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82em; text-decoration: none; #{params[:filter] == 'adjustments' ? 'background: #2563eb; color: white;' : 'background: #f1f5f9; color: #475569;'}" %>
+      </div>
+    </div>
+
+    <% if @transactions.any? %>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
+          <thead>
+            <tr style="border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px;">
+              <th style="padding: 12px 14px;">Fecha</th>
+              <th style="padding: 12px 14px;">Tipo de Movimiento</th>
+              <th style="padding: 12px 14px;">Descripción / Concepto</th>
+              <th style="padding: 12px 14px; text-align: right;">Monto (USD)</th>
+              <th style="padding: 12px 14px; text-align: right;">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @transactions.each do |t| %>
+              <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                <td style="padding: 14px; font-weight: 700; color: #0f172a; white-space: nowrap;">
+                  <%= t[:date]&.strftime("%d/%m/%Y") || "---" %>
+                </td>
+                
+                <td style="padding: 14px; white-space: nowrap;">
+                  <span style="background: <%= t[:badge_bg] %>; color: <%= t[:badge_color] %>; padding: 4px 10px; border-radius: 8px; font-weight: 800; font-size: 0.82em; display: inline-flex; align-items: center; gap: 5px;">
+                    <span><%= t[:emoji] %></span> <%= t[:category_label] %>
+                  </span>
+                </td>
+
+                <td style="padding: 14px; color: #334155; max-width: 400px;">
+                  <% if t[:url].present? %>
+                    <%= link_to t[:description], t[:url], style: "color: #1e293b; text-decoration: none; font-weight: 600;" %>
+                  <% else %>
+                    <span style="font-weight: 600;"><%= t[:description] %></span>
+                  <% end %>
+                </td>
+
+                <td style="padding: 14px; text-align: right; white-space: nowrap;">
+                  <% if t[:direction] == :inflow %>
+                    <span style="color: #10b981; font-weight: 900; font-size: 1.05em;">
+                      +$ <%= number_with_precision(t[:amount], precision: 2) %>
+                    </span>
+                  <% else %>
+                    <span style="color: #ef4444; font-weight: 900; font-size: 1.05em;">
+                      -$ <%= number_with_precision(t[:amount], precision: 2) %>
+                    </span>
+                  <% end %>
+                </td>
+
+                <td style="padding: 14px; text-align: right; white-space: nowrap;">
+                  <% if t[:is_adjustment] && t[:adjustment_record].present? %>
+                    <div style="display: inline-flex; gap: 6px;">
+                      <%= link_to "✏️", edit_cash_adjustment_path(t[:adjustment_record]), title: "Editar ajuste", style: "background: #f1f5f9; padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.85em;" %>
+                      <%= button_to cash_adjustment_path(t[:adjustment_record]), method: :delete, data: { turbo_confirm: "¿Eliminar este movimiento de caja?" }, title: "Eliminar", style: "background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.85em;" do %>
+                        🗑️
+                      <% end %>
+                    </div>
+                  <% elsif t[:url].present? %>
+                    <%= link_to "Ver ➔", t[:url], style: "color: #2563eb; text-decoration: none; font-weight: 700; font-size: 0.85em;" %>
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div style="text-align: center; padding: 50px 20px; color: #94a3b8;">
+        <span style="font-size: 2.5em; display: block; margin-bottom: 10px;">🏦</span>
+        No hay movimientos registrados en este filtro.
+      </div>
+    <% end %>
+
+  </div>
+
+</div>

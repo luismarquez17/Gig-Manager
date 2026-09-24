@@ -51,7 +51,9 @@ Rails.application.routes.draw do
   post '/stripe_webhooks', to: 'stripe_webhooks#create'
 
 
-  get '/funds/:fund_type', to: 'funds#show', as: 'fund'
+  # Gestión de Caja General / Fondo de la Banda
+  resources :cash_adjustments
+  get '/caja', to: 'cash_adjustments#index', as: 'cash_register'
 
   resources :clients do
     collection do

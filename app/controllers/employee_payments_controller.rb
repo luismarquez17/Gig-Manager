@@ -122,31 +122,11 @@ class EmployeePaymentsController < ApplicationController
 
   def approve
     ActiveRecord::Base.transaction do
-      total_payroll_available = FundAllocation.total_payroll_remaining
-      payment_amount = @payment.amount.to_f
-
-      if total_payroll_available >= payment_amount
-        # Todo cubierto del fondo de nómina
-        @payment.funding_source = 'payroll_fund'
-        consume_payroll_funds(@payment.gig, payment_amount, @payment)
-      elsif total_payroll_available > 0
-        # Parcialmente cubierto de nómina y el resto capital externo automático
-        consumed_from_payroll = total_payroll_available
-        consume_payroll_funds(@payment.gig, consumed_from_payroll, @payment)
-        @payment.funding_source = 'external_capital'
-        @payment.external_source_name = "Nómina ($#{consumed_from_payroll}) + Capital personal del leader ($#{payment_amount - consumed_from_payroll})"
-      else
-        # 0 en fondo de nómina: pasa 100% automáticamente a capital externo del líder
-        @payment.funding_source = 'external_capital'
-        @payment.external_source_name = 'Capital personal del leader (Fondos nómina en $0)'
-      end
-
+      @payment.funding_source = 'payroll_fund' if @payment.funding_source.blank?
       @payment.status = 'approved'
       @payment.approved_at = Time.current
       @payment.save!
     end
-
-    funding_info = @payment.from_external_capital? ? "(#{@payment.funding_source_label})" : "(Fondo Nómina)"
 
     target_area = @payment.user.musician? ? 'musicians' : 'staffs'
     AppNotification.create(
@@ -159,7 +139,7 @@ class EmployeePaymentsController < ApplicationController
       action_url: "/my_payments"
     ) rescue nil
 
-    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} a #{@payment.user.display_name} confirmado y aprobado exitosamente #{funding_info}."
+    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} a #{@payment.user.display_name} confirmado y aprobado exitosamente."
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path, alert: "Error al aprobar pago: #{e.message}"
   end
@@ -185,50 +165,70 @@ class EmployeePaymentsController < ApplicationController
 
   def reset_balance
     worker = current_company.users.find(params[:user_id])
-    new_balance = params[:new_balance].to_f.round(2)
+    mode   = params[:adjustment_mode].presence || 'company_debt'
 
-    # Calcular la deuda actual de shows PASADOS (misma lógica que en el index)
+    # Calcular situación actual de shows pasados
     today       = Date.today
     assignments = StaffAssignment.where(user_id: worker.id).includes(:gig)
-    paid_by_gig = worker.employee_payments.approved.where.not(gig_id: nil).group(:gig_id).sum(:amount)
     all_payments = worker.employee_payments.approved.to_a
+    paid_by_gig = worker.employee_payments.approved.where.not(gig_id: nil).group(:gig_id).sum(:amount)
 
-    raw_debt = assignments.sum do |sa|
-      next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today
+    raw_past_balance = assignments.sum do |sa|
+      next 0 unless sa.gig.present?
       unpaid = sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
       unpaid > 0 ? unpaid : 0
+    end
+
+    raw_past_overpaid = assignments.sum do |sa|
+      next 0 unless sa.gig.present?
+      excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
+      excess > 0 ? excess : 0
     end
 
     net_adjustment_credits = all_payments
       .select { |p| p.gig_id.nil? }
       .sum { |p| p.amount.to_f - p.expected_amount.to_f }
 
-    current_debt = [[raw_debt - net_adjustment_credits, 0].max, 0].max.round(2)
+    current_net_diff = (raw_past_balance - raw_past_overpaid - net_adjustment_credits).round(2)
+    current_company_debt = [current_net_diff, 0].max
+    current_worker_owes   = [-current_net_diff, 0].max
 
-    # La diferencia: cuánto hay que ajustar para llegar al nuevo monto deseado
-    # new_balance=0 → necesitamos "pagar" current_debt más (adjustment negativo)
-    # new_balance=50 y current_debt=100 → "pagamos" 50 más
-    adjustment = (new_balance - current_debt).round(2)
+    target_net_diff = case mode
+    when 'settle_all'
+      0.0
+    when 'worker_owes'
+      w_owes = params[:worker_owes].to_f.round(2)
+      -w_owes
+    else # 'company_debt'
+      c_debt = params[:company_debt].presence || params[:new_balance]
+      c_debt.to_f.round(2)
+    end
 
-    if adjustment == 0
+    delta = (target_net_diff - current_net_diff).round(2)
+
+    if delta == 0
       redirect_back fallback_location: employee_payments_path(user_id: worker.id),
-                    notice: "ℹ️ La deuda de #{worker.display_name} ya está en #{view_context.number_to_currency(new_balance, unit: 'USD')}. No se realizó ningún ajuste."
+                    notice: "ℹ️ El saldo de #{worker.display_name} ya está en el valor indicado. No se requirió ningún ajuste."
       return
     end
 
-    note_text = "[AJUSTE LIDER #{Date.today.strftime('%d/%m/%Y')}] " \
-                "Deuda anterior: #{view_context.number_to_currency(current_debt, unit: 'USD')} → " \
-                "Nueva deuda: #{view_context.number_to_currency(new_balance, unit: 'USD')}. Editado directamente por el líder."
+    note_text = case mode
+    when 'settle_all'
+      "[AJUSTE LÍDER #{Date.today.strftime('%d/%m/%Y')}] Saldado completamente: $0.00 en ambos apartados."
+    when 'worker_owes'
+      target_val = -target_net_diff
+      "[AJUSTE LÍDER #{Date.today.strftime('%d/%m/%Y')}] 'Nos debe' ajustado: #{view_context.number_to_currency(current_worker_owes, unit: 'USD')} → #{view_context.number_to_currency(target_val, unit: 'USD')}."
+    else
+      "[AJUSTE LÍDER #{Date.today.strftime('%d/%m/%Y')}] Deuda empresa ajustada: #{view_context.number_to_currency(current_company_debt, unit: 'USD')} → #{view_context.number_to_currency(target_net_diff, unit: 'USD')}."
+    end
 
     ActiveRecord::Base.transaction do
-      abs_adjustment = adjustment.abs
-
-      if adjustment > 0
-        # El líder quiere subir la deuda (new_balance > current_debt): añadir expected_amount
+      if delta > 0
+        # Aumentar saldo a favor del trabajador (disminuir lo que nos debe o aumentar deuda de la empresa)
         current_company.employee_payments.create!(
           user:                 worker,
           amount:               0.01,
-          expected_amount:      abs_adjustment + 0.01,
+          expected_amount:      delta + 0.01,
           gig_id:               nil,
           currency:             'USD',
           date_paid:            Date.today,
@@ -240,12 +240,11 @@ class EmployeePaymentsController < ApplicationController
           reported_by_worker:   false
         )
       else
-        # El líder quiere bajar la deuda (new_balance < current_debt):
-        # Asignar el pago de ajuste a los shows pasados pendientes (de más antiguo a más reciente)
-        # para que esos shows queden explícitamente saldados/cancelados por el ajuste
-        remaining_adj = adjustment.abs
+        # delta < 0: Disminuir saldo a favor del trabajador (pagar shows pendientes o registrar exceso/anticipo)
+        remaining_adj = delta.abs
+
         past_assignments = assignments
-          .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today }
+          .select { |sa| sa.gig.present? }
           .sort_by { |sa| sa.gig.date || today }
 
         past_assignments.each do |sa|
@@ -275,7 +274,6 @@ class EmployeePaymentsController < ApplicationController
           remaining_adj = (remaining_adj - portion).round(2)
         end
 
-        # Si aún queda monto de ajuste sin asociar a un show específico
         if remaining_adj > 0
           current_company.employee_payments.create!(
             user:                 worker,
@@ -295,9 +293,15 @@ class EmployeePaymentsController < ApplicationController
       end
     end
 
-    direction = adjustment < 0 ? "saldada" : "ajustada"
-    redirect_to employee_payments_path(user_id: worker.id),
-                notice: "✅ Deuda de #{worker.display_name} #{direction} a #{view_context.number_to_currency(new_balance, unit: 'USD')}. Ajuste registrado."
+    notice_msg = if target_net_diff > 0
+      "✅ Saldo de #{worker.display_name} ajustado: la empresa le debe #{view_context.number_to_currency(target_net_diff, unit: 'USD')}."
+    elsif target_net_diff < 0
+      "✅ Saldo de #{worker.display_name} ajustado: el trabajador nos debe #{view_context.number_to_currency(-target_net_diff, unit: 'USD')}."
+    else
+      "✅ Saldo de #{worker.display_name} saldado completamente ($0.00). El trabajador está al día."
+    end
+
+    redirect_to employee_payments_path(user_id: worker.id), notice: notice_msg
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path(user_id: params[:user_id]),
                   alert: "Error al registrar el ajuste: #{e.message}"
@@ -320,108 +324,51 @@ class EmployeePaymentsController < ApplicationController
       amount: default_amount,
       currency: @gig&.currency.presence || "USD",
       date_paid: Date.today,
-      status: 'approved'
+      status: 'approved',
+      funding_source: 'payroll_fund'
     )
-    @payroll_balance = FundAllocation.total_payroll_remaining
-    @gig_payroll_balance = @gig&.total_payroll_remaining.to_f
   end
 
   def create
     @payment = current_company.employee_payments.build(payment_params)
     @payment.status = 'approved'
-    payroll_gig = @payment.gig
-    payment_amount = @payment.amount.to_f
-    total_payroll_available = 0.0
-
-    ActiveRecord::Base.transaction do
-      if @payment.from_external_capital?
-        @payment.funding_source = 'external_capital'
-        @payment.external_source_name = params.dig(:employee_payment, :external_source_name).presence || 'Capital personal del leader'
-      else
-        total_payroll_available = FundAllocation.total_payroll_remaining(current_company.id)
-
-        if total_payroll_available >= payment_amount && total_payroll_available > 0
-          @payment.funding_source = 'payroll_fund'
-        elsif total_payroll_available > 0
-          consumed_from_payroll = total_payroll_available
-          @payment.funding_source = 'external_capital'
-          @payment.external_source_name = "Nómina ($#{'%.2f' % consumed_from_payroll}) + Capital personal ($#{'%.2f' % (payment_amount - consumed_from_payroll)})"
-        else
-          @payment.funding_source = 'external_capital'
-          @payment.external_source_name = 'Capital personal del leader (Fondos nómina en $0)'
-        end
-      end
-
-      @payment.save!
-
-      if @payment.from_payroll_fund?
-        consume_payroll_funds(payroll_gig, payment_amount, @payment)
-      elsif @payment.funding_source == 'external_capital' && total_payroll_available > 0
-        consume_payroll_funds(payroll_gig, [total_payroll_available, payment_amount].min, @payment)
-      end
+    @payment.funding_source = 'payroll_fund' if @payment.funding_source.blank?
+    if @payment.from_external_capital? && @payment.external_source_name.blank?
+      @payment.external_source_name = params.dig(:employee_payment, :external_source_name).presence || 'Capital personal del leader'
     end
 
-    worker_name  = @payment.user.display_name rescue @payment.user.email
-    currency_sym = @payment.currency.presence || '$'
-    amount_label = "#{currency_sym}#{'%.2f' % @payment.amount.to_f}"
+    if @payment.save
+      worker_name  = @payment.user.display_name rescue @payment.user.email
+      currency_sym = @payment.currency.presence || '$'
+      amount_label = "#{currency_sym}#{'%.2f' % @payment.amount.to_f}"
 
-    redirect_to employee_payments_path(user_id: @payment.user_id),
-                notice: "✅ Pago de #{amount_label} a #{worker_name} registrado y aplicado a su cuenta correctamente."
-  rescue ActiveRecord::RecordInvalid => e
-    @payroll_balance = FundAllocation.total_payroll_remaining(current_company.id)
-    @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
-    @gigs = current_company.gigs.includes(:client).order(date: :desc)
-    flash.now[:alert] = "Error al registrar el pago: #{@payment.errors.full_messages.to_sentence.presence || e.message}"
-    render :new, status: :unprocessable_entity
+      redirect_to employee_payments_path(user_id: @payment.user_id),
+                  notice: "✅ Pago de #{amount_label} a #{worker_name} registrado y aplicado a su cuenta correctamente."
+    else
+      @gigs = current_company.gigs.includes(:client).order(date: :desc)
+      flash.now[:alert] = "Error al registrar el pago: #{@payment.errors.full_messages.to_sentence}"
+      render :new, status: :unprocessable_entity
+    end
   end
 
   def edit
     @gigs = current_company.gigs.includes(:client).order(date: :desc)
-    @payroll_balance = FundAllocation.total_payroll_remaining(current_company.id)
-    @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
   end
 
   def update
-    ActiveRecord::Base.transaction do
-      @payment.fund_expenses.destroy_all
-      @payment.assign_attributes(payment_params)
-      payment_amount = @payment.amount.to_f
-      total_payroll_available = 0.0
-
-      if @payment.from_external_capital?
-        @payment.funding_source = 'external_capital'
-        @payment.external_source_name = params.dig(:employee_payment, :external_source_name).presence || 'Capital personal del leader'
-      else
-        total_payroll_available = FundAllocation.total_payroll_remaining(current_company.id)
-
-        if total_payroll_available >= payment_amount && total_payroll_available > 0
-          @payment.funding_source = 'payroll_fund'
-        elsif total_payroll_available > 0
-          consumed_from_payroll = total_payroll_available
-          @payment.funding_source = 'external_capital'
-          @payment.external_source_name = "Nómina ($#{'%.2f' % consumed_from_payroll}) + Capital personal ($#{'%.2f' % (payment_amount - consumed_from_payroll)})"
-        else
-          @payment.funding_source = 'external_capital'
-          @payment.external_source_name = 'Capital personal del leader (Fondos nómina en $0)'
-        end
-      end
-
-      @payment.save!
-
-      if @payment.from_payroll_fund? && @payment.approved?
-        consume_payroll_funds(@payment.gig, payment_amount, @payment)
-      elsif @payment.funding_source == 'external_capital' && @payment.approved? && total_payroll_available > 0
-        consume_payroll_funds(@payment.gig, [total_payroll_available, payment_amount].min, @payment)
-      end
+    @payment.assign_attributes(payment_params)
+    @payment.funding_source = 'payroll_fund' if @payment.funding_source.blank?
+    if @payment.from_external_capital? && @payment.external_source_name.blank?
+      @payment.external_source_name = params.dig(:employee_payment, :external_source_name).presence || 'Capital personal del leader'
     end
 
-    redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
-  rescue ActiveRecord::RecordInvalid => e
-    @payroll_balance = FundAllocation.total_payroll_remaining(current_company.id)
-    @gig_payroll_balance = @payment.gig&.total_payroll_remaining.to_f
-    @gigs = current_company.gigs.includes(:client).order(date: :desc)
-    flash.now[:alert] = "Error al actualizar el pago: #{@payment.errors.full_messages.to_sentence.presence || e.message}"
-    render :edit, status: :unprocessable_entity
+    if @payment.save
+      redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
+    else
+      @gigs = current_company.gigs.includes(:client).order(date: :desc)
+      flash.now[:alert] = "Error al actualizar el pago: #{@payment.errors.full_messages.to_sentence}"
+      render :edit, status: :unprocessable_entity
+    end
   end
 
   def destroy
@@ -434,37 +381,6 @@ class EmployeePaymentsController < ApplicationController
 
   def set_payment
     @payment = current_company.employee_payments.find(params[:id])
-  end
-
-  def consume_payroll_funds(gig, amount, payment)
-    remaining_amount = amount.to_f
-    return if remaining_amount <= 0
-
-    primary_allocations = gig.present? ? gig.payroll_allocations.order(:created_at).to_a : []
-    primary_ids = primary_allocations.map(&:id)
-
-    company_id = gig&.company_id || payment.company_id || current_company&.id
-    secondary_allocations = FundAllocation.joins(:gig)
-                                          .where(gigs: { company_id: company_id }, fund_type: 'payroll')
-                                          .where.not(id: primary_ids)
-                                          .order(:created_at).to_a
-
-    allocations = primary_allocations + secondary_allocations
-
-    allocations.each do |allocation|
-      break if remaining_amount <= 0
-      available = allocation.remaining.to_f
-      next if available <= 0
-
-      used = [available, remaining_amount].min
-      allocation.fund_expenses.create!(
-        amount: used,
-        currency: allocation.currency,
-        notes: "Pago a trabajador #{payment.user.display_name rescue payment.user.email} (#{payment.date_paid})",
-        employee_payment_id: payment.id
-      )
-      remaining_amount -= used
-    end
   end
 
   def payment_params

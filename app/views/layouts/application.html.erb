@@ -425,6 +425,10 @@
                 <span class="icon">⚡</span> <span>Conflictos</span>
               <% end %>
 
+              <%= link_to cash_adjustments_path, class: "sidebar-link #{'active' if controller_name == 'cash_adjustments'}" do %>
+                <span class="icon">🏦</span> <span>Caja General (Fondo)</span>
+              <% end %>
+
               <%= link_to financials_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'financials'}" do %>
                 <span class="icon">📊</span> <span>Métricas / Finanzas</span>
               <% end %>

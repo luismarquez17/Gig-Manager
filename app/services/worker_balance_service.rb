@@ -69,7 +69,7 @@ class WorkerBalanceService
 
   def past_assignments
     @past_assignments ||= worker_assignments
-      .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today }
+      .select { |sa| sa.gig.present? }
       .sort_by { |sa| sa.gig.date || today }
   end
 
@@ -80,6 +80,13 @@ class WorkerBalanceService
     end
   end
 
+  def raw_past_overpaid
+    @raw_past_overpaid ||= past_assignments.sum do |sa|
+      excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
+      excess.positive? ? excess : 0
+    end
+  end
+
   def net_adjustment_credits
     @net_adjustment_credits ||= worker_payments
       .select { |p| p.gig_id.nil? }
@@ -87,7 +94,7 @@ class WorkerBalanceService
   end
 
   def past_balance
-    net = raw_past_balance - net_adjustment_credits
+    net = raw_past_balance - raw_past_overpaid - net_adjustment_credits
     net >= 0 ? net.round(2) : 0.0
   end
 
@@ -116,14 +123,15 @@ class WorkerBalanceService
         }
       end
 
-      if net_adjustment_credits < 0
+      effective_standalone_debt = [-net_adjustment_credits - raw_past_overpaid, 0].max.round(2)
+      if effective_standalone_debt > 0
         debts << {
           gig:            nil,
-          agreed_amount:  0.0,
+          agreed_amount:  effective_standalone_debt,
           paid_amount:    0.0,
-          pending_amount: -net_adjustment_credits,
+          pending_amount: effective_standalone_debt,
           type:           :adjustment,
-          title:          "Ajustes contables del Líder (Cargo adicional)"
+          title:          "Ajustes contables del Líder (Deuda pendiente)"
         }
       end
 
@@ -132,6 +140,7 @@ class WorkerBalanceService
       standalone_by_gig   = standalone_payments.group_by(&:gig_id)
 
       standalone_by_gig.each do |_gig_id, ps|
+        next if _gig_id.nil?
         paid_for_gig = ps.sum { |p| p.amount.to_f }
         expected     = ps.map { |p| p.expected_amount.to_f }.max || 0.0
         pending      = expected - paid_for_gig
@@ -151,12 +160,8 @@ class WorkerBalanceService
   end
 
   def overpaid
-    @overpaid ||= worker_assignments.sum do |sa|
-      next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today
-
-      excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
-      excess.positive? ? excess : 0
-    end
+    net = raw_past_overpaid + net_adjustment_credits - raw_past_balance
+    net >= 0 ? net.round(2) : 0.0
   end
 
   def future_balance

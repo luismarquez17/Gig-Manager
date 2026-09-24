@@ -89,6 +89,43 @@ class Gig < ApplicationRecord
     amount.to_f > 0 && total_received >= amount.to_f
   end
 
+  # --- MÉTRICAS DE RENTABILIDAD Y NÓMINA DEL SHOW ---
+  def total_payroll_agreed
+    if staff_assignments.loaded?
+      staff_assignments.sum { |sa| sa.agreed_amount.to_f }
+    else
+      staff_assignments.sum(:agreed_amount).to_f
+    end
+  end
+
+  def total_payroll_paid
+    if employee_payments.loaded?
+      employee_payments.select { |ep| ep.approved? }.sum { |ep| ep.amount.to_f }
+    else
+      employee_payments.approved.sum(:amount).to_f
+    end
+  end
+
+  def pending_payroll_amount
+    [total_payroll_agreed - total_payroll_paid, 0.0].max.round(2)
+  end
+
+  # Ganancia Neta Proyectada (Monto acordado con cliente - Nómina total acordada)
+  def projected_net_profit
+    (amount.to_f - total_payroll_agreed).round(2)
+  end
+
+  # Margen de Ganancia Proyectado (%)
+  def projected_profit_margin
+    return 0.0 if amount.to_f <= 0
+    ((projected_net_profit / amount.to_f) * 100.0).round(1)
+  end
+
+  # Ganancia Neta Real en Mano (Cobrado a la fecha - Nómina pagada a la fecha)
+  def actual_cash_profit
+    (total_received - total_payroll_paid).round(2)
+  end
+
   def event_duration
     return nil unless start_time.present? && end_time.present?
     diff_seconds = end_time - start_time

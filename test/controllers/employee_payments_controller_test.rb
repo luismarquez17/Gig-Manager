@@ -24,20 +24,13 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
 
     assert_response :success
     assert_select "h3", text: /Resumen general/
-    assert_match "Deuda (shows pasados)", response.body
+    assert_match "Deuda (shows asignados)", response.body
     assert_match @worker.email, response.body
   end
 
-  test "should create employee payment using universal payroll when gig has no direct payroll allocation" do
+  test "should create employee payment using universal company fund when gig has no direct payroll allocation" do
     gig_with_payroll = gigs(:one)
-    gig_without_payroll = gigs(:two) rescue Gig.create!(amount: 500, currency: "USD", date: Date.today, client_email: "test@example.com")
-
-    FundAllocation.create!(
-      gig: gig_with_payroll,
-      fund_type: "payroll",
-      amount: 300.0,
-      currency: "USD"
-    )
+    gig_without_payroll = gigs(:two) rescue Gig.create!(company: @leader.company, amount: 500, currency: "USD", date: Date.today, client_email: "test@example.com")
 
     assert_difference("EmployeePayment.count", 1) do
       post employee_payments_url, params: {
@@ -47,26 +40,19 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
           amount: 200.0,
           currency: "USD",
           date_paid: Date.today,
-          payment_method: "Efectivo"
+          payment_method: "Efectivo",
+          funding_source: "payroll_fund"
         }
       }
     end
 
     payment = EmployeePayment.last
     assert_equal 200.0, payment.amount.to_f
-    assert_equal 1, payment.fund_expenses.count
-    assert_equal 200.0, payment.fund_expenses.first.amount.to_f
-    assert_equal 100.0, FundAllocation.total_payroll_remaining
+    assert payment.from_payroll_fund?
+    assert payment.approved?
   end
 
-  test "should create employee payment without gig using universal payroll" do
-    FundAllocation.create!(
-      gig: @gig,
-      fund_type: "payroll",
-      amount: 500.0,
-      currency: "USD"
-    )
-
+  test "should create employee payment without gig using universal company fund" do
     assert_difference("EmployeePayment.count", 1) do
       post employee_payments_url, params: {
         employee_payment: {
@@ -75,7 +61,8 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
           amount: 150.0,
           currency: "USD",
           date_paid: Date.today,
-          payment_method: "Transferencia"
+          payment_method: "Transferencia",
+          funding_source: "payroll_fund"
         }
       }
     end
@@ -83,42 +70,10 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     payment = EmployeePayment.last
     assert_nil payment.gig_id
     assert_equal 150.0, payment.amount.to_f
-    assert_equal 350.0, FundAllocation.total_payroll_remaining
+    assert payment.from_payroll_fund?
   end
 
-  test "should auto fallback to external capital when payment exceeds total universal payroll remaining" do
-    FundAllocation.create!(
-      gig: @gig,
-      fund_type: "payroll",
-      amount: 100.0,
-      currency: "USD"
-    )
-
-    assert_difference("EmployeePayment.count", 1) do
-      post employee_payments_url, params: {
-        employee_payment: {
-          user_id: @worker.id,
-          gig_id: @gig.id,
-          amount: 250.0,
-          currency: "USD",
-          date_paid: Date.today,
-          payment_method: "Efectivo",
-          funding_source: "payroll_fund"
-        }
-      }
-    end
-
-    payment = EmployeePayment.last
-    assert_equal 250.0, payment.amount.to_f
-    assert payment.from_external_capital?
-    assert_equal 1, payment.fund_expenses.count
-    assert_equal 100.0, payment.fund_expenses.first.amount.to_f
-    assert_redirected_to employee_payments_path(user_id: @worker.id)
-  end
-
-  test "should create employee payment using external capital even when payroll fund is zero" do
-    FundAllocation.where(fund_type: "payroll").destroy_all
-
+  test "should create employee payment using external capital" do
     assert_difference("EmployeePayment.count", 1) do
       post employee_payments_url, params: {
         employee_payment: {
@@ -138,7 +93,6 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 300.0, payment.amount.to_f
     assert payment.from_external_capital?
     assert_equal "Dinero personal del leader", payment.external_source_name
-    assert_equal 0, payment.fund_expenses.count
     assert_redirected_to employee_payments_path(user_id: @worker.id)
   end
 
@@ -206,14 +160,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to my_payments_path
   end
 
-  test "leader can approve worker payment report and consume payroll funds" do
-    FundAllocation.create!(
-      gig: @gig,
-      fund_type: "payroll",
-      amount: 300.0,
-      currency: "USD"
-    )
-
+  test "leader can approve worker payment report" do
     pending_payment = EmployeePayment.create!(
       company: @leader.company,
       user: @worker,
@@ -227,7 +174,6 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     )
 
     assert pending_payment.pending_approval?
-    assert_equal 0, pending_payment.fund_expenses.count
 
     # Leader logs in and approves
     post approve_employee_payment_url(pending_payment)
@@ -236,8 +182,6 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     pending_payment.reload
     assert pending_payment.approved?
     assert_not_nil pending_payment.approved_at
-    assert_equal 1, pending_payment.fund_expenses.count
-    assert_equal 150.0, pending_payment.fund_expenses.first.amount.to_f
   end
 
   test "leader can reject worker payment report" do
@@ -352,9 +296,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_match "Ya tienes un reporte de pago en revisión", response.body
   end
 
-  test "leader approval automatically falls back to external capital when payroll fund is zero" do
-    FundAllocation.where(fund_type: "payroll").destroy_all
-
+  test "leader approval approves payment with payroll_fund successfully" do
     pending_payment = EmployeePayment.create!(
       company: @leader.company,
       user: @worker,
@@ -373,13 +315,10 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
 
     pending_payment.reload
     assert pending_payment.approved?
-    assert pending_payment.from_external_capital?
-    assert_equal 0, payment_expenses = pending_payment.fund_expenses.count
-    assert_includes pending_payment.external_source_name, "Capital personal del leader"
+    assert pending_payment.from_payroll_fund?
   end
 
-  test "leader creating payment with zero payroll funds automatically succeeds and reduces worker debt" do
-    FundAllocation.where(fund_type: "payroll").destroy_all
+  test "leader creating payment automatically succeeds and reduces worker debt" do
     past_gig = Gig.create!(company: @leader.company, amount: 500, date: 2.days.ago, client_email: "past@example.com")
     StaffAssignment.create!(gig: past_gig, user: @worker, agreed_amount: 100.0)
 
@@ -407,11 +346,72 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     payment = EmployeePayment.last
     assert_equal 60.0, payment.amount.to_f
     assert payment.approved?
-    assert payment.from_external_capital?
+    assert payment.from_payroll_fund?
 
     # Verificar que la deuda del trabajador disminuyó a 40.00
     metrics_after = WorkerBalanceService.build_metrics_for_company(@leader.company)
     worker_metric_after = metrics_after.find { |m| m[:worker].id == @worker.id }
     assert_equal 40.0, worker_metric_after[:past_balance]
+  end
+
+  test "reset_balance can adjust company debt down to zero" do
+    past_gig = Gig.create!(company: @leader.company, amount: 500, date: 2.days.ago, client_email: "past@example.com")
+    StaffAssignment.create!(gig: past_gig, user: @worker, agreed_amount: 150.0)
+
+    post reset_balance_employee_payments_url, params: {
+      user_id: @worker.id,
+      adjustment_mode: "company_debt",
+      company_debt: "0.00"
+    }
+
+    assert_redirected_to employee_payments_path(user_id: @worker.id)
+    metrics = WorkerBalanceService.build_metrics_for_company(@leader.company)
+    worker_metric = metrics.find { |m| m[:worker].id == @worker.id }
+    assert_equal 0.0, worker_metric[:past_balance]
+    assert_equal 0.0, worker_metric[:overpaid]
+  end
+
+  test "reset_balance can adjust what worker owes" do
+    # Worker starts at 0 balance
+    post reset_balance_employee_payments_url, params: {
+      user_id: @worker.id,
+      adjustment_mode: "worker_owes",
+      worker_owes: "75.00"
+    }
+
+    assert_redirected_to employee_payments_path(user_id: @worker.id)
+    metrics = WorkerBalanceService.build_metrics_for_company(@leader.company)
+    worker_metric = metrics.find { |m| m[:worker].id == @worker.id }
+    assert_equal 0.0, worker_metric[:past_balance]
+    assert_equal 75.0, worker_metric[:overpaid]
+
+    # Now forgive / reset what worker owes to 0
+    post reset_balance_employee_payments_url, params: {
+      user_id: @worker.id,
+      adjustment_mode: "worker_owes",
+      worker_owes: "0.00"
+    }
+
+    assert_redirected_to employee_payments_path(user_id: @worker.id)
+    metrics_after = WorkerBalanceService.build_metrics_for_company(@leader.company)
+    worker_metric_after = metrics_after.find { |m| m[:worker].id == @worker.id }
+    assert_equal 0.0, worker_metric_after[:past_balance]
+    assert_equal 0.0, worker_metric_after[:overpaid]
+  end
+
+  test "reset_balance with settle_all leaves worker completely settled" do
+    past_gig = Gig.create!(company: @leader.company, amount: 500, date: 2.days.ago, client_email: "past@example.com")
+    StaffAssignment.create!(gig: past_gig, user: @worker, agreed_amount: 80.0)
+
+    post reset_balance_employee_payments_url, params: {
+      user_id: @worker.id,
+      adjustment_mode: "settle_all"
+    }
+
+    assert_redirected_to employee_payments_path(user_id: @worker.id)
+    metrics = WorkerBalanceService.build_metrics_for_company(@leader.company)
+    worker_metric = metrics.find { |m| m[:worker].id == @worker.id }
+    assert_equal 0.0, worker_metric[:past_balance]
+    assert_equal 0.0, worker_metric[:overpaid]
   end
 end

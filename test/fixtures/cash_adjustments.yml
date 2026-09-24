@@ -1,0 +1,17 @@
+one:
+  company: one
+  amount: 250.00
+  currency: "USD"
+  adjustment_type: 0
+  date: <%= Date.today %>
+  description: "Aporte inicial de capital"
+  user: one
+
+two:
+  company: one
+  amount: 50.00
+  currency: "USD"
+  adjustment_type: 1
+  date: <%= Date.today %>
+  description: "Retiro de efectivo"
+  user: one
