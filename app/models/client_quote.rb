@@ -23,7 +23,22 @@ class ClientQuote < ApplicationRecord
   scope :convertible, -> { where(status: [:pending, :accepted]) }
 
   def display_client_name
-    client_name.presence || "Enlace Abierto ##{id}"
+    client_name.presence || "Enlace Abierto ##{open_link_number}"
+  end
+
+  def open_link_number
+    return 1 if company_id.blank?
+
+    scope = ClientQuote.unscoped
+                       .where(company_id: company_id)
+                       .where(client_name: [nil, ''])
+
+    if persisted? && created_at.present? && id.present?
+      count = scope.where("created_at < :created_at OR (created_at = :created_at AND id <= :id)", created_at: created_at, id: id).count
+      count > 0 ? count : 1
+    else
+      scope.count + 1
+    end
   end
 
   def package_display_title
