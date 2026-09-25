@@ -1,9 +1,9 @@
 class ClientQuotesController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:public_show, :public_submit, :access]
+  skip_before_action :authenticate_user!, only: [:public_show, :public_submit, :access, :setup_password]
   skip_before_action :verify_authenticity_token, only: [:public_submit]
   before_action :set_quote, only: [:show, :destroy]
-  before_action :set_public_quote, only: [:public_show, :public_submit, :access]
-  layout 'portal', only: [:public_show, :public_submit]
+  before_action :set_public_quote, only: [:public_show, :public_submit, :access, :setup_password]
+  layout 'portal', only: [:public_show, :public_submit, :access]
 
   def index
     @client_quotes = current_company.client_quotes.recent_first
@@ -100,35 +100,95 @@ class ClientQuotesController < ApplicationController
   end
 
   def access
-    begin
-      client = @quote.client
-      if client.nil?
-        client = Client.find_or_create_for_gig(
-          company: @quote.company,
-          name: @quote.client_name,
-          phone: @quote.client_phone,
-          email: @quote.client_email
-        )
-        @quote.update_column(:client_id, client.id) if client.present?
-      end
+    @company = @quote.company
+    @client = @quote.client
 
-      user = User.find_or_create_client_user(
-        company: @quote.company,
-        client: client,
-        email: @quote.client_email,
-        name: @quote.client_name
-      ) if client.present?
-
-      if user.present?
-        sign_in(user)
-        redirect_to root_path, notice: "🎉 ¡Hola #{user.display_name}! Has accedido exitosamente a tu portal de cliente."
+    # 1. Si el usuario ya está autenticado en este navegador con la cuenta del cliente
+    if user_signed_in?
+      if current_user.email.to_s.downcase == @quote.client_email.to_s.downcase || (current_user.client_id.present? && current_user.client_id == @quote.client_id)
+        redirect_to root_path, notice: "🎉 ¡Hola #{current_user.display_name}! Has accedido a tu portal de cliente."
+        return
       else
-        redirect_to root_path, alert: "No se pudo iniciar sesión automáticamente. Por favor contacta a la agrupación."
+        redirect_to root_path, alert: "Ya tienes una sesión iniciada con la cuenta #{current_user.email}."
+        return
       end
-    rescue StandardError => e
-      Rails.logger.error("Error en ClientQuotesController#access: #{e.class}: #{e.message}")
-      redirect_to root_path, alert: "Ocurrió un error al ingresar al portal: #{e.message}"
     end
+
+    # 2. Si no está autenticado, asegurar que el registro de cliente exista
+    if @client.nil? && (@quote.client_name.present? || @quote.client_phone.present? || @quote.client_email.present?)
+      @client = Client.find_or_create_for_gig(
+        company: @quote.company,
+        name: @quote.client_name,
+        phone: @quote.client_phone,
+        email: @quote.client_email
+      )
+      @quote.update_column(:client_id, @client.id) if @client.present? && @quote.client_id != @client.id
+    end
+  end
+
+  def setup_password
+    @company = @quote.company
+    @client = @quote.client
+
+    email = params[:email].to_s.strip.downcase
+    phone = params[:phone].to_s.strip
+    password = params[:password].to_s
+    password_confirmation = params[:password_confirmation].to_s
+
+    quote_email = @quote.client_email.to_s.strip.downcase
+    quote_phone = @quote.client_phone.to_s.strip
+
+    phone_clean = phone.gsub(/\D/, '')
+    quote_phone_clean = quote_phone.gsub(/\D/, '')
+
+    email_matches = quote_email.present? && email == quote_email
+    phone_matches = quote_phone_clean.present? && phone_clean.present? && (phone_clean == quote_phone_clean || phone_clean.end_with?(quote_phone_clean.last(7)))
+
+    unless email_matches || phone_matches
+      redirect_to access_public_client_quote_path(@quote.public_token), alert: "❌ El correo o teléfono ingresado no coincide con los datos registrados en este presupuesto."
+      return
+    end
+
+    if password.length < 6
+      redirect_to access_public_client_quote_path(@quote.public_token), alert: "❌ La contraseña debe tener al menos 6 caracteres."
+      return
+    end
+
+    if password != password_confirmation
+      redirect_to access_public_client_quote_path(@quote.public_token), alert: "❌ Las contraseñas no coinciden."
+      return
+    end
+
+    @client ||= Client.find_or_create_for_gig(
+      company: @quote.company,
+      name: @quote.client_name,
+      phone: @quote.client_phone,
+      email: @quote.client_email
+    )
+    @quote.update_column(:client_id, @client.id) if @client.present? && @quote.client_id != @client.id
+
+    user = User.find_or_create_client_user(
+      company: @quote.company,
+      client: @client,
+      email: quote_email.presence || email,
+      name: @quote.client_name
+    )
+
+    if user.present?
+      user.password = password
+      user.password_confirmation = password_confirmation
+      if user.save
+        sign_in(user)
+        redirect_to root_path, notice: "🔒 ¡Tu cuenta ha sido protegida y activada con éxito! Bienvenido a tu portal, #{user.display_name}."
+      else
+        redirect_to access_public_client_quote_path(@quote.public_token), alert: "No se pudo guardar la contraseña: #{user.errors.full_messages.join(', ')}"
+      end
+    else
+      redirect_to access_public_client_quote_path(@quote.public_token), alert: "Ocurrió un error al configurar tu cuenta. Por favor contacta a la agrupación."
+    end
+  rescue StandardError => e
+    Rails.logger.error("Error en ClientQuotesController#setup_password: #{e.class}: #{e.message}")
+    redirect_to access_public_client_quote_path(@quote.public_token), alert: "Ocurrió un error: #{e.message}"
   end
 
   private

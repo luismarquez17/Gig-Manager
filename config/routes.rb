@@ -84,6 +84,7 @@ Rails.application.routes.draw do
   get '/q/:token', to: 'client_quotes#public_show', as: 'public_client_quote'
   post '/q/:token/submit', to: 'client_quotes#public_submit', as: 'submit_public_client_quote'
   get '/q/:token/access', to: 'client_quotes#access', as: 'access_public_client_quote'
+  post '/q/:token/setup_password', to: 'client_quotes#setup_password', as: 'setup_password_public_client_quote'
 
   # Configuración de Métodos de Pago de la Empresa
   get '/payment_methods_settings', to: 'payment_methods#edit', as: 'payment_methods_settings'

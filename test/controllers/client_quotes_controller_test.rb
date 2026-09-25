@@ -49,8 +49,18 @@ class ClientQuotesControllerTest < ActionDispatch::IntegrationTest
     assert_not_nil @quote.client_id
   end
 
-  test "should handle public quote access and automatic user sign in" do
+  test "should render secure access page when unauthenticated" do
     get access_public_client_quote_url(token: @quote.public_token)
+    assert_response :success
+    assert_select "h2", text: /Acceso Seguro al Perfil de Cliente/
+  end
+
+  test "should setup password securely and sign in" do
+    post setup_password_public_client_quote_url(token: @quote.public_token), params: {
+      phone: @quote.client_phone,
+      password: "password123",
+      password_confirmation: "password123"
+    }
     assert_redirected_to root_path
     follow_redirect!
     assert_response :success
