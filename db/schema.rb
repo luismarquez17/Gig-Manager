@@ -114,11 +114,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000000) do
   create_table "clients", force: :cascade do |t|
     t.string "name"
     t.string "phone"
-    t.string "email"
+    t.string "notes"
     t.integer "priority"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "notes"
+    t.string "email"
     t.bigint "company_id"
     t.index ["company_id"], name: "index_clients_on_company_id"
   end
@@ -259,8 +259,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000000) do
   create_table "gig_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.bigint "item_id", null: false
-    t.integer "quantity"
-    t.boolean "checked"
+    t.integer "quantity", default: 1
+    t.boolean "checked", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "loaded_quantity", default: 0, null: false
@@ -354,6 +354,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000000) do
     t.index ["client_id"], name: "index_gigs_on_client_id"
     t.index ["company_id"], name: "index_gigs_on_company_id"
     t.index ["portal_token"], name: "index_gigs_on_portal_token", unique: true
+  end
+
+  create_table "inquiries", force: :cascade do |t|
+    t.string "name"
+    t.string "email"
+    t.string "phone"
+    t.text "message"
+    t.bigint "preset_budget_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["preset_budget_id"], name: "index_inquiries_on_preset_budget_id"
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -590,6 +601,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_24_000000) do
   add_foreign_key "gig_upsell_requests", "gigs"
   add_foreign_key "gigs", "clients"
   add_foreign_key "gigs", "companies"
+  add_foreign_key "inquiries", "preset_budgets"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "investments", "companies"
   add_foreign_key "items", "companies"
