@@ -1,4 +1,5 @@
 class SubscriptionsController < ApplicationController
+  before_action :require_leader!
   skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment]
 
   def index

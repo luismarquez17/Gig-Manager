@@ -42,6 +42,10 @@ class ApplicationController < ActionController::Base
     return if controller_name == 'subscriptions' || controller_name == 'stripe_webhooks'
     return if devise_controller?
 
+    # Solo los líderes de la empresa son evaluados por la suscripción SaaS.
+    # Los clientes, staff y músicos no deben ver bloqueos ni avisos de cobro de la empresa.
+    return unless current_user.leader?
+
     if current_company.present?
       if current_company.suspended?
         redirect_to suspended_company_path
