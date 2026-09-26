@@ -117,14 +117,15 @@ class GigsController < ApplicationController
     if user && (user.staff? || user.leader? || user.musician?)
       assignment = @gig.staff_assignments.find_or_initialize_by(user_id: user.id)
       is_new = assignment.new_record?
+      previous_amount = assignment.agreed_amount.to_f
       assignment.agreed_amount = agreed_amount
       assignment.save!
 
-      if is_new
-        target_area = user.musician? ? 'musicians' : 'staffs'
-        date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
-        client_name = @gig.client&.name || "Cliente"
+      target_area = user.musician? ? 'musicians' : 'staffs'
+      date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
+      client_name = @gig.client&.name || "Cliente"
 
+      if is_new
         # Notificar al músico / staff asignado (únicamente a este usuario)
         AppNotification.create(
           company: @gig.company,
@@ -146,6 +147,18 @@ class GigsController < ApplicationController
           title: "👤 Nueva Asignación de Personal",
           message: "#{user.display_name} ha sido asignado(a) al show '#{client_name}' (#{date_formatted}).",
           action_url: "/gigs/#{@gig.id}"
+        ) rescue nil
+      elsif (agreed_amount - previous_amount).abs > 0.01
+        # Notificar al trabajador si se actualizó el pago acordado
+        AppNotification.create(
+          company: @gig.company,
+          sender: current_user,
+          recipient: user,
+          target_area: target_area,
+          notification_type: 'payment_alert',
+          title: "💰 Actualización de Pago Acordado",
+          message: "Se actualizó tu pago acordado a $#{view_context.number_with_precision(agreed_amount, precision: 2)} en el show de '#{client_name}' (#{date_formatted}).",
+          action_url: "/my_payments"
         ) rescue nil
       end
 
@@ -174,6 +187,22 @@ class GigsController < ApplicationController
 
     if assignment
       assignment.update!(agreed_amount: agreed_amount)
+
+      date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
+      client_name = @gig.client&.name || "Cliente"
+      target_area = assignment.user.musician? ? 'musicians' : 'staffs'
+
+      AppNotification.create(
+        company: @gig.company,
+        sender: current_user,
+        recipient: assignment.user,
+        target_area: target_area,
+        notification_type: 'payment_alert',
+        title: "💰 Actualización de Pago Acordado",
+        message: "Se actualizó tu pago acordado a $#{view_context.number_with_precision(agreed_amount, precision: 2)} en el show de '#{client_name}' (#{date_formatted}).",
+        action_url: "/my_payments"
+      ) rescue nil
+
       redirect_to gig_path(@gig), notice: "Pago acordado para #{assignment.user.display_name} actualizado a $#{view_context.number_with_precision(agreed_amount, precision: 2)}."
     else
       redirect_to gig_path(@gig), alert: "Asignación no encontrada."

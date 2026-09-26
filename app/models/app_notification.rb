@@ -132,7 +132,7 @@ class AppNotification < ApplicationRecord
     channels.uniq.each do |channel_suffix|
       stream_name = [company, channel_suffix]
 
-      # Prepend to list
+      # Prepend to list in notifications center
       Turbo::StreamsChannel.broadcast_prepend_to(
         stream_name,
         target: "notifications_list",
@@ -144,8 +144,26 @@ class AppNotification < ApplicationRecord
       clean_title = ActionController::Base.helpers.j(title.to_s)
       clean_msg = ActionController::Base.helpers.j(message.to_s.truncate(80))
       toast_type = notification_type == 'urgent' ? 'error' : 'success'
+      sound_type = (notification_type == 'urgent' || notification_type == 'error') ? 'urgent' : (notification_type == 'payment_alert' ? 'payment' : 'default')
+      url_link = action_url.presence || "/notifications"
       
-      script_html = "<script>if (typeof triggerNotificationAlert === 'function') { triggerNotificationAlert('#{clean_title}', '#{clean_msg}', '#{notification_type}'); } else if (typeof showToast === 'function') { showToast('#{clean_title}: #{clean_msg}', '#{toast_type}'); } if (typeof updateUnreadBadge === 'function') { updateUnreadBadge(1); }</script>"
+      script_html = <<~HTML
+        <div data-toast="1" style="pointer-events: all; display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 14px; font-family: Inter, sans-serif; font-size: 0.9rem; font-weight: 600; line-height: 1.4; box-shadow: 0 8px 30px rgba(0,0,0,0.14); border: 1px solid #{toast_type == 'error' ? '#fca5a5' : '#86efac'}; background: #{toast_type == 'error' ? '#fff1f2' : '#f0fdf4'}; color: #{toast_type == 'error' ? '#9f1239' : '#15803d'}; position: relative; overflow: hidden; max-width: 100%;">
+          <span style="font-size:1.3em;flex-shrink:0;">#{type_icon}</span>
+          <div style="flex:1;">
+            <div style="font-weight: 800; font-size: 0.95em; color: #0f172a; margin-bottom: 2px;">#{ERB::Util.html_escape(title)}</div>
+            <div style="font-size: 0.85em; color: #334155;">#{ERB::Util.html_escape(message.to_s.truncate(100))}</div>
+            <a href="#{url_link}" style="display: inline-block; margin-top: 6px; font-size: 0.82em; font-weight: 700; color: #2563eb; text-decoration: underline;">Ver detalles ➔</a>
+          </div>
+          <button onclick="this.closest('[data-toast]').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1em;color:inherit;opacity:0.6;padding:0;margin:0;line-height:1;flex-shrink:0;" title="Cerrar">✕</button>
+          <div style="position:absolute;bottom:0;left:0;height:3px;background:#{toast_type == 'error' ? '#f87171' : '#22c55e'};width:100%;transform-origin:left;animation:toastProgress 6s linear forwards;border-radius:0 0 14px 14px;"></div>
+        </div>
+        <script>
+          if (typeof playNotificationSound === 'function') { playNotificationSound('#{sound_type}'); }
+          if (typeof sendDeviceNotification === 'function') { sendDeviceNotification('#{clean_title}', '#{clean_msg}', { url: '#{url_link}' }); }
+          if (typeof updateUnreadBadge === 'function') { updateUnreadBadge(1); }
+        </script>
+      HTML
 
       Turbo::StreamsChannel.broadcast_append_to(
         stream_name,

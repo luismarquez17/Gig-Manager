@@ -291,8 +291,10 @@
     <% end %>
 
     <% if user_signed_in? && current_company.present? %>
-      <%= turbo_stream_from current_company, "notifications_#{current_user.role}" %>
       <%= turbo_stream_from current_company, "notifications_all_areas" %>
+      <%= turbo_stream_from current_company, "notifications_leaders" if current_user.leader? || current_user.superadmin? %>
+      <%= turbo_stream_from current_company, "notifications_musicians" if current_user.musician? %>
+      <%= turbo_stream_from current_company, "notifications_staffs" if current_user.staff? %>
       <%= turbo_stream_from current_company, "notifications_user_#{current_user.id}" %>
     <% end %>
 
@@ -590,6 +592,24 @@
                   <%= link_to 'Ver Eventos ➔', gigs_path, style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
                 <% end %>
               </div>
+            <% end %>
+          <% end %>
+
+          <% if user_signed_in? && (current_user.musician? || current_user.staff?) && controller_name != 'notifications' %>
+            <% worker_unread_count = current_user.unread_notifications_count %>
+            <% if worker_unread_count > 0 %>
+              <% latest_notif = current_user.app_notifications.unread_by(current_user).first %>
+              <% if latest_notif.present? %>
+                <div style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 1px solid #c7d2fe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);">
+                  <div style="display: flex; align-items: center; gap: 10px; color: #3730a3; font-size: 0.92rem; font-weight: 600;">
+                    <span style="font-size: 1.3rem;"><%= latest_notif.type_icon %></span>
+                    <span><strong><%= latest_notif.title %>:</strong> <%= latest_notif.message.truncate(95) %></span>
+                  </div>
+                  <%= link_to (latest_notif.action_url.presence || notifications_path), style: 'background: #4f46e5; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); white-space: nowrap;' do %>
+                    Ver Detalles ➔
+                  <% end %>
+                </div>
+              <% end %>
             <% end %>
           <% end %>
 
