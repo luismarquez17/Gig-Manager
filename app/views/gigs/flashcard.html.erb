@@ -166,8 +166,8 @@
       </div>
     <% end %>
 
-    <!-- Protocolo Musical & Canciones Especiales (si existen) -->
-    <% if @gig.has_music_notes? %>
+    <!-- Protocolo Musical & Canciones Especiales (Solo visible para Leaders y Staff) -->
+    <% if (defined?(current_user) && current_user && (current_user.leader? || current_user.staff?)) && @gig.has_music_notes? %>
       <div style="margin-bottom: 16px; background: rgba(139, 92, 246, 0.1); border: 1.5px solid rgba(167, 139, 250, 0.4); border-radius: 14px; padding: 12px 14px;">
         <div style="font-size: 0.72em; font-weight: 900; color: #c084fc; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
           <span>🎵</span> PROTOCOLO MUSICAL / PEDIDOS CLIENTE

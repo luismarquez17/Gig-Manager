@@ -79,7 +79,8 @@
       </div>
     <% end %>
 
-    <% if @gig.details.present? || @gig.has_music_notes? %>
+    <% show_music_preview = (current_user.leader? || current_user.staff?) && @gig.has_music_notes? %>
+    <% if @gig.details.present? || show_music_preview %>
       <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
         <% if @gig.details.present? %>
           <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border-left: 4px solid #3b82f6;">
@@ -88,7 +89,7 @@
           </div>
         <% end %>
 
-        <% if @gig.has_music_notes? %>
+        <% if show_music_preview %>
           <div style="background: #faf5ff; padding: 16px; border-radius: 14px; border-left: 4px solid #8b5cf6;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <p style="margin: 0; color: #6d28d9; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🎵 Repertorio &amp; Protocolo Musical</p>
@@ -806,7 +807,8 @@
     <% end %>
   <% end %>
 
-  <%# --- SECCIÓN DE REPERTORIO, MOMENTOS CLAVE Y PROTOCOLO MUSICAL --- %>
+  <%# --- SECCIÓN DE REPERTORIO, MOMENTOS CLAVE Y PROTOCOLO MUSICAL (SOLO LÍDERES Y STAFF) --- %>
+  <% if current_user.leader? || current_user.staff? %>
   <div id="seccion-notas-musicales" style="background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%); border: 1.5px solid #d8b4fe; border-radius: 20px; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.07); padding: 26px; margin-bottom: 30px;">
     
     <%# Cabecera %>
@@ -946,6 +948,7 @@
       </script>
     <% end %>
   </div>
+  <% end %>
 
 <% if current_user.musician? %>
   <%# --- CRONOGRAMA PARA EL MÚSICO --- %>
