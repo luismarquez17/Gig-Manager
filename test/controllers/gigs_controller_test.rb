@@ -64,4 +64,16 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "00:00", @gig.end_time.strftime("%H:%M") # 23:00 + 1 hr = 00:00 midnight
     assert_includes @gig.details, "Adicional añadido"
   end
+
+  test "should update music_notes via gig update" do
+    patch gig_url(@gig), params: {
+      gig: {
+        music_notes: "• Vals de entrada: Tiempo de Vals\n• Canción quinceañera: A Thousand Years"
+      }
+    }
+    assert_redirected_to gig_url(@gig)
+    @gig.reload
+    assert_includes @gig.music_notes, "Tiempo de Vals"
+    assert_includes @gig.music_notes, "A Thousand Years"
+  end
 end

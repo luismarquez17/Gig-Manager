@@ -165,4 +165,23 @@ class GigTest < ActiveSupport::TestCase
     assert_equal 150.0, gig.pending_payroll_amount
     assert_equal 100.0, gig.actual_cash_profit # $250 received - $150 paid
   end
+
+  test "music_notes helpers and persistence" do
+    company = companies(:one)
+    gig = Gig.create!(
+      company: company,
+      amount: 400.0,
+      client_email: "music@example.com",
+      music_notes: "• Vals de entrada: Tiempo de Vals\n• Brindis: A Thousand Years\n• Exclusiones: Sin reggaetón"
+    )
+
+    assert gig.has_music_notes?
+    lines = gig.formatted_music_notes_lines
+    assert_equal 3, lines.size
+    assert_equal "• Vals de entrada: Tiempo de Vals", lines.first
+
+    gig.update!(music_notes: "   ")
+    assert_not gig.has_music_notes?
+    assert_empty gig.formatted_music_notes_lines
+  end
 end

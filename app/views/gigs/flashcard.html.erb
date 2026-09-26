@@ -166,6 +166,32 @@
       </div>
     <% end %>
 
+    <!-- Protocolo Musical & Canciones Especiales (si existen) -->
+    <% if @gig.has_music_notes? %>
+      <div style="margin-bottom: 16px; background: rgba(139, 92, 246, 0.1); border: 1.5px solid rgba(167, 139, 250, 0.4); border-radius: 14px; padding: 12px 14px;">
+        <div style="font-size: 0.72em; font-weight: 900; color: #c084fc; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+          <span>🎵</span> PROTOCOLO MUSICAL / PEDIDOS CLIENTE
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 6px; font-size: 0.84em; line-height: 1.4;">
+          <% @gig.formatted_music_notes_lines.each do |line| %>
+            <div style="display: flex; align-items: baseline; gap: 7px; color: #f1f5f9;">
+              <span style="color: #a78bfa; font-size: 0.85em; flex-shrink: 0;">🎶</span>
+              <div style="min-width: 0; flex: 1;">
+                <% if line.include?(':') %>
+                  <% parts = line.split(':', 2) %>
+                  <strong style="color: #c4b5fd;"><%= parts[0].strip %>:</strong>
+                  <span style="color: #e2e8f0;"><%= parts[1].strip %></span>
+                <% else %>
+                  <span style="color: #e2e8f0;"><%= line %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
     <!-- Notas / Vestimenta (filtrando temas financieros y de adicionales) -->
     <% if dress_code.present? || musician_notes.present? %>
       <div style="background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 12px; padding: 10px 12px; margin-bottom: 16px; font-size: 0.84em; line-height: 1.4;">

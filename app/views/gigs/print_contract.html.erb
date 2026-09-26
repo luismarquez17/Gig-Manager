@@ -226,6 +226,15 @@
       <%= @gig.details.presence || "No hay detalles adicionales especificados para este evento." %>
     </div>
 
+    <% if @gig.has_music_notes? %>
+      <div style="font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #6d28d9; margin-bottom: 10px; border-bottom: 2px solid #ddd6fe; padding-bottom: 5px;">
+        🎵 Protocolo Musical &amp; Peticiones Especiales del Cliente
+      </div>
+      <div style="background: #faf5ff; border: 1px solid #e9d5ff; border-radius: 8px; padding: 15px; margin-bottom: 30px; font-size: 15px; color: #1e1b4b; white-space: pre-line;">
+        <%= @gig.music_notes %>
+      </div>
+    <% end %>
+
     <% if @gig.gig_items.any? %>
       <div style="font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;">
         Equipos Involucrados

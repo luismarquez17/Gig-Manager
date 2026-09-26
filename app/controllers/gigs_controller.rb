@@ -29,8 +29,9 @@ class GigsController < ApplicationController
           "clients.phone ILIKE ? OR " \
           "unaccent(gigs.location) ILIKE unaccent(?) OR " \
           "unaccent(gigs.details) ILIKE unaccent(?) OR " \
+          "unaccent(COALESCE(gigs.music_notes, '')) ILIKE unaccent(?) OR " \
           "gigs.client_email ILIKE ?",
-          query_term, query_term, query_term, query_term, query_term
+          query_term, query_term, query_term, query_term, query_term, query_term
         )
       end
     end
@@ -369,10 +370,16 @@ class GigsController < ApplicationController
 
   def update
     if @gig.update(gig_params)
-      @gig.client.update_priority! if @gig.client
-      redirect_to gig_path(@gig), notice: "Evento actualizado correctamente."
+      @gig.client&.update_priority! if @gig.client
+      respond_to do |format|
+        format.html { redirect_to gig_path(@gig), notice: "Evento actualizado correctamente." }
+        format.json { render json: { success: true, music_notes: @gig.music_notes } }
+      end
     else
-      render :edit, status: :unprocessable_entity
+      respond_to do |format|
+        format.html { render :edit, status: :unprocessable_entity }
+        format.json { render json: { success: false, errors: @gig.errors.full_messages }, status: :unprocessable_entity }
+      end
     end
   end
 
@@ -394,7 +401,7 @@ class GigsController < ApplicationController
   end
 
   def gig_params
-    params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :start_time, :end_time).tap do |whitelisted|
+    params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :music_notes, :start_time, :end_time).tap do |whitelisted|
       if params[:gig].has_key?(:custom_upsells)
         whitelisted[:custom_upsells] = params[:gig][:custom_upsells].presence&.to_unsafe_h || {}
       end

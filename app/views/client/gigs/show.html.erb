@@ -465,6 +465,38 @@
     </div>
   </section>
 
+  <%# === REPERTORIO Y MOMENTOS MUSICALES CONFIRMADOS === %>
+  <% if @gig.has_music_notes? %>
+    <section class="p-glass-card" style="border-color: rgba(167, 139, 250, 0.35); background: rgba(139, 92, 246, 0.04); box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.12);">
+      <h2 class="p-section-title" style="color: #c084fc;">
+        <span class="picon" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;">🎵</span>
+        Repertorio &amp; Momentos Especiales Confirmados
+      </h2>
+      <p style="color: var(--portal-text-muted); font-size: 0.9em; margin: 0 0 16px 0; line-height: 1.4;">
+        Hemos registrado tus peticiones musicales y el orden de los momentos clave para tu evento:
+      </p>
+      
+      <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(167, 139, 250, 0.2); border-radius: 16px; padding: 18px 20px;">
+        <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.95em; line-height: 1.5; color: #f1f5f9;">
+          <% @gig.formatted_music_notes_lines.each do |line| %>
+            <div style="display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px; border-bottom: 1px dashed rgba(255,255,255,0.06);">
+              <span style="color: #a78bfa; font-size: 0.95em; flex-shrink: 0;">🎶</span>
+              <div style="flex: 1; min-width: 0;">
+                <% if line.include?(':') %>
+                  <% parts = line.split(':', 2) %>
+                  <strong style="color: #c4b5fd;"><%= parts[0].strip %>:</strong>
+                  <span style="color: #e2e8f0;"><%= parts[1].strip %></span>
+                <% else %>
+                  <span style="color: #e2e8f0;"><%= line %></span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </section>
+  <% end %>
+
   <%# === EQUIPO DE TRABAJO === %>
   <% if @staff_members.present? %>
   <section class="p-glass-card">
