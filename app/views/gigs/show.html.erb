@@ -79,10 +79,25 @@
       </div>
     <% end %>
 
-    <% if @gig.details.present? %>
-      <div style="grid-column: 1 / -1; background: #f8fafc; padding: 15px; border-radius: 12px; border-left: 4px solid #3b82f6;">
-        <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Detalles o Paquete Contratado</p>
-        <p style="margin: 5px 0 0 0; color: #334155; line-height: 1.5; font-size: 0.95em;"><%= @gig.details %></p>
+    <% show_music_preview = (current_user.leader? || current_user.staff?) && @gig.has_music_notes? %>
+    <% if @gig.details.present? || show_music_preview %>
+      <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+        <% if @gig.details.present? %>
+          <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border-left: 4px solid #3b82f6;">
+            <p style="margin: 0; color: #64748b; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📦 Detalles Técnicos / Paquete</p>
+            <p style="margin: 6px 0 0 0; color: #334155; line-height: 1.5; font-size: 0.92em;"><%= @gig.details %></p>
+          </div>
+        <% end %>
+
+        <% if show_music_preview %>
+          <div style="background: #faf5ff; padding: 16px; border-radius: 14px; border-left: 4px solid #8b5cf6;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <p style="margin: 0; color: #6d28d9; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🎵 Repertorio &amp; Protocolo Musical</p>
+              <a href="#seccion-notas-musicales" style="color: #7c3aed; font-size: 0.8em; font-weight: 700; text-decoration: none;">Ver completo ↓</a>
+            </div>
+            <p style="margin: 6px 0 0 0; color: #3b0764; line-height: 1.5; font-size: 0.92em; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><%= @gig.music_notes %></p>
+          </div>
+        <% end %>
       </div>
     <% end %>
 
@@ -790,6 +805,149 @@
         <% end %>
       </div>
     <% end %>
+  <% end %>
+
+  <%# --- SECCIÓN DE REPERTORIO, MOMENTOS CLAVE Y PROTOCOLO MUSICAL (SOLO LÍDERES Y STAFF) --- %>
+  <% if current_user.leader? || current_user.staff? %>
+  <div id="seccion-notas-musicales" style="background: linear-gradient(135deg, #ffffff 0%, #faf5ff 100%); border: 1.5px solid #d8b4fe; border-radius: 20px; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.07); padding: 26px; margin-bottom: 30px;">
+    
+    <%# Cabecera %>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 18px;">
+      <div style="display: flex; align-items: flex-start; gap: 14px;">
+        <span style="font-size: 1.8em; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); flex-shrink: 0;">🎵</span>
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <h3 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #2e1065;">Repertorio, Momentos Clave &amp; Protocolo Musical</h3>
+            <% if @gig.has_music_notes? %>
+              <span style="background: #ede9fe; color: #6d28d9; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 800; border: 1px solid #c4b5fd;">
+                ✓ Peticiones Registradas
+              </span>
+            <% else %>
+              <span style="background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 700;">
+                Sin notas musicales
+              </span>
+            <% end %>
+          </div>
+          <p style="margin: 4px 0 0 0; color: #6b21a8; font-size: 0.88em; line-height: 1.4;">
+            Peticiones de canciones, orden del show (vals de entrada, salida de la quinceañera/novios, brindis, hora loca) acordadas con el cliente para que todo el equipo esté alineado.
+          </p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+        <% if @gig.has_music_notes? %>
+          <button type="button" onclick="copyMusicProtocolText()" id="copy-music-btn" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; padding: 8px 14px; border-radius: 10px; font-weight: 700; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#e9d5ff'" onmouseout="this.style.background='#f3e8ff'">
+            <span>📋</span> <span id="copy-music-btn-text">Copiar para WhatsApp</span>
+          </button>
+        <% end %>
+
+        <% if current_user.leader? %>
+          <button type="button" onclick="toggleMusicNotesEdit()" id="btn-toggle-music-edit" style="background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%); color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25); transition: 0.2s;">
+            <span>✏️</span> <span id="text-toggle-music-edit"><%= @gig.has_music_notes? ? 'Editar Notas' : '➕ Agregar Notas' %></span>
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Vista de Lectura %>
+    <div id="music-notes-view-block" style="<%= 'display: none;' if !@gig.has_music_notes? && current_user.leader? %>">
+      <% if @gig.has_music_notes? %>
+        <div style="background: #ffffff; border: 1px solid #e9d5ff; border-radius: 16px; padding: 20px 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+          <div style="display: flex; flex-direction: column; gap: 10px; color: #1e1b4b; font-size: 0.95em; line-height: 1.6;" id="music-protocol-content-text">
+            <% @gig.formatted_music_notes_lines.each do |line| %>
+              <div style="display: flex; align-items: baseline; gap: 10px; padding-bottom: 8px; border-bottom: 1px dashed #f3e8ff;">
+                <span style="color: #8b5cf6; font-size: 1em; flex-shrink: 0;">🎶</span>
+                <div style="flex: 1; min-width: 0;">
+                  <% if line.include?(':') %>
+                    <% parts = line.split(':', 2) %>
+                    <strong style="color: #5b21b6; background: #f5f3ff; padding: 2px 8px; border-radius: 6px; margin-right: 6px; border: 1px solid #ddd6fe;"><%= parts[0].strip %>:</strong>
+                    <span><%= parts[1].strip %></span>
+                  <% else %>
+                    <span><%= line %></span>
+                  <% end %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% else %>
+        <div style="background: rgba(255, 255, 255, 0.7); border: 1px dashed #d8b4fe; border-radius: 16px; padding: 25px; text-align: center; color: #6b21a8;">
+          <div style="font-size: 2.2em; margin-bottom: 8px;">🎶</div>
+          <h4 style="margin: 0 0 6px 0; font-size: 1.05em; font-weight: 800; color: #4c1d95;">No hay notas de protocolo ni canciones registradas aún</h4>
+          <p style="margin: 0 0 14px 0; font-size: 0.88em; color: #7e22ce; max-width: 500px; margin-left: auto; margin-right: auto;">
+            ¿El cliente pidió un vals específico, una canción al salir la quinceañera, o un orden especial? Guárdalo aquí para que esté disponible para todos los músicos del show.
+          </p>
+          <% if current_user.leader? %>
+            <button type="button" onclick="toggleMusicNotesEdit()" style="background: #7c3aed; color: white; border: none; padding: 9px 18px; border-radius: 10px; font-weight: 700; font-size: 0.85em; cursor: pointer; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);">
+              ➕ Escribir Peticiones Musicales
+            </button>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Formulario de Edición Rápida (Solo Líder) %>
+    <% if current_user.leader? %>
+      <div id="music-notes-edit-block" style="<%= @gig.has_music_notes? ? 'display: none;' : '' %>">
+        <%= form_with model: @gig, local: true, style: "background: #ffffff; border: 1.5px solid #a78bfa; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.08);" do |f| %>
+          <label style="display: block; font-weight: 800; color: #5b21b6; font-size: 0.95em; margin-bottom: 6px;">
+            📝 Escribe el orden de temas y peticiones musicales del cliente:
+          </label>
+          <p style="margin: 0 0 10px 0; font-size: 0.82em; color: #6d28d9;">
+            Tip: Puedes estructurarlo por momentos (ej: "Vals:", "Entrada Quinceañera:", "Brindis:", "Set Bailable:", "No tocar:").
+          </p>
+          <%= f.text_area :music_notes, rows: 6, placeholder: "• Vals de entrada: La señora pidió \"Tiempo de Vals\" al entrar la quinceañera.\n• Momento de la salida: Poner \"A Thousand Years\" al terminar el brindis.\n• Set en vivo: Iniciar con tanda de merengues y salsa bailable.\n• Canciones pedidas: \"Vivir Mi Vida\", \"Danza Kuduro\".\n• Exclusiones: No tocar reggaetón explícito.", style: "width: 100%; padding: 12px 14px; border: 1.5px solid #c4b5fd; border-radius: 10px; font-family: inherit; font-size: 0.92em; line-height: 1.5; box-sizing: border-box; outline: none; margin-bottom: 14px;" %>
+          <div style="display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
+            <button type="button" onclick="toggleMusicNotesEdit()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer;">
+              Cancelar
+            </button>
+            <%= f.submit "💾 Guardar Notas Musicales", style: "background: #7c3aed; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);" %>
+          </div>
+        <% end %>
+      </div>
+
+      <script>
+        function toggleMusicNotesEdit() {
+          const viewBlock = document.getElementById('music-notes-view-block');
+          const editBlock = document.getElementById('music-notes-edit-block');
+          const toggleBtn = document.getElementById('text-toggle-music-edit');
+
+          if (editBlock.style.display === 'none' || !editBlock.style.display) {
+            editBlock.style.display = 'block';
+            if (viewBlock) viewBlock.style.display = 'none';
+            if (toggleBtn) toggleBtn.textContent = 'Ocultar Edición';
+          } else {
+            editBlock.style.display = 'none';
+            if (viewBlock) viewBlock.style.display = 'block';
+            if (toggleBtn) toggleBtn.textContent = '<%= @gig.has_music_notes? ? "Editar Notas" : "➕ Agregar Notas" %>';
+          }
+        }
+
+        function copyMusicProtocolText() {
+          const clientName = '<%= escape_javascript(@gig.client_display_name) %>';
+          const gigDate = '<%= @gig.date ? @gig.date.strftime("%d/%m/%Y") : "Show" %>';
+          const musicNotes = `<%= escape_javascript(@gig.music_notes.to_s) %>`;
+          
+          const formattedShare = `🎵 *PROTOCOLO Y REPERTORIO MUSICAL*\n` +
+                                 `📌 *Evento:* ${clientName} (${gigDate})\n\n` +
+                                 `${musicNotes}\n\n` +
+                                 `🎶 _Gig Manager_`;
+
+          const btnText = document.getElementById('copy-music-btn-text');
+          navigator.clipboard.writeText(formattedShare).then(() => {
+            if (btnText) {
+              const orig = btnText.textContent;
+              btnText.textContent = '¡Copiado!';
+              setTimeout(() => { btnText.textContent = orig; }, 2000);
+            }
+          }).catch(err => {
+            console.error('Error al copiar:', err);
+            alert('Texto copiado.');
+          });
+        }
+      </script>
+    <% end %>
+  </div>
   <% end %>
 
 <% if current_user.musician? %>

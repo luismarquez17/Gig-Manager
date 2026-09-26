@@ -251,6 +251,15 @@ class Gig < ApplicationRecord
     upsells
   end
 
+  def has_music_notes?
+    music_notes.present? && music_notes.strip.present?
+  end
+
+  def formatted_music_notes_lines
+    return [] unless has_music_notes?
+    music_notes.lines.map(&:strip).reject(&:blank?)
+  end
+
   private
 
   def copy_client_email

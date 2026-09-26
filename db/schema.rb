@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_151847) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_26_183000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -352,6 +352,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_151847) do
     t.jsonb "custom_upsells", default: {}
     t.bigint "company_id"
     t.jsonb "music_preferences", default: {}
+    t.text "music_notes"
     t.index ["client_email"], name: "index_gigs_on_client_email"
     t.index ["client_id"], name: "index_gigs_on_client_id"
     t.index ["company_id"], name: "index_gigs_on_company_id"
