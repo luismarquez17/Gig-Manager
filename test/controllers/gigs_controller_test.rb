@@ -22,15 +22,24 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "should assign staff with agreed amount" do
-    worker = users(:two)
-    post assign_staff_gig_url(@gig), params: { staff_id: worker.id, agreed_amount: 150.0 }
+  test "should assign staff with agreed amount and notify only the assigned worker" do
+    worker = users(:musician)
+    other_worker = users(:two)
+
+    assert_difference -> { AppNotification.count }, 2 do # 1 personal notification to worker, 1 notification to leaders
+      post assign_staff_gig_url(@gig), params: { staff_id: worker.id, agreed_amount: 150.0 }
+    end
     assert_redirected_to gig_url(@gig)
 
     assignment = @gig.staff_assignments.find_by(user_id: worker.id)
     assert_not_nil assignment
     assert_equal 150.0, assignment.agreed_amount.to_f
     assert_equal 150.0, assignment.pending_balance
+
+    personal_notif = AppNotification.find_by(recipient: worker)
+    assert_not_nil personal_notif
+    assert_includes worker.app_notifications, personal_notif
+    assert_not_includes other_worker.app_notifications, personal_notif
   end
 
   test "should remove staff from gig" do

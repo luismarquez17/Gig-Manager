@@ -38,10 +38,11 @@ class User < ApplicationRecord
   has_many :employee_payments, dependent: :nullify
   has_many :notification_reads, dependent: :destroy
   has_many :sent_notifications, class_name: 'AppNotification', foreign_key: 'sender_id', dependent: :nullify
+  has_many :received_notifications, class_name: 'AppNotification', foreign_key: 'recipient_id', dependent: :nullify
 
   def app_notifications
     return AppNotification.none unless company_id.present?
-    AppNotification.where(company_id: company_id).for_role(role).recent_first
+    AppNotification.where(company_id: company_id).for_user(self).recent_first
   end
 
   def unread_notifications_count

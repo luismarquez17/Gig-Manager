@@ -132,6 +132,7 @@ class EmployeePaymentsController < ApplicationController
     AppNotification.create(
       company: current_company,
       sender: current_user,
+      recipient: @payment.user,
       target_area: target_area,
       notification_type: 'payment_alert',
       title: "Pago Aprobado",
@@ -153,6 +154,7 @@ class EmployeePaymentsController < ApplicationController
     AppNotification.create(
       company: current_company,
       sender: current_user,
+      recipient: @payment.user,
       target_area: target_area,
       notification_type: 'urgent',
       title: "Reporte de Pago Rechazado",

@@ -176,12 +176,19 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert pending_payment.pending_approval?
 
     # Leader logs in and approves
-    post approve_employee_payment_url(pending_payment)
+    assert_difference -> { AppNotification.count }, 1 do
+      post approve_employee_payment_url(pending_payment)
+    end
     assert_redirected_to employee_payments_path
 
     pending_payment.reload
     assert pending_payment.approved?
     assert_not_nil pending_payment.approved_at
+
+    notif = AppNotification.find_by(recipient: @worker, notification_type: 'payment_alert')
+    assert_not_nil notif
+    assert_includes @worker.app_notifications, notif
+    assert_not_includes users(:musician).app_notifications, notif
   end
 
   test "leader can reject worker payment report" do
@@ -196,13 +203,20 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
       reported_by_worker: true
     )
 
-    post reject_employee_payment_url(pending_payment), params: { rejection_reason: "Monto incorrecto" }
+    assert_difference -> { AppNotification.count }, 1 do
+      post reject_employee_payment_url(pending_payment), params: { rejection_reason: "Monto incorrecto" }
+    end
     assert_redirected_to employee_payments_path
 
     pending_payment.reload
     assert pending_payment.rejected?
     assert_equal "Monto incorrecto", pending_payment.rejection_reason
     assert_equal 0, pending_payment.fund_expenses.count
+
+    notif = AppNotification.find_by(recipient: @worker, notification_type: 'urgent')
+    assert_not_nil notif
+    assert_includes @worker.app_notifications, notif
+    assert_not_includes users(:musician).app_notifications, notif
   end
 
   test "worker cannot approve or reject payments" do

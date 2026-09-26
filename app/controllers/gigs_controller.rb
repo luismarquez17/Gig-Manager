@@ -125,10 +125,11 @@ class GigsController < ApplicationController
         date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
         client_name = @gig.client&.name || "Cliente"
 
-        # Notificar al músico / staff asignado
+        # Notificar al músico / staff asignado (únicamente a este usuario)
         AppNotification.create(
           company: @gig.company,
           sender: current_user,
+          recipient: user,
           target_area: target_area,
           notification_type: 'gig_alert',
           title: "🎸 Has sido asignado a un evento",

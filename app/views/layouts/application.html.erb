@@ -293,6 +293,7 @@
     <% if user_signed_in? && current_company.present? %>
       <%= turbo_stream_from current_company, "notifications_#{current_user.role}" %>
       <%= turbo_stream_from current_company, "notifications_all_areas" %>
+      <%= turbo_stream_from current_company, "notifications_user_#{current_user.id}" %>
     <% end %>
 
     <div style="display: flex; min-height: 100vh; font-family: 'Inter', sans-serif;">

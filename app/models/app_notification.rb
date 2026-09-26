@@ -4,6 +4,7 @@ class AppNotification < ApplicationRecord
   include TenantScoped
 
   belongs_to :sender, class_name: 'User', optional: true
+  belongs_to :recipient, class_name: 'User', optional: true
   has_many :notification_reads, dependent: :destroy
 
   enum target_area: {
@@ -24,17 +25,35 @@ class AppNotification < ApplicationRecord
 
   scope :recent_first, -> { order(created_at: :desc) }
 
+  scope :for_user, ->(user) {
+    return none unless user.present?
+
+    role_str = user.role.to_s
+    role_areas = case role_str
+                 when 'leader', 'superadmin' then [:all_areas, :leaders]
+                 when 'musician'             then [:all_areas, :musicians]
+                 when 'staff'                then [:all_areas, :staffs]
+                 else [:all_areas]
+                 end
+
+    where(
+      "(app_notifications.recipient_id IS NULL AND app_notifications.target_area IN (:areas)) OR app_notifications.recipient_id = :user_id",
+      areas: role_areas,
+      user_id: user.id
+    )
+  }
+
   scope :for_role, ->(role) {
     role_str = role.to_s
     case role_str
     when 'leader', 'superadmin'
-      where(target_area: [:all_areas, :leaders])
+      where(recipient_id: nil, target_area: [:all_areas, :leaders])
     when 'musician'
-      where(target_area: [:all_areas, :musicians])
+      where(recipient_id: nil, target_area: [:all_areas, :musicians])
     when 'staff'
-      where(target_area: [:all_areas, :staffs])
+      where(recipient_id: nil, target_area: [:all_areas, :staffs])
     else
-      where(target_area: :all_areas)
+      where(recipient_id: nil, target_area: :all_areas)
     end
   }
 
@@ -63,6 +82,8 @@ class AppNotification < ApplicationRecord
   end
 
   def target_area_label
+    return "Personal" if recipient_id.present?
+
     str = case target_area
     when 'all_areas' then 'Todas las áreas'
     when 'leaders'   then 'Área de Líderes'
@@ -100,7 +121,9 @@ class AppNotification < ApplicationRecord
   def broadcast_notification
     return unless company_id.present?
 
-    channels = if target_area == 'all_areas'
+    channels = if recipient_id.present?
+      ["notifications_user_#{recipient_id}"]
+    elsif target_area == 'all_areas'
       ["notifications_leaders", "notifications_musicians", "notifications_staffs", "notifications_all_areas"]
     else
       ["notifications_#{target_area}", "notifications_all_areas"]
