@@ -1,11 +1,63 @@
 class UsersController < ApplicationController
   before_action :set_user, only: [:show, :edit, :update, :update_role]
-  before_action :require_leader!, only: [:index, :update_role]
+  before_action :require_leader!, only: [:index, :create_worker, :update_role]
   before_action :require_profile_viewer_or_self!, only: [:show]
   before_action :require_self_or_leader!, only: [:edit, :update]
 
   def index
     @users = current_company.users.order(created_at: :desc)
+    @new_user = User.new
+  end
+
+  def create_worker
+    email = params.dig(:user, :email).to_s.strip.downcase
+    name = params.dig(:user, :name).to_s.strip
+    role = params.dig(:user, :role).to_s.presence || 'staff'
+    password = params.dig(:user, :password).to_s.presence
+
+    if email.blank?
+      redirect_to users_path, alert: "Debes ingresar un correo electrónico válido."
+      return
+    end
+
+    unless %w[staff musician leader].include?(role)
+      role = 'staff'
+    end
+
+    existing_user = User.find_by(email: email)
+
+    if existing_user
+      # Vincular usuario existente a la empresa actual y asignar rol
+      existing_user.company = current_company
+      existing_user.role = role
+      existing_user.name = name if name.present?
+      if password.present?
+        existing_user.password = password
+        existing_user.password_confirmation = password
+      end
+
+      if existing_user.save
+        redirect_to users_path, notice: "¡Trabajador #{existing_user.email} (#{existing_user.display_name}) vinculado exitosamente a #{current_company.name} como #{existing_user.role.capitalize}!"
+      else
+        redirect_to users_path, alert: "No se pudo vincular al trabajador: #{existing_user.errors.full_messages.to_sentence}"
+      end
+    else
+      temp_password = password.presence || SecureRandom.hex(6)
+      new_user = User.new(
+        email: email,
+        name: name.presence || email.split('@').first.capitalize,
+        role: role,
+        company: current_company,
+        password: temp_password,
+        password_confirmation: temp_password
+      )
+
+      if new_user.save
+        redirect_to users_path, notice: "¡Trabajador #{new_user.email} (#{new_user.display_name}) agregado exitosamente a #{current_company.name} como #{new_user.role.capitalize}!"
+      else
+        redirect_to users_path, alert: "No se pudo agregar al trabajador: #{new_user.errors.full_messages.to_sentence}"
+      end
+    end
   end
 
   def show

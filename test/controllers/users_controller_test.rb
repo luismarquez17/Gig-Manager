@@ -69,4 +69,61 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Batería", @musician.specialty
     assert_equal "Toco batería metal.", @musician.bio
   end
+
+  test "leader should create a new staff worker by email" do
+    sign_in @leader
+    assert_difference("User.count", 1) do
+      post create_worker_users_url, params: {
+        user: {
+          email: "newworker@testcompany.com",
+          name: "Nuevo Staff",
+          role: "staff"
+        }
+      }
+    end
+    assert_redirected_to users_path
+    new_user = User.find_by(email: "newworker@testcompany.com")
+    assert_not_nil new_user
+    assert_equal @leader.company_id, new_user.company_id
+    assert_equal "staff", new_user.role
+    assert_equal "Nuevo Staff", new_user.name
+  end
+
+  test "leader should link an existing user to their company as musician" do
+    sign_in @leader
+    other_user = User.create!(
+      email: "existingother@example.com",
+      password: "password123",
+      role: :client
+    )
+    assert_not_equal @leader.company_id, other_user.company_id
+
+    assert_no_difference("User.count") do
+      post create_worker_users_url, params: {
+        user: {
+          email: "existingother@example.com",
+          name: "Músico Transferido",
+          role: "musician"
+        }
+      }
+    end
+    assert_redirected_to users_path
+    other_user.reload
+    assert_equal @leader.company_id, other_user.company_id
+    assert_equal "musician", other_user.role
+    assert_equal "Músico Transferido", other_user.name
+  end
+
+  test "staff should not be able to create or link workers" do
+    sign_in @staff
+    assert_no_difference("User.count") do
+      post create_worker_users_url, params: {
+        user: {
+          email: "unauthorized@example.com",
+          role: "staff"
+        }
+      }
+    end
+    assert_redirected_to root_path
+  end
 end

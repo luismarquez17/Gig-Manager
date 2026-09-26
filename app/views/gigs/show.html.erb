@@ -587,10 +587,10 @@
         <span style="font-size: 0.85em; color: #64748b; font-weight: 600;">Total acordado: $<%= number_with_precision(@gig.staff_assignments.sum(:agreed_amount), precision: 2) %></span>
       </h3>
 
-      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 20px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
-        <div style="flex: 1; min-width: 200px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">Seleccionar trabajador</label>
-          <%= f.select :staff_id, current_company.users.workers.order(:email).map { |w| [w.display_name, w.id] }, { prompt: "Seleccionar trabajador..." }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
+        <div style="flex: 1; min-width: 240px;">
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">Seleccionar trabajador (Staff / Músico)</label>
+          <%= f.select :staff_id, current_company.users.workers.order(:name, :email).map { |w| ["#{w.display_name} (#{w.role.to_s.capitalize} · #{w.email})", w.id] }, { prompt: "-- Seleccionar trabajador --" }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
         </div>
         <div style="flex: 1; min-width: 220px;">
           <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">¿Cuánto le vas a pagar a este trabajador? ($ USD)</label>
@@ -600,6 +600,9 @@
           <%= f.submit "➕ Asignar trabajador", style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
         </div>
       <% end %>
+      <div style="margin-bottom: 20px; font-size: 0.82rem; color: #64748b; padding-left: 4px;">
+        💡 ¿No encuentras a tu músico o staff en la lista? <%= link_to "Agrégalo o cámbiale el rol en Gestión de Usuarios →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
+      </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
         <% @gig.staff_assignments.includes(:user).each do |sa| %>

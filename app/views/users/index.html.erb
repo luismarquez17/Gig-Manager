@@ -24,11 +24,47 @@
     </div>
   <% end %>
 
+  <!-- Formulario para Agregar o Vincular Trabajador Directamente -->
+  <div style="background: white; border-radius: 16px; padding: 22px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
+      <span>➕</span> <span>Agregar o Vincular Trabajador (Staff / Músico)</span>
+    </h3>
+    <p style="margin: 0 0 16px 0; font-size: 0.88em; color: #64748b;">
+      Ingresa el correo del trabajador. Si ya se registró por su cuenta en la app, se vinculará automáticamente a <strong><%= current_company.name %></strong> con el rol que elijas para que puedas asignarlo a shows y pagos.
+    </p>
+
+    <%= form_with model: @new_user, url: create_worker_users_path, method: :post, local: true, style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: flex-end;" do |f| %>
+      <div>
+        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Correo Electrónico *</label>
+        <%= f.email_field :email, placeholder: "ejemplo@correo.com", required: true, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Nombre Completo (Opcional)</label>
+        <%= f.text_field :name, placeholder: "Nombre y Apellido", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Rol en la Empresa *</label>
+        <%= f.select :role, [['Staff (Técnico/Equipo)', 'staff'], ['Músico', 'musician'], ['Líder / Admin', 'leader']], {}, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Contraseña (Opcional)</label>
+        <%= f.password_field :password, placeholder: "Auto-generada si se deja vacío", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      </div>
+
+      <div>
+        <%= f.submit "➕ Vincular / Agregar", style: "width: 100%; background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 2px 8px rgba(37,99,235,0.25);" %>
+      </div>
+    <% end %>
+  </div>
+
   <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden;">
     <table style="width: 100%; border-collapse: collapse;">
       <thead>
         <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Email</th>
+          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Usuario / Nombre</th>
           <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Rol Actual</th>
           <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Acciones</th>
         </tr>
@@ -36,7 +72,10 @@
       <tbody>
         <% @users.each do |user| %>
           <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 15px 20px; font-weight: 600; color: #1e293b;"><%= user.email %></td>
+            <td style="padding: 15px 20px;">
+              <div style="font-weight: 700; color: #1e293b;"><%= user.display_name %></div>
+              <div style="font-size: 0.82em; color: #64748b;"><%= user.email %></div>
+            </td>
             <td style="padding: 15px 20px;">
               <%
                 role_style = if user.leader?

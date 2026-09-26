@@ -153,6 +153,9 @@ Rails.application.routes.draw do
     end
   end
   resources :users, only: [:index, :edit, :update, :show] do
+    collection do
+      post :create_worker
+    end
     member do
       patch :update_role
     end
