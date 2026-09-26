@@ -90,7 +90,12 @@
                 <div style="margin-top: 6px; color: #94a3b8; font-size: 0.85em;"><%= truncate(gig.details, length: 100) %></div>
               <% end %>
             </div>
-            <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center;">
+            <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center; flex-wrap: wrap;">
+              <%= link_to new_worker_report_employee_payments_path(gig_id: gig.id),
+                  style: 'background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #065f46; font-weight: 700; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;',
+                  title: 'Reportar pago recibido por este show' do %>
+                <span>💵</span> Reportar Pago
+              <% end %>
               <button type="button" 
                       onclick="openFlashcardModal('flashcard-modal-<%= gig.id %>')" 
                       style="background: #eef2ff; border: 1px solid #c7d2fe; padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 4px; color: #4338ca; font-weight: 700; font-size: 0.85em; transition: 0.2s;" 
@@ -129,8 +134,15 @@
                 <% end %>
               </div>
             </div>
-            <%= link_to 'Ver', gig_path(gig),
-                style: 'background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82em; flex-shrink: 0;' %>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <%= link_to new_worker_report_employee_payments_path(gig_id: gig.id),
+                  style: 'background: #ecfdf5; border: 1px solid #a7f3d0; padding: 6px 12px; border-radius: 8px; text-decoration: none; color: #065f46; font-weight: 700; font-size: 0.82em; display: inline-flex; align-items: center; gap: 4px;',
+                  title: 'Reportar pago recibido por este show' do %>
+                <span>💵</span> Reportar Pago
+              <% end %>
+              <%= link_to 'Ver', gig_path(gig),
+                  style: 'background: #f1f5f9; color: #64748b; padding: 6px 12px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.82em; flex-shrink: 0;' %>
+            </div>
           </div>
         <% end %>
       </div>

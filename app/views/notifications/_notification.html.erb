@@ -52,6 +52,51 @@
             <span>• <%= notification.sender.display_name %></span>
           <% end %>
         </div>
+
+        <%# --- ACCIONES RÁPIDAS DE APROBACIÓN DE PAGO DIRECTO EN LA NOTIFICACIÓN --- %>
+        <% 
+          pending_payment = nil
+          if (user&.leader? || user&.superadmin?) && notification.notification_type == 'payment_alert' && notification.sender_id.present?
+            pending_payment = notification.company&.employee_payments&.pending_approval&.where(user_id: notification.sender_id)&.order(created_at: :desc)&.first
+          end
+        %>
+        <% if pending_payment.present? %>
+          <div style="margin-top: 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 12px; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+            <div>
+              <div style="font-size: 0.78em; font-weight: 800; color: #92400e; text-transform: uppercase; letter-spacing: 0.4px;">
+                ⏳ Pago Pendiente de Confirmación
+              </div>
+              <div style="font-size: 0.9em; color: #1e293b; margin-top: 2px;">
+                <strong style="color: #059669; font-size: 1.05em;"><%= number_to_currency(pending_payment.amount, unit: pending_payment.currency) %></strong>
+                &nbsp;•&nbsp; 
+                <% if pending_payment.gig.present? %>
+                  <strong>Show:</strong> <%= pending_payment.gig.client&.name || "Show del #{pending_payment.gig.date&.strftime('%d/%m/%Y')}" %>
+                <% else %>
+                  <span style="color: #64748b; font-style: italic;">Pago general / Anticipo</span>
+                <% end %>
+                &nbsp;•&nbsp; 
+                <strong>Fecha:</strong> <%= pending_payment.date_paid&.strftime("%d/%m/%Y") %>
+                &nbsp;•&nbsp; 
+                <strong>Método:</strong> <%= pending_payment.payment_method.presence || "Efectivo" %>
+              </div>
+              <% if pending_payment.notes.present? %>
+                <div style="font-size: 0.82em; color: #64748b; margin-top: 3px;">
+                  📝 "<%= pending_payment.notes %>"
+                </div>
+              <% end %>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <%= button_to approve_employee_payment_path(pending_payment), method: :post, data: { turbo_confirm: "¿Confirmas que el pago de #{number_to_currency(pending_payment.amount, unit: pending_payment.currency)} a #{pending_payment.user.display_name} ya fue entregado y deseas aceptarlo?" }, style: "background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.82rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);" do %>
+                ✅ Aceptar y Confirmar
+              <% end %>
+
+              <%= button_to reject_employee_payment_path(pending_payment), method: :post, data: { turbo_confirm: "¿Estás seguro de rechazar este reporte de pago?" }, style: "background: #fff1f2; color: #dc2626; border: 1px solid #fecaca; padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 0.82rem; cursor: pointer;" do %>
+                ❌ Rechazar
+              <% end %>
+            </div>
+          </div>
+        <% end %>
       </div>
 
     </div>

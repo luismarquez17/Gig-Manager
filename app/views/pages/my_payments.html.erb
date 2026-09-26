@@ -11,8 +11,8 @@
       </div>
       
       <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-        <%= link_to new_worker_report_employee_payments_path, class: "btn-main btn-success-custom", style: "box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);" do %>
-          ➕ Marcar Pago Recibido
+        <%= link_to new_worker_report_employee_payments_path, class: "btn-main btn-success-custom", style: "box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); display: inline-flex; align-items: center; gap: 6px;" do %>
+          <span>➕</span> Reportar Pago Recibido
         <% end %>
 
         <%= link_to root_path, class: "btn-main btn-gray-custom" do %>
@@ -184,7 +184,7 @@
                 <td style="padding: 16px 20px; text-align: center;">
                   <% if pending > 0 && item[:gig].present? %>
                     <%= link_to new_worker_report_employee_payments_path(gig_id: item[:gig].id), class: "btn-main btn-primary-custom py-1 px-3 fs-7", style: "font-size: 0.82em; font-weight: 700; white-space: nowrap;" do %>
-                      ✓ Marcar Pago
+                      💵 Reportar Pago
                     <% end %>
                   <% else %>
                     <span style="color: #cbd5e1; font-size: 0.85em;">—</span>

@@ -21,9 +21,12 @@
                     Items: <%= gig.gig_items.map(&:quantity).sum %> • Cargados: <%= gig.gig_items.map(&:loaded_quantity).sum %>
                   </div>
                 </div>
-                <div style="display:flex; gap:8px;">
-                  <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #0f172a; font-weight: 700;' %>
-                  <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background: #2563eb; color: white; padding: 8px 10px; border-radius: 8px; text-decoration: none; font-weight: 700;' %>
+                <div style="display:flex; gap:8px; align-items: center; flex-wrap: wrap;">
+                  <%= link_to new_worker_report_employee_payments_path(gig_id: gig.id), class: 'button', style: 'background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #065f46; font-weight: 700; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;' do %>
+                    <span>💵</span> Pago
+                  <% end %>
+                  <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 0.85em;' %>
+                  <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background: #2563eb; color: white; padding: 8px 10px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85em;' %>
                 </div>
               </div>
             <% end %>

@@ -186,7 +186,8 @@
                   </div>
                 <% end %>
                 
-                <div style="margin-top: 6px; text-align: right;">
+                <div style="margin-top: 6px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                  <%= link_to '💵 Reportar Pago', new_worker_report_employee_payments_path(gig_id: gig.id), style: "font-size: 0.8em; color: #059669; font-weight: 700; text-decoration: none;" %>
                   <%= link_to 'Detalles', gig_path(gig), style: "font-size: 0.8em; color: #4f46e5; font-weight: 700; text-decoration: none;" %>
                 </div>
               </div>

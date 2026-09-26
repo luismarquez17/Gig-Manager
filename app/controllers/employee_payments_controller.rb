@@ -112,7 +112,22 @@ class EmployeePaymentsController < ApplicationController
     )
 
     if @payment.save
-      redirect_to my_payments_path, notice: "✅ Tu reporte de pago por #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} ha sido registrado y enviado al líder para confirmación."
+      currency_sym = @payment.currency.presence || '$'
+      amount_formatted = view_context.number_to_currency(@payment.amount, unit: currency_sym)
+      show_label = @payment.gig.present? ? (@payment.gig.client&.name || "Show del #{@payment.gig.date&.strftime('%d/%m/%Y')}") : "Pago general / Anticipo"
+      notes_info = @payment.notes.present? ? " Notas: \"#{@payment.notes}\"." : ""
+
+      AppNotification.create(
+        company: current_company,
+        sender: current_user,
+        target_area: 'leaders',
+        notification_type: 'payment_alert',
+        title: "💰 Reporte de Pago: #{current_user.display_name} reportó #{amount_formatted}",
+        message: "#{current_user.display_name} indicó haber recibido #{amount_formatted} el #{@payment.date_paid&.strftime('%d/%m/%Y')} vía #{@payment.payment_method || 'Efectivo'} (#{show_label}).#{notes_info} Confirma si ya se le realizó este pago.",
+        action_url: "/employee_payments?status=pending_approval"
+      ) rescue nil
+
+      redirect_to my_payments_path, notice: "✅ Tu reporte de pago por #{amount_formatted} ha sido registrado y enviado al líder para confirmación."
     else
       @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
       @gig = gig
@@ -129,18 +144,22 @@ class EmployeePaymentsController < ApplicationController
     end
 
     target_area = @payment.user.musician? ? 'musicians' : 'staffs'
+    currency_sym = @payment.currency.presence || '$'
+    amount_formatted = view_context.number_to_currency(@payment.amount, unit: currency_sym)
+    show_label = @payment.gig.present? ? (@payment.gig.client&.name || "Show del #{@payment.gig.date&.strftime('%d/%m/%Y')}") : "Pago general"
+
     AppNotification.create(
       company: current_company,
       sender: current_user,
       recipient: @payment.user,
       target_area: target_area,
       notification_type: 'payment_alert',
-      title: "Pago Aprobado",
-      message: "Tu pago de $#{@payment.amount} (#{@payment.gig ? 'Show: ' + (@payment.gig.client&.name || @payment.gig.date.to_s) : 'Pago directo'}) ha sido aprobado.",
+      title: "✅ Pago Confirmado",
+      message: "Tu reporte de pago de #{amount_formatted} (#{show_label}) ha sido confirmado y aprobado por el líder. Tu balance ha sido actualizado.",
       action_url: "/my_payments"
     ) rescue nil
 
-    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{view_context.number_to_currency(@payment.amount, unit: (@payment.currency.presence || '$'))} a #{@payment.user.display_name} confirmado y aprobado exitosamente."
+    redirect_back fallback_location: employee_payments_path, notice: "✅ Pago de #{amount_formatted} a #{@payment.user.display_name} confirmado y aprobado exitosamente."
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path, alert: "Error al aprobar pago: #{e.message}"
   end
@@ -151,14 +170,17 @@ class EmployeePaymentsController < ApplicationController
     @payment.save!
 
     target_area = @payment.user.musician? ? 'musicians' : 'staffs'
+    currency_sym = @payment.currency.presence || '$'
+    amount_formatted = view_context.number_to_currency(@payment.amount, unit: currency_sym)
+
     AppNotification.create(
       company: current_company,
       sender: current_user,
       recipient: @payment.user,
       target_area: target_area,
       notification_type: 'urgent',
-      title: "Reporte de Pago Rechazado",
-      message: "Tu reporte de pago de $#{@payment.amount} ha sido rechazado: #{@payment.rejection_reason}",
+      title: "❌ Reporte de Pago Rechazado",
+      message: "Tu reporte de pago de #{amount_formatted} no fue aceptado: #{@payment.rejection_reason}",
       action_url: "/my_payments"
     ) rescue nil
 
