@@ -19,7 +19,7 @@
     <%= form_with model: @payment, local: true do |f| %>
       <div class="form-group-custom">
         <%= f.label :user_id, 'Trabajador / Músico / Staff' %>
-        <%= f.collection_select :user_id, current_company.users.workers.order(:name, :email), :id, ->(w) { "#{w.display_name} (#{w.role.to_s.capitalize} · #{w.email})" }, { include_blank: "-- Selecciona un trabajador --" }, { class: 'form-input-custom', required: true } %>
+        <%= f.collection_select :user_id, current_company.users.workers.order(:name, :email), :id, ->(w) { "#{w.display_name} (#{w.role.to_s.capitalize})" }, { include_blank: "-- Selecciona un trabajador --" }, { class: 'form-input-custom', required: true } %>
       </div>
 
       <div class="form-group-custom">
