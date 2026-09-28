@@ -72,9 +72,11 @@
             <p style="color: #047857; font-size: 0.9rem; margin: 4px 0 0 0;">Tu empresa <strong style="color: #064e3b;"><%= @company.name %></strong> tiene acceso total e ilimitado a todas las herramientas.</p>
           </div>
         </div>
-        <%= button_to portal_subscriptions_path, method: :post, data: { turbo: false }, class: "sub-mobile-btn", style: "padding: 12px 24px; border-radius: 12px; background: #059669; color: white; border: none; font-weight: 800; font-size: 0.9rem; cursor: pointer; box-shadow: 0 4px 14px rgba(5,150,105,0.3);" do %>
-          Administrar Suscripción en Stripe 💳
-        <% end %>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <a href="#reportar-pago" class="sub-mobile-btn" style="text-decoration: none; padding: 12px 20px; border-radius: 12px; background: #059669; color: white; font-weight: 800; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(5,150,105,0.3);">
+            <span>🔄</span> Renovar o Cambiar Plan
+          </a>
+        </div>
       </div>
 
     <% elsif @trial_active %>
@@ -200,9 +202,9 @@
       </div>
 
       <div>
-        <%= button_to checkout_subscriptions_path(plan_tier: 'starter'), method: :post, data: { turbo: false }, class: "sub-mobile-btn", style: "width: 100%; padding: 16px; border-radius: 14px; background: #0f172a; color: white; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; box-shadow: 0 4px 15px rgba(15,23,42,0.2); transition: background 0.2s;" do %>
-          Activar Plan Base ($10/mes) 🚀
-        <% end %>
+        <a href="#reportar-pago" class="sub-mobile-btn" style="display: block; width: 100%; text-align: center; box-sizing: border-box; text-decoration: none; padding: 16px; border-radius: 14px; background: #0f172a; color: white; font-weight: 800; font-size: 0.95rem; box-shadow: 0 4px 15px rgba(15,23,42,0.2); transition: background 0.2s;">
+          Elegir Plan Base ($10/mes) 🚀
+        </a>
       </div>
     </div>
 
@@ -245,21 +247,21 @@
       </div>
 
       <div>
-        <%= button_to checkout_subscriptions_path(plan_tier: 'pro'), method: :post, data: { turbo: false }, class: "sub-mobile-btn", style: "width: 100%; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; box-shadow: 0 6px 20px rgba(99,102,241,0.4);" do %>
-          Activar Plan Pro ($20/mes) ✨
-        <% end %>
+        <a href="#reportar-pago" class="sub-mobile-btn" style="display: block; width: 100%; text-align: center; box-sizing: border-box; text-decoration: none; padding: 16px; border-radius: 14px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; font-weight: 800; font-size: 0.95rem; box-shadow: 0 6px 20px rgba(99,102,241,0.4);">
+          Elegir Plan Pro ($20/mes) ✨
+        </a>
       </div>
     </div>
 
   </div>
 
-  <!-- Sección Especial: Métodos de Pago Venezuela / Alternativos (Zelle, Binance, Pago Móvil) -->
-  <div class="sub-mobile-card" style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 45px;">
+  <!-- Sección Especial: Métodos de Pago Disponibles (Zelle, Binance, Pago Móvil, Transferencia) -->
+  <div id="reportar-pago" class="sub-mobile-card" style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 45px;">
     <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 25px; flex-wrap: wrap;">
-      <span style="font-size: 2.2rem;">🇻🇪</span>
+      <span style="font-size: 2.2rem;">💳</span>
       <div>
-        <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin: 0;">Métodos de Pago en Venezuela y Alternativos</h2>
-        <p style="color: #64748b; font-size: 0.9rem; margin: 4px 0 0 0;">¿Sin tarjeta internacional? Paga fácilmente por Zelle, Binance Pay USDT o Pago Móvil Bancamiga (Tasa BCV).</p>
+        <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin: 0;">Métodos de Pago Disponibles</h2>
+        <p style="color: #64748b; font-size: 0.9rem; margin: 4px 0 0 0;">Paga fácilmente por Pago Móvil Bancamiga (Tasa BCV), Zelle, Binance Pay USDT o Transferencia Bancaria.</p>
       </div>
     </div>
 
@@ -352,8 +354,8 @@
         <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Sí. Puedes cambiar entre el Plan Base ($10/mo) y el Plan Pro ($20/mo) o cancelar tu suscripción con un solo clic en cualquier momento.</p>
       </div>
       <div class="sub-mobile-card" style="padding: 20px; border-radius: 16px; background: white; border: 1px solid #e2e8f0;">
-        <h4 style="font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">¿Aceptan tarjetas de cualquier país y Pago Móvil en Venezuela?</h4>
-        <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Sí, procesamos tarjetas internacionales Visa/Mastercard vía Stripe y también aceptamos Pago Móvil Bancamiga (a Tasa BCV), Zelle y Binance Pay USDT.</p>
+        <h4 style="font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">¿Cuáles son los métodos de pago aceptados?</h4>
+        <p style="color: #64748b; font-size: 0.88rem; margin: 0;">Aceptamos Pago Móvil Bancamiga (a Tasa Oficial BCV), Zelle (USD), Binance Pay (USDT) y Transferencias Bancarias. Una vez efectuado el pago, repórtalo en el formulario para activar tu plan de inmediato.</p>
       </div>
     </div>
   </div>
