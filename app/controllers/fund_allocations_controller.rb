@@ -1,5 +1,6 @@
 class FundAllocationsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:finances) }
   before_action :set_gig
 
   def create

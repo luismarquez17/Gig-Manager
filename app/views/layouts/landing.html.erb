@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es" class="scroll-smooth">
+  <head>
+    <meta charset="utf-8">
+    <title>GigManager | Plataforma Modular para Bandas, Orquestas y Eventos</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="El software de gestión todo en uno para orquestas, bandas y productoras de eventos. Controla gigs, inventario QR, finanzas, nómina de músicos y cotizaciones.">
+    <meta name="keywords" content="gestión de bandas, software para músicos, nómina de orquestas, control de gigs, inventario de instrumentos, cotizaciones de eventos">
+    
+    <!-- OpenGraph / Social Sharing -->
+    <meta property="og:title" content="GigManager | Plataforma Todo en Uno para la Industria Musical">
+    <meta property="og:description" content="Organiza tus shows, inventario, finanzas y nóminas de músicos con 30 días de prueba gratuita.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="<%= request.original_url %>">
+    <meta name="theme-color" content="#030712">
+
+    <!-- Favicon & Touch Icons Oficiales -->
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" type="image/png" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/logo.svg">
+
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <meta name="turbo-visit-control" content="reload">
+    <meta name="turbo-cache-control" content="no-cache">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              slate: {
+                850: '#111827',
+                950: '#030712',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
+    <%= javascript_importmap_tags %>
+
+    <style>
+      .landing-page {
+        font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif !important;
+        background-color: #030712 !important;
+        color: #f8fafc !important;
+      }
+      .landing-page a {
+        text-decoration: none;
+      }
+      .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4, .landing-page h5, .landing-page h6 {
+        color: inherit;
+      }
+      .glow-cyan {
+        box-shadow: 0 0 35px -5px rgba(6, 182, 212, 0.35);
+      }
+      .glow-indigo {
+        box-shadow: 0 0 35px -5px rgba(99, 102, 241, 0.35);
+      }
+      .glow-emerald {
+        box-shadow: 0 0 35px -5px rgba(16, 185, 129, 0.35);
+      }
+      .gradient-text-cyan {
+        background: linear-gradient(135deg, #38bdf8 0%, #06b6d4 50%, #10b981 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .gradient-text-purple {
+        background: linear-gradient(135deg, #a78bfa 0%, #818cf8 50%, #06b6d4 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+    </style>
+  </head>
+
+  <body class="landing-page bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black antialiased">
+    <!-- Navbar Público -->
+    <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/85 border-b border-slate-800/80 transition-all">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-20">
+          
+          <!-- Logo & Brand -->
+          <a href="<%= public_landing_path %>" class="flex items-center gap-3 group">
+            <img src="/icons/logo.svg" alt="GigManager Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform" />
+            <div class="flex flex-col">
+              <span class="text-xl font-black tracking-tight text-white flex items-center gap-1">
+                Gig<span class="gradient-text-cyan">Manager</span>
+              </span>
+              <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase -mt-1">Music Ops Platform</span>
+            </div>
+          </a>
+
+          <!-- Navigation Links Desktop -->
+          <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+            <a href="#modulos" class="hover:text-cyan-400 transition-colors">Módulos</a>
+            <a href="#como-funciona" class="hover:text-cyan-400 transition-colors">Cómo Funciona</a>
+            <a href="#calculadora" class="hover:text-cyan-400 transition-colors">Calculadora & Precios</a>
+            <a href="#faq" class="hover:text-cyan-400 transition-colors">Preguntas</a>
+          </nav>
+
+          <!-- Action Buttons Desktop -->
+          <div class="hidden sm:flex items-center gap-4">
+            <% if user_signed_in? %>
+              <a href="<%= authenticated_root_path %>" data-turbo="false" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-cyan-500/25 transition-all">
+                <span>Ir al Dashboard</span>
+                <span>→</span>
+              </a>
+            <% else %>
+              <a href="<%= new_user_session_path %>" data-turbo="false" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                Iniciar Sesión
+              </a>
+              <a href="<%= new_user_registration_path %>" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-0.5 transition-all">
+                <span>Prueba 30 Días Gratis</span>
+                <span class="text-cyan-200">⚡</span>
+              </a>
+            <% end %>
+          </div>
+
+          <!-- Mobile Menu Button -->
+          <div class="flex sm:hidden items-center gap-2">
+            <% if user_signed_in? %>
+              <a href="<%= authenticated_root_path %>" data-turbo="false" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-black text-xs">
+                Dashboard
+              </a>
+            <% else %>
+              <a href="<%= new_user_session_path %>" data-turbo="false" class="px-3 py-1.5 rounded-lg bg-slate-900 text-slate-200 font-bold text-xs border border-slate-800">
+                Entrar
+              </a>
+              <a href="<%= new_user_registration_path %>" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-black text-xs">
+                Prueba Gratis
+              </a>
+            <% end %>
+          </div>
+
+        </div>
+      </div>
+    </header>
+
+    <!-- Flash Notifications -->
+    <% if flash[:notice].present? || flash[:alert].present? %>
+      <div class="max-w-4xl mx-auto px-4 mt-4 w-full">
+        <% if flash[:notice].present? %>
+          <div class="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-sm font-semibold flex items-center gap-3 backdrop-blur-md">
+            <span>✨</span>
+            <span><%= flash[:notice] %></span>
+          </div>
+        <% end %>
+        <% if flash[:alert].present? %>
+          <div class="p-4 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-sm font-semibold flex items-center gap-3 backdrop-blur-md">
+            <span>⚠️</span>
+            <span><%= flash[:alert] %></span>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+
+    <!-- Contenido Principal -->
+    <main class="flex-grow">
+      <%= yield %>
+    </main>
+
+    <!-- Footer Público -->
+    <footer class="border-t border-slate-900 bg-slate-950/90 pt-16 pb-12 mt-20">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+          
+          <!-- Columna Brand -->
+          <div class="md:col-span-2 space-y-4">
+            <div class="flex items-center gap-3">
+              <img src="/icons/logo.svg" alt="GigManager Logo" class="w-8 h-8 rounded-lg shadow" />
+              <span class="text-xl font-black text-white">Gig<span class="gradient-text-cyan">Manager</span></span>
+            </div>
+            <p class="text-slate-400 text-sm max-w-md leading-relaxed">
+              El motor integral para agrupaciones, directores musicales, orquestas y productoras de eventos. Control modular de agenda, nómina, finanzas, inventario QR y contratos digitales.
+            </p>
+            <div class="flex items-center gap-3 text-xs font-semibold text-cyan-400 pt-2">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30">
+                <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+                Servicio 100% Operativo
+              </span>
+              <span class="text-slate-500">•</span>
+              <span class="text-slate-400">Prueba de 30 días sin tarjeta</span>
+            </div>
+          </div>
+
+          <!-- Columna Módulos -->
+          <div>
+            <h4 class="text-white text-xs font-black uppercase tracking-wider mb-4">Módulos</h4>
+            <ul class="space-y-2.5 text-sm text-slate-400">
+              <li><a href="#modulos" class="hover:text-cyan-400 transition-colors">Eventos & Shows (Gigs)</a></li>
+              <li><a href="#modulos" class="hover:text-cyan-400 transition-colors">Inventario QR & Taller</a></li>
+              <li><a href="#modulos" class="hover:text-cyan-400 transition-colors">Finanzas & Flujo de Caja</a></li>
+              <li><a href="#modulos" class="hover:text-cyan-400 transition-colors">Nómina de Músicos</a></li>
+              <li><a href="#modulos" class="hover:text-cyan-400 transition-colors">CRM & Cotizaciones</a></li>
+            </ul>
+          </div>
+
+          <!-- Columna Accesos -->
+          <div>
+            <h4 class="text-white text-xs font-black uppercase tracking-wider mb-4">Comenzar</h4>
+            <ul class="space-y-2.5 text-sm text-slate-400">
+              <li><a href="<%= new_user_registration_path %>" class="hover:text-cyan-400 transition-colors font-bold text-slate-200">Crear Cuenta (30 Días Gratis)</a></li>
+              <li><a href="<%= new_user_session_path %>" class="hover:text-cyan-400 transition-colors">Iniciar Sesión</a></li>
+              <li><a href="#calculadora" class="hover:text-cyan-400 transition-colors">Calculadora Modular</a></li>
+              <li><a href="<%= terms_path %>" class="hover:text-cyan-400 transition-colors">Términos de Servicio</a></li>
+              <li><a href="<%= privacy_path %>" class="hover:text-cyan-400 transition-colors">Política de Privacidad</a></li>
+              <li><a href="#faq" class="hover:text-cyan-400 transition-colors">Preguntas Frecuentes</a></li>
+            </ul>
+          </div>
+
+        </div>
+
+        <div class="border-t border-slate-900 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-500">
+          <p>© <%= Time.current.year %> GigManager SaaS. Todos los derechos reservados.</p>
+          <p class="flex items-center gap-4">
+            <a href="<%= privacy_path %>" class="hover:text-cyan-400 transition-colors">Privacidad y Datos</a>
+            <span>•</span>
+            <a href="<%= terms_path %>" class="hover:text-cyan-400 transition-colors">Términos y Condiciones</a>
+            <span>•</span>
+            <span>Multi-Tenant Aislado</span>
+            <span>•</span>
+            <span>Diseñado para Músicos y Empresas</span>
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Botón Flotante de WhatsApp para Atención Directa -->
+    <a href="https://wa.me/584246208725?text=<%= ERB::Util.url_encode('¡Hola! Tengo interés en GigManager y quisiera consultar sobre los planes y módulos.') %>" 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       class="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-extrabold text-sm shadow-2xl shadow-emerald-500/40 hover:scale-105 transition-all duration-300 group">
+      <!-- Icono WhatsApp SVG -->
+      <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24">
+        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.861.174.086.275.072.376-.044.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824zm-3.392-12.416C6.495 2 2 6.495 2 12.031c0 1.986.581 3.844 1.587 5.421L2 22l4.708-1.54c1.517.917 3.29 1.402 5.323 1.402 5.536 0 10.031-4.495 10.031-10.031 0-5.536-4.495-10.031-10.031-10.031zm0 18.281c-1.745 0-3.376-.569-4.704-1.535l-.337-.245-2.784.91.93-2.716-.26-.356c-1.077-1.474-1.64-3.239-1.64-5.045 0-4.563 3.712-8.275 8.275-8.275 4.563 0 8.275 3.712 8.275 8.275 0 4.564-3.712 8.276-8.275 8.276z"/>
+      </svg>
+      <div class="hidden sm:flex flex-col items-start leading-none">
+        <span class="text-[10px] uppercase font-bold text-emerald-100">¿Dudas? Chat en Vivo</span>
+        <span class="text-xs font-black text-white">WhatsApp Soporte</span>
+      </div>
+      <span class="absolute -top-2 -right-2 flex h-4 w-4">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-4 w-4 bg-emerald-300"></span>
+      </span>
+    </a>
+
+  </body>
+</html>

@@ -1,6 +1,7 @@
 class InvestmentsController < ApplicationController
   before_action :authenticate_user!
   before_action :require_leader!
+  before_action -> { require_module!(:finances) }
   before_action :set_investment, only: [:edit, :update, :destroy]
   layout :resolve_layout
 

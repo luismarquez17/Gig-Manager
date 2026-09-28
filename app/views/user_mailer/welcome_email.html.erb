@@ -1,0 +1,67 @@
+<div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #030712; color: #f8fafc; border-radius: 16px; overflow: hidden; border: 1px solid #1e293b;">
+  <!-- Header -->
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); padding: 36px 30px; text-align: center; border-bottom: 1px solid #334155;">
+    <h1 style="margin: 0; font-size: 26px; font-weight: 900; color: #ffffff; letter-spacing: -0.5px;">
+      Gig<span style="color: #38bdf8;">Manager</span>
+    </h1>
+    <p style="margin: 8px 0 0 0; color: #94a3b8; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px;">
+      Plataforma Modular para la Industria Musical y Eventos
+    </p>
+  </div>
+
+  <!-- Body -->
+  <div style="padding: 32px 30px; background-color: #0b1120;">
+    <h2 style="font-size: 20px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 16px;">
+      ¡Hola, <%= @user.display_name %>! 👋
+    </h2>
+
+    <p style="font-size: 15px; line-height: 1.6; color: #cbd5e1; margin-bottom: 24px;">
+      Te damos la más cordial bienvenida a <strong>GigManager</strong>. Tu cuenta para <strong style="color: #38bdf8;"><%= @company&.name || 'tu organización' %></strong> ha sido configurada exitosamente con <strong>30 días de prueba gratuita completa</strong>.
+    </p>
+
+    <!-- Trial Banner -->
+    <div style="background: rgba(6, 182, 212, 0.1); border: 1px solid rgba(6, 182, 212, 0.3); border-radius: 12px; padding: 18px 20px; margin-bottom: 28px;">
+      <div style="font-size: 14px; font-weight: 800; color: #38bdf8; margin-bottom: 4px;">
+        ✨ 30 DÍAS DE PRUEBA ACTIVA
+      </div>
+      <div style="font-size: 13px; color: #94a3b8;">
+        Válido hasta el <strong><%= @trial_ends_at.strftime("%d de %B de %Y") %></strong> sin ningún cobro anticipado.
+      </div>
+    </div>
+
+    <!-- Primeros Pasos Clave -->
+    <h3 style="font-size: 16px; font-weight: 800; color: #ffffff; margin-bottom: 12px;">
+      🚀 Pasos para arrancar de inmediato:
+    </h3>
+
+    <ul style="padding-left: 20px; color: #cbd5e1; font-size: 14px; line-height: 1.8; margin-bottom: 28px;">
+      <li><strong>Crea tu primer Evento (Gig):</strong> Añade la fecha, locación GPS y monto del show en tu calendario.</li>
+      <% if @join_url.present? %>
+        <li>
+          <strong>Invita a tus Músicos y Staff:</strong> Comparte tu enlace de equipo privado para que se registren gratis:<br>
+          <a href="<%= @join_url %>" style="color: #38bdf8; text-decoration: underline; word-break: break-all;"><%= @join_url %></a>
+        </li>
+      <% end %>
+      <li><strong>Control de Inventario QR:</strong> Genera etiquetas y fichas técnicas de tus equipos e instrumentos.</li>
+      <li><strong>Cotizador de Clientes:</strong> Envía presupuestos formales con botón de WhatsApp directo.</li>
+    </ul>
+
+    <!-- Action Button -->
+    <div style="text-align: center; margin-bottom: 32px;">
+      <a href="<%= @dashboard_url %>" style="display: inline-block; background: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%); color: #ffffff; font-weight: 800; font-size: 15px; padding: 14px 28px; border-radius: 10px; text-decoration: none; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.35);">
+        Ingresar al Dashboard de GigManager →
+      </a>
+    </div>
+
+    <!-- Support Box -->
+    <div style="border-top: 1px solid #1e293b; padding-top: 20px; font-size: 13px; color: #94a3b8; line-height: 1.5;">
+      💬 <strong>¿Necesitas ayuda con la configuración?</strong> Escríbenos directamente a nuestro WhatsApp oficial: 
+      <a href="https://wa.me/584246208725" style="color: #25D366; font-weight: 700; text-decoration: none;">+58 424 6208725</a>.
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <div style="background-color: #030712; padding: 20px 30px; text-align: center; font-size: 12px; color: #64748b; border-top: 1px solid #1e293b;">
+    © <%= Time.current.year %> GigManager SaaS. Todos los derechos reservados.
+  </div>
+</div>

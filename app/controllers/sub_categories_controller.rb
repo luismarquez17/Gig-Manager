@@ -1,5 +1,6 @@
 class SubCategoriesController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:inventory) }
 
   def create
     @sub_category = SubCategory.new(sub_category_params)

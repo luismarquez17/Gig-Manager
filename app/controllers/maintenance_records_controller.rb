@@ -1,5 +1,6 @@
 class MaintenanceRecordsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:inventory) }
   before_action :set_maintenance_record, only: [:edit, :update]
 
   def index

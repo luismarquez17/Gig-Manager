@@ -1,6 +1,6 @@
 class SubscriptionsController < ApplicationController
   before_action :require_leader!
-  skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment]
+  skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment, :modules, :update_modules]
 
   def index
     @company = current_company
@@ -11,9 +11,33 @@ class SubscriptionsController < ApplicationController
     @pending_payments = @company.subscription_payments.where(status: 'pending').order(created_at: :desc)
   end
 
+  def modules
+    @company = current_company
+  end
+
+  def update_modules
+    @company = current_company
+    if params[:modules].present?
+      @company.update_modules!(params[:modules])
+      redirect_to company_modules_path, notice: "✅ Módulos actualizados con éxito. Tu menú y funciones se han ajustado."
+    else
+      redirect_to company_modules_path, alert: "No se recibieron parámetros de módulos."
+    end
+  end
+
+  TIER_PRICES = {
+    'starter'    => 10.00,
+    'banda'      => 15.00,
+    'productora' => 18.00,
+    'salon'      => 15.00,
+    'negocio'    => 14.00,
+    'full'       => 22.00,
+    'pro'        => 20.00
+  }.freeze
+
   def report_payment
-    plan_tier = params[:plan_tier] == 'pro' ? 'pro' : 'starter'
-    amount = plan_tier == 'pro' ? 20.00 : 10.00
+    plan_tier = params[:plan_tier].presence || 'starter'
+    amount = TIER_PRICES[plan_tier] || 10.00
 
     @payment = current_company.subscription_payments.build(
       user: current_user,

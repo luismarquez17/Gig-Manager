@@ -1,5 +1,6 @@
 class FundsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:finances) }
 
   def show
     @fund_type = params[:fund_type]

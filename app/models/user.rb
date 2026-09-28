@@ -29,6 +29,8 @@ class User < ApplicationRecord
   belongs_to :company, optional: true
   belongs_to :client, optional: true
 
+  attr_accessor :company_name_input, :selected_modules_input
+
   before_validation :assign_default_company, on: :create
 
   has_one_attached :avatar
@@ -51,6 +53,7 @@ class User < ApplicationRecord
   end
 
   after_create :associate_and_claim_gigs
+  after_create_commit :send_welcome_email, if: -> { leader? && email.present? }
   after_save :associate_and_claim_gigs, if: -> { client_id.blank? && company_id.present? }
 
   def avatar_attached?
@@ -333,17 +336,32 @@ class User < ApplicationRecord
     # Garantiza aislamiento total: Si un usuario se registra de forma independiente,
     # se le crea su propia empresa única con 30 días de prueba gratuita y se le asigna como Líder.
     user_name = name.presence || email.split('@').first.capitalize
+    company_title = company_name_input.presence || "Agrupación #{user_name}"
+
+    initial_modules = if selected_modules_input.present?
+      AppModule.build_modules_hash(selected_modules_input)
+    else
+      AppModule.default_hash
+    end
+
     new_company = Company.create!(
-      name: "Agrupación #{user_name}",
+      name: company_title,
       monthly_fee: 0.0,
       status: :active,
       trial_started_at: Time.current,
-      trial_ends_at: 30.days.from_now,
+      trial_ends_at: Company::DEFAULT_TRIAL_DAYS.days.from_now,
       subscription_status: 'trialing',
-      plan_tier: 'starter'
+      plan_tier: 'starter',
+      enabled_modules: initial_modules
     )
     self.company_id = new_company.id
     self.role = :leader if role.blank? || client?
+  end
+
+  def send_welcome_email
+    UserMailer.welcome_email(self).deliver_later
+  rescue StandardError => e
+    Rails.logger.error "[User#send_welcome_email] #{e.message}"
   end
 end
 

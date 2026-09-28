@@ -1,5 +1,6 @@
 class EmployeePaymentsController < ApplicationController
   before_action :require_leader!, except: [:new_worker_report, :create_worker_report]
+  before_action -> { require_module!(:payroll) }
   before_action :set_payment, only: [:edit, :update, :destroy, :approve, :reject]
 
   def index

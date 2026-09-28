@@ -41,11 +41,18 @@ class SubscriptionPayment < ApplicationRecord
                     Time.current
                   end
 
-      company&.update!(
+      updates = {
         subscription_status: 'active',
         plan_tier: plan_tier,
         trial_ends_at: base_date + 30.days
-      )
+      }
+
+      package_modules = AppModule.modules_for_package(plan_tier)
+      if package_modules.present?
+        updates[:enabled_modules] = AppModule.build_modules_hash(package_modules)
+      end
+
+      company&.update!(updates)
     end
   end
 

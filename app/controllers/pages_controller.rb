@@ -1,5 +1,11 @@
 class PagesController < ApplicationController
+  skip_before_action :authenticate_user!, only: [:terms, :privacy, :suspended], raise: false
+  skip_before_action :set_current_tenant, only: [:terms, :privacy, :suspended], raise: false
+  skip_before_action :check_company_subscription!, only: [:terms, :privacy, :suspended], raise: false
+
   before_action :require_leader!, only: [:availability, :financials]
+  before_action -> { require_module!(:finances) }, only: [:financials]
+  before_action -> { require_module!(:inventory) }, only: [:availability]
 
   def dashboard
     if current_user.leader? || current_user.superadmin?
@@ -309,6 +315,14 @@ class PagesController < ApplicationController
   end
 
   def normativas
+  end
+
+  def terms
+    render layout: 'landing'
+  end
+
+  def privacy
+    render layout: 'landing'
   end
 
   def suspended

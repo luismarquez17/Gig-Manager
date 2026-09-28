@@ -1,5 +1,6 @@
 class GigUpsellRequestsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:clients_crm) }
   before_action :set_gig_upsell_request
 
   def approve

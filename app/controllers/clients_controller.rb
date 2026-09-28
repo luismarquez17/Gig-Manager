@@ -1,5 +1,6 @@
 class ClientsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:clients_crm) }
 
   def index
     @clients = current_company.clients.includes(gigs: :gig_payments)

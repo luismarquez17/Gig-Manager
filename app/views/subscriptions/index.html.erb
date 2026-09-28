@@ -109,6 +109,47 @@
     <% end %>
   </div>
 
+  <!-- Panel de Módulos Activos de la Empresa -->
+  <div class="sub-mobile-card" style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 35px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h2 style="font-size: 1.25rem; font-weight: 800; color: #0f172a; margin: 0; display: flex; align-items: center; gap: 8px;">
+          <span>🧩</span> Módulos Habilitados en <%= @company.name %>
+        </h2>
+        <p style="color: #64748b; font-size: 0.88rem; margin: 4px 0 0 0;">
+          Estos son los módulos activos para tu agrupación. Puedes solicitar la activación de módulos adicionales o cambiar de plan cuando lo requieras.
+        </p>
+      </div>
+      <span style="padding: 6px 14px; border-radius: 20px; font-size: 0.8rem; font-weight: 800; background: #e0e7ff; color: #4338ca;">
+        <%= @company.enabled_module_keys.count %> de <%= AppModule.all.count %> Módulos Activos
+      </span>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
+      <% AppModule.all.each do |mod| %>
+        <% is_on = @company.module_enabled?(mod[:key]) %>
+        <div style="background: <%= is_on ? '#f8fafc' : '#f1f5f9' %>; border: 1px solid <%= is_on ? '#cbd5e1' : '#e2e8f0' %>; border-radius: 14px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; opacity: <%= is_on ? '1' : '0.6' %>;">
+          <span style="font-size: 1.5rem; line-height: 1;"><%= mod[:icon] %></span>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <strong style="color: #0f172a; font-size: 0.92rem;"><%= mod[:name] %></strong>
+              <% if is_on %>
+                <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #dcfce7; color: #15803d;">
+                  ✓ Activo
+                </span>
+              <% else %>
+                <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #fee2e2; color: #b91c1c;">
+                  ✕ Inactivo
+                </span>
+              <% end %>
+            </div>
+            <p style="margin: 0; font-size: 0.8rem; color: #64748b; line-height: 1.35;"><%= mod[:description] %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
   <!-- Grilla de Planes de Precios -->
   <div class="sub-mobile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 25px; margin-bottom: 45px;">
 
@@ -267,8 +308,16 @@
       <%= form_with url: report_payment_subscriptions_path, method: :post, local: true, style: "display: flex; flex-direction: column; gap: 15px;" do |f| %>
         <div class="sub-mobile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
           <div>
-            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Plan a Activar</label>
-            <%= select_tag :plan_tier, options_for_select([["Plan Base ($10 USD / mes)", "starter"], ["Plan Pro ($20 USD / mes - En Ajuste)", "pro"]]), style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Plan o Paquete a Activar</label>
+            <%= select_tag :plan_tier, options_for_select([
+              ["🎸 Paquete Bandas & Orquestas ($15 USD / mes)", "banda"],
+              ["🎬 Paquete Productoras & Audio ($18 USD / mes)", "productora"],
+              ["🏛️ Paquete Salones & Venues ($15 USD / mes)", "salon"],
+              ["💼 Paquete Empresas & Negocios ($14 USD / mes)", "negocio"],
+              ["👑 Paquete Full Suite Total ($22 USD / mes)", "full"],
+              ["🚀 Plan Base ($10 USD / mes)", "starter"],
+              ["✨ Plan Pro ($20 USD / mes - En Ajuste)", "pro"]
+            ]), style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Método de Pago</label>

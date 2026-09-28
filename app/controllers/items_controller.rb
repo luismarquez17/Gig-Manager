@@ -1,5 +1,6 @@
 class ItemsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:inventory) }
   before_action :set_item, only: [:show, :edit, :update, :destroy]
 
   def index

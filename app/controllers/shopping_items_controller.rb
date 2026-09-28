@@ -1,5 +1,6 @@
 class ShoppingItemsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:shopping_list) }
   before_action :set_shopping_item, only: [:edit, :update, :destroy, :toggle_purchased, :add_to_inventory, :increment_inventory]
 
 

@@ -1,0 +1,15 @@
+¡Hola, <%= @user.display_name %>!
+
+¡Te damos la bienvenida a GigManager!
+Tu cuenta para <%= @company&.name || 'tu organización' %> ha sido activada con 30 días de prueba gratuita completa (válida hasta el <%= @trial_ends_at.strftime("%d/%m/%Y") %>).
+
+🚀 Pasos iniciales:
+1. Accede a tu panel: <%= @dashboard_url %>
+<% if @join_url.present? %>
+2. Invita a tus músicos y staff con tu enlace de equipo:
+   <%= @join_url %>
+<% end %>
+
+💬 Soporte directo por WhatsApp: +58 424 6208725 (https://wa.me/584246208725)
+
+© <%= Time.current.year %> GigManager SaaS

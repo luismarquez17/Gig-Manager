@@ -1,5 +1,6 @@
 class GigsController < ApplicationController
   before_action :require_leader!, except: [:show, :load_in_checklist, :my, :flashcard]
+  before_action -> { require_module!(:gigs) }
   before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract, :flashcard]
   before_action :check_gig_assignment, only: [:show, :load_in_checklist, :flashcard]
   before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :add_upsell, :edit, :update, :destroy]

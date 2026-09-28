@@ -44,8 +44,16 @@ module Superadmin
     end
 
     def update
+      if params[:company][:enabled_modules].present?
+        modules_hash = {}
+        AppModule.keys.each do |k|
+          modules_hash[k] = (params[:company][:enabled_modules][k] == "1" || params[:company][:enabled_modules][k] == true)
+        end
+        @company.enabled_modules = modules_hash
+      end
+
       if @company.update(company_params)
-        redirect_to superadmin_company_path(@company), notice: "✅ Empresa '#{@company.name}' actualizada."
+        redirect_to superadmin_company_path(@company), notice: "✅ Empresa '#{@company.name}' actualizada correctamente."
       else
         render :edit, status: :unprocessable_entity
       end
@@ -91,7 +99,11 @@ module Superadmin
     end
 
     def company_params
-      params.require(:company).permit(:name, :slug, :status, :monthly_fee, :currency, :billing_day, :contact_email, :contact_phone, :notes)
+      params.require(:company).permit(
+        :name, :slug, :status, :monthly_fee, :currency, :billing_day,
+        :contact_email, :contact_phone, :notes, :subscription_status,
+        :plan_tier, :trial_started_at, :trial_ends_at
+      )
     end
   end
 end

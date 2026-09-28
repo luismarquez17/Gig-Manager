@@ -38,4 +38,20 @@ class PagesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", /Métricas Financieras/
   end
+
+  test "should get terms page unauthenticated" do
+    sign_out @user
+    get terms_url
+    assert_response :success
+    assert_select "h1", /Términos y Condiciones/
+    assert_select "a[href*='wa.me/584246208725']"
+  end
+
+  test "should get privacy page unauthenticated" do
+    sign_out @user
+    get privacy_url
+    assert_response :success
+    assert_select "h1", /Política de Privacidad/
+    assert_select "a[href*='wa.me/584246208725']"
+  end
 end

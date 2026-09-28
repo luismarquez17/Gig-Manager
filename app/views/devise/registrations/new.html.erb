@@ -1,34 +1,73 @@
-<div style="min-height: 80vh; display: flex; align-items: center; justify-content: center; font-family: 'Inter', sans-serif;">
-  <div style="background: white; padding: 40px; border-radius: 24px; border: 1px solid #e2e8f0; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); width: 100%; max-width: 400px;">
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8 p-8 sm:p-10 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl">
     
-    <div style="text-align: center; margin-bottom: 30px;">
-      <h2 style="color: #0f172a; margin: 0; font-size: 1.8em; font-weight: 800;">Crear Cuenta</h2>
-      <p style="color: #64748b; font-size: 0.9em; margin-top: 5px;">Regístrate para acceder a Gig Manager</p>
+    <!-- Encabezado -->
+    <div class="text-center">
+      <img src="/icons/logo.svg" alt="GigManager Logo" class="w-14 h-14 rounded-2xl shadow-xl shadow-blue-500/30 mx-auto mb-4" />
+      <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 text-xs font-bold mb-3">
+        <span>✨</span>
+        <span>Prueba de 30 Días Gratis</span>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Crea tu Agrupación</h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Comienza a gestionar tus shows y finanzas hoy mismo</p>
     </div>
 
-    <%= form_for(resource, as: resource_name, url: registration_path(resource_name)) do |f| %>
+    <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "mt-6 space-y-4" }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
-      <div style="margin-bottom: 15px;">
-        <%= f.label :email, style: "display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 8px;" %>
-        <%= f.email_field :email, autofocus: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; box-sizing: border-box;" %>
+      <% if @selected_modules.present? %>
+        <%= hidden_field_tag :modules, @selected_modules.join(',') %>
+        <div class="p-3 rounded-xl bg-cyan-950/40 border border-cyan-500/30 text-xs text-cyan-300 flex items-center justify-between">
+          <span>🧩 Módulos Seleccionados:</span>
+          <span class="font-black text-cyan-200"><%= @selected_modules.count %> módulos</span>
+        </div>
+      <% end %>
+
+      <!-- Nombre Completo -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Tu Nombre y Apellido</label>
+        <%= f.text_field :name, autofocus: true, placeholder: "Ej. Carlos Mendoza", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
       </div>
 
-      <div style="margin-bottom: 15px;">
-        <%= f.label :password, "Contraseña", style: "display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 8px;" %>
-        <%= f.password_field :password, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; box-sizing: border-box;" %>
+      <!-- Nombre de la Agrupación / Banda -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Nombre de tu Agrupación o Empresa</label>
+        <%= text_field_tag :company_name, @company_name, placeholder: "Ej. Orquesta Los Titanes", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
       </div>
 
-      <div style="margin-bottom: 25px;">
-        <%= f.label :password_confirmation, "Confirmar Contraseña", style: "display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 8px;" %>
-        <%= f.password_field :password_confirmation, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #e2e8f0; box-sizing: border-box;" %>
+      <!-- Email -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Correo Electrónico</label>
+        <%= f.email_field :email, autocomplete: "email", placeholder: "director@agrupacion.com", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
       </div>
 
-      <%= f.submit "Registrarse", style: "width: 100%; background: #2563eb; color: white; padding: 14px; border: none; border-radius: 12px; font-weight: 700; cursor: pointer;" %>
+      <!-- Contraseña -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Contraseña</label>
+        <%= f.password_field :password, autocomplete: "new-password", placeholder: "Mínimo 6 caracteres", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
+      </div>
+
+      <!-- Confirmar Contraseña -->
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Confirmar Contraseña</label>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password", placeholder: "Repite tu contraseña", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
+      </div>
+
+      <div class="pt-3">
+        <%= f.submit "Comenzar Prueba Gratis (30 Días) ⚡", 
+            class: "w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 cursor-pointer transition-all text-center" %>
+      </div>
     <% end %>
 
-    <div style="margin-top: 20px; text-align: center;">
-      <%= render "devise/shared/links" %>
+    <div class="pt-4 border-t border-slate-800/80 text-center text-xs text-slate-400">
+      <span>¿Ya tienes una cuenta?</span>
+      <%= link_to "Iniciar Sesión", new_user_session_path, class: "font-bold text-cyan-400 hover:text-cyan-300 ml-1" %>
     </div>
+
   </div>
 </div>

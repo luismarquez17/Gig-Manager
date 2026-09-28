@@ -1,7 +1,15 @@
 Rails.application.routes.draw do
   devise_for :users, controllers: { registrations: 'users/registrations' }
   
-  root "pages#dashboard"
+  authenticated :user do
+    root "pages#dashboard", as: :authenticated_root
+  end
+
+  get '/dashboard', to: 'pages#dashboard', as: :dashboard
+  root "landing#index"
+  get '/landing', to: 'landing#index', as: :public_landing
+  get '/terms', to: 'pages#terms', as: :terms
+  get '/privacy', to: 'pages#privacy', as: :privacy
 
   # Superadmin Namespace
   namespace :superadmin do
@@ -40,14 +48,18 @@ Rails.application.routes.draw do
   get '/normativas', to: 'pages#normativas', as: 'normativas'
   get '/suspended', to: 'pages#suspended', as: 'suspended_company'
 
-  # Gestión de Suscripciones y Stripe
+  # Gestión de Suscripciones, Stripe y Módulos
   resources :subscriptions, only: [:index] do
     collection do
       post :checkout
       post :portal
       post :report_payment
+      get  :modules
+      patch :update_modules
     end
   end
+  get '/modules', to: 'subscriptions#modules', as: 'company_modules'
+  patch '/modules', to: 'subscriptions#update_modules', as: 'update_company_modules'
   post '/stripe_webhooks', to: 'stripe_webhooks#create'
 
 

@@ -1,5 +1,6 @@
 class GigPaymentsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:gigs) }
   before_action :set_gig, if: -> { params[:gig_id].present? }
   before_action :set_payment, only: [:edit, :update, :destroy]
 

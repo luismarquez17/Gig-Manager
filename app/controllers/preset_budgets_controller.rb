@@ -1,6 +1,7 @@
 class PresetBudgetsController < ApplicationController
   skip_before_action :authenticate_user!, only: [:show]
   before_action :require_leader!, only: [:new, :create, :edit, :update, :destroy, :print]
+  before_action -> { require_module!(:clients_crm) }, except: [:show]
   before_action :set_preset_budget, only: [:show, :edit, :update, :destroy, :print]
 
   def index

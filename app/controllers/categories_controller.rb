@@ -1,5 +1,6 @@
 class CategoriesController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:inventory) }
 
   def create
     @category = Category.new(category_params)

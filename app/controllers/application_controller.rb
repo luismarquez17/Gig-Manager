@@ -3,7 +3,7 @@ class ApplicationController < ActionController::Base
   before_action :set_current_tenant
   before_action :check_company_subscription!
 
-  helper_method :current_company, :superadmin?
+  helper_method :current_company, :superadmin?, :module_enabled?
 
   def current_company
     Current.company ||= find_or_create_default_company
@@ -13,7 +13,20 @@ class ApplicationController < ActionController::Base
     current_user&.superadmin?
   end
 
+  def module_enabled?(module_key)
+    return true if current_user&.superadmin?
+    current_company.present? ? current_company.module_enabled?(module_key) : true
+  end
+
   protected
+
+  def after_sign_out_path_for(resource_or_scope)
+    public_landing_path
+  end
+
+  def after_sign_in_path_for(resource_or_scope)
+    authenticated_root_path
+  end
 
   def set_current_tenant
     return unless user_signed_in?
@@ -74,6 +87,15 @@ class ApplicationController < ActionController::Base
   def require_staff_or_leader!
     unless current_user&.superadmin? || current_user&.leader? || current_user&.staff? || current_user&.musician?
       redirect_to root_path, alert: "No tienes permiso para acceder a esta sección."
+    end
+  end
+
+  def require_module!(module_key)
+    return if current_user&.superadmin?
+
+    unless module_enabled?(module_key)
+      module_name = AppModule.name_for(module_key)
+      redirect_to root_path, alert: "El módulo de #{module_name} no está activo en el plan de tu empresa. Contacta a un administrador para habilitarlo."
     end
   end
 end

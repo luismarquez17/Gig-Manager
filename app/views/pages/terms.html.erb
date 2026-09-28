@@ -1,0 +1,119 @@
+<div class="py-16 sm:py-24 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+  <!-- Encabezado de la Página Legal -->
+  <div class="mb-12 text-center">
+    <a href="<%= public_landing_path %>" class="inline-flex items-center gap-2 text-xs font-extrabold text-cyan-400 hover:text-cyan-300 uppercase tracking-widest mb-4 transition-colors">
+      <span>←</span> <span>Volver a Inicio</span>
+    </a>
+    <div class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-cyan-400 text-xs font-extrabold uppercase tracking-wider mb-4 block mx-auto w-fit">
+      Marco Legal & Transparencia
+    </div>
+    <h1 class="text-3xl sm:text-5xl font-black text-white tracking-tight mb-4">
+      Términos y Condiciones de Servicio
+    </h1>
+    <p class="text-slate-400 text-sm sm:text-base max-w-2xl mx-auto">
+      Última actualización: <%= Date.today.strftime("%d de %B de %Y") %>. Por favor, lee cuidadosamente los términos que rigen el uso de la plataforma GigManager.
+    </p>
+  </div>
+
+  <!-- Contenido de las Cláusulas -->
+  <div class="bg-slate-900/60 border border-slate-800 rounded-3xl p-6 sm:p-10 text-slate-300 space-y-8 text-sm sm:text-base leading-relaxed backdrop-blur-xl">
+    
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">1.</span> Objeto del Servicio
+      </h2>
+      <p>
+        <strong>GigManager</strong> es una plataforma de software como servicio (SaaS) diseñada para la gestión integral de agrupaciones musicales, bandas, orquestas, salones de fiesta, productoras de eventos y empresas de servicios. La plataforma provee herramientas para la calendarización de eventos (gigs), control de inventario y activos vía códigos QR, liquidación de nóminas, cotizaciones digitales con enlace de WhatsApp, contratos digitales y balances financieros.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">2.</span> Período de Prueba Gratuita (Free Trial)
+      </h2>
+      <p>
+        Ofrecemos un período de prueba gratuito de <strong>30 días continuos</strong> a partir de la fecha de registro para cada nueva organización. Durante este período:
+      </p>
+      <ul class="list-disc list-inside space-y-1.5 mt-2 text-slate-300 ml-2">
+        <li>No se requiere ingresar tarjeta de crédito ni método de pago previo.</li>
+        <li>La cuenta tiene acceso a los módulos seleccionados o al catálogo de herramientas activas.</li>
+        <li>Al culminar los 30 días, el usuario director/líder podrá seleccionar un plan de suscripción para continuar utilizando la plataforma sin interrupciones ni pérdida de datos.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">3.</span> Planes, Tarifas y Métodos de Pago
+      </h2>
+      <p>
+        Los planes de GigManager son modulares y adaptables a las necesidades de cada organización:
+      </p>
+      <ul class="list-disc list-inside space-y-1.5 mt-2 text-slate-300 ml-2">
+        <li><strong>Suscripción Mensual:</strong> El costo mensual se determina según el paquete seleccionado (ej. Bandas $15/mes, Productoras $18/mes, Salones $15/mes, Empresas $14/mes, Full Suite $22/mes) o la combinación de módulos personalizados.</li>
+        <li><strong>Procesamiento Internacional:</strong> Pagos con tarjeta de crédito/débito procesados mediante pasarelas seguras (Stripe).</li>
+        <li><strong>Pagos Manuales y Locales (Venezuela & LatAm):</strong> Aceptamos transferencias bancarias, Pago Móvil (Tasa Oficial BCV), Zelle y Binance Pay (USDT). El usuario reporta su referencia de comprobante y nuestro equipo valida la acreditación en minutos.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">4.</span> Aislamiento Multi-Tenant y Propiedad de la Información
+      </h2>
+      <p>
+        GigManager opera bajo una estricta arquitectura <strong>Multi-Tenant Aislada</strong>. Esto garantiza que:
+      </p>
+      <ul class="list-disc list-inside space-y-1.5 mt-2 text-slate-300 ml-2">
+        <li>Cada empresa u organización cuenta con un espacio de datos estrictamente delimitado. Ninguna otra empresa u organización puede visualizar tus clientes, contratos, inventarios ni reportes financieros.</li>
+        <li>El usuario es el único propietario de los datos de sus clientes, presupuestos, nóminas y contratos generados dentro de la plataforma.</li>
+        <li>GigManager no comercializa, transfiere ni utiliza los datos de tus clientes para fines publicitarios ni de prospección comercial.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">5.</span> Roles y Responsabilidades
+      </h2>
+      <p>
+        La plataforma clasifica los accesos por roles (Líder/Director, Staff/Técnico, Músico, Cliente):
+      </p>
+      <ul class="list-disc list-inside space-y-1.5 mt-2 text-slate-300 ml-2">
+        <li>El <strong>Director/Líder</strong> es responsable de la administración de usuarios, asignación de pagos y configuración de módulos.</li>
+        <li>Los <strong>Músicos y Personal de Staff</strong> acceden únicamente a sus eventos asignados, checklists y desgloses de honorarios.</li>
+        <li>Los <strong>Clientes Finales</strong> acceden a portales seguros mediante tokens protegidos para firmar contratos, revisar itinerarios y cotizaciones, sin acceso a información interna de la empresa.</li>
+      </ul>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">6.</span> Cancelación y Disponibilidad
+      </h2>
+      <p>
+        El usuario puede pausar o cancelar su suscripción en cualquier momento sin penalizaciones. GigManager se compromete a mantener un uptime óptimo y a realizar respaldos periódicos de la información operativa de tu negocio.
+      </p>
+    </section>
+
+    <section>
+      <h2 class="text-xl font-black text-white mb-3 flex items-center gap-2">
+        <span class="text-cyan-400">7.</span> Contacto y Soporte Técnico
+      </h2>
+      <p>
+        Para consultas, dudas sobre facturación o asistencia técnica, puedes contactarnos directamente a través de:
+      </p>
+      <div class="mt-3 p-4 rounded-2xl bg-slate-950 border border-slate-800 flex items-center gap-4">
+        <span class="text-2xl">💬</span>
+        <div class="text-sm">
+          <div><strong>WhatsApp de Soporte Directo:</strong> <a href="https://wa.me/584246208725" target="_blank" class="text-cyan-400 hover:underline">+58 424 6208725</a></div>
+          <div class="text-slate-400 mt-1">Horario de atención: Lunes a Domingo, 8:00 AM - 10:00 PM (Hora de Venezuela)</div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="mt-8 text-center">
+    <a href="<%= new_user_registration_path %>" class="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl shadow-cyan-500/25 transition-all">
+      <span>Comenzar 30 Días Gratis</span>
+      <span>⚡</span>
+    </a>
+  </div>
+</div>

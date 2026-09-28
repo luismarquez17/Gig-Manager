@@ -1,5 +1,6 @@
 class InventoryItemsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:inventory) }
 
   def update
     @item = Item.find(params[:item_id])

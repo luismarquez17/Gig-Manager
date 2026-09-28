@@ -1,0 +1,16 @@
+Hola, <%= @user.display_name %>.
+
+Te recordamos que a tu cuenta de <%= @company&.name %> le quedan <%= @days_left %> días de prueba gratuita.
+Activa tu suscripción para mantener el acceso ininterrumpido a tus eventos, contratos y nóminas:
+
+<%= @subscriptions_url %>
+
+Métodos de Pago:
+- Pago Móvil Bancamiga (0424-6208725, Tasa BCV)
+- Zelle (USD)
+- Binance Pay (USDT)
+- Tarjetas Visa/Mastercard vía Stripe
+
+💬 Dudas por WhatsApp: +58 424 6208725 (https://wa.me/584246208725)
+
+© <%= Time.current.year %> GigManager SaaS

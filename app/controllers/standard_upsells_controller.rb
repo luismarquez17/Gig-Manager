@@ -1,5 +1,6 @@
 class StandardUpsellsController < ApplicationController
   before_action :require_leader!
+  before_action -> { require_module!(:clients_crm) }
   before_action :set_standard_upsell, only: [:edit, :update, :destroy]
 
   def index

@@ -22,22 +22,76 @@ class Company < ApplicationRecord
   validates :invitation_token, uniqueness: true, allow_nil: true
   validates :monthly_fee, numericality: { greater_than_or_equal_to: 0 }
 
+  DEFAULT_TRIAL_DAYS = 30
+
   before_validation :generate_slug_and_token, on: :create
   before_create :set_default_trial_period
 
   def set_default_trial_period
     self.trial_started_at ||= Time.current
-    self.trial_ends_at ||= 30.days.from_now
+    self.trial_ends_at ||= DEFAULT_TRIAL_DAYS.days.from_now
     self.subscription_status ||= "trialing"
     self.plan_tier ||= "starter"
+    self.enabled_modules ||= AppModule.default_hash
+  end
+
+  # ==========================================
+  # GESTIÓN DE MÓDULOS / FEATURE FLAGS
+  # ==========================================
+
+  def modules
+    stored = (has_attribute?(:enabled_modules) && enabled_modules.is_a?(Hash)) ? enabled_modules : {}
+    AppModule.default_hash.merge(stored)
+  end
+
+  def module_enabled?(module_key)
+    return false if module_key.blank?
+    key_str = module_key.to_s
+    # Por defecto, si no está explícitamente en falso, está habilitado
+    modules[key_str] != false && modules[key_str] != "false" && modules[key_str] != 0
+  end
+
+  def enable_module!(module_key)
+    return if module_key.blank?
+    cfg = modules.dup
+    cfg[module_key.to_s] = true
+    update!(enabled_modules: cfg)
+  end
+
+  def disable_module!(module_key)
+    return if module_key.blank?
+    cfg = modules.dup
+    cfg[module_key.to_s] = false
+    update!(enabled_modules: cfg)
+  end
+
+  def update_modules!(new_modules_hash)
+    formatted = {}
+    AppModule.keys.each do |key|
+      val = new_modules_hash[key] || new_modules_hash[key.to_sym]
+      formatted[key] = (val == true || val == "1" || val == "true" || val == 1)
+    end
+    update!(enabled_modules: formatted)
+  end
+
+  def enabled_module_keys
+    AppModule.keys.select { |key| module_enabled?(key) }
+  end
+
+  # ==========================================
+  # ESTADOS DE SUSCRIPCIÓN & FREE TRIAL
+  # ==========================================
+
+  def in_trial?
+    subscription_status == "trialing"
   end
 
   def trial_active?
-    subscription_status == "trialing" && trial_ends_at.present? && trial_ends_at > Time.current
+    in_trial? && trial_ends_at.present? && trial_ends_at > Time.current
   end
 
   def trial_expired?
-    subscription_status == "trialing" && trial_ends_at.present? && trial_ends_at <= Time.current
+    in_trial? && trial_ends_at.present? && trial_ends_at <= Time.current
   end
 
   def days_left_in_trial
@@ -50,8 +104,25 @@ class Company < ApplicationRecord
   end
 
   def access_granted?
+    return false if suspended?
     return true if active_subscription? || trial_active?
     false
+  end
+
+  def subscription_label
+    if suspended?
+      "Suspendida"
+    elsif active_subscription?
+      "Suscripción Activa (#{plan_tier.to_s.capitalize})"
+    elsif trial_active?
+      "Prueba Gratuita (#{days_left_in_trial} días restantes)"
+    elsif trial_expired?
+      "Prueba Gratuita Vencida"
+    elsif past_due?
+      "Pago Vencido"
+    else
+      subscription_status.to_s.titleize
+    end
   end
 
   def leaders

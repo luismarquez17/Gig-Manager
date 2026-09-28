@@ -1,6 +1,8 @@
 class ClientQuotesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:public_show, :public_submit, :access, :setup_password]
   skip_before_action :verify_authenticity_token, only: [:public_submit]
+  before_action :require_leader!, except: [:public_show, :public_submit, :access, :setup_password]
+  before_action -> { require_module!(:clients_crm) }, except: [:public_show, :public_submit, :access, :setup_password]
   before_action :set_quote, only: [:show, :destroy]
   before_action :set_public_quote, only: [:public_show, :public_submit, :access, :setup_password]
   layout 'portal', only: [:public_show, :public_submit, :access]

@@ -13,10 +13,9 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="GigManager">
     <link rel="manifest" href="/manifest.json">
-    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="/icons/icon-512.png">
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+    <link rel="alternate icon" type="image/png" href="/icons/icon-192.png">
+    <link rel="apple-touch-icon" href="/icons/logo.svg">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
@@ -258,10 +257,14 @@
         from { transform: scaleX(1); }
         to   { transform: scaleX(0); }
       }
+      body {
+        background-color: #f8fafc !important;
+        color: #1e293b !important;
+      }
     </style>
   </head>
 
-  <body style="margin: 0; padding: 0; background-color: #f8fafc;">
+  <body style="margin: 0; padding: 0; background-color: #f8fafc !important; color: #1e293b !important;">
 
     <%# =============================================
         TOPBAR MÓVIL (oculto en desktop por CSS)
@@ -271,8 +274,8 @@
         <button class="topbar-hamburger" id="hamburger-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="app-sidebar">
           <span></span><span></span><span></span>
         </button>
-        <div class="topbar-brand">
-          <span class="topbar-logo">G</span>
+        <div class="topbar-brand" style="display: flex; align-items: center;">
+          <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 8px; margin-right: 8px;" />
           Gig Manager
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
@@ -306,9 +309,9 @@
           
           <%# Logo + nombre de empresa + botón cerrar (sólo visible en móvil) %>
           <div class="sidebar-brand" style="position: relative;">
-            <h2>
-              <span class="brand-logo">G</span>
-              Gig Manager
+            <h2 style="display: flex; align-items: center;">
+              <img src="/icons/logo.svg" alt="GigManager" style="width: 38px; height: 38px; border-radius: 11px; margin-right: 10px; box-shadow: 0 4px 12px rgba(37,99,235,0.35); flex-shrink: 0;" />
+              <span>Gig Manager</span>
             </h2>
             <% if current_company.present? %>
               <div style="font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
@@ -357,40 +360,135 @@
 
             <% if current_user.leader? || current_user.superadmin? %>
 
-              <%= link_to items_path, class: "sidebar-link #{'active' if controller_name == 'items'}" do %>
-                <span class="icon">📦</span> <span>Inventario</span>
+              <%# --- EVENTOS & SHOWS --- %>
+              <% if module_enabled?(:gigs) %>
+                <%= link_to gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name != 'my'}" do %>
+                  <span class="icon">🎸</span> <span>Gigs / Eventos</span>
+                  <% 
+                    pending_upsells_count = current_company&.gig_upsell_requests&.pending&.count rescue 0 
+                  %>
+                  <% if pending_upsells_count.to_i > 0 %>
+                    <span style="background: #3b82f6; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                      <%= pending_upsells_count %>
+                    </span>
+                  <% end %>
+                <% end %>
+
+                <%= link_to gig_payments_path, class: "sidebar-link #{'active' if controller_name == 'gig_payments'}" do %>
+                  <span class="icon">💳</span> <span>Pagos Eventos / Shows</span>
+                <% end %>
               <% end %>
 
-              <%= link_to shopping_items_path, class: "sidebar-link #{'active' if controller_name == 'shopping_items'}" do %>
-                <span class="icon">🛒</span> <span>Lista de Compras</span>
+              <%# --- INVENTARIO & TALLER --- %>
+              <% if module_enabled?(:inventory) %>
+                <%= link_to items_path, class: "sidebar-link #{'active' if controller_name == 'items'}" do %>
+                  <span class="icon">📦</span> <span>Inventario</span>
+                <% end %>
+
+                <%= link_to kits_path, class: "sidebar-link #{'active' if controller_name == 'kits'}" do %>
+                  <span class="icon">🛠️</span> <span>Plantillas (Kits)</span>
+                <% end %>
+
+                <%= link_to maintenance_records_path, class: "sidebar-link #{'active' if controller_name == 'maintenance_records'}" do %>
+                  <span class="icon">🔧</span> <span>Taller (Reparos)</span>
+                <% end %>
+
+                <%= link_to availability_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'availability'}" do %>
+                  <span class="icon">⚡</span> <span>Conflictos</span>
+                <% end %>
               <% end %>
 
-              <%= link_to clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && action_name == 'index'}" do %>
-                <span class="icon">👥</span> <span>Clientes</span>
+              <%# --- LISTA DE COMPRAS --- %>
+              <% if module_enabled?(:shopping_list) %>
+                <%= link_to shopping_items_path, class: "sidebar-link #{'active' if controller_name == 'shopping_items'}" do %>
+                  <span class="icon">🛒</span> <span>Lista de Compras</span>
+                <% end %>
               <% end %>
 
-              <%= link_to debts_clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && action_name == 'debts'}" do %>
-                <span class="icon">💳</span> <span>Cuentas por Cobrar</span>
+              <%# --- COMERCIAL / CLIENTES --- %>
+              <% if module_enabled?(:clients_crm) %>
+                <%= link_to clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && action_name == 'index'}" do %>
+                  <span class="icon">👥</span> <span>Clientes</span>
+                <% end %>
+
+                <%= link_to debts_clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && action_name == 'debts'}" do %>
+                  <span class="icon">💳</span> <span>Cuentas por Cobrar</span>
+                <% end %>
+
+                <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
+                  <span class="icon">📄</span> <span>Presupuestos Base</span>
+                <% end %>
+
+                <%= link_to client_quotes_path, class: "sidebar-link #{'active' if controller_name == 'client_quotes'}" do %>
+                  <span class="icon">📋</span> <span>Presupuestos Clientes</span>
+                <% end %>
+
+                <%= link_to payment_methods_settings_path, class: "sidebar-link #{'active' if controller_name == 'payment_methods'}" do %>
+                  <span class="icon">💳</span> <span>Métodos de Pago</span>
+                <% end %>
+
+                <%= link_to standard_upsells_path, class: "sidebar-link #{'active' if controller_name == 'standard_upsells'}" do %>
+                  <span class="icon">🚀</span> <span>Adicionales (Upsells)</span>
+                <% end %>
               <% end %>
 
-              <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
-                <span class="icon">📄</span> <span>Presupuestos Base</span>
+              <%# --- FINANZAS & CAJA --- %>
+              <% if module_enabled?(:finances) %>
+                <%= link_to cash_adjustments_path, class: "sidebar-link #{'active' if controller_name == 'cash_adjustments'}" do %>
+                  <span class="icon">🏦</span> <span>Caja General (Fondo)</span>
+                <% end %>
+
+                <%= link_to financials_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'financials'}" do %>
+                  <span class="icon">📊</span> <span>Métricas / Finanzas</span>
+                <% end %>
+
+                <%= link_to investments_path, class: "sidebar-link #{'active' if controller_name == 'investments'}" do %>
+                  <span class="icon">💸</span> <span>Inversiones</span>
+                <% end %>
               <% end %>
 
-              <%= link_to client_quotes_path, class: "sidebar-link #{'active' if controller_name == 'client_quotes'}" do %>
-                <span class="icon">📋</span> <span>Presupuestos Clientes</span>
+              <%# --- NÓMINA DE PERSONAL --- %>
+              <% if module_enabled?(:payroll) %>
+                <%= link_to employee_payments_path, class: "sidebar-link #{'active' if controller_name == 'employee_payments'}" do %>
+                  <span class="icon">💰</span> <span>Pagos a trabajadores</span>
+                  <% 
+                    pending_count = current_company&.employee_payments&.pending_approval&.count rescue 0 
+                  %>
+                  <% if pending_count.to_i > 0 %>
+                    <span style="background: #f59e0b; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                      <%= pending_count %>
+                    </span>
+                  <% end %>
+                <% end %>
               <% end %>
 
-              <%= link_to payment_methods_settings_path, class: "sidebar-link #{'active' if controller_name == 'payment_methods'}" do %>
-                <span class="icon">💳</span> <span>Métodos de Pago</span>
-              <% end %>
-
-              <%= link_to standard_upsells_path, class: "sidebar-link #{'active' if controller_name == 'standard_upsells'}" do %>
-                <span class="icon">🚀</span> <span>Adicionales (Upsells)</span>
+              <%# --- ADMINISTRACIÓN & SUSCRIPCIÓN --- %>
+              <%= link_to users_path, class: "sidebar-link #{'active' if controller_name == 'users'}" do %>
+                <span class="icon">⚙️</span> <span>Roles / Accesos</span>
               <% end %>
 
               <% if current_company.present? %>
-                <%= link_to subscriptions_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions'}" do %>
+                <%# Botón Destacado: Añadir Funciones & Opciones %>
+                <div style="margin: 12px 10px 14px 10px; padding: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px;">
+                  <div style="font-size: 0.72rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+                    <span>⚡ Funciones de Gig</span>
+                    <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: 6px; background: rgba(99, 102, 241, 0.3); color: #e0e7ff;">
+                      <%= current_company.enabled_module_keys.count %>/<%= AppModule.all.count %>
+                    </span>
+                  </div>
+                  <div style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 8px; line-height: 1.3;">
+                    Personaliza tu plan y añade más herramientas a tu banda.
+                  </div>
+                  <%= link_to company_modules_path, style: "display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px 10px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; text-decoration: none; box-shadow: 0 3px 10px rgba(6, 182, 212, 0.25); box-sizing: border-box;" do %>
+                    <span>➕</span> <span>Añadir Funciones / Módulos</span>
+                  <% end %>
+                </div>
+
+                <%= link_to company_modules_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions' && action_name == 'modules'}" do %>
+                  <span class="icon">🧩</span> <span>Módulos de Empresa</span>
+                <% end %>
+
+                <%= link_to subscriptions_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions' && action_name != 'modules'}" do %>
                   <span class="icon">💳</span> <span>Suscripción SaaS</span>
                   <% if current_company.trial_active? %>
                     <span style="background: rgba(139, 92, 246, 0.3); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
@@ -400,66 +498,9 @@
                 <% end %>
               <% end %>
 
-              <%= link_to gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name != 'my'}" do %>
-                <span class="icon">🎸</span> <span>Gigs / Eventos</span>
-                <% 
-                  pending_upsells_count = current_company&.gig_upsell_requests&.pending&.count rescue 0 
-                %>
-                <% if pending_upsells_count.to_i > 0 %>
-                  <span style="background: #3b82f6; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
-                    <%= pending_upsells_count %>
-                  </span>
-                <% end %>
-              <% end %>
-
-              <%= link_to gig_payments_path, class: "sidebar-link #{'active' if controller_name == 'gig_payments'}" do %>
-                <span class="icon">💳</span> <span>Pagos Eventos / Shows</span>
-              <% end %>
-
-              <%= link_to kits_path, class: "sidebar-link #{'active' if controller_name == 'kits'}" do %>
-                <span class="icon">🛠️</span> <span>Plantillas (Kits)</span>
-              <% end %>
-
-              <%= link_to maintenance_records_path, class: "sidebar-link #{'active' if controller_name == 'maintenance_records'}" do %>
-                <span class="icon">🔧</span> <span>Taller (Reparos)</span>
-              <% end %>
-
-              <%= link_to availability_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'availability'}" do %>
-                <span class="icon">⚡</span> <span>Conflictos</span>
-              <% end %>
-
-              <%= link_to cash_adjustments_path, class: "sidebar-link #{'active' if controller_name == 'cash_adjustments'}" do %>
-                <span class="icon">🏦</span> <span>Caja General (Fondo)</span>
-              <% end %>
-
-              <%= link_to financials_dashboard_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'financials'}" do %>
-                <span class="icon">📊</span> <span>Métricas / Finanzas</span>
-              <% end %>
-
-              <%= link_to investments_path, class: "sidebar-link #{'active' if controller_name == 'investments'}" do %>
-                <span class="icon">💸</span> <span>Inversiones</span>
-              <% end %>
-
-              <%= link_to employee_payments_path, class: "sidebar-link #{'active' if controller_name == 'employee_payments'}" do %>
-                <span class="icon">💰</span> <span>Pagos a trabajadores</span>
-                <% 
-                  pending_count = current_company&.employee_payments&.pending_approval&.count rescue 0 
-                %>
-                <% if pending_count.to_i > 0 %>
-                  <span style="background: #f59e0b; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
-                    <%= pending_count %>
-                  </span>
-                <% end %>
-              <% end %>
-
-              <%= link_to users_path, class: "sidebar-link #{'active' if controller_name == 'users'}" do %>
-                <span class="icon">⚙️</span> <span>Roles / Accesos</span>
-              <% end %>
-
               <%= link_to normativas_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'normativas'}" do %>
                 <span class="icon">📜</span> <span>Normativas</span>
               <% end %>
-
             <% elsif current_user.staff? %>
               <div class="nav-header">Agrupación</div>
               <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
@@ -553,6 +594,37 @@
       <main style="<%= user_signed_in? ? 'margin-left: 280px;' : 'margin-left: 0;' %> flex-grow: 1; min-height: 100vh; padding: 40px; box-sizing: border-box; overflow-x: auto;">
         <div style="max-width: 1200px; margin: 0 auto;">
           
+          <%# --- BANNER DE FREE TRIAL (PRUEBA GRATUITA) --- %>
+          <% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && current_company&.trial_active? && controller_name != 'subscriptions' %>
+            <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid rgba(139, 92, 246, 0.45); border-radius: 16px; padding: 14px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);">
+              <div style="display: flex; align-items: center; gap: 14px;">
+                <div style="background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.15rem; flex-shrink: 0; box-shadow: 0 0 14px rgba(139, 92, 246, 0.5);">
+                  <%= current_company.days_left_in_trial %>
+                </div>
+                <div>
+                  <div style="color: white; font-size: 0.94rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span>Prueba Gratuita Activa:</span>
+                    <span style="color: #a5b4fc; font-weight: 800;">Te quedan <%= current_company.days_left_in_trial %> días</span>
+                    <span style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.25); color: #c4b5fd; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.4);">Acceso Total</span>
+                  </div>
+                  <div style="color: #94a3b8; font-size: 0.82rem; margin-top: 2px;">
+                    Todos los módulos están desbloqueados. Elige tu plan o ajusta tus módulos en cualquier momento.
+                  </div>
+                </div>
+              </div>
+
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <%= link_to company_modules_path, style: "background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 8px 14px; border-radius: 9px; font-weight: 700; font-size: 0.84rem; text-decoration: none;" do %>
+                  🧩 Ajustar Módulos
+                <% end %>
+
+                <%= link_to subscriptions_path, style: "background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 8px 18px; border-radius: 9px; font-weight: 800; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 12px rgba(139, 92, 246, 0.4); white-space: nowrap;" do %>
+                  Elegir Plan ➔
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+
           <% if user_signed_in? && current_user.superadmin? && session[:superadmin_company_id].present? %>
             <div style="background: linear-gradient(135deg, #4338ca, #3730a3); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);">
               <div style="display: flex; align-items: center; gap: 10px; font-size: 0.92rem; font-weight: 600;">

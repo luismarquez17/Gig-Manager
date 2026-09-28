@@ -25,4 +25,91 @@ class CompanyTest < ActiveSupport::TestCase
 
     assert_not_equal old_token, company.invitation_token
   end
+
+  test "asigna 30 dias de prueba gratuita por defecto al crearse" do
+    company = Company.create!(name: "Orquesta Nueva Era", monthly_fee: 0)
+
+    assert_equal "trialing", company.subscription_status
+    assert_not_nil company.trial_started_at
+    assert_not_nil company.trial_ends_at
+    assert company.trial_ends_at > 28.days.from_now
+    assert company.trial_active?
+    assert_not company.trial_expired?
+    assert_equal 30, company.days_left_in_trial
+    assert company.access_granted?
+  end
+
+  test "maneja expiracion de periodo de prueba correctamente" do
+    company = Company.create!(
+      name: "Banda Expirada",
+      subscription_status: "trialing",
+      trial_started_at: 35.days.ago,
+      trial_ends_at: 5.days.ago,
+      monthly_fee: 0
+    )
+
+    assert_not company.trial_active?
+    assert company.trial_expired?
+    assert_equal 0, company.days_left_in_trial
+    assert_not company.access_granted?
+  end
+
+  test "concede acceso con suscripcion activa aunque el trial haya expirado" do
+    company = Company.create!(
+      name: "Banda Pagada",
+      subscription_status: "active",
+      trial_started_at: 40.days.ago,
+      trial_ends_at: 10.days.ago,
+      monthly_fee: 50.0
+    )
+
+    assert company.active_subscription?
+    assert company.access_granted?
+  end
+
+  test "restringe acceso si la empresa esta suspendida" do
+    company = Company.create!(
+      name: "Banda Suspendida",
+      status: :suspended,
+      subscription_status: "active",
+      monthly_fee: 50.0
+    )
+
+    assert_not company.access_granted?
+  end
+
+  test "gestiona modulos habilitados y deshabilitados correctamente" do
+    company = Company.create!(name: "Grupo Modular", monthly_fee: 0)
+
+    # Por defecto todos los modulos estan habilitados
+    assert company.module_enabled?(:gigs)
+    assert company.module_enabled?(:inventory)
+    assert company.module_enabled?(:finances)
+    assert company.module_enabled?(:payroll)
+    assert company.module_enabled?(:clients_crm)
+
+    # Deshabilitar modulo de inventario
+    company.disable_module!(:inventory)
+    assert_not company.module_enabled?(:inventory)
+    assert company.module_enabled?(:gigs)
+
+    # Habilitar nuevamente
+    company.enable_module!(:inventory)
+    assert company.module_enabled?(:inventory)
+
+    # Actualizacion masiva de modulos
+    company.update_modules!({
+      "gigs" => true,
+      "inventory" => false,
+      "finances" => false,
+      "payroll" => true,
+      "clients_crm" => true
+    })
+
+    assert company.module_enabled?(:gigs)
+    assert_not company.module_enabled?(:inventory)
+    assert_not company.module_enabled?(:finances)
+    assert company.module_enabled?(:payroll)
+    assert company.module_enabled?(:clients_crm)
+  end
 end
