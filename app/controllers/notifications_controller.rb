@@ -55,6 +55,7 @@ class NotificationsController < ApplicationController
 
     respond_to do |format|
       format.html { redirect_to notifications_path(filter: params[:filter]) }
+      format.json { head :ok }
       format.turbo_stream { render turbo_stream: turbo_stream.replace("notification_#{params[:id]}", partial: "notifications/notification", locals: { notification: @notification }) }
     end
   end

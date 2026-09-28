@@ -53,6 +53,19 @@
       /* Prevent long labels from wrapping awkwardly */
       aside nav a { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
+      /* Top auto-dismiss banners */
+      @keyframes topBannerProgress {
+        from { width: 100%; }
+        to { width: 0%; }
+      }
+      .top-auto-dismiss-banner {
+        transition: opacity 0.4s ease, transform 0.4s ease, max-height 0.4s ease, margin 0.4s ease, padding 0.4s ease !important;
+      }
+      .top-banner-close-btn:hover {
+        opacity: 1 !important;
+        background: rgba(0, 0, 0, 0.08) !important;
+      }
+
       /* ======================================================
          MOBILE TOPBAR — oculto en desktop, visible en móvil
          ====================================================== */
@@ -640,12 +653,16 @@
           <% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && controller_name != 'employee_payments' && !(controller_name == 'pages' && action_name == 'dashboard') %>
             <% pending_worker_reports = current_company&.employee_payments&.pending_approval&.count rescue 0 %>
             <% if pending_worker_reports.to_i > 0 %>
-              <div style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);">
-                <div style="display: flex; align-items: center; gap: 10px; color: #92400e; font-size: 0.92rem; font-weight: 600;">
-                  <span style="font-size: 1.3rem;">🔔</span>
+              <div class="top-auto-dismiss-banner" data-banner-type="worker-reports" data-reports-count="<%= pending_worker_reports %>" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08); position: relative; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 10px; color: #92400e; font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 240px;">
+                  <span style="font-size: 1.3rem; flex-shrink: 0;">🔔</span>
                   <span><strong>Notificación:</strong> Tienes <strong><%= pending_worker_reports %> pago(s) reportado(s)</strong> por trabajadores esperando tu confirmación.</span>
                 </div>
-                <%= link_to 'Revisar y Confirmar ➔', employee_payments_path, style: 'background: #f59e0b; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25); white-space: nowrap;' %>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <%= link_to 'Revisar y Confirmar ➔', employee_payments_path, style: 'background: #f59e0b; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25); white-space: nowrap;' %>
+                  <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #b45309; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar aviso">✕</button>
+                </div>
+                <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: #f59e0b; width: 100%; transform-origin: left; animation: topBannerProgress 7s linear forwards;"></div>
               </div>
             <% end %>
 
@@ -653,16 +670,20 @@
             <% pending_upsell_requests_count = pending_upsells.size %>
             <% if pending_upsell_requests_count.positive? && !(controller_name == 'gigs' && action_name == 'show') %>
               <% first_pending_gig = pending_upsells.first&.gig %>
-              <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(59, 130, 246, 0.08);">
-                <div style="display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 0.92rem; font-weight: 600;">
-                  <span style="font-size: 1.3rem;">🚀</span>
+              <div class="top-auto-dismiss-banner" data-banner-type="upsell-requests" data-upsells-count="<%= pending_upsell_requests_count %>" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); position: relative; overflow: hidden;">
+                <div style="display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 240px;">
+                  <span style="font-size: 1.3rem; flex-shrink: 0;">🚀</span>
                   <span><strong>Aviso de Clientes:</strong> Tienes <strong><%= pending_upsell_requests_count %> solicitud(es) de adicionales (upsells)</strong> de clientes esperando tu decisión.</span>
                 </div>
-                <% if first_pending_gig %>
-                  <%= link_to 'Ver y Decidir en el Evento ➔', gig_path(first_pending_gig), style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
-                <% else %>
-                  <%= link_to 'Ver Eventos ➔', gigs_path, style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
-                <% end %>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <% if first_pending_gig %>
+                    <%= link_to 'Ver y Decidir en el Evento ➔', gig_path(first_pending_gig), style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
+                  <% else %>
+                    <%= link_to 'Ver Eventos ➔', gigs_path, style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
+                  <% end %>
+                  <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #1d4ed8; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar aviso">✕</button>
+                </div>
+                <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: #3b82f6; width: 100%; transform-origin: left; animation: topBannerProgress 7s linear forwards;"></div>
               </div>
             <% end %>
           <% end %>
@@ -672,14 +693,18 @@
             <% if worker_unread_count > 0 %>
               <% latest_notif = current_user.app_notifications.unread_by(current_user).first %>
               <% if latest_notif.present? %>
-                <div style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 1px solid #c7d2fe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(79, 70, 229, 0.08);">
-                  <div style="display: flex; align-items: center; gap: 10px; color: #3730a3; font-size: 0.92rem; font-weight: 600;">
-                    <span style="font-size: 1.3rem;"><%= latest_notif.type_icon %></span>
+                <div class="top-auto-dismiss-banner" data-banner-type="worker-notif" data-notif-id="<%= latest_notif.id %>" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 1px solid #c7d2fe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.08); position: relative; overflow: hidden;">
+                  <div style="display: flex; align-items: center; gap: 12px; color: #3730a3; font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 240px;">
+                    <span style="font-size: 1.4rem; flex-shrink: 0;"><%= latest_notif.type_icon %></span>
                     <span><strong><%= latest_notif.title %>:</strong> <%= latest_notif.message.truncate(95) %></span>
                   </div>
-                  <%= link_to (latest_notif.action_url.presence || notifications_path), style: 'background: #4f46e5; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); white-space: nowrap;' do %>
-                    Ver Detalles ➔
-                  <% end %>
+                  <div style="display: flex; align-items: center; gap: 10px;">
+                    <%= link_to (latest_notif.action_url.presence || notifications_path), style: 'background: #4f46e5; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); white-space: nowrap;' do %>
+                      Ver Detalles ➔
+                    <% end %>
+                    <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #4338ca; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar notificación">✕</button>
+                  </div>
+                  <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: #6366f1; width: 100%; transform-origin: left; animation: topBannerProgress 7s linear forwards;"></div>
                 </div>
               <% end %>
             <% end %>
@@ -1036,6 +1061,92 @@
           badge.style.display = newCount > 0 ? (badge.id === 'unread-notifications-badge' ? 'inline-block' : 'inline-block') : 'none';
         });
       }
+
+      /* ── Auto-dismiss top notification banners ───────────────── */
+      function initTopDismissBanners() {
+        var banners = document.querySelectorAll('.top-auto-dismiss-banner');
+        banners.forEach(function(banner) {
+          var type = banner.getAttribute('data-banner-type');
+          var notifId = banner.getAttribute('data-notif-id');
+          var reportsCount = banner.getAttribute('data-reports-count');
+          var upsellsCount = banner.getAttribute('data-upsells-count');
+
+          // Check if already dismissed in this session
+          if (type === 'worker-notif' && notifId && sessionStorage.getItem('dismissed_worker_notif_' + notifId)) {
+            banner.style.display = 'none';
+            return;
+          }
+          if (type === 'worker-reports' && reportsCount && sessionStorage.getItem('dismissed_worker_reports_' + reportsCount)) {
+            banner.style.display = 'none';
+            return;
+          }
+          if (type === 'upsell-requests' && upsellsCount && sessionStorage.getItem('dismissed_upsell_requests_' + upsellsCount)) {
+            banner.style.display = 'none';
+            return;
+          }
+
+          // Auto-dismiss timer (7 seconds)
+          var dismissTimer = setTimeout(function() {
+            dismissTopBanner(banner);
+          }, 7000);
+
+          banner.addEventListener('mouseenter', function() {
+            clearTimeout(dismissTimer);
+          });
+          banner.addEventListener('mouseleave', function() {
+            dismissTimer = setTimeout(function() {
+              dismissTopBanner(banner);
+            }, 1800);
+          });
+        });
+      }
+
+      function dismissTopBanner(banner) {
+        if (!banner || banner.getAttribute('data-dismissing') === '1') return;
+        banner.setAttribute('data-dismissing', '1');
+
+        var type = banner.getAttribute('data-banner-type');
+        var notifId = banner.getAttribute('data-notif-id');
+        var reportsCount = banner.getAttribute('data-reports-count');
+        var upsellsCount = banner.getAttribute('data-upsells-count');
+
+        // Record in sessionStorage so it doesn't reappear when navigating sections
+        if (type === 'worker-notif' && notifId) {
+          sessionStorage.setItem('dismissed_worker_notif_' + notifId, '1');
+          var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+          fetch('/notifications/' + notifId + '/mark_as_read', {
+            method: 'POST',
+            headers: {
+              'X-CSRF-Token': csrfToken || '',
+              'Accept': 'application/json',
+              'Content-Type': 'application/json'
+            }
+          }).catch(function(){});
+        }
+        if (type === 'worker-reports' && reportsCount) {
+          sessionStorage.setItem('dismissed_worker_reports_' + reportsCount, '1');
+        }
+        if (type === 'upsell-requests' && upsellsCount) {
+          sessionStorage.setItem('dismissed_upsell_requests_' + upsellsCount, '1');
+        }
+
+        // Smooth transition out
+        banner.style.opacity = '0';
+        banner.style.transform = 'translateY(-10px)';
+        setTimeout(function() {
+          banner.style.maxHeight = '0px';
+          banner.style.marginTop = '0px';
+          banner.style.marginBottom = '0px';
+          banner.style.paddingTop = '0px';
+          banner.style.paddingBottom = '0px';
+        }, 120);
+        setTimeout(function() {
+          if (banner.parentNode) banner.parentNode.removeChild(banner);
+        }, 550);
+      }
+
+      document.addEventListener('turbo:load', initTopDismissBanners);
+      document.addEventListener('DOMContentLoaded', initTopDismissBanners);
 
       /* ── Prevent Turbo scroll-to-top on form actions ─────── */
       (function() {
