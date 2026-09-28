@@ -19,12 +19,21 @@
     <%= form_with model: @payment, local: true do |f| %>
       <div class="form-group-custom">
         <%= f.label :user_id, 'Trabajador / Músico / Staff' %>
-        <%= f.collection_select :user_id, current_company.users.workers.order(:name, :email), :id, ->(w) { "#{w.display_name} (#{w.role.to_s.capitalize})" }, { include_blank: "-- Selecciona un trabajador --" }, { class: 'form-input-custom', required: true } %>
+        <%= f.collection_select :user_id, current_company.users.workers.order(:name, :email), :id, ->(w) { "#{w.display_name} (#{w.role.to_s.capitalize})" }, { include_blank: "-- Selecciona un trabajador --" }, { id: 'payment_user_select', class: 'form-input-custom', required: true, onchange: 'updateWorkerShows(this.value)' } %>
       </div>
 
       <div class="form-group-custom">
         <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
-        <%= f.collection_select :gig_id, @gigs, :id, ->(g) { "#{g.client&.name || 'Sin cliente'} - #{g.date&.strftime('%d/%m/%Y')}" }, { include_blank: "-- Ninguno / Pago General --" }, { class: 'form-input-custom' } %>
+        <% 
+          options = [["-- Ninguno / Pago General --", ""]]
+          if @available_gigs.present?
+            options += @available_gigs.map { |g| [g[:title], g[:id], { 'data-pending' => g[:pending_amount], 'data-currency' => g[:currency] }] }
+          end
+        %>
+        <%= f.select :gig_id, options, { selected: @payment.gig_id }, { id: 'payment_gig_select', class: 'form-input-custom', onchange: 'onGigSelected(this)' } %>
+        <small id="gig_select_hint" style="color: #64748b; font-size: 0.82em; display: block; margin-top: 4px;">
+          Solo se muestran los shows donde este trabajador tiene saldo pendiente por cobrar.
+        </small>
       </div>
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
@@ -32,6 +41,7 @@
           <%= f.label :amount, 'Monto pagado' %>
           <%= f.text_field :amount,
             inputmode: 'decimal',
+            id: 'payment_amount_input',
             data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
             class: 'form-input-custom',
             placeholder: '0.00',
@@ -40,7 +50,7 @@
 
         <div class="form-group-custom">
           <%= f.label :currency, 'Moneda' %>
-          <%= f.select :currency, [['USD ($)', 'USD'], ['BS (Bs)', 'BS']], {}, { class: 'form-input-custom' } %>
+          <%= f.select :currency, [['USD ($)', 'USD'], ['BS (Bs)', 'BS']], {}, { id: 'payment_currency_select', class: 'form-input-custom' } %>
         </div>
       </div>
 
@@ -75,4 +85,63 @@
     <% end %>
   </div>
 </div>
+
+<script>
+  const WORKER_SHOWS_MAP = <%= raw (@worker_unpaid_gigs_map || {}).to_json %>;
+
+  function updateWorkerShows(workerId, selectedGigId = null) {
+    const gigSelect = document.getElementById('payment_gig_select');
+    const hint = document.getElementById('gig_select_hint');
+    if (!gigSelect) return;
+
+    const currentSelected = selectedGigId || gigSelect.value;
+    gigSelect.innerHTML = '';
+
+    const workerGigs = WORKER_SHOWS_MAP[workerId] || [];
+
+    const defaultOpt = document.createElement('option');
+    defaultOpt.value = '';
+    defaultOpt.textContent = workerGigs.length > 0 ? '-- Ninguno / Pago General --' : '-- Ninguno / Pago General (Sin shows pendientes) --';
+    gigSelect.appendChild(defaultOpt);
+
+    workerGigs.forEach(g => {
+      const opt = document.createElement('option');
+      opt.value = g.id;
+      opt.textContent = g.title;
+      opt.setAttribute('data-pending', g.pending_amount);
+      opt.setAttribute('data-currency', g.currency);
+      if (currentSelected && g.id == currentSelected) {
+        opt.selected = true;
+      }
+      gigSelect.appendChild(opt);
+    });
+
+    if (hint) {
+      if (workerGigs.length === 0 && workerId) {
+        hint.textContent = 'ℹ️ Este trabajador no tiene shows pendientes por cobrar. Puedes registrar un pago general o anticipo.';
+        hint.style.color = '#15803d';
+      } else {
+        hint.textContent = 'Solo se muestran los shows donde este trabajador tiene saldo pendiente por cobrar.';
+        hint.style.color = '#64748b';
+      }
+    }
+  }
+
+  function onGigSelected(select) {
+    const selectedOpt = select.options[select.selectedIndex];
+    if (!selectedOpt || !selectedOpt.value) return;
+
+    const pending = selectedOpt.getAttribute('data-pending');
+    const currency = selectedOpt.getAttribute('data-currency');
+    const amountInput = document.getElementById('payment_amount_input');
+    const currencySelect = document.getElementById('payment_currency_select');
+
+    if (pending && amountInput) {
+      amountInput.value = parseFloat(pending).toFixed(2);
+    }
+    if (currency && currencySelect) {
+      currencySelect.value = currency;
+    }
+  }
+</script>
 

@@ -19,17 +19,20 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def new_worker_report
-    @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
+    assignments = current_user.staff_assignments.includes(gig: :client)
+    unpaid_assignments = assignments.select { |sa| sa.pending_balance > 0 && sa.gig.present? }
+    @assigned_gigs = unpaid_assignments.map(&:gig)
     @gig = current_company.gigs.find_by(id: params[:gig_id]) if params[:gig_id].present?
+    if @gig.present? && !@assigned_gigs.include?(@gig)
+      @assigned_gigs.unshift(@gig)
+    end
     
     default_amount = nil
     if @gig.present?
       assignment = @gig.staff_assignments.find_by(user_id: current_user.id)
       if assignment.present?
-        agreed = assignment.agreed_amount.to_f
-        paid = current_user.employee_payments.approved.where(gig_id: @gig.id).sum(:amount).to_f
-        pending_gig_bal = agreed - paid
-        default_amount = pending_gig_bal.positive? ? pending_gig_bal : agreed
+        pending_gig_bal = assignment.pending_balance
+        default_amount = pending_gig_bal.positive? ? pending_gig_bal : assignment.agreed_amount.to_f
       end
     end
 
@@ -333,7 +336,28 @@ class EmployeePaymentsController < ApplicationController
 
   def new
     @gig = current_company.gigs.find_by(id: params[:gig_id]) if params[:gig_id].present?
-    @gigs = current_company.gigs.includes(:client).order(date: :desc)
+    @worker_unpaid_gigs_map = build_worker_unpaid_gigs_map
+    
+    selected_worker_id = params[:user_id].presence
+    if selected_worker_id.present?
+      @selected_worker = current_company.users.find_by(id: selected_worker_id)
+      @available_gigs = @worker_unpaid_gigs_map[@selected_worker&.id] || []
+      if @gig.present? && !@available_gigs.any? { |g| g[:id] == @gig.id }
+        assignment = @gig.staff_assignments.find_by(user_id: selected_worker_id)
+        pending_val = assignment&.pending_balance.to_f
+        client_name = @gig.client&.name || "Show"
+        date_str = @gig.date ? @gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
+        @available_gigs << {
+          id: @gig.id,
+          title: "#{client_name} - #{date_str} (Pendiente: #{view_context.number_to_currency(pending_val, unit: (@gig.currency || '$'))})",
+          pending_amount: pending_val,
+          currency: @gig.currency.presence || "USD"
+        }
+      end
+    else
+      @available_gigs = []
+    end
+
     default_amount = nil
     if @gig.present? && params[:user_id].present?
       assignment = @gig.staff_assignments.find_by(user_id: params[:user_id])
@@ -369,14 +393,30 @@ class EmployeePaymentsController < ApplicationController
       redirect_to employee_payments_path(user_id: @payment.user_id),
                   notice: "✅ Pago de #{amount_label} a #{worker_name} registrado y aplicado a su cuenta correctamente."
     else
-      @gigs = current_company.gigs.includes(:client).order(date: :desc)
+      @worker_unpaid_gigs_map = build_worker_unpaid_gigs_map
+      @selected_worker = @payment.user
+      @available_gigs = @worker_unpaid_gigs_map[@selected_worker&.id] || []
       flash.now[:alert] = "Error al registrar el pago: #{@payment.errors.full_messages.to_sentence}"
       render :new, status: :unprocessable_entity
     end
   end
 
   def edit
-    @gigs = current_company.gigs.includes(:client).order(date: :desc)
+    @worker_unpaid_gigs_map = build_worker_unpaid_gigs_map
+    @selected_worker = @payment.user
+    @available_gigs = (@worker_unpaid_gigs_map[@selected_worker&.id] || []).dup
+    if @payment.gig.present? && !@available_gigs.any? { |g| g[:id] == @payment.gig_id }
+      assignment = @payment.gig.staff_assignments.find_by(user_id: @payment.user_id)
+      pending_val = assignment&.pending_balance.to_f
+      client_name = @payment.gig.client&.name || "Show"
+      date_str = @payment.gig.date ? @payment.gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
+      @available_gigs.unshift({
+        id: @payment.gig_id,
+        title: "#{client_name} - #{date_str} (Show actual de este pago)",
+        pending_amount: pending_val,
+        currency: @payment.gig.currency.presence || "USD"
+      })
+    end
   end
 
   def update
@@ -389,7 +429,9 @@ class EmployeePaymentsController < ApplicationController
     if @payment.save
       redirect_to employee_payments_path(user_id: @payment.user_id), notice: "Pago a trabajador actualizado correctamente."
     else
-      @gigs = current_company.gigs.includes(:client).order(date: :desc)
+      @worker_unpaid_gigs_map = build_worker_unpaid_gigs_map
+      @selected_worker = @payment.user
+      @available_gigs = @worker_unpaid_gigs_map[@selected_worker&.id] || []
       flash.now[:alert] = "Error al actualizar el pago: #{@payment.errors.full_messages.to_sentence}"
       render :edit, status: :unprocessable_entity
     end
@@ -402,6 +444,32 @@ class EmployeePaymentsController < ApplicationController
   end
 
   private
+
+  def build_worker_unpaid_gigs_map
+    workers = current_company.users.workers
+    worker_ids = workers.pluck(:id)
+    
+    assignments = StaffAssignment.where(user_id: worker_ids).includes(:user, gig: :client)
+    
+    map = {}
+    workers.each do |w|
+      worker_assignments = assignments.select { |sa| sa.user_id == w.id && sa.gig.present? }
+      unpaid = worker_assignments.select { |sa| sa.pending_balance > 0 }
+      
+      map[w.id] = unpaid.map do |sa|
+        client_name = sa.gig.client&.name || "Show"
+        date_str = sa.gig.date ? sa.gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
+        pending_str = view_context.number_to_currency(sa.pending_balance, unit: (sa.gig.currency.presence || '$'))
+        {
+          id: sa.gig_id,
+          title: "#{client_name} - #{date_str} (Pendiente: #{pending_str})",
+          pending_amount: sa.pending_balance,
+          currency: sa.gig.currency.presence || "USD"
+        }
+      end
+    end
+    map
+  end
 
   def set_payment
     @payment = current_company.employee_payments.find(params[:id])

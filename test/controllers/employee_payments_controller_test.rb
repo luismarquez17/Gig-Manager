@@ -428,4 +428,34 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     assert_equal 0.0, worker_metric[:past_balance]
     assert_equal 0.0, worker_metric[:overpaid]
   end
+
+  test "new employee payment populates worker_unpaid_gigs_map only with shows having pending balance" do
+    unpaid_client = Client.create!(company: @leader.company, name: "Cliente Pendiente Test", email: "unpaid@example.com", phone: "04141234567")
+    paid_client = Client.create!(company: @leader.company, name: "Cliente Pagado Test", email: "paid@example.com", phone: "04149876543")
+
+    unpaid_gig = Gig.create!(company: @leader.company, client: unpaid_client, amount: 500, date: 1.day.from_now)
+    paid_gig = Gig.create!(company: @leader.company, client: paid_client, amount: 500, date: 2.days.ago)
+
+    StaffAssignment.create!(gig: unpaid_gig, user: @worker, agreed_amount: 100.0)
+    StaffAssignment.create!(gig: paid_gig, user: @worker, agreed_amount: 50.0)
+
+    # Fully pay paid_gig
+    EmployeePayment.create!(
+      company: @leader.company,
+      user: @worker,
+      gig: paid_gig,
+      amount: 50.0,
+      status: "approved",
+      funding_source: "payroll_fund"
+    )
+
+    get new_employee_payment_url(user_id: @worker.id)
+    assert_response :success
+
+    # Check that unpaid_gig is included in the select options / json map and paid_gig is not
+    assert_includes response.body, "Cliente Pendiente Test"
+    assert_not_includes response.body, "Cliente Pagado Test"
+    assert_match /Pendiente: \$100\.00/, response.body
+  end
 end
+
