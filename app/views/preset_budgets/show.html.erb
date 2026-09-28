@@ -20,10 +20,10 @@
     
     <%# Columna izquierda: Imagen o flyer %>
     <div style="background: #0f172a; border: 1px solid #e2e8f0; border-radius: 20px; padding: 12px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 320px; position: relative; overflow: hidden;">
-      <% if @preset_budget.image.attached? %>
-        <% img_url = rails_blob_path(@preset_budget.image, only_path: true) rescue url_for(@preset_budget.image) %>
+      <% if @preset_budget.image_attached? %>
+        <% img_url = @preset_budget.image_base64.presence || (rails_blob_path(@preset_budget.image, only_path: true) rescue url_for(@preset_budget.image)) %>
         <div style="position: relative; width: 100%; display: flex; justify-content: center;">
-          <%= image_tag @preset_budget.image, style: "max-width: 100%; height: auto; border-radius: 14px; max-height: 480px; object-fit: contain; box-shadow: 0 8px 25px rgba(0,0,0,0.4);", alt: @preset_budget.title %>
+          <%= image_tag @preset_budget.image_url_or_data, style: "max-width: 100%; height: auto; border-radius: 14px; max-height: 480px; object-fit: contain; box-shadow: 0 8px 25px rgba(0,0,0,0.4);", alt: @preset_budget.title %>
           
           <%# Botones flotantes de acción en imagen %>
           <div style="position: absolute; bottom: 14px; left: 14px; right: 14px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">

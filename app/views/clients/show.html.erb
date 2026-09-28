@@ -183,7 +183,7 @@
           price: pb.price.to_f, 
           currency: pb.currency,
           print_url: print_preset_budget_url(pb),
-          image_url: pb.image.attached? ? url_for(pb.image) : nil
+          image_url: pb.image_attached? ? (pb.image_base64.presence || (rails_blob_path(pb.image, only_path: true) rescue url_for(pb.image))) : nil
         } 
       }.to_json %>;
 

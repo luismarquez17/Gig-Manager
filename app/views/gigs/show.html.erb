@@ -710,6 +710,11 @@
               <div>
                 <span style="color: #64748b; font-weight: 600;">Pagado:</span>
                 <strong style="color: #059669;">$ <%= number_with_precision(paid, precision: 2) %></strong>
+                <% if sa.general_credit_applied > 0 %>
+                  <span style="font-size: 0.75em; color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 6px; font-weight: 700; margin-left: 4px;" title="Incluye pago general o anticipo aplicado a este show">
+                    (incl. $<%= number_with_precision(sa.general_credit_applied, precision: 2) %> anticipo)
+                  </span>
+                <% end %>
               </div>
 
               <div>
@@ -750,8 +755,8 @@
     <% if my_assignment.present? %>
       <%
         my_agreed = my_assignment.agreed_amount.to_f
-        my_paid = current_user.employee_payments.approved.where(gig_id: @gig.id).sum(:amount).to_f
-        my_pending = my_agreed - my_paid
+        my_paid = my_assignment.total_paid
+        my_pending = my_assignment.pending_balance
         my_pending_report = current_user.employee_payments.pending_approval.where(gig_id: @gig.id).first
       %>
       <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">

@@ -7,4 +7,18 @@ class PresetBudget < ApplicationRecord
   validates :title, :description, :price, :currency, presence: true
   validates :price, numericality: { greater_than_or_equal_to: 0 }
   validates :currency, inclusion: { in: ["USD", "BS"] }
+
+  def image_attached?
+    image_base64.present? || image.attached?
+  end
+
+  def image_url_or_data
+    if image_base64.present?
+      image_base64
+    elsif image.attached?
+      image
+    else
+      nil
+    end
+  end
 end

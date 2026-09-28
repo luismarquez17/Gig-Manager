@@ -54,11 +54,10 @@
       </p>
     </div>
 
-    <% if preset_budget.image.attached? %>
+    <% if preset_budget.image_attached? %>
       <div id="current-image-container" style="margin-top: 15px; display: flex; align-items: center; gap: 14px; background: #f1f5f9; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
         <span style="font-size: 0.82em; font-weight: 700; color: #475569; text-transform: uppercase;">Flyer actual:</span>
-        <% img_thumb = rails_blob_path(preset_budget.image, only_path: true) rescue url_for(preset_budget.image) %>
-        <%= image_tag preset_budget.image, style: "width: 80px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" %>
+        <%= image_tag preset_budget.image_url_or_data, style: "width: 80px; height: 60px; object-fit: cover; border-radius: 8px; border: 1px solid #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.08);" %>
         <span style="font-size: 0.78em; color: #64748b;">Selecciona un archivo nuevo arriba si deseas reemplazarlo.</span>
       </div>
     <% end %>

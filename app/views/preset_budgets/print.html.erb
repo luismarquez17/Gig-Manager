@@ -235,13 +235,12 @@
       <%= @preset_budget.description %>
     </div>
 
-    <% if @preset_budget.image.attached? %>
+    <% if @preset_budget.image_attached? %>
       <div style="font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 15px; border-bottom: 1px solid #f1f5f9; padding-bottom: 5px;">
         Flyer Informativo
       </div>
       <div class="flyer-section">
-        <%# Usamos rails_blob_path para generar un link absoluto de ser posible %>
-        <%= image_tag @preset_budget.image, class: 'flyer-image' %>
+        <%= image_tag @preset_budget.image_url_or_data, class: 'flyer-image' %>
       </div>
     <% end %>
 

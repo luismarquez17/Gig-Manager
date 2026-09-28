@@ -384,14 +384,14 @@
               <div class="check-indicator">✓</div>
               
               <div>
-                <% if preset.image.attached? %>
-                  <% img_url = rails_blob_path(preset.image, only_path: true) rescue url_for(preset.image) %>
+                <% if preset.image_attached? %>
+                  <% img_url = preset.image_base64.presence || (rails_blob_path(preset.image, only_path: true) rescue url_for(preset.image)) %>
                   <div class="preset-img-wrapper">
                     <%# Fondo ambiental difuminado %>
-                    <%= image_tag preset.image, class: "preset-img-blur-bg", alt: "", "aria-hidden": "true" %>
+                    <%= image_tag preset.image_url_or_data, class: "preset-img-blur-bg", alt: "", "aria-hidden": "true" %>
                     
                     <%# Imagen completa en su proporción original %>
-                    <%= image_tag preset.image, class: "preset-img", alt: preset.title, loading: "lazy" %>
+                    <%= image_tag preset.image_url_or_data, class: "preset-img", alt: preset.title, loading: "lazy" %>
                     
                     <div style="position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); color: #c084fc; font-size: 0.7rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; border: 1px solid rgba(139, 92, 246, 0.35); text-transform: uppercase; letter-spacing: 0.5px; z-index: 5;">
                       ✨ Paquete

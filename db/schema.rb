@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_26_183000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_28_131000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -455,6 +455,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_26_183000) do
     t.boolean "featured", default: false
     t.string "badge_text"
     t.integer "position", default: 0
+    t.text "image_base64"
     t.index ["company_id"], name: "index_preset_budgets_on_company_id"
   end
 

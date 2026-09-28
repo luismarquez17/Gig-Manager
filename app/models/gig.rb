@@ -99,10 +99,10 @@ class Gig < ApplicationRecord
   end
 
   def total_payroll_paid
-    if employee_payments.loaded?
-      employee_payments.select { |ep| ep.approved? }.sum { |ep| ep.amount.to_f }
+    if staff_assignments.loaded?
+      staff_assignments.sum { |sa| sa.total_paid }.round(2)
     else
-      employee_payments.approved.sum(:amount).to_f
+      staff_assignments.includes(:user).sum { |sa| sa.total_paid }.round(2)
     end
   end
 

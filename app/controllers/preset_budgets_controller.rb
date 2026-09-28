@@ -16,6 +16,7 @@ class PresetBudgetsController < ApplicationController
 
   def create
     @preset_budget = current_company.preset_budgets.build(preset_budget_params)
+    process_image_upload
     if @preset_budget.save
       redirect_to preset_budgets_path, notice: "🎯 ¡Presupuesto base creado con éxito!"
     else
@@ -27,7 +28,9 @@ class PresetBudgetsController < ApplicationController
   end
 
   def update
-    if @preset_budget.update(preset_budget_params)
+    @preset_budget.assign_attributes(preset_budget_params)
+    process_image_upload
+    if @preset_budget.save
       redirect_to preset_budgets_path, notice: "✅ Presupuesto base actualizado."
     else
       render :edit, status: :unprocessable_entity
@@ -49,7 +52,17 @@ class PresetBudgetsController < ApplicationController
     @preset_budget = current_company ? current_company.preset_budgets.find(params[:id]) : PresetBudget.find(params[:id])
   end
 
+  def process_image_upload
+    image_file = params.dig(:preset_budget, :image)
+    if image_file.respond_to?(:read)
+      content_type = image_file.content_type.presence || 'image/jpeg'
+      encoded = Base64.strict_encode64(image_file.read)
+      @preset_budget.image_base64 = "data:#{content_type};base64,#{encoded}"
+      image_file.rewind if image_file.respond_to?(:rewind)
+    end
+  end
+
   def preset_budget_params
-    params.require(:preset_budget).permit(:title, :description, :price, :currency, :image)
+    params.require(:preset_budget).permit(:title, :description, :price, :currency, :image, :image_base64)
   end
 end

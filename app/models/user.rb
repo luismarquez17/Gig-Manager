@@ -134,20 +134,20 @@ class User < ApplicationRecord
 
     # 1. Shows asignados vía StaffAssignment
     assignments.each do |sa|
-      paid = paid_by_gig[sa.gig_id].to_f
-      pending_approval = pending_by_gig[sa.gig_id].to_f
-      expected = sa.agreed_amount.to_f
-      items << {
-        gig: sa.gig,
-        title: sa.gig&.client&.name || "Show del #{sa.gig&.date}",
-        date: sa.gig&.date,
-        expected_amount: expected,
-        paid_amount: paid,
-        pending_approval_amount: pending_approval,
-        pending_amount: expected - paid,
-        type: :assignment,
-        assignment: sa
-      }
+       paid = sa.total_paid
+       pending_approval = pending_by_gig[sa.gig_id].to_f
+       expected = sa.agreed_amount.to_f
+       items << {
+         gig: sa.gig,
+         title: sa.gig&.client&.name || "Show del #{sa.gig&.date}",
+         date: sa.gig&.date,
+         expected_amount: expected,
+         paid_amount: paid,
+         pending_approval_amount: pending_approval,
+         pending_amount: sa.pending_balance,
+         type: :assignment,
+         assignment: sa
+       }
     end
 
     # 2. Pagos independientes (sin gig asignado)
