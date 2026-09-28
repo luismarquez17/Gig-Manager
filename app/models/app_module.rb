@@ -114,7 +114,7 @@ class AppModule
       key: 'productora',
       name: 'Paquete Productoras & Audio',
       icon: '🎬',
-      badge: 'Producción & Equipos',
+      badge: 'Productoras',
       price: 18.00,
       savings: '$2 USD/mes',
       description: 'Optimizado para empresas de producción técnica, alquiler de audio, tarimas, luces e iluminación con inventario QR y cotizaciones.',
@@ -124,7 +124,7 @@ class AppModule
       key: 'salon',
       name: 'Paquete Salones & Venues',
       icon: '🏛️',
-      badge: 'Locaciones & Eventos',
+      badge: 'Salones',
       price: 15.00,
       savings: '$2 USD/mes',
       description: 'Pensado para salones de fiesta, quintas, venues y centros de convenciones: Cotizaciones públicas, control de inventario y caja.',
@@ -134,7 +134,7 @@ class AppModule
       key: 'negocio',
       name: 'Paquete Empresas & Negocios',
       icon: '💼',
-      badge: 'Pymes & Servicios',
+      badge: 'Pymes',
       price: 14.00,
       savings: '$3 USD/mes',
       description: 'Diseñado para pymes, comercios y prestadores de servicios: Gestión de clientes, presupuestos por WhatsApp, finanzas y nómina.',
@@ -144,7 +144,7 @@ class AppModule
       key: 'full',
       name: 'Paquete Full Suite Total',
       icon: '👑',
-      badge: '⭐ Acceso Total Ilimitado',
+      badge: '⭐ Acceso Total',
       price: 22.00,
       savings: '$4 USD/mes',
       featured: true,
@@ -219,6 +219,57 @@ class AppModule
     MODULES.keys.each_with_object({}) do |key, h|
       h[key.to_s] = keys_array.include?(key.to_s)
     end
+  end
+
+  EXTRA_MODULE_PRICE = 3.00
+
+  def self.extra_module_price
+    EXTRA_MODULE_PRICE
+  end
+
+  def self.calculate_pricing(pkg_key, enabled_keys)
+    pkg_key_clean = pkg_key.presence || 'banda'
+    pkg = package_info(pkg_key_clean) || package_info('banda')
+    pkg_modules = pkg[:modules] || []
+    base_price = pkg[:price].to_f
+
+    enabled_array = if enabled_keys.is_a?(Hash)
+                      enabled_keys.select { |_, v| v == true || v == "1" || v == 1 || v == "true" }.keys.map(&:to_s)
+                    else
+                      Array(enabled_keys).flatten.map(&:to_s).reject(&:blank?)
+                    end
+
+    included_keys = enabled_array & pkg_modules
+    extra_keys = enabled_array - pkg_modules
+    extra_cost = extra_keys.count * EXTRA_MODULE_PRICE
+    subtotal = base_price + extra_cost
+
+    full_suite_pkg = package_info('full')
+    full_suite_price = full_suite_pkg ? full_suite_pkg[:price].to_f : 22.00
+    suggests_full_suite = (subtotal >= full_suite_price) && (pkg_key_clean != 'full')
+    effective_total = suggests_full_suite ? full_suite_price : subtotal
+
+    {
+      package_key: pkg[:key],
+      package_name: pkg[:name],
+      package_icon: pkg[:icon],
+      package_badge: pkg[:badge],
+      base_price: base_price,
+      pkg_modules: pkg_modules,
+      enabled_keys: enabled_array,
+      included_keys: included_keys,
+      extra_keys: extra_keys,
+      extra_module_price: EXTRA_MODULE_PRICE,
+      extra_cost: extra_cost,
+      subtotal: subtotal,
+      total_price: effective_total,
+      suggests_full_suite: suggests_full_suite,
+      full_suite_price: full_suite_price,
+      savings_with_full_suite: suggests_full_suite ? (subtotal - full_suite_price).round(2) : 0.0,
+      included_modules_details: included_keys.map { |k| find(k) }.compact,
+      extra_modules_details: extra_keys.map { |k| find(k) }.compact,
+      total_modules_count: enabled_array.count
+    }
   end
 
   def self.by_category

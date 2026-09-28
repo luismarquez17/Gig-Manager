@@ -123,6 +123,9 @@
         </p>
       </div>
       <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <span style="font-size: 0.82rem; font-weight: 800; color: #059669; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 6px 14px; border-radius: 20px;">
+          Cuota Calculada: $<%= '%.2f' % @pricing_breakdown[:total_price] %> USD/mes
+        </span>
         <%= link_to company_modules_path, style: "font-size: 0.82rem; font-weight: 800; color: #4338ca; text-decoration: none; padding: 6px 14px; border-radius: 20px; background: #e0e7ff; display: inline-flex; align-items: center; gap: 5px;" do %>
           <span>⚙️</span> Personalizar Menú
         <% end %>
@@ -135,15 +138,22 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
       <% AppModule.all.each do |mod| %>
         <% is_on = @company.module_enabled?(mod[:key]) %>
+        <% is_pkg_module = @pricing_breakdown[:pkg_modules].include?(mod[:key]) %>
         <div style="background: <%= is_on ? '#f8fafc' : '#f1f5f9' %>; border: 1px solid <%= is_on ? '#cbd5e1' : '#e2e8f0' %>; border-radius: 14px; padding: 16px; display: flex; align-items: flex-start; gap: 12px; opacity: <%= is_on ? '1' : '0.6' %>;">
           <span style="font-size: 1.5rem; line-height: 1;"><%= mod[:icon] %></span>
           <div style="flex: 1;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <strong style="color: #0f172a; font-size: 0.92rem;"><%= mod[:name] %></strong>
               <% if is_on %>
-                <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #dcfce7; color: #15803d;">
-                  ✓ Activo
-                </span>
+                <% if is_pkg_module %>
+                  <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #dcfce7; color: #15803d;">
+                    ✓ Incluido en Plan
+                  </span>
+                <% else %>
+                  <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #fef3c7; color: #92400e;">
+                    + Extra ($3 USD)
+                  </span>
+                <% end %>
               <% else %>
                 <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 20px; background: #fee2e2; color: #b91c1c;">
                   ✕ Inactivo
@@ -157,101 +167,8 @@
     </div>
   </div>
 
-  <!-- Encabezado de la Grilla de Paquetes -->
-  <div style="text-align: center; max-width: 700px; margin: 0 auto 30px auto;">
-    <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 50px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: #6366f1; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">
-      <span>💎</span> Paquetes Pre-Diseñados con Descuento
-    </div>
-    <h2 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.5px;">
-      Elige el Paquete a tu Medida
-    </h2>
-    <p style="color: #64748b; font-size: 0.95rem; margin: 0; line-height: 1.5;">
-      Ahorra contratando un paquete pre-diseñado para tu sector con todos los módulos y herramientas que necesitas.
-    </p>
-  </div>
-
-  <!-- Grilla de Paquetes Oficiales -->
-  <div class="sub-mobile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; margin-bottom: 45px;">
-    <% AppModule.packages.each do |pkg| %>
-      <% is_featured = pkg[:featured] == true %>
-      <% is_current_plan = @company.plan_tier == pkg[:key] && @company.active_subscription? %>
-
-      <div class="sub-mobile-card" style="<%= is_featured ? 'background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 2px solid #6366f1; color: white; box-shadow: 0 15px 40px rgba(99,102,241,0.25);' : 'background: white; border: 1.5px solid #cbd5e1; color: #0f172a; box-shadow: 0 10px 30px rgba(0,0,0,0.04);' %> border-radius: 24px; padding: 30px; display: flex; flex-direction: column; justify-content: space-between; position: relative;">
-        
-        <% if pkg[:badge].present? %>
-          <div style="position: absolute; top: -13px; right: 20px; padding: 4px 12px; border-radius: 20px; <%= is_featured ? 'background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; box-shadow: 0 4px 10px rgba(99,102,241,0.4);' : 'background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe;' %> font-size: 0.72rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em;">
-            <%= pkg[:badge] %>
-          </div>
-        <% end %>
-
-        <div>
-          <!-- Icono y Nombre -->
-          <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
-            <div style="width: 48px; height: 48px; border-radius: 14px; <%= is_featured ? 'background: rgba(99,102,241,0.25); border: 1px solid rgba(165,180,252,0.4);' : 'background: #f1f5f9; border: 1px solid #e2e8f0;' %> display: flex; align-items: center; justify-content: center; font-size: 1.7rem; flex-shrink: 0;">
-              <%= pkg[:icon] %>
-            </div>
-            <div>
-              <h3 style="font-size: 1.28rem; font-weight: 800; margin: 0; <%= is_featured ? 'color: white;' : 'color: #0f172a;' %>">
-                <%= pkg[:name] %>
-              </h3>
-              <% if pkg[:savings].present? %>
-                <span style="font-size: 0.74rem; font-weight: 800; <%= is_featured ? 'color: #a5b4fc;' : 'color: #059669;' %>">
-                  ⚡ Ahorras <%= pkg[:savings] %>
-                </span>
-              <% end %>
-            </div>
-          </div>
-
-          <p style="font-size: 0.86rem; margin: 0 0 18px 0; line-height: 1.45; <%= is_featured ? 'color: #cbd5e1;' : 'color: #64748b;' %>">
-            <%= pkg[:description] %>
-          </p>
-
-          <!-- Precio -->
-          <div style="margin-bottom: 22px; display: flex; align-items: baseline; gap: 6px;">
-            <span style="font-size: 2.5rem; font-weight: 900; <%= is_featured ? 'color: white;' : 'color: #0f172a;' %>">
-              $<%= '%.0f' % pkg[:price] %>
-            </span>
-            <span style="font-weight: 700; font-size: 0.9rem; <%= is_featured ? 'color: #cbd5e1;' : 'color: #64748b;' %>">
-              USD / mes
-            </span>
-          </div>
-
-          <!-- Lista de Módulos -->
-          <div style="margin-bottom: 25px;">
-            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; <%= is_featured ? 'color: #a5b4fc;' : 'color: #64748b;' %>">
-              Módulos Incluidos (<%= pkg[:modules].count %>):
-            </div>
-            <ul style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 10px; font-size: 0.86rem;">
-              <% pkg[:modules].each do |mod_key| %>
-                <% mod_obj = AppModule.find(mod_key) %>
-                <% next unless mod_obj %>
-                <li style="display: flex; align-items: center; gap: 9px;">
-                  <span style="font-size: 1rem;"><%= mod_obj[:icon] %></span>
-                  <span style="<%= is_featured ? 'color: #f8fafc;' : 'color: #334155;' %> font-weight: 600;">
-                    <%= mod_obj[:name] %>
-                  </span>
-                </li>
-              <% end %>
-            </ul>
-          </div>
-        </div>
-
-        <!-- Botón de Acción -->
-        <div>
-          <% if is_current_plan %>
-            <div style="width: 100%; text-align: center; box-sizing: border-box; padding: 14px; border-radius: 12px; background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; font-weight: 800; font-size: 0.9rem;">
-              ✓ Tu Paquete Actual
-            </div>
-          <% else %>
-            <a href="#reportar-pago" onclick="selectPlanTier('<%= pkg[:key] %>')" class="sub-mobile-btn" style="display: block; width: 100%; text-align: center; box-sizing: border-box; text-decoration: none; padding: 15px; border-radius: 12px; <%= is_featured ? 'background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; box-shadow: 0 6px 20px rgba(99,102,241,0.4);' : 'background: #0f172a; color: white; box-shadow: 0 4px 15px rgba(15,23,42,0.2);' %> font-weight: 800; font-size: 0.92rem; transition: transform 0.15s;">
-              Elegir este Paquete ($<%= '%.0f' % pkg[:price] %>/mes) 🚀
-            </a>
-          <% end %>
-        </div>
-
-      </div>
-    <% end %>
-  </div>
+  <%# SIMULADOR & CALCULADOR UNIFICADO DE PLANES Y MÓDULOS EN DÓLARES %>
+  <%= render 'subscriptions/pricing_calculator' %>
 
   <!-- Sección Especial: Métodos de Pago Disponibles (Zelle, Binance, Pago Móvil, Transferencia) -->
   <div id="reportar-pago" class="sub-mobile-card" style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 45px;">
@@ -307,13 +224,17 @@
     <div style="padding: 24px; border-radius: 18px; background: #f8fafc; border: 1px solid #e2e8f0;">
       <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">Reportar Pago Realizado</h3>
       <%= form_with url: report_payment_subscriptions_path, method: :post, local: true, style: "display: flex; flex-direction: column; gap: 15px;" do |f| %>
-        <div class="sub-mobile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+        <div class="sub-mobile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
           <div>
-            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Paquete o Plan a Activar</label>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Paquete Base</label>
             <%= select_tag :plan_tier, options_for_select(
-              AppModule.packages.map { |pkg| ["#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD / mes)", pkg[:key]] },
+              AppModule.packages.map { |pkg| ["#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD)", pkg[:key]] },
               @company.plan_tier.presence || "banda"
             ), id: "subscription_plan_tier_select", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Monto a Pagar ($ USD)</label>
+            <%= number_field_tag :amount, @pricing_breakdown[:total_price], step: "0.01", id: "subscription_amount_input", placeholder: "15.00", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Método de Pago</label>

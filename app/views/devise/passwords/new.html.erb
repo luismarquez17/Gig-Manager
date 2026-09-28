@@ -29,7 +29,7 @@
       </div>
     <% end %>
 
-    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "mt-6 space-y-4" }) do |f| %>
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "mt-6 space-y-4", data: { turbo: false } }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 
       <div>

@@ -60,24 +60,53 @@
   </div>
 
   <%# Header Principal con Estilo Dark / Neón %>
-  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-radius: 24px; border: 1px solid rgba(139, 92, 246, 0.3); padding: 32px; color: white; margin-bottom: 30px; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.25); position: relative; overflow: hidden;">
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-radius: 24px; border: 1px solid rgba(139, 92, 246, 0.3); padding: 32px; color: white; margin-bottom: 24px; box-shadow: 0 15px 35px rgba(15, 23, 42, 0.25); position: relative; overflow: hidden;">
     <div style="position: absolute; right: -20px; bottom: -20px; font-size: 8rem; opacity: 0.05; pointer-events: none;">🧩</div>
     
     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 14px;">
       <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 50px; background: rgba(139, 92, 246, 0.2); border: 1px solid rgba(139, 92, 246, 0.4); color: #c084fc; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
         <span>⚡</span> Catálogo de Opciones de GigManager
       </div>
-      <span style="padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); color: #38bdf8;">
-        <%= @company.enabled_module_keys.count %> de <%= AppModule.all.count %> Módulos Activos
-      </span>
+      <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+        <%= link_to subscriptions_path(anchor: 'gigmanager-pricing-calculator'), style: "padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; background: rgba(99, 102, 241, 0.3); border: 1px solid rgba(165, 180, 252, 0.4); color: #c7d2fe; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;" do %>
+          <span>🧮</span> Ver en Suscripción SaaS
+        <% end %>
+        <span style="padding: 6px 14px; border-radius: 20px; font-size: 0.82rem; font-weight: 800; background: rgba(6, 182, 212, 0.2); border: 1px solid rgba(6, 182, 212, 0.4); color: #38bdf8;">
+          <%= @company.enabled_module_keys.count %> de <%= AppModule.all.count %> Módulos Activos
+        </span>
+      </div>
     </div>
 
     <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 10px 0; color: white; letter-spacing: -0.5px;">
       Añadir y Configurar Opciones de tu Agrupación
     </h1>
-    <p style="color: #cbd5e1; font-size: 1rem; margin: 0; max-width: 680px; line-height: 1.6;">
-      Personaliza las herramientas que aparecen en tu menú lateral izquierdo. Puedes encender módulos adicionales en cualquier momento para potenciar la gestión de tus shows.
+    <p style="color: #cbd5e1; font-size: 1rem; margin: 0 0 18px 0; max-width: 680px; line-height: 1.6;">
+      Personaliza las herramientas que aparecen en tu menú lateral izquierdo. Los módulos de tu paquete base están incluidos; cualquier módulo adicional se cotiza a <strong>+$3.00 USD/mes</strong>.
     </p>
+
+    <%# Desglose de Cuota Actual %>
+    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 14px 18px; border-radius: 16px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.4rem;"><%= @pricing_breakdown[:package_icon] %></span>
+        <div>
+          <span style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Plan Base: <%= @pricing_breakdown[:package_name] %> ($<%= '%.0f' % @pricing_breakdown[:base_price] %>/mes)</span>
+          <div style="font-size: 0.88rem; color: white; font-weight: 700;">
+            <% if @pricing_breakdown[:extra_keys].any? %>
+              <%= @pricing_breakdown[:included_keys].count %> módulos base + <span style="color: #fde047;"><%= @pricing_breakdown[:extra_keys].count %> adicional(es) (+ $<%= '%.2f' % @pricing_breakdown[:extra_cost] %> USD)</span>
+            <% else %>
+              Todos los módulos activos pertenecen a tu paquete base.
+            <% end %>
+          </div>
+        </div>
+      </div>
+
+      <div style="text-align: right;">
+        <span style="font-size: 0.75rem; color: #a5b4fc; font-weight: 700; text-transform: uppercase;">Cuota Estimada:</span>
+        <div style="font-size: 1.4rem; font-weight: 900; color: #38bdf8;">
+          $<%= '%.2f' % @pricing_breakdown[:total_price] %> <span style="font-size: 0.8rem; font-weight: 700; color: #cbd5e1;">USD/mes</span>
+        </div>
+      </div>
+    </div>
   </div>
 
   <%= form_with url: update_company_modules_path, method: :patch, local: true do |f| %>
@@ -85,6 +114,7 @@
     <% 
       active_modules = AppModule.all.select { |m| @company.module_enabled?(m[:key]) }
       inactive_modules = AppModule.all.reject { |m| @company.module_enabled?(m[:key]) }
+      pkg_modules = @pricing_breakdown[:pkg_modules] || []
     %>
 
     <%# SECCIÓN 1: MÓDULOS ACTIVOS %>
@@ -99,10 +129,11 @@
 
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <% active_modules.each do |mod| %>
-            <div class="module-card" style="background: white; border-radius: 18px; border: 1.5px solid #a7f3d0; padding: 20px 24px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.05); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <% is_pkg = pkg_modules.include?(mod[:key]) %>
+            <div class="module-card" style="background: white; border-radius: 18px; border: 1.5px solid <%= is_pkg ? '#a7f3d0' : '#fde68a' %>; padding: 20px 24px; box-shadow: 0 4px 12px <%= is_pkg ? 'rgba(16, 185, 129, 0.05)' : 'rgba(245, 158, 11, 0.08)' %>; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
               
               <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 260px;">
-                <div style="width: 48px; height: 48px; border-radius: 14px; background: #ecfdf5; border: 1px solid #a7f3d0; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: <%= is_pkg ? '#ecfdf5' : '#fefce8' %>; border: 1px solid <%= is_pkg ? '#a7f3d0' : '#fde68a' %>; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
                   <%= mod[:icon] %>
                 </div>
 
@@ -114,9 +145,15 @@
                     <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f1f5f9; color: #64748b; text-transform: uppercase;">
                       <%= mod[:category] %>
                     </span>
-                    <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d;">
-                      ✓ En tu Menú Lateral
-                    </span>
+                    <% if is_pkg %>
+                      <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d;">
+                        ✓ En tu Plan Base ($0)
+                      </span>
+                    <% else %>
+                      <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #fef3c7; color: #92400e;">
+                        + Módulo Extra (+ $3 USD/mes)
+                      </span>
+                    <% end %>
                   </div>
                   
                   <p style="margin: 0 0 8px 0; font-size: 0.88rem; color: #475569; line-height: 1.45;">
@@ -169,6 +206,7 @@
       <% if inactive_modules.any? %>
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <% inactive_modules.each do |mod| %>
+            <% is_pkg = pkg_modules.include?(mod[:key]) %>
             <div class="module-card" style="background: #fafafa; border-radius: 18px; border: 1.5px dashed #cbd5e1; padding: 20px 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
               
               <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 260px;">
@@ -184,9 +222,15 @@
                     <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f1f5f9; color: #64748b; text-transform: uppercase;">
                       <%= mod[:category] %>
                     </span>
-                    <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #ede9fe; color: #6d28d9;">
-                      ➕ Disponible para Añadir
-                    </span>
+                    <% if is_pkg %>
+                      <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d;">
+                        ✓ Incluido en tu Plan Base ($0 extra)
+                      </span>
+                    <% else %>
+                      <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #fef3c7; color: #92400e;">
+                        ➕ Módulo Adicional (+ $3.00 USD/mes)
+                      </span>
+                    <% end %>
                   </div>
                   
                   <p style="margin: 0 0 8px 0; font-size: 0.88rem; color: #64748b; line-height: 1.45;">

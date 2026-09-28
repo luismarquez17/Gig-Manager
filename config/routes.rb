@@ -56,10 +56,12 @@ Rails.application.routes.draw do
       post :report_payment
       get  :modules
       patch :update_modules
+      get  :calculator
     end
   end
   get '/modules', to: 'subscriptions#modules', as: 'company_modules'
   patch '/modules', to: 'subscriptions#update_modules', as: 'update_company_modules'
+  get '/subscriptions/calculator', to: 'subscriptions#calculator', as: 'subscription_calculator'
   post '/stripe_webhooks', to: 'stripe_webhooks#create'
 
 

@@ -1,6 +1,6 @@
 class SubscriptionsController < ApplicationController
   before_action :require_leader!
-  skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment, :modules, :update_modules]
+  skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment, :modules, :update_modules, :calculator]
 
   def index
     @company = current_company
@@ -9,10 +9,16 @@ class SubscriptionsController < ApplicationController
     @trial_expired = @company.trial_expired?
     @active_subscription = @company.active_subscription?
     @pending_payments = @company.subscription_payments.where(status: 'pending').order(created_at: :desc)
+    @pricing_breakdown = @company.pricing_breakdown
   end
 
   def modules
     @company = current_company
+    @pricing_breakdown = @company.pricing_breakdown
+  end
+
+  def calculator
+    redirect_to subscriptions_path(anchor: 'gigmanager-pricing-calculator')
   end
 
   def update_modules
@@ -37,7 +43,12 @@ class SubscriptionsController < ApplicationController
 
   def report_payment
     plan_tier = params[:plan_tier].presence || 'banda'
-    amount = TIER_PRICES[plan_tier] || AppModule.package_info(plan_tier)&.dig(:price) || 15.00
+    
+    amount = if params[:amount].present? && params[:amount].to_f > 0
+               params[:amount].to_f
+             else
+               TIER_PRICES[plan_tier] || AppModule.package_info(plan_tier)&.dig(:price) || 15.00
+             end
 
     @payment = current_company.subscription_payments.build(
       user: current_user,

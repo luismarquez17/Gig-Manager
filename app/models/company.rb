@@ -78,6 +78,24 @@ class Company < ApplicationRecord
     AppModule.keys.select { |key| module_enabled?(key) }
   end
 
+  def pricing_breakdown(simulated_tier = nil, simulated_modules = nil)
+    target_tier = simulated_tier.presence || plan_tier.presence || 'banda'
+    target_modules = simulated_modules.presence || enabled_module_keys
+    AppModule.calculate_pricing(target_tier, target_modules)
+  end
+
+  def calculated_monthly_fee
+    pricing_breakdown[:total_price]
+  end
+
+  def extra_modules
+    pricing_breakdown[:extra_modules_details]
+  end
+
+  def has_extra_modules?
+    pricing_breakdown[:extra_keys].any?
+  end
+
   # ==========================================
   # ESTADOS DE SUSCRIPCIÓN & FREE TRIAL
   # ==========================================

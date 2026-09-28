@@ -1,0 +1,79 @@
+<div style="max-width: 1100px; margin: 0 auto; padding: 20px 10px; font-family: 'Inter', sans-serif;">
+
+  <%# Breadcrumb / Navegación rápida %>
+  <div style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+    <%= link_to "← Volver a Suscripción & Planes", subscriptions_path, style: "color: #6366f1; text-decoration: none; font-weight: 700; font-size: 0.9rem;" %>
+    <span style="font-size: 0.85rem; color: #64748b;">
+      🏢 Empresa: <strong style="color: #0f172a;"><%= @company.name %></strong>
+    </span>
+  </div>
+
+  <%# Renderizar el Calculador / Simulador Interactivo %>
+  <%= render 'subscriptions/pricing_calculator' %>
+
+  <%# Métodos de Pago y Reporte de Pago %>
+  <div id="reportar-pago" style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 45px;">
+    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 25px; flex-wrap: wrap;">
+      <span style="font-size: 2.2rem;">💳</span>
+      <div>
+        <h2 style="font-size: 1.4rem; font-weight: 800; color: #0f172a; margin: 0;">Reportar Pago de Mensualidad Calculada</h2>
+        <p style="color: #64748b; font-size: 0.9rem; margin: 4px 0 0 0;">Paga fácilmente por Pago Móvil Bancamiga (Tasa BCV), Zelle, Binance Pay USDT o Transferencia Bancaria.</p>
+      </div>
+    </div>
+
+    <!-- Pestañas / Datos bancarios -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 15px; margin-bottom: 25px;">
+      <div style="padding: 16px; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 800; color: #059669; font-size: 0.9rem; margin-bottom: 6px;">🇺🇸 Zelle (USD)</div>
+        <div style="font-size: 0.82rem; color: #334155;">Correo: <strong style="color: #0f172a; user-select: all;">pagos@gigmanager.app</strong></div>
+        <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">Titular: Gig Manager Corp</div>
+      </div>
+      <div style="padding: 16px; border-radius: 16px; background: #f8fafc; border: 1px solid #e2e8f0;">
+        <div style="font-weight: 800; color: #d97706; font-size: 0.9rem; margin-bottom: 6px;">🔶 Binance Pay (USDT)</div>
+        <div style="font-size: 0.82rem; color: #334155;">Pay ID: <strong style="color: #0f172a; user-select: all;">889977665</strong></div>
+        <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">Red: TRC20 / BEP20</div>
+      </div>
+      <div style="padding: 16px; border-radius: 16px; background: #f0f9ff; border: 1px solid #bae6fd;">
+        <div style="font-weight: 800; color: #0284c7; font-size: 0.9rem; margin-bottom: 6px; display: flex; justify-content: space-between; align-items: center;">
+          <span>🇻🇪 Pago Móvil Bancamiga</span>
+          <span style="font-size: 0.72rem; background: #0284c7; color: white; padding: 2px 6px; border-radius: 4px; font-weight: 800;">TASA BCV</span>
+        </div>
+        <div style="font-size: 0.82rem; color: #334155;">Banco: <strong style="color: #0f172a;">Bancamiga (0172)</strong></div>
+        <div style="font-size: 0.82rem; color: #334155;">C.I.: <strong style="color: #0f172a; user-select: all;">V-33115864</strong></div>
+        <div style="font-size: 0.82rem; color: #334155;">Teléfono: <strong style="color: #0f172a; user-select: all;">0424-6208725</strong></div>
+      </div>
+    </div>
+
+    <!-- Formulario para Reportar Pago -->
+    <div style="padding: 24px; border-radius: 18px; background: #f8fafc; border: 1px solid #e2e8f0;">
+      <h3 style="font-size: 1.1rem; font-weight: 800; color: #0f172a; margin: 0 0 16px 0;">Reportar Pago Realizado</h3>
+      <%= form_with url: report_payment_subscriptions_path, method: :post, local: true, style: "display: flex; flex-direction: column; gap: 15px;" do |f| %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Paquete Base</label>
+            <%= select_tag :plan_tier, options_for_select(
+              AppModule.packages.map { |pkg| ["#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD / mes)", pkg[:key]] },
+              @company.plan_tier.presence || "banda"
+            ), id: "subscription_plan_tier_select", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Método de Pago</label>
+            <%= select_tag :payment_method, options_for_select([["Pago Móvil (Tasa BCV)", "pago_movil"], ["Zelle (USD)", "zelle"], ["Binance Pay (USDT)", "binance"], ["Transferencia Bancaria", "transferencia"]]), style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+          </div>
+          <div>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Número de Referencia</label>
+            <%= text_field_tag :reference_number, nil, required: true, placeholder: "Ej. 09841235", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+          </div>
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Notas adicionales (opcional)</label>
+          <%= text_field_tag :notes, nil, placeholder: "Titular de la cuenta, detalle de módulos extra incluidos...", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+        </div>
+        <div style="padding-top: 5px;">
+          <%= f.submit "Reportar Pago para Verificación 🚀", style: "width: 100%; padding: 14px; border-radius: 12px; background: #2563eb; color: white; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.3);" %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+</div>
