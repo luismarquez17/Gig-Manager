@@ -109,11 +109,15 @@ class Company < ApplicationRecord
     false
   end
 
+  def plan_tier_name
+    AppModule.package_info(plan_tier)&.dig(:name) || plan_tier.to_s.titleize
+  end
+
   def subscription_label
     if suspended?
       "Suspendida"
     elsif active_subscription?
-      "Suscripción Activa (#{plan_tier.to_s.capitalize})"
+      "Suscripción Activa (#{plan_tier_name})"
     elsif trial_active?
       "Prueba Gratuita (#{days_left_in_trial} días restantes)"
     elsif trial_expired?

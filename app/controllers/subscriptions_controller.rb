@@ -36,8 +36,8 @@ class SubscriptionsController < ApplicationController
   }.freeze
 
   def report_payment
-    plan_tier = params[:plan_tier].presence || 'starter'
-    amount = TIER_PRICES[plan_tier] || 10.00
+    plan_tier = params[:plan_tier].presence || 'banda'
+    amount = TIER_PRICES[plan_tier] || AppModule.package_info(plan_tier)&.dig(:price) || 15.00
 
     @payment = current_company.subscription_payments.build(
       user: current_user,

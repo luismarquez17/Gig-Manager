@@ -101,48 +101,75 @@ class AppModule
 
   PACKAGES = {
     'banda' => {
+      key: 'banda',
       name: 'Paquete Bandas & Orquestas',
       icon: '🎸',
+      badge: 'Más Popular',
       price: 15.00,
+      savings: '$2 USD/mes',
+      description: 'Ideal para agrupaciones, directores, orquestas y bandas en vivo: Agenda de shows, nóminas por bolo/porcentaje, repertorio y caja.',
       modules: ['gigs', 'payroll', 'songs_repertoire', 'finances']
     },
     'productora' => {
+      key: 'productora',
       name: 'Paquete Productoras & Audio',
       icon: '🎬',
+      badge: 'Producción & Equipos',
       price: 18.00,
+      savings: '$2 USD/mes',
+      description: 'Optimizado para empresas de producción técnica, alquiler de audio, tarimas, luces e iluminación con inventario QR y cotizaciones.',
       modules: ['gigs', 'inventory', 'clients_crm', 'payroll', 'shopping_list']
     },
     'salon' => {
+      key: 'salon',
       name: 'Paquete Salones & Venues',
       icon: '🏛️',
+      badge: 'Locaciones & Eventos',
       price: 15.00,
+      savings: '$2 USD/mes',
+      description: 'Pensado para salones de fiesta, quintas, venues y centros de convenciones: Cotizaciones públicas, control de inventario y caja.',
       modules: ['gigs', 'inventory', 'clients_crm', 'finances']
     },
     'negocio' => {
+      key: 'negocio',
       name: 'Paquete Empresas & Negocios',
       icon: '💼',
+      badge: 'Pymes & Servicios',
       price: 14.00,
+      savings: '$3 USD/mes',
+      description: 'Diseñado para pymes, comercios y prestadores de servicios: Gestión de clientes, presupuestos por WhatsApp, finanzas y nómina.',
       modules: ['clients_crm', 'finances', 'payroll']
     },
     'full' => {
+      key: 'full',
       name: 'Paquete Full Suite Total',
       icon: '👑',
+      badge: '⭐ Acceso Total Ilimitado',
       price: 22.00,
+      savings: '$4 USD/mes',
+      featured: true,
+      description: 'Acceso total e ilimitado a todas las herramientas actuales y futuras del ecosistema GigManager con soporte prioritario.',
       modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
     },
     'starter' => {
-      name: 'Plan Base',
+      key: 'starter',
+      name: 'Plan Base (Legacy)',
       icon: '🚀',
       price: 10.00,
       modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
     },
     'pro' => {
-      name: 'Plan Pro',
+      key: 'pro',
+      name: 'Plan Pro (Legacy)',
       icon: '✨',
       price: 20.00,
       modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
     }
   }.freeze
+
+  def self.packages
+    PACKAGES.slice('banda', 'productora', 'salon', 'negocio', 'full').values
+  end
 
   def self.all
     MODULES.values
