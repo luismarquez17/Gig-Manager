@@ -144,22 +144,24 @@
       </div>
     </header>
 
-    <!-- Flash Notifications -->
-    <% if flash[:notice].present? || flash[:alert].present? %>
-      <div class="max-w-4xl mx-auto px-4 mt-4 w-full">
-        <% if flash[:notice].present? %>
-          <div class="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-sm font-semibold flex items-center gap-3 backdrop-blur-md">
-            <span>✨</span>
-            <span><%= flash[:notice] %></span>
-          </div>
-        <% end %>
-        <% if flash[:alert].present? %>
-          <div class="p-4 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-sm font-semibold flex items-center gap-3 backdrop-blur-md">
-            <span>⚠️</span>
-            <span><%= flash[:alert] %></span>
-          </div>
-        <% end %>
-      </div>
+    <!-- Flash Notifications (Páginas públicas generales) -->
+    <% unless devise_controller? %>
+      <% if flash[:notice].present? || flash[:alert].present? %>
+        <div class="max-w-4xl mx-auto px-4 mt-4 w-full">
+          <% if flash[:notice].present? %>
+            <div class="p-4 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-200 text-sm font-semibold flex items-center gap-3 backdrop-blur-md">
+              <span>✅</span>
+              <span><%= flash[:notice] %></span>
+            </div>
+          <% end %>
+          <% if flash[:alert].present? %>
+            <div class="p-4 rounded-xl bg-rose-950/80 border border-rose-500/40 text-rose-200 text-sm font-semibold flex items-center gap-3 backdrop-blur-md">
+              <span>❌</span>
+              <span><%= flash[:alert] %></span>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
     <% end %>
 
     <!-- Contenido Principal -->

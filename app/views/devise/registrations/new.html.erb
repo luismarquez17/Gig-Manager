@@ -12,6 +12,27 @@
       <p class="text-xs sm:text-sm text-slate-400 mt-1">Comienza a gestionar tus shows y finanzas hoy mismo</p>
     </div>
 
+    <!-- Mensajes de Estado (Rojo cuando algo salió mal / Verde cuando salió bien) -->
+    <% if flash[:alert].present? %>
+      <div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-sm shadow-xl shadow-rose-950/30 flex items-start gap-3">
+        <span class="text-lg flex-shrink-0">❌</span>
+        <div class="flex-1">
+          <div class="font-black text-rose-300 text-xs uppercase tracking-wider mb-0.5">Error al registrarse</div>
+          <div class="text-xs text-rose-100 font-medium leading-relaxed"><%= flash[:alert] %></div>
+        </div>
+      </div>
+    <% end %>
+
+    <% if flash[:notice].present? %>
+      <div class="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 text-sm shadow-xl shadow-emerald-950/30 flex items-start gap-3">
+        <span class="text-lg flex-shrink-0">✅</span>
+        <div class="flex-1">
+          <div class="font-black text-emerald-300 text-xs uppercase tracking-wider mb-0.5">¡Operación exitosa!</div>
+          <div class="text-xs text-emerald-100 font-medium leading-relaxed"><%= flash[:notice] %></div>
+        </div>
+      </div>
+    <% end %>
+
     <%= form_for(resource, as: resource_name, url: registration_path(resource_name), html: { class: "mt-6 space-y-4" }) do |f| %>
       <%= render "devise/shared/error_messages", resource: resource %>
 

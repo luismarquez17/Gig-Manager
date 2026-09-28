@@ -1,25 +1,60 @@
-<h2>Change your password</h2>
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8 p-8 sm:p-10 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl">
+    
+    <!-- Encabezado -->
+    <div class="text-center">
+      <img src="/icons/logo.svg" alt="GigManager Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain;" class="w-14 h-14 rounded-2xl shadow-xl shadow-blue-500/30 mx-auto mb-4" />
+      <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Cambiar Contraseña</h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Establece una nueva clave de acceso para tu cuenta</p>
+    </div>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
-  <%= f.hidden_field :reset_password_token %>
-
-  <div class="field">
-    <%= f.label :password, "New password" %><br />
-    <% if @minimum_password_length %>
-      <em>(<%= @minimum_password_length %> characters minimum)</em><br />
+    <!-- Mensajes de Estado (Rojo cuando algo salió mal / Verde cuando salió bien) -->
+    <% if flash[:alert].present? %>
+      <div class="p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-sm shadow-xl shadow-rose-950/30 flex items-start gap-3">
+        <span class="text-lg flex-shrink-0">❌</span>
+        <div class="flex-1">
+          <div class="font-black text-rose-300 text-xs uppercase tracking-wider mb-0.5">Error</div>
+          <div class="text-xs text-rose-100 font-medium leading-relaxed"><%= flash[:alert] %></div>
+        </div>
+      </div>
     <% end %>
-    <%= f.password_field :password, autofocus: true, autocomplete: "new-password" %>
-  </div>
 
-  <div class="field">
-    <%= f.label :password_confirmation, "Confirm new password" %><br />
-    <%= f.password_field :password_confirmation, autocomplete: "new-password" %>
-  </div>
+    <% if flash[:notice].present? %>
+      <div class="p-4 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-200 text-sm shadow-xl shadow-emerald-950/30 flex items-start gap-3">
+        <span class="text-lg flex-shrink-0">✅</span>
+        <div class="flex-1">
+          <div class="font-black text-emerald-300 text-xs uppercase tracking-wider mb-0.5">¡Operación exitosa!</div>
+          <div class="text-xs text-emerald-100 font-medium leading-relaxed"><%= flash[:notice] %></div>
+        </div>
+      </div>
+    <% end %>
 
-  <div class="actions">
-    <%= f.submit "Change my password" %>
-  </div>
-<% end %>
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put, class: "mt-6 space-y-4" }) do |f| %>
+      <%= render "devise/shared/error_messages", resource: resource %>
+      <%= f.hidden_field :reset_password_token %>
 
-<%= render "devise/shared/links" %>
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Nueva Contraseña</label>
+        <%= f.password_field :password, autofocus: true, autocomplete: "new-password", placeholder: "Mínimo 6 caracteres", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
+      </div>
+
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Confirmar Nueva Contraseña</label>
+        <%= f.password_field :password_confirmation, autocomplete: "new-password", placeholder: "Repite tu nueva contraseña", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
+      </div>
+
+      <div class="pt-3">
+        <%= f.submit "Actualizar Contraseña y Entrar", 
+            class: "w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 cursor-pointer transition-all text-center" %>
+      </div>
+    <% end %>
+
+    <div class="pt-4 border-t border-slate-800/80 text-center text-xs text-slate-400">
+      <span>¿Recordaste tu contraseña?</span>
+      <%= link_to "Iniciar Sesión", new_user_session_path, class: "font-bold text-cyan-400 hover:text-cyan-300 ml-1" %>
+    </div>
+
+  </div>
+</div>
