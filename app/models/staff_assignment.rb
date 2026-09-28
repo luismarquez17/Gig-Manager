@@ -48,6 +48,8 @@ class StaffAssignment < ApplicationRecord
 
       direct = gig.employee_payments.approved.where(user_id: user_id).sum(:amount).to_f
 
+      is_future = gig.present? && gig.date.present? && gig.date > Date.today
+
       if direct >= agreed
         {
           direct_paid: direct,
@@ -57,9 +59,20 @@ class StaffAssignment < ApplicationRecord
           pending_balance: 0.0,
           worker_owes: (direct - agreed).round(2)
         }
+      elsif is_future
+        # Para shows futuros sin pago directo completo, no auto-aplicamos créditos generales pasados hasta que se celebre el evento
+        rem_balance = (agreed - direct).round(2)
+        {
+          direct_paid: direct,
+          credit_applied: 0.0,
+          total_paid: direct,
+          balance: rem_balance,
+          pending_balance: [rem_balance, 0.0].max.round(2),
+          worker_owes: 0.0
+        }
       else
         all_worker_assignments = user.staff_assignments.includes(:gig)
-          .select { |sa| sa.gig.present? }
+          .select { |sa| sa.gig.present? && (sa.gig.date.blank? || sa.gig.date <= Date.today) }
           .sort_by { |sa| [sa.gig.date || Date.today, sa.created_at || Time.current] }
 
         all_worker_payments = user.employee_payments.approved.to_a

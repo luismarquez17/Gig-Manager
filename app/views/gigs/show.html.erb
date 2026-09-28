@@ -719,18 +719,37 @@
 
               <div>
                 <span style="color: #64748b; font-weight: 600;">Estado:</span>
+                <% is_future_gig = @gig.date.present? && @gig.date > Date.today %>
                 <% if balance > 0 %>
-                  <strong style="color: #dc2626; background: #fef2f2; padding: 4px 10px; border-radius: 8px; border: 1px solid #fecaca;">
-                    ⏳ Pendiente: $ <%= number_with_precision(balance, precision: 2) %>
-                  </strong>
+                  <% if is_future_gig %>
+                    <% if paid > 0 %>
+                      <strong style="color: #1d4ed8; background: #eff6ff; padding: 4px 10px; border-radius: 8px; border: 1px solid #bfdbfe;">
+                        📅 Anticipo abonado (Resta: $ <%= number_with_precision(balance, precision: 2) %>)
+                      </strong>
+                    <% else %>
+                      <strong style="color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                        📅 Programado ($ <%= number_with_precision(agreed, precision: 2) %> al realizarse)
+                      </strong>
+                    <% end %>
+                  <% else %>
+                    <strong style="color: #dc2626; background: #fef2f2; padding: 4px 10px; border-radius: 8px; border: 1px solid #fecaca;">
+                      ⏳ Pendiente: $ <%= number_with_precision(balance, precision: 2) %>
+                    </strong>
+                  <% end %>
                 <% elsif balance < 0 %>
                   <strong style="color: #b45309; background: #fffbe6; padding: 4px 10px; border-radius: 8px; border: 1px solid #fef08a;">
                     ⚠️ Le debe a la empresa: $ <%= number_with_precision(balance.abs, precision: 2) %> (Vuelto)
                   </strong>
                 <% else %>
-                  <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
-                    ✅ Pagado completo
-                  </strong>
+                  <% if is_future_gig %>
+                    <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
+                      ✅ Pagado por adelantado
+                    </strong>
+                  <% else %>
+                    <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
+                      ✅ Pagado completo
+                    </strong>
+                  <% end %>
                 <% end %>
               </div>
 
@@ -784,11 +803,12 @@
             <div style="font-size: 0.75em; color: #15803d; font-weight: 700; text-transform: uppercase;">Cobrado Confirmado</div>
             <div style="font-size: 1.4em; font-weight: 900; color: #16a34a; margin-top: 2px;">$ <%= number_with_precision(my_paid, precision: 2) %></div>
           </div>
-          <div style="background: <%= my_pending > 0 ? '#fffbeb' : '#f0fdf4' %>; border: 1px solid <%= my_pending > 0 ? '#fde68a' : '#bbf7d0' %>; border-radius: 12px; padding: 14px;">
-            <div style="font-size: 0.75em; color: <%= my_pending > 0 ? '#b45309' : '#15803d' %>; font-weight: 700; text-transform: uppercase;">
-              <%= my_pending > 0 ? 'Pendiente' : 'Al Día' %>
+          <% is_future_gig = @gig.date.present? && @gig.date > Date.today %>
+          <div style="background: <%= my_pending > 0 ? (is_future_gig ? '#f8fafc' : '#fffbeb') : '#f0fdf4' %>; border: 1px solid <%= my_pending > 0 ? (is_future_gig ? '#cbd5e1' : '#fde68a') : '#bbf7d0' %>; border-radius: 12px; padding: 14px;">
+            <div style="font-size: 0.75em; color: <%= my_pending > 0 ? (is_future_gig ? '#475569' : '#b45309') : '#15803d' %>; font-weight: 700; text-transform: uppercase;">
+              <%= my_pending > 0 ? (is_future_gig ? 'Por Cobrar al celebrarse' : 'Pendiente') : 'Al Día' %>
             </div>
-            <div style="font-size: 1.4em; font-weight: 900; color: <%= my_pending > 0 ? '#d97706' : '#16a34a' %>; margin-top: 2px;">$ <%= number_with_precision(my_pending > 0 ? my_pending : 0, precision: 2) %></div>
+            <div style="font-size: 1.4em; font-weight: 900; color: <%= my_pending > 0 ? (is_future_gig ? '#1e293b' : '#d97706') : '#16a34a' %>; margin-top: 2px;">$ <%= number_with_precision(my_pending > 0 ? my_pending : 0, precision: 2) %></div>
           </div>
         </div>
 
