@@ -3,7 +3,7 @@
     
     <!-- Encabezado -->
     <div class="text-center">
-      <img src="/icons/logo.svg" alt="GigManager Logo" class="w-14 h-14 rounded-2xl shadow-xl shadow-blue-500/30 mx-auto mb-4" />
+      <img src="/icons/logo.svg" alt="GigManager Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain;" class="w-14 h-14 rounded-2xl shadow-xl shadow-blue-500/30 mx-auto mb-4" />
       <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Iniciar Sesión</h2>
       <p class="text-xs sm:text-sm text-slate-400 mt-1">Ingresa a tu panel de GigManager</p>
     </div>
@@ -16,7 +16,12 @@
       </div>
 
       <div>
-        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Contraseña</label>
+        <div class="flex items-center justify-between mb-1.5">
+          <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider">Contraseña</label>
+          <% if devise_mapping.recoverable? %>
+            <%= link_to "¿Olvidaste tu contraseña?", new_password_path(resource_name), class: "text-xs text-cyan-400 hover:text-cyan-300 transition-colors" %>
+          <% end %>
+        </div>
         <%= f.password_field :password, autocomplete: "current-password", placeholder: "••••••••", 
             class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
       </div>

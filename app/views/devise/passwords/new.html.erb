@@ -1,16 +1,32 @@
-<h2>Forgot your password?</h2>
+<div class="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+  <div class="w-full max-w-md space-y-8 p-8 sm:p-10 rounded-3xl bg-slate-900/80 border border-slate-800 shadow-2xl backdrop-blur-xl">
+    
+    <!-- Encabezado -->
+    <div class="text-center">
+      <img src="/icons/logo.svg" alt="GigManager Logo" width="56" height="56" style="width: 56px; height: 56px; object-fit: contain;" class="w-14 h-14 rounded-2xl shadow-xl shadow-blue-500/30 mx-auto mb-4" />
+      <h2 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Recuperar Contraseña</h2>
+      <p class="text-xs sm:text-sm text-slate-400 mt-1">Ingresa tu correo para enviarte las instrucciones de restablecimiento</p>
+    </div>
 
-<%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= render "devise/shared/error_messages", resource: resource %>
+    <%= form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post, class: "mt-6 space-y-4" }) do |f| %>
+      <%= render "devise/shared/error_messages", resource: resource %>
 
-  <div class="field">
-    <%= f.label :email %><br />
-    <%= f.email_field :email, autofocus: true, autocomplete: "email" %>
+      <div>
+        <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Correo Electrónico</label>
+        <%= f.email_field :email, autofocus: true, autocomplete: "email", placeholder: "tu@email.com", 
+            class: "w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all", required: true %>
+      </div>
+
+      <div class="pt-3">
+        <%= f.submit "Enviar Instrucciones", 
+            class: "w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-xl shadow-cyan-500/25 hover:shadow-cyan-500/40 cursor-pointer transition-all text-center" %>
+      </div>
+    <% end %>
+
+    <div class="pt-4 border-t border-slate-800/80 text-center text-xs text-slate-400">
+      <span>¿Recordaste tu contraseña?</span>
+      <%= link_to "Iniciar Sesión", new_user_session_path, class: "font-bold text-cyan-400 hover:text-cyan-300 ml-1" %>
+    </div>
+
   </div>
-
-  <div class="actions">
-    <%= f.submit "Send me reset password instructions" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>

@@ -1,4 +1,5 @@
 class ApplicationController < ActionController::Base
+  layout :layout_by_resource
   before_action :authenticate_user!
   before_action :set_current_tenant
   before_action :check_company_subscription!
@@ -19,6 +20,14 @@ class ApplicationController < ActionController::Base
   end
 
   protected
+
+  def layout_by_resource
+    if devise_controller? && !user_signed_in?
+      "landing"
+    else
+      "application"
+    end
+  end
 
   def after_sign_out_path_for(resource_or_scope)
     public_landing_path
