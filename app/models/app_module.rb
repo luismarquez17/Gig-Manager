@@ -150,25 +150,11 @@ class AppModule
       featured: true,
       description: 'Acceso total e ilimitado a todas las herramientas actuales y futuras del ecosistema GigManager con soporte prioritario.',
       modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
-    },
-    'starter' => {
-      key: 'starter',
-      name: 'Plan Base (Legacy)',
-      icon: '🚀',
-      price: 10.00,
-      modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
-    },
-    'pro' => {
-      key: 'pro',
-      name: 'Plan Pro (Legacy)',
-      icon: '✨',
-      price: 20.00,
-      modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
     }
   }.freeze
 
   def self.packages
-    PACKAGES.slice('banda', 'productora', 'salon', 'negocio', 'full').values
+    PACKAGES.values
   end
 
   def self.all
@@ -197,11 +183,12 @@ class AppModule
   end
 
   def self.modules_for_package(pkg_key)
-    PACKAGES.dig(pkg_key.to_s, :modules)
+    package_info(pkg_key)&.dig(:modules) || PACKAGES['banda'][:modules]
   end
 
   def self.package_info(pkg_key)
-    PACKAGES[pkg_key.to_s]
+    k = pkg_key.to_s
+    PACKAGES[k] || PACKAGES['banda']
   end
 
   def self.default_hash
@@ -228,8 +215,8 @@ class AppModule
   end
 
   def self.calculate_pricing(pkg_key, enabled_keys)
-    pkg_key_clean = pkg_key.presence || 'banda'
-    pkg = package_info(pkg_key_clean) || package_info('banda')
+    clean_key = (PACKAGES.key?(pkg_key.to_s)) ? pkg_key.to_s : 'banda'
+    pkg = package_info(clean_key)
     pkg_modules = pkg[:modules] || []
     base_price = pkg[:price].to_f
 
@@ -246,12 +233,21 @@ class AppModule
 
     full_suite_pkg = package_info('full')
     full_suite_price = full_suite_pkg ? full_suite_pkg[:price].to_f : 22.00
-    suggests_full_suite = (subtotal >= full_suite_price) && (pkg_key_clean != 'full')
+    suggests_full_suite = (subtotal >= full_suite_price) && (clean_key != 'full')
     effective_total = suggests_full_suite ? full_suite_price : subtotal
+
+    custom_plan_name = if clean_key == 'full'
+                         pkg[:name]
+                       elsif extra_keys.any?
+                         "#{pkg[:name]} + #{extra_keys.count} Adicional(es) (Personalizado)"
+                       else
+                         pkg[:name]
+                       end
 
     {
       package_key: pkg[:key],
       package_name: pkg[:name],
+      custom_plan_name: custom_plan_name,
       package_icon: pkg[:icon],
       package_badge: pkg[:badge],
       base_price: base_price,
@@ -261,6 +257,7 @@ class AppModule
       extra_keys: extra_keys,
       extra_module_price: EXTRA_MODULE_PRICE,
       extra_cost: extra_cost,
+      difference_amount: extra_cost,
       subtotal: subtotal,
       total_price: effective_total,
       suggests_full_suite: suggests_full_suite,
@@ -268,7 +265,8 @@ class AppModule
       savings_with_full_suite: suggests_full_suite ? (subtotal - full_suite_price).round(2) : 0.0,
       included_modules_details: included_keys.map { |k| find(k) }.compact,
       extra_modules_details: extra_keys.map { |k| find(k) }.compact,
-      total_modules_count: enabled_array.count
+      total_modules_count: enabled_array.count,
+      has_extras: extra_keys.any?
     }
   end
 

@@ -112,4 +112,30 @@ class CompanyTest < ActiveSupport::TestCase
     assert company.module_enabled?(:payroll)
     assert company.module_enabled?(:clients_crm)
   end
+
+  test "calcula pricing_breakdown y extra_modules correctamente para una empresa" do
+    company = Company.create!(name: "Orquesta Latina", plan_tier: "banda", monthly_fee: 15.0)
+
+    # Solo modulos de banda
+    company.update_modules!({
+      "gigs" => true,
+      "payroll" => true,
+      "songs_repertoire" => true,
+      "finances" => true,
+      "inventory" => false,
+      "clients_crm" => false,
+      "shopping_list" => false
+    })
+
+    assert_equal "banda", company.effective_plan_tier
+    assert_equal 15.00, company.calculated_monthly_fee
+    assert_equal false, company.has_extra_modules?
+
+    # Agregar modulo extra (CRM + $3 USD)
+    company.enable_module!(:clients_crm)
+    assert_equal 18.00, company.calculated_monthly_fee
+    assert_equal true, company.has_extra_modules?
+    assert_equal 1, company.extra_modules.count
+    assert_equal "clients_crm", company.extra_modules.first[:key]
+  end
 end

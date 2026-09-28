@@ -37,4 +37,35 @@ class AppModuleTest < ActiveSupport::TestCase
       assert_equal true, default_hash[k]
     end
   end
+
+  test "calcula precios base y modulos extra correctamente" do
+    # Plan Banda ($15) con solo sus 4 modulos base
+    banda_mods = ["gigs", "payroll", "songs_repertoire", "finances"]
+    pricing_base = AppModule.calculate_pricing("banda", banda_mods)
+    assert_equal 15.00, pricing_base[:base_price]
+    assert_equal 0.0, pricing_base[:extra_cost]
+    assert_equal 15.00, pricing_base[:total_price]
+    assert_equal "Paquete Bandas & Orquestas", pricing_base[:custom_plan_name]
+    assert_equal false, pricing_base[:has_extras]
+
+    # Plan Banda con 1 modulo extra (ej. inventory -> + $3.00 USD)
+    pricing_with_1_extra = AppModule.calculate_pricing("banda", banda_mods + ["inventory"])
+    assert_equal 15.00, pricing_with_1_extra[:base_price]
+    assert_equal 3.00, pricing_with_1_extra[:extra_cost]
+    assert_equal 3.00, pricing_with_1_extra[:difference_amount]
+    assert_equal 18.00, pricing_with_1_extra[:total_price]
+    assert_includes pricing_with_1_extra[:custom_plan_name], "1 Adicional(es) (Personalizado)"
+    assert_equal true, pricing_with_1_extra[:has_extras]
+
+    # Plan Banda con 2 modulos extra (+ $6.00 USD) -> Sugiere Full Suite a $22
+    pricing_with_2_extras = AppModule.calculate_pricing("banda", banda_mods + ["inventory", "clients_crm"])
+    assert_equal 15.00, pricing_with_2_extras[:base_price]
+    assert_equal 6.00, pricing_with_2_extras[:extra_cost]
+    assert_equal 21.00, pricing_with_2_extras[:total_price]
+
+    # Plan Banda con todos los 7 modulos (+ 3 extras = +$9) -> Topa en Full Suite $22.00
+    pricing_with_3_extras = AppModule.calculate_pricing("banda", AppModule.keys)
+    assert_equal 22.00, pricing_with_3_extras[:total_price]
+    assert_equal true, pricing_with_3_extras[:suggests_full_suite]
+  end
 end

@@ -25,11 +25,12 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
-  test "leader puede ver el panel de configuracion de modulos" do
+  test "leader al acceder a modules es redirigido a suscripciones unificadas" do
     sign_in @leader
     get company_modules_path
+    assert_redirected_to subscriptions_path(anchor: 'gigmanager-modules-section')
+    follow_redirect!
     assert_response :success
-    assert_select "h1", text: /Añadir y Configurar Opciones/
   end
 
   test "leader puede actualizar las preferencias de modulos" do
@@ -44,7 +45,7 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
       }
     }
 
-    assert_redirected_to company_modules_path
+    assert_redirected_to subscriptions_path(anchor: 'gigmanager-modules-section')
     follow_redirect!
     assert_response :success
 

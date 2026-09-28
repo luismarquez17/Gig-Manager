@@ -484,7 +484,7 @@
                 <%# Botón Destacado: Añadir Funciones & Opciones %>
                 <div style="margin: 12px 10px 14px 10px; padding: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px;">
                   <div style="font-size: 0.72rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
-                    <span>⚡ Funciones de Gig</span>
+                    <span>⚡ Planes & Módulos</span>
                     <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: 6px; background: rgba(99, 102, 241, 0.3); color: #e0e7ff;">
                       <%= current_company.enabled_module_keys.count %>/<%= AppModule.all.count %>
                     </span>
@@ -492,16 +492,12 @@
                   <div style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 8px; line-height: 1.3;">
                     Personaliza tu plan y añade más herramientas a tu banda.
                   </div>
-                  <%= link_to company_modules_path, style: "display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px 10px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; text-decoration: none; box-shadow: 0 3px 10px rgba(6, 182, 212, 0.25); box-sizing: border-box;" do %>
-                    <span>➕</span> <span>Añadir Funciones / Módulos</span>
+                  <%= link_to subscriptions_path(anchor: 'gigmanager-modules-section'), style: "display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px 10px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; text-decoration: none; box-shadow: 0 3px 10px rgba(6, 182, 212, 0.25); box-sizing: border-box;" do %>
+                    <span>➕</span> <span>Personalizar Módulos</span>
                   <% end %>
                 </div>
 
-                <%= link_to company_modules_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions' && action_name == 'modules'}" do %>
-                  <span class="icon">🧩</span> <span>Módulos de Empresa</span>
-                <% end %>
-
-                <%= link_to subscriptions_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions' && action_name != 'modules'}" do %>
+                <%= link_to subscriptions_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions'}" do %>
                   <span class="icon">💳</span> <span>Suscripción SaaS</span>
                   <% if current_company.trial_active? %>
                     <span style="background: rgba(139, 92, 246, 0.3); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">

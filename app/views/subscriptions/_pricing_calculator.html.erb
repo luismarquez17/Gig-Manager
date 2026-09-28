@@ -1,6 +1,6 @@
 <%# 
   Partial: _pricing_calculator.html.erb
-  Calculador y Simulador Unificado de Planes Base y Módulos Adicionales (+ $3 USD)
+  Calculador y Simulador Unificado de Planes Base, Planes Personalizados y Pago de Diferencia (+ $3 USD)
 %>
 
 <style>
@@ -8,22 +8,22 @@
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   }
   .pkg-pill-btn {
-    transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     border: 2px solid #cbd5e1;
     position: relative;
     user-select: none;
   }
   .pkg-pill-btn:hover {
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     border-color: #94a3b8;
-    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.08);
+    box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08);
   }
   .pkg-pill-btn.is-active {
     border-color: #6366f1 !important;
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
     color: white !important;
-    box-shadow: 0 14px 30px -5px rgba(99, 102, 241, 0.4) !important;
+    box-shadow: 0 10px 25px -4px rgba(99, 102, 241, 0.35) !important;
     transform: translateY(-2px);
   }
   .pkg-pill-btn.is-active .pkg-name {
@@ -36,7 +36,7 @@
     color: #38bdf8 !important;
   }
   .calc-module-row {
-    transition: all 0.18s ease;
+    transition: all 0.15s ease;
   }
   .calc-module-row:hover {
     border-color: #94a3b8 !important;
@@ -48,16 +48,27 @@
   .calc-module-row.is-extra-active {
     background: #fefce8 !important;
     border-color: #fde047 !important;
-    box-shadow: 0 4px 12px rgba(234, 179, 8, 0.1) !important;
+    box-shadow: 0 3px 10px rgba(234, 179, 8, 0.08) !important;
   }
   .calc-glow-card {
     background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
     border: 1.5px solid #6366f1;
     color: white;
-    box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.3);
+    box-shadow: 0 15px 35px -8px rgba(15, 23, 42, 0.25);
+  }
+  .calc-toggle-btn {
+    transition: all 0.2s ease;
+  }
+  .calc-toggle-btn:hover {
+    background: #e2e8f0 !important;
+    border-color: #94a3b8 !important;
+    color: #0f172a !important;
   }
 
-  @media (max-width: 900px) {
+  @media (max-width: 960px) {
+    .calc-main-grid {
+      grid-template-columns: 1fr !important;
+    }
     .pkg-grid-5 {
       grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
@@ -75,75 +86,73 @@
   }
 </style>
 
-<div class="calc-container" id="gigmanager-pricing-calculator" style="margin-bottom: 35px;">
+<div class="calc-container" id="gigmanager-pricing-calculator" style="margin-bottom: 30px;">
   
   <%# Tarjeta Principal del Calculador %>
-  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 28px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 24px;">
+  <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.03); margin-bottom: 20px;">
     
-    <%# Encabezado %>
-    <div style="text-align: center; max-width: 760px; margin: 0 auto 28px auto;">
-      <div style="display: inline-flex; align-items: center; gap: 8px; padding: 5px 14px; border-radius: 50px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: #4f46e5; font-size: 0.82rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">
+    <%# Encabezado Compacto %>
+    <div style="text-align: center; max-width: 720px; margin: 0 auto 20px auto;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 50px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: #4f46e5; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">
         <span>💎</span> Planes Base & Calculadora de Módulos Extra
       </div>
-      <h2 style="font-size: 1.85rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; letter-spacing: -0.5px;">
+      <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.5px;">
         Elige tu Plan Base y Personaliza tus Módulos
       </h2>
-      <p style="color: #64748b; font-size: 0.95rem; margin: 0; line-height: 1.5;">
-        Selecciona un paquete pre-diseñado para tu sector. Los módulos de tu paquete están <strong>incluidos ($0)</strong>. Si agregas un módulo fuera del paquete, se cotiza a <strong>+$3.00 USD/mes</strong>.
+      <p style="color: #64748b; font-size: 0.9rem; margin: 0; line-height: 1.45;">
+        Los módulos de tu paquete están <strong>incluidos ($0)</strong>. Módulos fuera de tu paquete se cotizan a <strong>+$3.00 USD/mes</strong>.
       </p>
     </div>
 
     <%# 1. PLANES BASE ARRIBA (5 Cards Responsivas en Grid) %>
-    <div style="margin-bottom: 30px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-        <label style="font-size: 0.84rem; font-weight: 800; text-transform: uppercase; color: #334155; letter-spacing: 0.5px;">
+    <div style="margin-bottom: 22px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+        <label style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; color: #334155; letter-spacing: 0.5px;">
           1. Selecciona tu Paquete Base:
         </label>
-        <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
-          💡 Haz clic en cualquier plan para cambiar la configuración
+        <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+          💡 Haz clic en cualquier plan para preconfigurar sus módulos
         </span>
       </div>
 
-      <div class="pkg-grid-5" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px;" id="calc-package-tabs">
+      <div class="pkg-grid-5" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;" id="calc-package-tabs">
         <% AppModule.packages.each do |pkg| %>
-          <% is_selected = (@simulated_plan.presence || @company.plan_tier) == pkg[:key] %>
-          <div class="pkg-pill-btn <%= 'is-active' if is_selected %>" data-pkg-key="<%= pkg[:key] %>" style="background: <%= is_selected ? '#0f172a' : '#f8fafc' %>; color: <%= is_selected ? 'white' : '#1e293b' %>; border-radius: 18px; padding: 14px 12px; display: flex; flex-direction: column; justify-content: space-between;">
+          <% is_selected = (@simulated_plan.presence || @company.effective_plan_tier) == pkg[:key] %>
+          <div class="pkg-pill-btn <%= 'is-active' if is_selected %>" data-pkg-key="<%= pkg[:key] %>" onclick="window.selectGigPackage('<%= pkg[:key] %>', true)" style="background: <%= is_selected ? '#0f172a' : '#f8fafc' %>; color: <%= is_selected ? 'white' : '#1e293b' %>; border-radius: 14px; padding: 10px 10px; display: flex; flex-direction: column; justify-content: space-between;">
             
             <div>
-              <%# Badge en fila superior dedicada %>
-              <div style="min-height: 22px; margin-bottom: 8px; display: flex; align-items: center; justify-content: flex-start;">
+              <%# Badge en fila superior %>
+              <div style="min-height: 18px; margin-bottom: 6px; display: flex; align-items: center; justify-content: flex-start;">
                 <% if pkg[:badge].present? %>
-                  <span class="pkg-badge-pill" style="font-size: 0.62rem; font-weight: 900; padding: 2px 7px; border-radius: 6px; background: <%= is_selected ? 'rgba(99, 102, 241, 0.3)' : '#e0e7ff' %>; color: <%= is_selected ? '#c7d2fe' : '#4338ca' %>; border: 1px solid <%= is_selected ? 'rgba(165, 180, 252, 0.4)' : '#c7d2fe' %>; text-transform: uppercase; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block;">
+                  <span class="pkg-badge-pill" style="font-size: 0.58rem; font-weight: 900; padding: 1px 6px; border-radius: 5px; background: <%= is_selected ? 'rgba(99, 102, 241, 0.3)' : '#e0e7ff' %>; color: <%= is_selected ? '#c7d2fe' : '#4338ca' %>; border: 1px solid <%= is_selected ? 'rgba(165, 180, 252, 0.4)' : '#c7d2fe' %>; text-transform: uppercase; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block;">
                     <%= pkg[:badge] %>
                   </span>
                 <% else %>
-                  <span style="visibility: hidden; font-size: 0.62rem; padding: 2px 0;">&nbsp;</span>
+                  <span style="visibility: hidden; font-size: 0.58rem;">&nbsp;</span>
                 <% end %>
               </div>
 
-              <%# Icono %>
-              <div style="font-size: 2rem; line-height: 1; margin-bottom: 8px;">
+              <%# Icono + Nombre en bloque compacto %>
+              <div style="font-size: 1.6rem; line-height: 1; margin-bottom: 4px;">
                 <%= pkg[:icon] %>
               </div>
 
-              <%# Nombre del Plan %>
-              <div class="pkg-name" style="font-weight: 800; font-size: 0.92rem; margin-bottom: 4px; color: #0f172a; line-height: 1.25; min-height: 38px; display: flex; align-items: center;">
+              <div class="pkg-name" style="font-weight: 800; font-size: 0.85rem; margin-bottom: 3px; color: #0f172a; line-height: 1.2; min-height: 32px; display: flex; align-items: center;">
                 <%= pkg[:name] %>
               </div>
 
               <%# Precio %>
-              <div class="pkg-price-text" style="font-size: 1.45rem; font-weight: 900; color: #059669; line-height: 1.1; margin-bottom: 3px;">
-                $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.72rem; font-weight: 700; color: #64748b;">USD/mes</span>
+              <div class="pkg-price-text" style="font-size: 1.3rem; font-weight: 900; color: #059669; line-height: 1.1; margin-bottom: 2px;">
+                $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.68rem; font-weight: 700; color: #64748b;">USD/mes</span>
               </div>
 
-              <%# Módulos Base %>
-              <div class="pkg-subtext" style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
+              <div class="pkg-subtext" style="font-size: 0.72rem; color: #64748b; font-weight: 600;">
                 <%= pkg[:modules].count %> módulos base
               </div>
             </div>
 
             <%# Status Indicator %>
-            <div class="pkg-selection-status" style="margin-top: 10px; padding-top: 8px; border-top: 1px solid <%= is_selected ? 'rgba(255,255,255,0.15)' : '#e2e8f0' %>; font-size: 0.72rem; font-weight: 800; text-align: center; color: <%= is_selected ? '#38bdf8' : '#64748b' %>;">
+            <div class="pkg-selection-status" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid <%= is_selected ? 'rgba(255,255,255,0.15)' : '#e2e8f0' %>; font-size: 0.68rem; font-weight: 800; text-align: center; color: <%= is_selected ? '#38bdf8' : '#64748b' %>;">
               <%= is_selected ? '✓ Seleccionado' : 'Elegir Plan' %>
             </div>
 
@@ -152,153 +161,212 @@
       </div>
     </div>
 
-    <%# 2. SECCIÓN INFERIOR: CHECKLIST DE MÓDULOS (+3 +3) Y FACTURA EN VIVO %>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 24px; align-items: start;">
+    <%# 2. SECCIÓN INFERIOR: CHECKLIST COMPACTA Y FACTURA EN VIVO (SIN ESTIRAMIENTO VERTICAL) %>
+    <div class="calc-main-grid" style="display: grid; grid-template-columns: 1.15fr 0.95fr; gap: 18px; align-items: start;">
       
-      <%# Columna Izquierda: Checklist de Módulos %>
-      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 20px; padding: 22px;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
-          <label style="font-size: 0.85rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
-            2. Módulos & Herramientas Activas:
+      <%# Columna Izquierda: Checklist Compacta de 7 Módulos %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 16px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+          <label style="font-size: 0.82rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+            2. Herramientas & Módulos:
           </label>
-          <span id="calc-module-count-badge" style="font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: #e0e7ff; color: #4338ca;">
+          <span id="calc-module-count-badge" style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 16px; background: #e0e7ff; color: #4338ca;">
             -- módulos
           </span>
         </div>
 
-        <p style="font-size: 0.82rem; color: #64748b; margin: 0 0 16px 0; line-height: 1.45;">
-          Los módulos de tu plan base tienen costo <strong>$0</strong>. Al marcar un módulo adicional fuera de tu plan, se suma automáticamente <strong>+$3.00 USD/mes</strong> a tu cuota.
+        <p style="font-size: 0.76rem; color: #64748b; margin: 0 0 10px 0; line-height: 1.35;">
+          Marca o desmarca para personalizar tu menú. Los extras se suman a <strong>+$3 USD/mes</strong>.
         </p>
 
         <form id="calc-modules-form" action="<%= update_company_modules_path %>" method="POST">
           <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
           <input type="hidden" name="_method" value="patch">
 
-          <div style="display: flex; flex-direction: column; gap: 10px;" id="calc-modules-list">
+          <div style="display: flex; flex-direction: column; gap: 7px;" id="calc-modules-list">
             <% AppModule.all.each do |mod| %>
               <% is_checked = (@simulated_modules.presence || @company.enabled_module_keys).include?(mod[:key]) %>
-              <div class="calc-module-row" id="calc-row-<%= mod[:key] %>" style="background: white; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 12px 14px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
-                <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; flex: 1; user-select: none;">
-                  <input type="hidden" name="modules[<%= mod[:key] %>]" value="0">
-                  <input type="checkbox" name="modules[<%= mod[:key] %>]" value="1" class="calc-module-checkbox" data-mod-key="<%= mod[:key] %>" <%= 'checked' if is_checked %> style="width: 18px; height: 18px; accent-color: #6366f1; cursor: pointer; flex-shrink: 0;">
-                  <span style="font-size: 1.4rem; line-height: 1;"><%= mod[:icon] %></span>
-                  <div>
-                    <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a; line-height: 1.2;">
-                      <%= mod[:name] %>
+              <div class="calc-module-row" id="calc-row-<%= mod[:key] %>" style="background: white; border: 1.5px solid #e2e8f0; border-radius: 11px; overflow: hidden; transition: all 0.2s ease;">
+                
+                <%# Fila Superior Compacta %>
+                <div style="padding: 8px 11px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  
+                  <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; flex: 1; min-width: 0; user-select: none;">
+                    <input type="hidden" name="modules[<%= mod[:key] %>]" value="0">
+                    <input type="checkbox" name="modules[<%= mod[:key] %>]" value="1" class="calc-module-checkbox" data-mod-key="<%= mod[:key] %>" onchange="window.recalculateGigPricing()" <%= 'checked' if is_checked %> style="width: 17px; height: 17px; accent-color: #6366f1; cursor: pointer; flex-shrink: 0;">
+                    <span style="font-size: 1.3rem; line-height: 1; flex-shrink: 0;"><%= mod[:icon] %></span>
+                    
+                    <div style="min-width: 0; flex: 1;">
+                      <div style="font-size: 0.85rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <%= mod[:name] %>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        <span style="font-weight: 700; color: #475569;"><%= mod[:category] %>:</span> <%= mod[:description].truncate(45) %>
+                      </div>
                     </div>
-                    <div style="font-size: 0.74rem; color: #64748b; margin-top: 2px;">
-                      <%= mod[:category] %> • <%= mod[:description].truncate(50) %>
-                    </div>
-                  </div>
-                </label>
+                  </label>
 
-                <%# Badge Dinámico de Estado / Precio Extra %>
-                <div class="calc-module-status-badge" data-mod-key="<%= mod[:key] %>" style="flex-shrink: 0; text-align: right;">
-                  <!-- Insertado dinámicamente por JS -->
+                  <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+                    <%# Badge Dinámico de Estado / Precio Extra %>
+                    <div class="calc-module-status-badge" data-mod-key="<%= mod[:key] %>">
+                      <!-- Insertado dinámicamente por JS -->
+                    </div>
+
+                    <%# Botón Desplegable Chevron %>
+                    <button type="button" class="calc-toggle-btn" onclick="window.toggleModuleDetails('<%= mod[:key] %>')" style="background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 7px; width: 26px; height: 26px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; color: #64748b; font-size: 0.75rem; padding: 0; flex-shrink: 0;" title="Ver funciones incluidas">
+                      <span id="calc-chevron-<%= mod[:key] %>" style="display: inline-block; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);">▼</span>
+                    </button>
+                  </div>
+
                 </div>
+
+                <%# Panel Desplegable con Funciones & Descripción %>
+                <div id="calc-details-<%= mod[:key] %>" style="display: none; padding: 10px 12px 12px 12px; background: #f8fafc; border-top: 1px solid #f1f5f9;">
+                  <div style="font-size: 0.78rem; color: #334155; line-height: 1.45; margin-bottom: 8px;">
+                    <%= mod[:description] %>
+                  </div>
+
+                  <% if mod[:features].present? %>
+                    <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; margin-bottom: 5px;">
+                      ✨ Herramientas incluidas en este módulo:
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 5px;">
+                      <% mod[:features].each do |feat| %>
+                        <div style="font-size: 0.72rem; padding: 4px 8px; border-radius: 6px; background: white; border: 1px solid #e2e8f0; color: #1e293b; font-weight: 600; display: flex; align-items: center; gap: 5px; box-shadow: 0 1px 2px rgba(0,0,0,0.02);">
+                          <span style="color: #10b981; font-weight: 900; font-size: 0.75rem;">✓</span>
+                          <span style="line-height: 1.25;"><%= feat %></span>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+
               </div>
             <% end %>
           </div>
 
-          <div style="margin-top: 18px; display: flex; justify-content: flex-end;">
-            <button type="submit" style="padding: 10px 18px; border-radius: 10px; background: #0f172a; color: white; border: none; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(15,23,42,0.15);">
-              <span>💾</span> Guardar Módulos en mi Empresa
+          <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 0.72rem; color: #64748b;">Aparecerán en tu menú lateral</span>
+            <button type="submit" style="padding: 8px 15px; border-radius: 9px; background: #0f172a; color: white; border: none; font-size: 0.78rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 3px 10px rgba(15,23,42,0.12);">
+              <span>💾</span> Guardar Módulos
             </button>
           </div>
         </form>
       </div>
 
-      <%# Columna Derecha: Factura Proforma / Desglose en Dólares %>
-      <div class="calc-glow-card" style="border-radius: 24px; padding: 26px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 20px;">
+      <%# Columna Derecha: Factura Proforma / Desglose en Dólares (Compacto & Elegante) %>
+      <div class="calc-glow-card" style="border-radius: 18px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between; position: sticky; top: 20px;">
         
         <div>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 12px;">
-            <span style="font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #a5b4fc;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 9px;">
+            <span style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #a5b4fc;">
               🧾 Desglose de Mensualidad
             </span>
-            <span id="calc-summary-plan-badge" style="font-size: 0.74rem; font-weight: 800; padding: 3px 10px; border-radius: 20px; background: rgba(99, 102, 241, 0.3); color: #c7d2fe; border: 1px solid rgba(165, 180, 252, 0.4);">
-              Plan Activo
+            <span id="calc-summary-plan-badge" style="font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 16px; background: rgba(99, 102, 241, 0.3); color: #c7d2fe; border: 1px solid rgba(165, 180, 252, 0.4);">
+              Plan Base
             </span>
+          </div>
+
+          <%# Título Dinámico del Plan %>
+          <div style="margin-bottom: 10px;">
+            <div id="calc-summary-plan-title" style="font-weight: 800; font-size: 1.05rem; color: #ffffff; line-height: 1.25;">
+              Paquete Bandas & Orquestas
+            </div>
+            <div id="calc-summary-plan-subtitle" style="font-size: 0.74rem; color: #94a3b8; margin-top: 1px;">
+              Configuración estándar del paquete
+            </div>
           </div>
 
           <%# Línea 1: Plan Base %>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 0.92rem;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span id="calc-summary-pkg-icon" style="font-size: 1.2rem;">🎸</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.86rem; background: rgba(255,255,255,0.05); padding: 7px 10px; border-radius: 9px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span id="calc-summary-pkg-icon" style="font-size: 1.1rem;">🎸</span>
               <span id="calc-summary-pkg-name" style="font-weight: 700; color: white;">Paquete Bandas</span>
             </div>
-            <span id="calc-summary-base-price" style="font-weight: 800; color: #38bdf8; font-size: 1.05rem;">$15.00 USD</span>
+            <span id="calc-summary-base-price" style="font-weight: 800; color: #38bdf8; font-size: 0.98rem;">$15.00 USD</span>
           </div>
 
           <%# Lista de Módulos Incluidos %>
-          <div style="margin-bottom: 16px; padding: 10px 14px; border-radius: 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 6px;">
-              ✓ Módulos Incluidos en este Plan ($0 extra):
+          <div style="margin-bottom: 10px; padding: 7px 9px; border-radius: 9px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
+            <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px;">
+              ✓ Incluidos en este Plan ($0 extra):
             </div>
-            <div id="calc-summary-included-list" style="display: flex; flex-wrap: wrap; gap: 5px;">
+            <div id="calc-summary-included-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
               <!-- Insertado por JS -->
             </div>
           </div>
 
           <%# Línea 2: Módulos Adicionales (+3 c/u) %>
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.92rem;">
-            <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 1.1rem;">➕</span>
+          <div id="calc-summary-extra-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.86rem; background: rgba(253, 224, 71, 0.08); border: 1px solid rgba(253, 224, 71, 0.2); padding: 6px 10px; border-radius: 9px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 0.95rem;">➕</span>
               <span style="font-weight: 700; color: #fde047;">Módulos Extra (<span id="calc-summary-extra-count">0</span>):</span>
             </div>
-            <span id="calc-summary-extra-cost" style="font-weight: 800; color: #fde047; font-size: 1.05rem;">+$0.00 USD</span>
+            <span id="calc-summary-extra-cost" style="font-weight: 800; color: #fde047; font-size: 0.98rem;">+$0.00 USD</span>
           </div>
 
           <%# Lista de Módulos Extra %>
-          <div id="calc-summary-extra-container" style="margin-bottom: 16px; padding: 10px 14px; border-radius: 12px; background: rgba(253, 224, 71, 0.08); border: 1px solid rgba(253, 224, 71, 0.25);">
-            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #fef08a; margin-bottom: 6px;">
-              Módulos fuera de tu paquete (+$3.00 USD/mes c/u):
+          <div id="calc-summary-extra-container" style="display: none; margin-bottom: 10px; padding: 7px 9px; border-radius: 9px; background: rgba(253, 224, 71, 0.06); border: 1px solid rgba(253, 224, 71, 0.25);">
+            <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #fef08a; margin-bottom: 4px;">
+              Módulos fuera del paquete (+$3.00 USD/mes):
             </div>
-            <div id="calc-summary-extra-list" style="display: flex; flex-wrap: wrap; gap: 5px;">
+            <div id="calc-summary-extra-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
               <!-- Insertado por JS -->
             </div>
           </div>
 
-          <%# Recomendación Inteligente Full Suite (si aplica) %>
-          <div id="calc-full-suite-tip" style="display: none; margin-bottom: 18px; padding: 12px 14px; border-radius: 14px; background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); border: 1px solid rgba(251, 191, 36, 0.4); color: #fef08a;">
-            <div style="font-weight: 800; font-size: 0.84rem; display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+          <%# Recomendación Inteligente Full Suite %>
+          <div id="calc-full-suite-tip" style="display: none; margin-bottom: 12px; padding: 9px 11px; border-radius: 11px; background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); border: 1px solid rgba(251, 191, 36, 0.4); color: #fef08a;">
+            <div style="font-weight: 800; font-size: 0.78rem; display: flex; align-items: center; gap: 5px; margin-bottom: 2px;">
               <span>👑</span> ¡Ahorro Inteligente GigManager!
             </div>
-            <div style="font-size: 0.76rem; line-height: 1.35; color: #fef9c3;">
-              Al sumar tantos módulos, te recomendamos activar el <strong>Paquete Full Suite Total por solo $22.00 USD/mes</strong> para tener los 7 módulos completos sin límite.
+            <div style="font-size: 0.72rem; line-height: 1.3; color: #fef9c3;">
+              Al sumar varios módulos, te conviene el <strong>Paquete Full Suite Total por $22.00 USD/mes</strong>.
             </div>
           </div>
 
-          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.15); margin: 16px 0;" />
+          <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 12px 0;" />
 
           <%# TOTAL A PAGAR EN DÓLARES %>
-          <div style="margin-bottom: 20px;">
-            <div style="font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #cbd5e1; margin-bottom: 4px;">
-              Total Mensual a Pagar:
+          <div style="margin-bottom: 14px;">
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #cbd5e1; margin-bottom: 2px;">
+              Total Cuota Mensual:
             </div>
-            <div style="display: flex; align-items: baseline; gap: 8px;">
-              <span id="calc-total-amount" style="font-size: 2.6rem; font-weight: 900; color: white; letter-spacing: -1px;">
+            <div style="display: flex; align-items: baseline; gap: 6px;">
+              <span id="calc-total-amount" style="font-size: 2.2rem; font-weight: 900; color: white; letter-spacing: -0.5px;">
                 $15.00
               </span>
-              <span style="font-size: 1rem; font-weight: 800; color: #38bdf8;">
+              <span style="font-size: 0.92rem; font-weight: 800; color: #38bdf8;">
                 USD / mes
               </span>
             </div>
-            <div style="font-size: 0.76rem; color: #94a3b8; margin-top: 4px;">
-              Paga en USD vía Zelle, Binance Pay USDT o en Bolívares (Tasa Oficial BCV) por Pago Móvil.
+          </div>
+
+          <%# Banner Explicativo Inteligente de Pago y Fechas %>
+          <div id="calc-difference-banner" style="margin-bottom: 12px; padding: 10px 12px; border-radius: 11px; font-size: 0.74rem; line-height: 1.35;">
+            <div id="calc-diff-banner-content">
+              <!-- Insertado por JS -->
             </div>
           </div>
+
         </div>
 
-        <%# Botón de Acción Principal %>
-        <div style="display: flex; flex-direction: column; gap: 10px;">
-          <button type="button" id="calc-report-btn" onclick="applyCalculationToPaymentReport()" style="width: 100%; padding: 14px; border-radius: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-weight: 800; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.35);">
-            <span>⚡ Reportar Pago por <span id="calc-btn-amount">$15.00</span> USD</span>
+        <%# Botones de Acción %>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+          
+          <%# Botón 1: Pagar Mensualidad Completa / Renovar %>
+          <button type="button" id="calc-report-full-btn" onclick="window.applyCalculationToPaymentReport('full')" style="width: 100%; padding: 11px; border-radius: 11px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);">
+            <span>⚡ Reportar Mensualidad (<span id="calc-btn-full-amount">$15.00 USD</span>)</span>
           </button>
 
-          <a href="<%= company_modules_path %>" style="text-align: center; font-size: 0.78rem; color: #a5b4fc; text-decoration: none; font-weight: 700;">
-            ⚙️ Personalizar menú lateral en detalle →
-          </a>
+          <%# Botón 2: Pagar Solo la Diferencia (Solo visible si la empresa ya pagó su plan base) %>
+          <button type="button" id="calc-report-diff-btn" onclick="window.applyCalculationToPaymentReport('diff')" style="display: none; width: 100%; padding: 10px; border-radius: 11px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; border: 1px solid rgba(165, 180, 252, 0.4); font-weight: 800; font-size: 0.84rem; cursor: pointer; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 10px rgba(99, 102, 241, 0.25);">
+            <span>➕ Pagar Módulo(s) Extra (<span id="calc-btn-diff-amount">+$3.00 USD</span>)</span>
+          </button>
+
+          <div style="text-align: center; font-size: 0.72rem; color: #a5b4fc; font-weight: 600; margin-top: 2px;">
+            💡 Sube automáticamente al formulario de reporte
+          </div>
         </div>
 
       </div>
@@ -315,15 +383,19 @@
     const PACKAGES_DATA = <%= raw AppModule::PACKAGES.to_json %>;
     const MODULES_DATA = <%= raw AppModule::MODULES.to_json %>;
     const EXTRA_PRICE = <%= AppModule::EXTRA_MODULE_PRICE %>;
+    
+    const IS_SUBSCRIPTION_PAID = <%= @company.subscription_paid_and_active? ? 'true' : 'false' %>;
+    const EXPIRATION_DATE_STR = "<%= @company.trial_ends_at.present? ? (I18n.l(@company.trial_ends_at.to_date, format: :long) rescue @company.trial_ends_at.strftime('%d/%m/%Y')) : '' %>";
+    const DAYS_LEFT = <%= @company.subscription_paid_and_active? ? @company.days_left_in_subscription : @company.days_left_in_trial %>;
 
-    let selectedPackageKey = "<%= @simulated_plan.presence || @company.plan_tier.presence || 'banda' %>";
+    let selectedPackageKey = "<%= @simulated_plan.presence || @company.effective_plan_tier.presence || 'banda' %>";
 
     function getSelectedModuleKeys() {
       const checkboxes = document.querySelectorAll('.calc-module-checkbox:checked');
       return Array.from(checkboxes).map(cb => cb.dataset.modKey);
     }
 
-    function calculate() {
+    window.recalculateGigPricing = function() {
       const pkg = PACKAGES_DATA[selectedPackageKey] || PACKAGES_DATA['banda'];
       const pkgModules = pkg.modules || [];
       const basePrice = parseFloat(pkg.price) || 15.00;
@@ -338,7 +410,7 @@
       const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
       const finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
 
-      // Actualizar Filas y Badges de Módulos
+      // Actualizar Filas y Badges de Módulos en la lista izquierda
       document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
         const modKey = cb.dataset.modKey;
         const rowEl = document.getElementById(`calc-row-${modKey}`);
@@ -354,41 +426,76 @@
 
         if (isPartOfPackage) {
           if (rowEl && isChecked) rowEl.classList.add('is-included');
-          badgeContainer.innerHTML = `<span style="font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
-            ✓ Incluido ($0)
+          badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
+            ✓ $0
           </span>`;
         } else {
           if (isChecked) {
             if (rowEl) rowEl.classList.add('is-extra-active');
-            badgeContainer.innerHTML = `<span style="font-size: 0.72rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; display: inline-block;">
-              + $${EXTRA_PRICE.toFixed(2)} USD/mes
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; display: inline-block;">
+              + $${EXTRA_PRICE.toFixed(2)} Extra
             </span>`;
           } else {
-            badgeContainer.innerHTML = `<span style="font-size: 0.72rem; font-weight: 700; padding: 3px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-block;">
-              + $${EXTRA_PRICE.toFixed(2)} USD (Añadir)
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-block;">
+              + $${EXTRA_PRICE.toFixed(2)}
             </span>`;
           }
         }
       });
 
-      // Actualizar Resumen en Factura Proforma
+      // Actualizar Encabezado y Títulos del Plan en la Factura Derecha
+      const summaryPlanBadge = document.getElementById('calc-summary-plan-badge');
+      const summaryPlanTitle = document.getElementById('calc-summary-plan-title');
+      const summaryPlanSubtitle = document.getElementById('calc-summary-plan-subtitle');
       const summaryPkgIcon = document.getElementById('calc-summary-pkg-icon');
       const summaryPkgName = document.getElementById('calc-summary-pkg-name');
       const summaryBasePrice = document.getElementById('calc-summary-base-price');
-      const summaryPlanBadge = document.getElementById('calc-summary-plan-badge');
+
+      const hasExtras = extraKeys.length > 0;
+
+      if (summaryPlanBadge) {
+        if (hasExtras) {
+          summaryPlanBadge.textContent = '✨ Plan Personalizado';
+          summaryPlanBadge.style.background = 'rgba(234, 179, 8, 0.25)';
+          summaryPlanBadge.style.color = '#fef08a';
+          summaryPlanBadge.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+        } else {
+          summaryPlanBadge.textContent = 'Plan Base';
+          summaryPlanBadge.style.background = 'rgba(99, 102, 241, 0.3)';
+          summaryPlanBadge.style.color = '#c7d2fe';
+          summaryPlanBadge.style.borderColor = 'rgba(165, 180, 252, 0.4)';
+        }
+      }
+
+      if (summaryPlanTitle) {
+        if (selectedPackageKey === 'full') {
+          summaryPlanTitle.textContent = pkg.name;
+        } else if (hasExtras) {
+          summaryPlanTitle.textContent = `${pkg.name} + ${extraKeys.length} Extra`;
+        } else {
+          summaryPlanTitle.textContent = pkg.name;
+        }
+      }
+
+      if (summaryPlanSubtitle) {
+        if (hasExtras) {
+          summaryPlanSubtitle.textContent = `Base (${pkg.name}) + ${extraKeys.length} módulo(s) extra`;
+        } else {
+          summaryPlanSubtitle.textContent = 'Configuración estándar del paquete';
+        }
+      }
 
       if (summaryPkgIcon) summaryPkgIcon.textContent = pkg.icon || '🎸';
       if (summaryPkgName) summaryPkgName.textContent = pkg.name || 'Paquete';
       if (summaryBasePrice) summaryBasePrice.textContent = `$${basePrice.toFixed(2)} USD`;
-      if (summaryPlanBadge) summaryPlanBadge.textContent = pkg.name;
 
       // Lista de Módulos Incluidos
       const includedListEl = document.getElementById('calc-summary-included-list');
       if (includedListEl) {
         includedListEl.innerHTML = includedKeys.map(k => {
           const m = MODULES_DATA[k];
-          return m ? `<span style="font-size: 0.74rem; background: rgba(255,255,255,0.08); padding: 2px 7px; border-radius: 6px; color: #e2e8f0; font-weight: 600;">${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
-        }).join('') || '<span style="font-size: 0.72rem; color: #94a3b8;">Ninguno seleccionado</span>';
+          return m ? `<span style="font-size: 0.7rem; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; color: #e2e8f0; font-weight: 600;">${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
+        }).join('') || '<span style="font-size: 0.7rem; color: #94a3b8;">Ninguno seleccionado</span>';
       }
 
       // Módulos Extra
@@ -401,13 +508,13 @@
       if (extraCostEl) extraCostEl.textContent = `+$${extraCost.toFixed(2)} USD`;
 
       if (extraContainer) {
-        extraContainer.style.display = extraKeys.length > 0 ? 'block' : 'none';
+        extraContainer.style.display = hasExtras ? 'block' : 'none';
       }
 
       if (extraListEl) {
         extraListEl.innerHTML = extraKeys.map(k => {
           const m = MODULES_DATA[k];
-          return m ? `<span style="font-size: 0.74rem; background: rgba(253, 224, 71, 0.2); border: 1px solid rgba(253, 224, 71, 0.4); padding: 2px 7px; border-radius: 6px; color: #fef08a; font-weight: 700;">+ ${m.icon} ${m.name.split('(')[0].trim()} (+$3)</span>` : '';
+          return m ? `<span style="font-size: 0.7rem; background: rgba(253, 224, 71, 0.2); border: 1px solid rgba(253, 224, 71, 0.4); padding: 1px 6px; border-radius: 5px; color: #fef08a; font-weight: 700;">+ ${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
         }).join('');
       }
 
@@ -417,28 +524,99 @@
         tipEl.style.display = suggestsFullSuite ? 'block' : 'none';
       }
 
+      // Banner Informativo Inteligente & Botones de Acción Condicionales
+      const diffBanner = document.getElementById('calc-difference-banner');
+      const diffBannerContent = document.getElementById('calc-diff-banner-content');
+      const reportFullBtn = document.getElementById('calc-report-full-btn');
+      const reportDiffBtn = document.getElementById('calc-report-diff-btn');
+
+      if (IS_SUBSCRIPTION_PAID) {
+        // ESCENARIO 1: CLIENTE CON SUSCRIPCIÓN ACTIVA Y PAGADA
+        if (hasExtras) {
+          if (diffBanner) {
+            diffBanner.style.display = 'block';
+            diffBanner.style.background = 'rgba(56, 189, 248, 0.12)';
+            diffBanner.style.border = '1px solid rgba(56, 189, 248, 0.35)';
+            diffBannerContent.innerHTML = `
+              <div style="font-weight: 800; color: #38bdf8; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+                <span>✅</span> Plan base pagado hasta el ${EXPIRATION_DATE_STR} (${DAYS_LEFT} días restantes)
+              </div>
+              <div style="color: #bae6fd;">
+                Para activar estos <strong>${extraKeys.length} módulo(s) extra</strong>, solo debes pagar la diferencia de <strong>+$${extraCost.toFixed(2)} USD</strong>.
+              </div>
+            `;
+          }
+          if (reportDiffBtn) {
+            reportDiffBtn.style.display = 'flex';
+            reportDiffBtn.innerHTML = `<span>➕ Pagar Módulo(s) Extra (+ $${extraCost.toFixed(2)} USD)</span>`;
+          }
+          if (reportFullBtn) {
+            reportFullBtn.style.display = 'flex';
+            reportFullBtn.innerHTML = `<span>🔄 Renovar Mes Completo ($${finalTotal.toFixed(2)} USD)</span>`;
+          }
+        } else {
+          if (diffBanner) {
+            diffBanner.style.display = 'block';
+            diffBanner.style.background = 'rgba(16, 185, 129, 0.12)';
+            diffBanner.style.border = '1px solid rgba(16, 185, 129, 0.35)';
+            diffBannerContent.innerHTML = `
+              <div style="font-weight: 800; color: #34d399; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+                <span>✓</span> Plan al día hasta el ${EXPIRATION_DATE_STR}
+              </div>
+              <div style="color: #a7f3d0;">
+                No tienes pagos pendientes. Tu servicio está cubierto por <strong>${DAYS_LEFT} días más</strong>.
+              </div>
+            `;
+          }
+          if (reportDiffBtn) reportDiffBtn.style.display = 'none';
+          if (reportFullBtn) {
+            reportFullBtn.style.display = 'flex';
+            reportFullBtn.innerHTML = `<span>🔄 Adelantar / Renovar Mes ($${finalTotal.toFixed(2)} USD)</span>`;
+          }
+        }
+      } else {
+        // ESCENARIO 2: CLIENTE EN PRUEBA GRATUITA, VENCIDO O PENDIENTE DE PAGO
+        // Seguridad: NO mostrar opción de $3, requiere el pago mensual completo
+        if (diffBanner) {
+          diffBanner.style.display = 'block';
+          diffBanner.style.background = 'rgba(234, 179, 8, 0.12)';
+          diffBanner.style.border = '1px solid rgba(234, 179, 8, 0.35)';
+          diffBannerContent.innerHTML = `
+            <div style="font-weight: 800; color: #fde047; margin-bottom: 2px; display: flex; align-items: center; gap: 4px;">
+              <span>📅</span> ${EXPIRATION_DATE_STR ? ('Vencimiento: ' + EXPIRATION_DATE_STR + ' (' + DAYS_LEFT + ' días)') : 'Pago de Mensualidad'}
+            </div>
+            <div style="color: #fef08a;">
+              Tu cuota mensual es de <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. Reporta tu pago para activar tu servicio.
+            </div>
+          `;
+        }
+        if (reportDiffBtn) reportDiffBtn.style.display = 'none';
+        if (reportFullBtn) {
+          reportFullBtn.style.display = 'flex';
+          reportFullBtn.innerHTML = `<span>⚡ Reportar Pago Mensual ($${finalTotal.toFixed(2)} USD)</span>`;
+        }
+      }
+
       // Total Final
       const totalAmountEl = document.getElementById('calc-total-amount');
-      const btnAmountEl = document.getElementById('calc-btn-amount');
       if (totalAmountEl) totalAmountEl.textContent = `$${finalTotal.toFixed(2)}`;
-      if (btnAmountEl) btnAmountEl.textContent = `$${finalTotal.toFixed(2)}`;
 
       const moduleCountBadge = document.getElementById('calc-module-count-badge');
       if (moduleCountBadge) {
-        moduleCountBadge.textContent = `${selectedKeys.length} de ${Object.keys(MODULES_DATA).length} Módulos Activos`;
+        moduleCountBadge.textContent = `${selectedKeys.length} de ${Object.keys(MODULES_DATA).length} Módulos`;
       }
 
-      // Sincronizar input de monto del formulario de reporte de pago si existe
+      // Sincronizar campo de monto en el formulario de reporte de pago inferior
       const paymentAmountInput = document.getElementById('subscription_amount_input');
-      if (paymentAmountInput) {
+      if (paymentAmountInput && !paymentAmountInput.dataset.manualOverride) {
         paymentAmountInput.value = finalTotal.toFixed(2);
       }
-    }
+    };
 
-    function selectPackage(pkgKey) {
+    window.selectGigPackage = function(pkgKey, switchPackageDefaults = false) {
+      if (!PACKAGES_DATA[pkgKey]) pkgKey = 'banda';
       selectedPackageKey = pkgKey;
       const pkg = PACKAGES_DATA[pkgKey];
-      if (!pkg) return;
 
       // Actualizar estado de las 5 cards superiores
       document.querySelectorAll('.pkg-pill-btn').forEach(btn => {
@@ -464,50 +642,110 @@
         }
       });
 
-      // Al cambiar de paquete, preseleccionar automáticamente los módulos del paquete
+      // Solo si el usuario explícitamente hizo clic en otra pestaña de paquete,
+      // preseleccionamos los módulos de ese nuevo paquete
+      if (switchPackageDefaults) {
+        const pkgModules = pkg.modules || [];
+        document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
+          cb.checked = pkgModules.includes(cb.dataset.modKey);
+        });
+      }
+
+      // Sincronizar el select del formulario
+      const select = document.getElementById('subscription_plan_tier_select');
+      if (select) {
+        select.value = selectedPackageKey;
+      }
+
+      window.recalculateGigPricing();
+    };
+
+    // Función para reportar pago completo o solo diferencia
+    window.applyCalculationToPaymentReport = function(mode) {
+      const pkg = PACKAGES_DATA[selectedPackageKey] || PACKAGES_DATA['banda'];
       const pkgModules = pkg.modules || [];
-      document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
-        cb.checked = pkgModules.includes(cb.dataset.modKey);
-      });
+      const selectedKeys = getSelectedModuleKeys();
+      const extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
+      const extraCost = extraKeys.length * EXTRA_PRICE;
+      const basePrice = parseFloat(pkg.price) || 15.00;
+      const subtotal = basePrice + extraCost;
+      const fullSuitePrice = 22.00;
+      const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
+      const finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
 
-      calculate();
-    }
-
-    // Exponer función global para aplicar al formulario de reporte de pago
-    window.applyCalculationToPaymentReport = function() {
       const select = document.getElementById('subscription_plan_tier_select');
       if (select) {
         select.value = selectedPackageKey;
       }
 
       const paymentAmountInput = document.getElementById('subscription_amount_input');
-      const totalAmountEl = document.getElementById('calc-total-amount');
-      if (paymentAmountInput && totalAmountEl) {
-        const rawAmount = totalAmountEl.textContent.replace('$', '').trim();
-        paymentAmountInput.value = parseFloat(rawAmount).toFixed(2);
+      const notesInput = document.querySelector('input[name="notes"]');
+
+      if (mode === 'diff' && extraKeys.length > 0 && IS_SUBSCRIPTION_PAID) {
+        if (paymentAmountInput) {
+          paymentAmountInput.value = extraCost.toFixed(2);
+        }
+        if (notesInput) {
+          const extraNames = extraKeys.map(k => MODULES_DATA[k] ? MODULES_DATA[k].name : k).join(', ');
+          notesInput.value = `Pago de diferencia por ${extraKeys.length} módulo(s) extra (${extraNames}) - Plan ${pkg.name} vigente hasta ${EXPIRATION_DATE_STR}`;
+        }
+      } else {
+        if (paymentAmountInput) {
+          paymentAmountInput.value = finalTotal.toFixed(2);
+        }
+        if (notesInput) {
+          if (extraKeys.length > 0) {
+            notesInput.value = `Suscripción mensual: ${pkg.name} + ${extraKeys.length} módulo(s) adicional(es)`;
+          } else {
+            notesInput.value = `Suscripción mensual: ${pkg.name}`;
+          }
+        }
       }
-      
+
       const target = document.getElementById('reportar-pago');
       if (target) {
         target.scrollIntoView({ behavior: 'smooth' });
+        const refInput = document.querySelector('input[name="reference_number"]');
+        if (refInput) {
+          setTimeout(() => refInput.focus(), 400);
+        }
       }
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
-      // Event listeners para pestañas de paquetes
-      document.querySelectorAll('.pkg-pill-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-          selectPackage(this.dataset.pkgKey);
-        });
-      });
+    // Función para desplegar y contraer detalles y funciones de cada módulo
+    window.toggleModuleDetails = function(modKey) {
+      const panel = document.getElementById(`calc-details-${modKey}`);
+      const chevron = document.getElementById(`calc-chevron-${modKey}`);
+      if (!panel) return;
 
-      // Event listeners para checkboxes de módulos
-      document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
-        cb.addEventListener('change', calculate);
-      });
+      const isHidden = (panel.style.display === 'none' || panel.style.display === '');
+      if (isHidden) {
+        panel.style.display = 'block';
+        if (chevron) {
+          chevron.style.transform = 'rotate(180deg)';
+          chevron.style.color = '#4f46e5';
+        }
+      } else {
+        panel.style.display = 'none';
+        if (chevron) {
+          chevron.style.transform = 'rotate(0deg)';
+          chevron.style.color = '#64748b';
+        }
+      }
+    };
 
-      // Inicializar cálculo con el plan de la empresa
-      selectPackage(selectedPackageKey);
-    });
+    function initCalculator() {
+      // Inicializar cálculo preservando los módulos reales guardados de la empresa
+      window.selectGigPackage(selectedPackageKey, false);
+    }
+
+    if (document.readyState !== 'loading') {
+      initCalculator();
+    } else {
+      document.addEventListener('DOMContentLoaded', initCalculator);
+    }
+
+    document.addEventListener('turbo:load', initCalculator);
+    document.addEventListener('turbo:render', initCalculator);
   })();
 </script>

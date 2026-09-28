@@ -13,41 +13,30 @@ class SubscriptionsController < ApplicationController
   end
 
   def modules
-    @company = current_company
-    @pricing_breakdown = @company.pricing_breakdown
+    redirect_to subscriptions_path(anchor: 'gigmanager-modules-section')
   end
 
   def calculator
-    redirect_to subscriptions_path(anchor: 'gigmanager-pricing-calculator')
+    redirect_to subscriptions_path(anchor: 'gigmanager-modules-section')
   end
 
   def update_modules
     @company = current_company
     if params[:modules].present?
       @company.update_modules!(params[:modules])
-      redirect_to company_modules_path, notice: "✅ Módulos actualizados con éxito. Tu menú y funciones se han ajustado."
+      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'), notice: "✅ Módulos actualizados con éxito. Tu menú lateral y cuota se han ajustado."
     else
-      redirect_to company_modules_path, alert: "No se recibieron parámetros de módulos."
+      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'), alert: "No se recibieron parámetros de módulos."
     end
   end
 
-  TIER_PRICES = {
-    'starter'    => 10.00,
-    'banda'      => 15.00,
-    'productora' => 18.00,
-    'salon'      => 15.00,
-    'negocio'    => 14.00,
-    'full'       => 22.00,
-    'pro'        => 20.00
-  }.freeze
-
   def report_payment
-    plan_tier = params[:plan_tier].presence || 'banda'
+    plan_tier = params[:plan_tier].presence || current_company.effective_plan_tier
     
     amount = if params[:amount].present? && params[:amount].to_f > 0
                params[:amount].to_f
              else
-               TIER_PRICES[plan_tier] || AppModule.package_info(plan_tier)&.dig(:price) || 15.00
+               AppModule.package_info(plan_tier)&.dig(:price) || 15.00
              end
 
     @payment = current_company.subscription_payments.build(
