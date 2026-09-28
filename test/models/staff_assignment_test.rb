@@ -47,5 +47,29 @@ class StaffAssignmentTest < ActiveSupport::TestCase
     assert_equal 5.0, assignment.pending_balance
     assert_equal 5.0, assignment.balance
   end
+
+  test "future gigs are not counted as debt until the date has passed" do
+    worker = users(:two)
+    client = clients(:one)
+    future_gig = Gig.create!(date: 3.days.from_now.to_date, amount: 300.0, client: client, currency: 'USD')
+
+    StaffAssignment.create!(user: worker, gig: future_gig, agreed_amount: 50.0)
+
+    # Current debt must be 0, not 50.0
+    assert_equal 0.0, worker.pending_balance
+    assert_equal 50.0, worker.future_pending_balance
+
+    metrics = WorkerBalanceService.new(
+      worker: worker,
+      worker_payments: worker.employee_payments.approved.to_a,
+      worker_assignments: worker.staff_assignments.includes(:gig).to_a
+    )
+
+    assert_equal 0.0, metrics.past_balance
+    assert_equal 50.0, metrics.future_balance
+    assert_equal 0, metrics.gig_debts.size
+    assert_equal 1, metrics.future_gigs.size
+  end
 end
+
 

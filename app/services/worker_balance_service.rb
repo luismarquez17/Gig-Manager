@@ -69,8 +69,14 @@ class WorkerBalanceService
 
   def past_assignments
     @past_assignments ||= worker_assignments
-      .select { |sa| sa.gig.present? }
+      .select { |sa| sa.gig.present? && (sa.gig.date.blank? || sa.gig.date <= today) }
       .sort_by { |sa| sa.gig.date || today }
+  end
+
+  def future_assignments
+    @future_assignments ||= worker_assignments
+      .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date > today }
+      .sort_by { |sa| sa.gig.date }
   end
 
   def raw_past_balance
@@ -82,6 +88,13 @@ class WorkerBalanceService
 
   def raw_past_overpaid
     @raw_past_overpaid ||= past_assignments.sum do |sa|
+      excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
+      excess.positive? ? excess : 0
+    end
+  end
+
+  def raw_future_overpaid
+    @raw_future_overpaid ||= future_assignments.sum do |sa|
       excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
       excess.positive? ? excess : 0
     end
@@ -141,13 +154,16 @@ class WorkerBalanceService
 
       standalone_by_gig.each do |_gig_id, ps|
         next if _gig_id.nil?
+        gig = ps.first.gig
+        next if gig.present? && gig.date.present? && gig.date > today
+
         paid_for_gig = ps.sum { |p| p.amount.to_f }
         expected     = ps.map { |p| p.expected_amount.to_f }.max || 0.0
         pending      = expected - paid_for_gig
         next if pending <= 0
 
         debts << {
-          gig:            ps.first.gig,
+          gig:            gig,
           agreed_amount:  expected,
           paid_amount:    paid_for_gig,
           pending_amount: pending,
@@ -160,23 +176,19 @@ class WorkerBalanceService
   end
 
   def overpaid
-    net = raw_past_overpaid + net_adjustment_credits - raw_past_balance
+    net = raw_past_overpaid + raw_future_overpaid + net_adjustment_credits - raw_past_balance
     net >= 0 ? net.round(2) : 0.0
   end
 
   def future_balance
-    @future_balance ||= worker_assignments.sum do |sa|
-      next 0 unless sa.gig.present? && sa.gig.date.present? && sa.gig.date > today
-
+    @future_balance ||= future_assignments.sum do |sa|
       unpaid = sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
       unpaid.positive? ? unpaid : 0
-    end
+    end.round(2)
   end
 
   def future_gigs
-    @future_gigs ||= worker_assignments.filter_map do |sa|
-      next if sa.gig.blank? || sa.gig.date.blank? || sa.gig.date <= today
-
+    @future_gigs ||= future_assignments.filter_map do |sa|
       paid_for_gig = paid_by_gig[sa.gig_id].to_f
       pending      = sa.agreed_amount.to_f - paid_for_gig
       next if pending <= 0

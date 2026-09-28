@@ -195,30 +195,20 @@ class EmployeePaymentsController < ApplicationController
     mode   = params[:adjustment_mode].presence || 'company_debt'
 
     # Calcular situación actual de shows pasados
-    today       = Date.today
-    assignments = StaffAssignment.where(user_id: worker.id).includes(:gig)
+    today        = Date.today
+    assignments  = StaffAssignment.where(user_id: worker.id).includes(:gig)
     all_payments = worker.employee_payments.approved.to_a
-    paid_by_gig = worker.employee_payments.approved.where.not(gig_id: nil).group(:gig_id).sum(:amount)
 
-    raw_past_balance = assignments.sum do |sa|
-      next 0 unless sa.gig.present?
-      unpaid = sa.agreed_amount.to_f - paid_by_gig[sa.gig_id].to_f
-      unpaid > 0 ? unpaid : 0
-    end
+    balance_service = WorkerBalanceService.new(
+      worker: worker,
+      worker_payments: all_payments,
+      worker_assignments: assignments,
+      today: today
+    )
 
-    raw_past_overpaid = assignments.sum do |sa|
-      next 0 unless sa.gig.present?
-      excess = paid_by_gig[sa.gig_id].to_f - sa.agreed_amount.to_f
-      excess > 0 ? excess : 0
-    end
-
-    net_adjustment_credits = all_payments
-      .select { |p| p.gig_id.nil? }
-      .sum { |p| p.amount.to_f - p.expected_amount.to_f }
-
-    current_net_diff = (raw_past_balance - raw_past_overpaid - net_adjustment_credits).round(2)
-    current_company_debt = [current_net_diff, 0].max
-    current_worker_owes   = [-current_net_diff, 0].max
+    current_company_debt = balance_service.past_balance
+    current_worker_owes  = balance_service.overpaid
+    current_net_diff     = (current_company_debt - current_worker_owes).round(2)
 
     target_net_diff = case mode
     when 'settle_all'
@@ -271,7 +261,7 @@ class EmployeePaymentsController < ApplicationController
         remaining_adj = delta.abs
 
         past_assignments = assignments
-          .select { |sa| sa.gig.present? }
+          .select { |sa| sa.gig.present? && (sa.gig.date.blank? || sa.gig.date <= today) }
           .sort_by { |sa| sa.gig.date || today }
 
         past_assignments.each do |sa|

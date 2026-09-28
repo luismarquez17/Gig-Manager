@@ -111,6 +111,21 @@ class User < ApplicationRecord
     assignment_total + unassigned_payments_total
   end
 
+  def past_agreed_amount
+    assignment_total = staff_assignments.joins(:gig).where("gigs.date IS NULL OR gigs.date <= ?", Date.today).sum(:agreed_amount).to_f
+    assigned_gig_ids = staff_assignments.pluck(:gig_id)
+
+    unassigned_payments_total = if assigned_gig_ids.empty?
+      employee_payments.approved.sum(:expected_amount).to_f
+    else
+      employee_payments.approved.joins("LEFT JOIN gigs ON gigs.id = employee_payments.gig_id")
+        .where("employee_payments.gig_id IS NULL OR (employee_payments.gig_id NOT IN (?) AND (gigs.date IS NULL OR gigs.date <= ?))", assigned_gig_ids, Date.today)
+        .sum(:expected_amount).to_f
+    end
+
+    assignment_total + unassigned_payments_total
+  end
+
   def total_paid_amount
     employee_payments.approved.sum(:amount).to_f
   end
@@ -120,7 +135,27 @@ class User < ApplicationRecord
   end
 
   def pending_balance
-    total_agreed_amount - total_paid_amount
+    WorkerBalanceService.new(
+      worker: self,
+      worker_payments: employee_payments.approved.to_a,
+      worker_assignments: staff_assignments.includes(:gig).to_a
+    ).past_balance
+  end
+
+  def future_pending_balance
+    WorkerBalanceService.new(
+      worker: self,
+      worker_payments: employee_payments.approved.to_a,
+      worker_assignments: staff_assignments.includes(:gig).to_a
+    ).future_balance
+  end
+
+  def worker_balance_metrics
+    WorkerBalanceService.new(
+      worker: self,
+      worker_payments: employee_payments.approved.to_a,
+      worker_assignments: staff_assignments.includes(:gig).to_a
+    ).to_h
   end
 
   def worker_payment_items
@@ -137,6 +172,7 @@ class User < ApplicationRecord
        paid = sa.total_paid
        pending_approval = pending_by_gig[sa.gig_id].to_f
        expected = sa.agreed_amount.to_f
+       is_future = sa.gig.present? && sa.gig.date.present? && sa.gig.date > Date.today
        items << {
          gig: sa.gig,
          title: sa.gig&.client&.name || "Show del #{sa.gig&.date}",
@@ -145,6 +181,7 @@ class User < ApplicationRecord
          paid_amount: paid,
          pending_approval_amount: pending_approval,
          pending_amount: sa.pending_balance,
+         is_future: is_future,
          type: :assignment,
          assignment: sa
        }
@@ -162,6 +199,7 @@ class User < ApplicationRecord
       paid = payments.select(&:approved?).sum { |p| p.amount.to_f }
       pending_approval = payments.select(&:pending_approval?).sum { |p| p.amount.to_f }
       expected = payments.map { |p| p.expected_amount.to_f }.max || paid
+      is_future = gig.present? && gig.date.present? && gig.date > Date.today
       items << {
         gig: gig,
         title: gig ? (gig.client&.name || "Show del #{gig.date}") : "Pago Directo",
@@ -170,6 +208,7 @@ class User < ApplicationRecord
         paid_amount: paid,
         pending_approval_amount: pending_approval,
         pending_amount: expected - paid,
+        is_future: is_future,
         type: :payment,
         payments: payments
       }
