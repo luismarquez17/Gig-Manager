@@ -55,15 +55,17 @@ class User < ApplicationRecord
   after_create :associate_and_claim_gigs
   after_create_commit :send_welcome_email, if: -> { leader? && email.present? }
   after_save :associate_and_claim_gigs, if: -> { client_id.blank? && company_id.present? }
+  before_save :sync_avatar_to_base64
+  after_commit :ensure_avatar_base64_persisted, on: [:create, :update]
 
   def avatar_attached?
-    avatar_base64.present? || avatar.attached?
+    avatar_base64.present? || (avatar.attached? && blob_exists?(avatar))
   end
 
   def avatar_url_or_data
     if avatar_base64.present?
       avatar_base64
-    elsif avatar.attached?
+    elsif avatar.attached? && blob_exists?(avatar)
       avatar
     else
       nil
@@ -362,6 +364,64 @@ class User < ApplicationRecord
     UserMailer.welcome_email(self).deliver_later
   rescue StandardError => e
     Rails.logger.error "[User#send_welcome_email] #{e.message}"
+  end
+
+  def sync_avatar_to_base64
+    change = attachment_changes['avatar']
+    if change.present?
+      attachable = change.attachable
+      data = nil
+      content_type = nil
+
+      if attachable.is_a?(Hash) && attachable[:io].respond_to?(:read)
+        io = attachable[:io]
+        data = io.read
+        io.rewind if io.respond_to?(:rewind)
+        content_type = attachable[:content_type]
+      elsif attachable.respond_to?(:read)
+        data = attachable.read
+        attachable.rewind if attachable.respond_to?(:rewind)
+        content_type = attachable.content_type if attachable.respond_to?(:content_type)
+      elsif change.blob.present?
+        data = (change.blob.download rescue nil)
+        content_type = change.blob.content_type
+      end
+
+      if data.present?
+        content_type = content_type.presence || 'image/jpeg'
+        encoded = Base64.strict_encode64(data)
+        self.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+      end
+    elsif avatar_base64.blank? && avatar.attached? && avatar.blob.present?
+      data = (avatar.blob.download rescue nil)
+      if data.present?
+        content_type = avatar.blob.content_type.presence || 'image/jpeg'
+        encoded = Base64.strict_encode64(data)
+        self.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+      end
+    end
+  end
+
+  def ensure_avatar_base64_persisted
+    return if avatar_base64.present? || !avatar.attached? || avatar.blob.nil?
+
+    if blob_exists?(avatar)
+      data = (avatar.blob.download rescue nil)
+      if data.present?
+        content_type = avatar.blob.content_type.presence || 'image/jpeg'
+        encoded = Base64.strict_encode64(data)
+        update_column(:avatar_base64, "data:#{content_type};base64,#{encoded}")
+      end
+    end
+  rescue StandardError => e
+    Rails.logger.warn("ensure_avatar_base64_persisted error: #{e.message}")
+  end
+
+  def blob_exists?(attachment)
+    return false unless attachment&.attached? && attachment.blob
+    attachment.blob.service.exist?(attachment.blob.key)
+  rescue StandardError
+    false
   end
 end
 
