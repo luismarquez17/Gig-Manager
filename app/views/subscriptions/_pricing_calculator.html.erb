@@ -105,23 +105,17 @@
     color: #0f172a !important;
   }
 
-  @media (max-width: 960px) {
+  @media (max-width: 1080px) {
     .calc-main-grid {
       grid-template-columns: 1fr !important;
     }
-    .pkg-grid-5 {
-      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-    }
-    .pkg-grid-5 .pkg-pill-btn:last-child {
-      grid-column: span 2 !important;
+    .pkg-grid-packages {
+      grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
     }
   }
-  @media (max-width: 600px) {
-    .pkg-grid-5 {
-      grid-template-columns: 1fr !important;
-    }
-    .pkg-grid-5 .pkg-pill-btn:last-child {
-      grid-column: span 1 !important;
+  @media (max-width: 640px) {
+    .pkg-grid-packages {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
     }
   }
 </style>
@@ -132,30 +126,30 @@
   <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 22px; box-shadow: 0 8px 25px rgba(0,0,0,0.03); margin-bottom: 20px;">
     
     <%# Encabezado Compacto %>
-    <div style="text-align: center; max-width: 720px; margin: 0 auto 20px auto;">
+    <div style="text-align: center; max-width: 760px; margin: 0 auto 20px auto;">
       <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 50px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: #4f46e5; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; margin-bottom: 8px;">
-        <span>💎</span> Planes Base & Calculadora de Módulos Extra
+        <span>💎</span> Planes Base, Plan Personalizado & Descuentos
       </div>
       <h2 style="font-size: 1.6rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; letter-spacing: -0.5px;">
-        Elige tu Plan Base y Personaliza tus Módulos
+        Elige un Paquete Preestablecido o Crea tu Plan Personalizado
       </h2>
       <p style="color: #64748b; font-size: 0.9rem; margin: 0; line-height: 1.45;">
-        Los módulos de tu paquete están <strong>incluidos ($0)</strong>. Módulos fuera de tu paquete se cotizan a <strong>+$3.00 USD/mes</strong>.
+        Elige un combo preconfigurado o selecciona el <strong>Plan Personalizado</strong> para escoger tus herramientas a medida con <strong>descuentos progresivos por volumen</strong>.
       </p>
     </div>
 
-    <%# 1. PLANES BASE ARRIBA (5 Cards Responsivas en Grid) %>
+    <%# 1. PLANES ARRIBA (6 Cards Responsivas en Grid) %>
     <div style="margin-bottom: 22px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
         <label style="font-size: 0.82rem; font-weight: 800; text-transform: uppercase; color: #334155; letter-spacing: 0.5px;">
-          1. Selecciona tu Paquete Base:
+          1. Selecciona tu Paquete o Plan:
         </label>
         <span style="font-size: 0.75rem; color: #64748b; font-weight: 600;">
           💡 Haz clic en cualquier plan para preconfigurar sus módulos
         </span>
       </div>
 
-      <div class="pkg-grid-5" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;" id="calc-package-tabs">
+      <div class="pkg-grid-packages" style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px;" id="calc-package-tabs">
         <% AppModule.packages.each do |pkg| %>
           <% is_selected = (@simulated_plan.presence || @company.effective_plan_tier) == pkg[:key] %>
           <div class="pkg-pill-btn <%= 'is-active' if is_selected %>" data-pkg-key="<%= pkg[:key] %>" onclick="window.selectGigPackage('<%= pkg[:key] %>', true)">
@@ -183,11 +177,19 @@
 
               <%# Precio %>
               <div class="pkg-price-text" style="font-size: 1.3rem; font-weight: 900; line-height: 1.1; margin-bottom: 2px;">
-                $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.68rem; font-weight: 700; color: #64748b;">USD/mes</span>
+                <% if pkg[:key] == 'personalizado' %>
+                  <span id="calc-pill-custom-price-display">$13</span> <span style="font-size: 0.68rem; font-weight: 700; color: #64748b;">USD/mes</span>
+                <% else %>
+                  $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.68rem; font-weight: 700; color: #64748b;">USD/mes</span>
+                <% end %>
               </div>
 
               <div class="pkg-subtext" style="font-size: 0.72rem; font-weight: 600;">
-                <%= pkg[:modules].count %> módulos base
+                <% if pkg[:key] == 'personalizado' %>
+                  Descuentos % volumen
+                <% else %>
+                  <%= pkg[:modules].count %> módulos base
+                <% end %>
               </div>
             </div>
 
@@ -215,8 +217,8 @@
           </span>
         </div>
 
-        <p style="font-size: 0.76rem; color: #64748b; margin: 0 0 10px 0; line-height: 1.35;">
-          Marca o desmarca para personalizar tu menú. Los extras se suman a <strong>+$3 USD/mes</strong>.
+        <p id="calc-modules-instruction-text" style="font-size: 0.76rem; color: #64748b; margin: 0 0 10px 0; line-height: 1.35;">
+          Marca o desmarca para personalizar tu menú. En <strong>Plan Personalizado</strong> obtienes descuentos por volumen.
         </p>
 
         <form id="calc-modules-form" action="<%= update_company_modules_path %>" method="POST">
@@ -317,7 +319,7 @@
             </div>
           </div>
 
-          <%# Línea 1: Plan Base %>
+          <%# Línea 1: Plan Base / Subtotal %>
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.86rem; background: rgba(255,255,255,0.05); padding: 7px 10px; border-radius: 9px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span id="calc-summary-pkg-icon" style="font-size: 1.1rem;">🎸</span>
@@ -328,7 +330,7 @@
 
           <%# Lista de Módulos Incluidos %>
           <div style="margin-bottom: 10px; padding: 7px 9px; border-radius: 9px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
-            <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px;">
+            <div id="calc-summary-included-label" style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px;">
               ✓ Incluidos en este Plan ($0 extra):
             </div>
             <div id="calc-summary-included-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
@@ -336,7 +338,16 @@
             </div>
           </div>
 
-          <%# Línea 2: Módulos Adicionales (+3 c/u) %>
+          <%# Línea 2A: Descuento por Volumen (Modo Personalizado) %>
+          <div id="calc-summary-discount-line" style="display: none; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.86rem; background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); padding: 7px 10px; border-radius: 9px;">
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <span style="font-size: 1rem;">🎉</span>
+              <span style="font-weight: 700; color: #6ee7b7;">Descuento por Volumen (<span id="calc-summary-discount-badge">0%</span>):</span>
+            </div>
+            <span id="calc-summary-discount-amount" style="font-weight: 800; color: #34d399; font-size: 0.98rem;">-$0.00 USD</span>
+          </div>
+
+          <%# Línea 2B: Módulos Adicionales (+3 c/u - Modo Combos Base) %>
           <div id="calc-summary-extra-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.86rem; background: rgba(253, 224, 71, 0.08); border: 1px solid rgba(253, 224, 71, 0.2); padding: 6px 10px; border-radius: 9px;">
             <div style="display: flex; align-items: center; gap: 6px;">
               <span style="font-size: 0.95rem;">➕</span>
@@ -369,6 +380,9 @@
 
           <%# TOTAL A PAGAR EN DÓLARES %>
           <div style="margin-bottom: 14px;">
+            <div id="calc-summary-regular-price-container" style="display: none; font-size: 0.74rem; color: #94a3b8; margin-bottom: 2px;">
+              Precio regular de lista: <span id="calc-summary-regular-price" style="text-decoration: line-through; color: #f87171; font-weight: 700;">$0.00 USD</span>
+            </div>
             <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #cbd5e1; margin-bottom: 2px;">
               Total Cuota Mensual:
             </div>
@@ -417,11 +431,11 @@
 
 </div>
 
-<%# JavaScript Reactivo del Simulador de Precios %>
 <script>
   (function() {
     const PACKAGES_DATA = <%= raw AppModule::PACKAGES.to_json %>;
     const MODULES_DATA = <%= raw AppModule::MODULES.to_json %>;
+    const CUSTOM_TIERS_DATA = <%= raw AppModule::CUSTOM_TIERS.to_json %>;
     const EXTRA_PRICE = <%= AppModule::EXTRA_MODULE_PRICE %>;
     
     const IS_SUBSCRIPTION_PAID = <%= @company.subscription_paid_and_active? ? 'true' : 'false' %>;
@@ -436,19 +450,52 @@
     }
 
     window.recalculateGigPricing = function() {
+      const isCustomMode = (selectedPackageKey === 'personalizado');
       const pkg = PACKAGES_DATA[selectedPackageKey] || PACKAGES_DATA['banda'];
-      const pkgModules = pkg.modules || [];
-      const basePrice = parseFloat(pkg.price) || 15.00;
       const selectedKeys = getSelectedModuleKeys();
+      const count = selectedKeys.length;
 
-      const includedKeys = selectedKeys.filter(k => pkgModules.includes(k));
-      const extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
-      const extraCost = extraKeys.length * EXTRA_PRICE;
-      const subtotal = basePrice + extraCost;
+      let basePrice = 0.0;
+      let regularPrice = 0.0;
+      let savings = 0.0;
+      let discountLabel = '';
+      let finalTotal = 0.0;
+      let includedKeys = [];
+      let extraKeys = [];
+      let extraCost = 0.0;
+      let suggestsFullSuite = false;
 
-      const fullSuitePrice = 22.00;
-      const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
-      const finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
+      if (isCustomMode) {
+        const tier = CUSTOM_TIERS_DATA[count] || CUSTOM_TIERS_DATA[7];
+        finalTotal = tier.price;
+        regularPrice = tier.regular;
+        savings = tier.savings;
+        discountLabel = tier.discount_label;
+        basePrice = finalTotal;
+        includedKeys = selectedKeys;
+        extraKeys = [];
+        extraCost = 0.0;
+        suggestsFullSuite = (count === 7);
+
+        // Actualizar precio en la card superior de Plan Personalizado
+        const pillCustomPrice = document.getElementById('calc-pill-custom-price-display');
+        if (pillCustomPrice) {
+          pillCustomPrice.textContent = `$${finalTotal.toFixed(0)}`;
+        }
+      } else {
+        const pkgModules = pkg.modules || [];
+        basePrice = parseFloat(pkg.price) || 15.00;
+        includedKeys = selectedKeys.filter(k => pkgModules.includes(k));
+        extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
+        extraCost = extraKeys.length * EXTRA_PRICE;
+        const subtotal = basePrice + extraCost;
+        const fullSuitePrice = 22.00;
+        suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
+        finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
+        regularPrice = subtotal;
+        savings = suggestsFullSuite ? (subtotal - fullSuitePrice) : 0.0;
+        discountLabel = suggestsFullSuite ? "Full Suite Ahorro" : "";
+      }
 
       // Actualizar Filas y Badges de Módulos en la lista izquierda
       document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
@@ -457,28 +504,41 @@
         const badgeContainer = document.querySelector(`.calc-module-status-badge[data-mod-key="${modKey}"]`);
         if (!badgeContainer) return;
 
-        const isPartOfPackage = pkgModules.includes(modKey);
         const isChecked = cb.checked;
 
         if (rowEl) {
           rowEl.classList.remove('is-included', 'is-extra-active');
         }
 
-        if (isPartOfPackage) {
-          if (rowEl && isChecked) rowEl.classList.add('is-included');
-          badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
-            ✓ $0
-          </span>`;
-        } else {
+        if (isCustomMode) {
           if (isChecked) {
-            if (rowEl) rowEl.classList.add('is-extra-active');
-            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; display: inline-block;">
-              + $${EXTRA_PRICE.toFixed(2)} Extra
+            if (rowEl) rowEl.classList.add('is-included');
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
+              ✓ En tu Plan
             </span>`;
           } else {
-            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-block;">
-              + $${EXTRA_PRICE.toFixed(2)}
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; display: inline-block;">
+              + Añadir
             </span>`;
+          }
+        } else {
+          const isPartOfPackage = (pkg.modules || []).includes(modKey);
+          if (isPartOfPackage) {
+            if (rowEl && isChecked) rowEl.classList.add('is-included');
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
+              ✓ $0
+            </span>`;
+          } else {
+            if (isChecked) {
+              if (rowEl) rowEl.classList.add('is-extra-active');
+              badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; display: inline-block;">
+                + $${EXTRA_PRICE.toFixed(2)} Extra
+              </span>`;
+            } else {
+              badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-block;">
+                + $${EXTRA_PRICE.toFixed(2)}
+              </span>`;
+            }
           }
         }
       });
@@ -490,12 +550,18 @@
       const summaryPkgIcon = document.getElementById('calc-summary-pkg-icon');
       const summaryPkgName = document.getElementById('calc-summary-pkg-name');
       const summaryBasePrice = document.getElementById('calc-summary-base-price');
+      const summaryIncludedLabel = document.getElementById('calc-summary-included-label');
 
-      const hasExtras = extraKeys.length > 0;
+      const hasExtras = !isCustomMode && (extraKeys.length > 0);
 
       if (summaryPlanBadge) {
-        if (hasExtras) {
-          summaryPlanBadge.textContent = '✨ Plan Personalizado';
+        if (isCustomMode) {
+          summaryPlanBadge.textContent = '⚙️ Plan Personalizado';
+          summaryPlanBadge.style.background = 'rgba(56, 189, 248, 0.25)';
+          summaryPlanBadge.style.color = '#38bdf8';
+          summaryPlanBadge.style.borderColor = 'rgba(56, 189, 248, 0.4)';
+        } else if (hasExtras) {
+          summaryPlanBadge.textContent = '✨ Combo + Extras';
           summaryPlanBadge.style.background = 'rgba(234, 179, 8, 0.25)';
           summaryPlanBadge.style.color = '#fef08a';
           summaryPlanBadge.style.borderColor = 'rgba(251, 191, 36, 0.4)';
@@ -508,7 +574,9 @@
       }
 
       if (summaryPlanTitle) {
-        if (selectedPackageKey === 'full') {
+        if (isCustomMode) {
+          summaryPlanTitle.textContent = count > 0 ? `Plan Personalizado (${count} ${count === 1 ? 'Módulo' : 'Módulos'})` : 'Plan Personalizado';
+        } else if (selectedPackageKey === 'full') {
           summaryPlanTitle.textContent = pkg.name;
         } else if (hasExtras) {
           summaryPlanTitle.textContent = `${pkg.name} + ${extraKeys.length} Extra`;
@@ -518,16 +586,22 @@
       }
 
       if (summaryPlanSubtitle) {
-        if (hasExtras) {
+        if (isCustomMode) {
+          summaryPlanSubtitle.textContent = 'Herramientas a tu medida con descuento por volumen';
+        } else if (hasExtras) {
           summaryPlanSubtitle.textContent = `Base (${pkg.name}) + ${extraKeys.length} módulo(s) extra`;
         } else {
           summaryPlanSubtitle.textContent = 'Configuración estándar del paquete';
         }
       }
 
-      if (summaryPkgIcon) summaryPkgIcon.textContent = pkg.icon || '🎸';
-      if (summaryPkgName) summaryPkgName.textContent = pkg.name || 'Paquete';
-      if (summaryBasePrice) summaryBasePrice.textContent = `$${basePrice.toFixed(2)} USD`;
+      if (summaryPkgIcon) summaryPkgIcon.textContent = isCustomMode ? '⚙️' : (pkg.icon || '🎸');
+      if (summaryPkgName) summaryPkgName.textContent = isCustomMode ? 'Plan Personalizado' : (pkg.name || 'Paquete');
+      if (summaryBasePrice) summaryBasePrice.textContent = `$${(isCustomMode ? regularPrice : basePrice).toFixed(2)} USD`;
+
+      if (summaryIncludedLabel) {
+        summaryIncludedLabel.textContent = isCustomMode ? '✓ Módulos en tu Plan Personalizado:' : '✓ Incluidos en este Plan ($0 extra):';
+      }
 
       // Lista de Módulos Incluidos
       const includedListEl = document.getElementById('calc-summary-included-list');
@@ -538,17 +612,40 @@
         }).join('') || '<span style="font-size: 0.7rem; color: #94a3b8;">Ninguno seleccionado</span>';
       }
 
-      // Módulos Extra
+      // Línea de Descuento por Volumen (en Modo Personalizado o Full Suite)
+      const discountLine = document.getElementById('calc-summary-discount-line');
+      const discountBadge = document.getElementById('calc-summary-discount-badge');
+      const discountAmountEl = document.getElementById('calc-summary-discount-amount');
+      const regularPriceContainer = document.getElementById('calc-summary-regular-price-container');
+      const regularPriceEl = document.getElementById('calc-summary-regular-price');
+
+      if (isCustomMode && savings > 0) {
+        if (discountLine) discountLine.style.display = 'flex';
+        if (discountBadge) discountBadge.textContent = discountLabel;
+        if (discountAmountEl) discountAmountEl.textContent = `-$${savings.toFixed(2)} USD`;
+        if (regularPriceContainer) regularPriceContainer.style.display = 'block';
+        if (regularPriceEl) regularPriceEl.textContent = `$${regularPrice.toFixed(2)} USD`;
+      } else {
+        if (discountLine) discountLine.style.display = 'none';
+        if (regularPriceContainer) regularPriceContainer.style.display = 'none';
+      }
+
+      // Módulos Extra (en modo Paquetes predefinidos)
+      const extraLine = document.getElementById('calc-summary-extra-line');
       const extraCountEl = document.getElementById('calc-summary-extra-count');
       const extraCostEl = document.getElementById('calc-summary-extra-cost');
       const extraContainer = document.getElementById('calc-summary-extra-container');
       const extraListEl = document.getElementById('calc-summary-extra-list');
 
+      if (extraLine) {
+        extraLine.style.display = isCustomMode ? 'none' : 'flex';
+      }
+
       if (extraCountEl) extraCountEl.textContent = extraKeys.length;
       if (extraCostEl) extraCostEl.textContent = `+$${extraCost.toFixed(2)} USD`;
 
       if (extraContainer) {
-        extraContainer.style.display = hasExtras ? 'block' : 'none';
+        extraContainer.style.display = (!isCustomMode && hasExtras) ? 'block' : 'none';
       }
 
       if (extraListEl) {
@@ -561,7 +658,7 @@
       // Tip Full Suite
       const tipEl = document.getElementById('calc-full-suite-tip');
       if (tipEl) {
-        tipEl.style.display = suggestsFullSuite ? 'block' : 'none';
+        tipEl.style.display = (!isCustomMode && suggestsFullSuite) ? 'block' : 'none';
       }
 
       // Banner Informativo Inteligente & Botones de Acción Condicionales
@@ -616,7 +713,6 @@
         }
       } else {
         // ESCENARIO 2: CLIENTE EN PRUEBA GRATUITA, VENCIDO O PENDIENTE DE PAGO
-        // Seguridad: NO mostrar opción de $3, requiere el pago mensual completo
         if (diffBanner) {
           diffBanner.style.display = 'block';
           diffBanner.style.background = 'rgba(234, 179, 8, 0.12)';
@@ -626,7 +722,7 @@
               <span>📅</span> ${EXPIRATION_DATE_STR ? ('Vencimiento: ' + EXPIRATION_DATE_STR + ' (' + DAYS_LEFT + ' días)') : 'Pago de Mensualidad'}
             </div>
             <div style="color: #fef08a;">
-              Tu cuota mensual es de <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. Reporta tu pago para activar tu servicio.
+              Tu cuota mensual es de <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. ${savings > 0 ? ('¡Estás ahorrando <strong>$' + savings.toFixed(2) + ' USD</strong> por descuento de volumen!') : 'Reporta tu pago para activar tu servicio.'}
             </div>
           `;
         }
@@ -658,7 +754,7 @@
       selectedPackageKey = pkgKey;
       const pkg = PACKAGES_DATA[pkgKey];
 
-      // Actualizar estado de las 5 cards superiores
+      // Actualizar estado de las 6 cards superiores
       document.querySelectorAll('.pkg-pill-btn').forEach(btn => {
         const isThis = (btn.dataset.pkgKey === pkgKey);
         const statusEl = btn.querySelector('.pkg-selection-status');
@@ -672,8 +768,8 @@
       });
 
       // Solo si el usuario explícitamente hizo clic en otra pestaña de paquete,
-      // preseleccionamos los módulos de ese nuevo paquete
-      if (switchPackageDefaults) {
+      // preseleccionamos los módulos de ese nuevo paquete (si no es 'personalizado')
+      if (switchPackageDefaults && pkgKey !== 'personalizado') {
         const pkgModules = pkg.modules || [];
         document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
           cb.checked = pkgModules.includes(cb.dataset.modKey);
@@ -691,16 +787,28 @@
 
     // Función para reportar pago completo o solo diferencia
     window.applyCalculationToPaymentReport = function(mode) {
+      const isCustomMode = (selectedPackageKey === 'personalizado');
       const pkg = PACKAGES_DATA[selectedPackageKey] || PACKAGES_DATA['banda'];
-      const pkgModules = pkg.modules || [];
       const selectedKeys = getSelectedModuleKeys();
-      const extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
-      const extraCost = extraKeys.length * EXTRA_PRICE;
-      const basePrice = parseFloat(pkg.price) || 15.00;
-      const subtotal = basePrice + extraCost;
-      const fullSuitePrice = 22.00;
-      const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
-      const finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
+      const count = selectedKeys.length;
+
+      let finalTotal = 0.0;
+      let extraKeys = [];
+      let extraCost = 0.0;
+
+      if (isCustomMode) {
+        const tier = CUSTOM_TIERS_DATA[count] || CUSTOM_TIERS_DATA[7];
+        finalTotal = tier.price;
+      } else {
+        const pkgModules = pkg.modules || [];
+        extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
+        extraCost = extraKeys.length * EXTRA_PRICE;
+        const basePrice = parseFloat(pkg.price) || 15.00;
+        const subtotal = basePrice + extraCost;
+        const fullSuitePrice = 22.00;
+        const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
+        finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
+      }
 
       const select = document.getElementById('subscription_plan_tier_select');
       if (select) {
@@ -710,7 +818,7 @@
       const paymentAmountInput = document.getElementById('subscription_amount_input');
       const notesInput = document.querySelector('input[name="notes"]');
 
-      if (mode === 'diff' && extraKeys.length > 0 && IS_SUBSCRIPTION_PAID) {
+      if (mode === 'diff' && extraKeys.length > 0 && IS_SUBSCRIPTION_PAID && !isCustomMode) {
         if (paymentAmountInput) {
           paymentAmountInput.value = extraCost.toFixed(2);
         }
@@ -723,7 +831,10 @@
           paymentAmountInput.value = finalTotal.toFixed(2);
         }
         if (notesInput) {
-          if (extraKeys.length > 0) {
+          const modNames = selectedKeys.map(k => MODULES_DATA[k] ? MODULES_DATA[k].name.split('(')[0].trim() : k).join(', ');
+          if (isCustomMode) {
+            notesInput.value = `Suscripción mensual: Plan Personalizado (${selectedKeys.length} módulos: ${modNames})`;
+          } else if (extraKeys.length > 0) {
             notesInput.value = `Suscripción mensual: ${pkg.name} + ${extraKeys.length} módulo(s) adicional(es)`;
           } else {
             notesInput.value = `Suscripción mensual: ${pkg.name}`;

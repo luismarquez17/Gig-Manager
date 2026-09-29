@@ -99,4 +99,41 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert @company.module_enabled?(:finances)
     assert @company.module_enabled?(:payroll)
   end
+
+  test "leader puede reportar pago de plan personalizado conservando modulos especificos" do
+    sign_in @leader
+    # Configurar modulos custom (gigs, finances, inventory)
+    @company.update_modules!(gigs: true, finances: true, inventory: true, payroll: false, clients_crm: false, shopping_list: false, songs_repertoire: false)
+
+    assert_difference -> { SubscriptionPayment.count } => 1 do
+      post report_payment_subscriptions_path, params: {
+        plan_tier: "personalizado",
+        amount: "13.00",
+        payment_method: "zelle",
+        reference_number: "ZEL-998877",
+        notes: "Suscripción mensual: Plan Personalizado (3 módulos)"
+      }
+    end
+
+    assert_redirected_to subscriptions_path
+    follow_redirect!
+    assert_response :success
+
+    payment = SubscriptionPayment.last
+    assert_equal "personalizado", payment.plan_tier
+    assert_equal 13.00, payment.amount
+    assert_equal "ZEL-998877", payment.reference_number
+    assert payment.pending?
+
+    payment.approve!
+    assert payment.approved?
+    @company.reload
+    assert_equal "personalizado", @company.plan_tier
+    assert_equal "Plan Personalizado (3 Módulos)", @company.plan_tier_name
+    assert @company.active_subscription?
+    assert @company.module_enabled?(:gigs)
+    assert @company.module_enabled?(:finances)
+    assert @company.module_enabled?(:inventory)
+    assert_not @company.module_enabled?(:payroll)
+  end
 end

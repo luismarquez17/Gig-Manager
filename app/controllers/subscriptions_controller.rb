@@ -35,6 +35,8 @@ class SubscriptionsController < ApplicationController
     
     amount = if params[:amount].present? && params[:amount].to_f > 0
                params[:amount].to_f
+             elsif plan_tier == 'personalizado'
+               AppModule.calculate_pricing('personalizado', current_company.enabled_module_keys)[:total_price]
              else
                AppModule.package_info(plan_tier)&.dig(:price) || 15.00
              end

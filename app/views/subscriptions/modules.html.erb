@@ -80,23 +80,36 @@
     <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 10px 0; color: white; letter-spacing: -0.5px;">
       Añadir y Configurar Opciones de <%= venue_mode? ? 'tu Empresa / Salón' : 'tu Agrupación' %>
     </h1>
-    <p style="color: #cbd5e1; font-size: 1rem; margin: 0 0 18px 0; max-width: 680px; line-height: 1.6;">
-      Personaliza las herramientas que aparecen en tu menú lateral izquierdo. Los módulos de tu paquete base están incluidos; cualquier módulo adicional se cotiza a <strong>+$3.00 USD/mes</strong>.
-    </p>
+    <% if @company.plan_tier == 'personalizado' %>
+      <p style="color: #cbd5e1; font-size: 1rem; margin: 0 0 18px 0; max-width: 680px; line-height: 1.6;">
+        Personaliza las herramientas que aparecen en tu menú lateral izquierdo. Tu cuenta cuenta con <strong>Plan Personalizado</strong> con escala de descuento por volumen.
+      </p>
+    <% else %>
+      <p style="color: #cbd5e1; font-size: 1rem; margin: 0 0 18px 0; max-width: 680px; line-height: 1.6;">
+        Personaliza las herramientas que aparecen en tu menú lateral izquierdo. Los módulos de tu paquete base están incluidos; cualquier módulo adicional se cotiza a <strong>+$3.00 USD/mes</strong>.
+      </p>
+    <% end %>
 
     <%# Desglose de Cuota Actual %>
     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.12); padding: 14px 18px; border-radius: 16px;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 1.4rem;"><%= @pricing_breakdown[:package_icon] %></span>
         <div>
-          <span style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Plan Base: <%= @pricing_breakdown[:package_name] %> ($<%= '%.0f' % @pricing_breakdown[:base_price] %>/mes)</span>
-          <div style="font-size: 0.88rem; color: white; font-weight: 700;">
-            <% if @pricing_breakdown[:extra_keys].any? %>
-              <%= @pricing_breakdown[:included_keys].count %> módulos base + <span style="color: #fde047;"><%= @pricing_breakdown[:extra_keys].count %> adicional(es) (+ $<%= '%.2f' % @pricing_breakdown[:extra_cost] %> USD)</span>
-            <% else %>
-              Todos los módulos activos pertenecen a tu paquete base.
-            <% end %>
-          </div>
+          <% if @company.plan_tier == 'personalizado' %>
+            <span style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Plan Personalizado (<%= @company.enabled_module_keys.count %> Módulos)</span>
+            <div style="font-size: 0.88rem; color: #38bdf8; font-weight: 700;">
+              <%= @pricing_breakdown[:discount_label].presence || 'Descuento por volumen aplicado' %>
+            </div>
+          <% else %>
+            <span style="font-size: 0.78rem; color: #94a3b8; text-transform: uppercase; font-weight: 700;">Plan Base: <%= @pricing_breakdown[:package_name] %> ($<%= '%.0f' % @pricing_breakdown[:base_price] %>/mes)</span>
+            <div style="font-size: 0.88rem; color: white; font-weight: 700;">
+              <% if @pricing_breakdown[:extra_keys].any? %>
+                <%= @pricing_breakdown[:included_keys].count %> módulos base + <span style="color: #fde047;"><%= @pricing_breakdown[:extra_keys].count %> adicional(es) (+ $<%= '%.2f' % @pricing_breakdown[:extra_cost] %> USD)</span>
+              <% else %>
+                Todos los módulos activos pertenecen a tu paquete base.
+              <% end %>
+            </div>
+          <% end %>
         </div>
       </div>
 
@@ -115,6 +128,7 @@
       active_modules = AppModule.all.select { |m| @company.module_enabled?(m[:key]) }
       inactive_modules = AppModule.all.reject { |m| @company.module_enabled?(m[:key]) }
       pkg_modules = @pricing_breakdown[:pkg_modules] || []
+      is_custom_plan = (@company.plan_tier == 'personalizado')
     %>
 
     <%# SECCIÓN 1: MÓDULOS ACTIVOS %>
@@ -130,10 +144,10 @@
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <% active_modules.each do |mod| %>
             <% is_pkg = pkg_modules.include?(mod[:key]) %>
-            <div class="module-card" style="background: white; border-radius: 18px; border: 1.5px solid <%= is_pkg ? '#a7f3d0' : '#fde68a' %>; padding: 20px 24px; box-shadow: 0 4px 12px <%= is_pkg ? 'rgba(16, 185, 129, 0.05)' : 'rgba(245, 158, 11, 0.08)' %>; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
+            <div class="module-card" style="background: white; border-radius: 18px; border: 1.5px solid <%= (is_custom_plan || is_pkg) ? '#a7f3d0' : '#fde68a' %>; padding: 20px 24px; box-shadow: 0 4px 12px <%= (is_custom_plan || is_pkg) ? 'rgba(16, 185, 129, 0.05)' : 'rgba(245, 158, 11, 0.08)' %>; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap;">
               
               <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 260px;">
-                <div style="width: 48px; height: 48px; border-radius: 14px; background: <%= is_pkg ? '#ecfdf5' : '#fefce8' %>; border: 1px solid <%= is_pkg ? '#a7f3d0' : '#fde68a' %>; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
+                <div style="width: 48px; height: 48px; border-radius: 14px; background: <%= (is_custom_plan || is_pkg) ? '#ecfdf5' : '#fefce8' %>; border: 1px solid <%= (is_custom_plan || is_pkg) ? '#a7f3d0' : '#fde68a' %>; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
                   <%= mod[:icon] %>
                 </div>
 
@@ -145,7 +159,11 @@
                     <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f1f5f9; color: #64748b; text-transform: uppercase;">
                       <%= mod[:category] %>
                     </span>
-                    <% if is_pkg %>
+                    <% if is_custom_plan %>
+                      <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;">
+                        ✓ En tu Plan Personalizado
+                      </span>
+                    <% elsif is_pkg %>
                       <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d;">
                         ✓ En tu Plan Base ($0)
                       </span>
@@ -222,7 +240,11 @@
                     <span style="font-size: 0.72rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: #f1f5f9; color: #64748b; text-transform: uppercase;">
                       <%= mod[:category] %>
                     </span>
-                    <% if is_pkg %>
+                    <% if is_custom_plan %>
+                      <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">
+                        ➕ Añadir a tu Plan (Tarifa por Volumen)
+                      </span>
+                    <% elsif is_pkg %>
                       <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: #dcfce7; color: #15803d;">
                         ✓ Incluido en tu Plan Base ($0 extra)
                       </span>

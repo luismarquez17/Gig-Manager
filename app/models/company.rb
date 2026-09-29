@@ -25,7 +25,7 @@ class Company < ApplicationRecord
   attribute :business_type, :string, default: 'music_band'
 
   DEFAULT_TRIAL_DAYS = 30
-  VALID_PLAN_TIERS = ['banda', 'productora', 'salon', 'negocio', 'full'].freeze
+  VALID_PLAN_TIERS = ['banda', 'productora', 'salon', 'negocio', 'personalizado', 'full'].freeze
 
   BUSINESS_TYPES = {
     'music_band' => {
@@ -406,7 +406,11 @@ class Company < ApplicationRecord
   end
 
   def plan_tier_name
-    AppModule.package_info(effective_plan_tier)&.dig(:name) || 'Paquete Bandas & Orquestas'
+    if effective_plan_tier == 'personalizado'
+      "Plan Personalizado (#{enabled_module_keys.count} #{enabled_module_keys.count == 1 ? 'Módulo' : 'Módulos'})"
+    else
+      AppModule.package_info(effective_plan_tier)&.dig(:name) || 'Paquete Bandas & Orquestas'
+    end
   end
 
   def subscription_label

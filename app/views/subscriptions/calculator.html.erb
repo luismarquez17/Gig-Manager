@@ -50,9 +50,12 @@
       <%= form_with url: report_payment_subscriptions_path, method: :post, local: true, style: "display: flex; flex-direction: column; gap: 15px;" do |f| %>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
           <div>
-            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Paquete Base</label>
+            <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Plan / Paquete</label>
             <%= select_tag :plan_tier, options_for_select(
-              AppModule.packages.map { |pkg| ["#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD / mes)", pkg[:key]] },
+              AppModule.packages.map { |pkg| [
+                pkg[:key] == 'personalizado' ? "#{pkg[:icon]} #{pkg[:name]} (A Tu Medida - Con Descuentos)" : "#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD / mes)",
+                pkg[:key]
+              ] },
               @company.plan_tier.presence || "banda"
             ), id: "subscription_plan_tier_select", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>

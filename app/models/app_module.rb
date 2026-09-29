@@ -140,6 +140,16 @@ class AppModule
       description: 'Diseñado para pymes, comercios y prestadores de servicios: Gestión de clientes, presupuestos por WhatsApp, finanzas y nómina.',
       modules: ['clients_crm', 'finances', 'payroll']
     },
+    'personalizado' => {
+      key: 'personalizado',
+      name: 'Plan Personalizado',
+      icon: '⚙️',
+      badge: '100% Flexible',
+      price: 13.00,
+      savings: 'Hasta $20 USD/mes',
+      description: 'Selecciona libremente los módulos que necesitas sin atarte a un combo predefinido, con descuentos progresivos por volumen.',
+      modules: []
+    },
     'full' => {
       key: 'full',
       name: 'Paquete Full Suite Total',
@@ -152,6 +162,22 @@ class AppModule
       modules: ['gigs', 'inventory', 'clients_crm', 'finances', 'payroll', 'shopping_list', 'songs_repertoire']
     }
   }.freeze
+
+  CUSTOM_TIERS = {
+    0 => { price: 0.0, regular: 0.0, savings: 0.0, discount_label: "0%" },
+    1 => { price: 6.0, regular: 6.0, savings: 0.0, discount_label: "Tarifa Base" },
+    2 => { price: 10.0, regular: 12.0, savings: 2.0, discount_label: "17% OFF" },
+    3 => { price: 13.0, regular: 18.0, savings: 5.0, discount_label: "28% OFF" },
+    4 => { price: 15.0, regular: 24.0, savings: 9.0, discount_label: "38% OFF" },
+    5 => { price: 18.0, regular: 30.0, savings: 12.0, discount_label: "40% OFF" },
+    6 => { price: 20.0, regular: 36.0, savings: 16.0, discount_label: "44% OFF" },
+    7 => { price: 22.0, regular: 42.0, savings: 20.0, discount_label: "48% OFF" }
+  }.freeze
+
+  def self.custom_tier_for(count)
+    c = count.to_i.clamp(0, 7)
+    CUSTOM_TIERS[c] || { price: 22.0, regular: 42.0, savings: 20.0, discount_label: "48% OFF" }
+  end
 
   def self.packages
     PACKAGES.values
@@ -183,7 +209,9 @@ class AppModule
   end
 
   def self.modules_for_package(pkg_key)
-    package_info(pkg_key)&.dig(:modules) || PACKAGES['banda'][:modules]
+    k = pkg_key.to_s
+    return [] if k == 'personalizado'
+    package_info(k)&.dig(:modules) || PACKAGES['banda'][:modules]
   end
 
   def self.package_info(pkg_key)
@@ -216,15 +244,54 @@ class AppModule
 
   def self.calculate_pricing(pkg_key, enabled_keys)
     clean_key = (PACKAGES.key?(pkg_key.to_s)) ? pkg_key.to_s : 'banda'
-    pkg = package_info(clean_key)
-    pkg_modules = pkg[:modules] || []
-    base_price = pkg[:price].to_f
-
+    
     enabled_array = if enabled_keys.is_a?(Hash)
                       enabled_keys.select { |_, v| v == true || v == "1" || v == 1 || v == "true" }.keys.map(&:to_s)
                     else
                       Array(enabled_keys).flatten.map(&:to_s).reject(&:blank?)
                     end
+
+    if clean_key == 'personalizado'
+      count = enabled_array.count
+      tier = custom_tier_for(count)
+      custom_price = tier[:price]
+      regular_price = tier[:regular]
+      savings = tier[:savings]
+      discount_label = tier[:discount_label]
+
+      return {
+        package_key: 'personalizado',
+        package_name: 'Plan Personalizado',
+        custom_plan_name: count > 0 ? "Plan Personalizado (#{count} #{count == 1 ? 'Módulo' : 'Módulos'})" : "Plan Personalizado",
+        package_icon: '⚙️',
+        package_badge: '100% A Tu Medida',
+        base_price: custom_price,
+        regular_price: regular_price,
+        discount_amount: savings,
+        discount_label: discount_label,
+        pkg_modules: enabled_array,
+        enabled_keys: enabled_array,
+        included_keys: enabled_array,
+        extra_keys: [],
+        extra_module_price: EXTRA_MODULE_PRICE,
+        extra_cost: 0.0,
+        difference_amount: 0.0,
+        subtotal: custom_price,
+        total_price: custom_price,
+        suggests_full_suite: count == 7,
+        full_suite_price: 22.00,
+        savings_with_full_suite: savings,
+        included_modules_details: enabled_array.map { |k| find(k) }.compact,
+        extra_modules_details: [],
+        total_modules_count: count,
+        has_extras: false,
+        is_custom: true
+      }
+    end
+
+    pkg = package_info(clean_key)
+    pkg_modules = pkg[:modules] || []
+    base_price = pkg[:price].to_f
 
     included_keys = enabled_array & pkg_modules
     extra_keys = enabled_array - pkg_modules
@@ -251,6 +318,9 @@ class AppModule
       package_icon: pkg[:icon],
       package_badge: pkg[:badge],
       base_price: base_price,
+      regular_price: subtotal,
+      discount_amount: suggests_full_suite ? (subtotal - full_suite_price).round(2) : 0.0,
+      discount_label: suggests_full_suite ? "Full Suite Ahorro" : nil,
       pkg_modules: pkg_modules,
       enabled_keys: enabled_array,
       included_keys: included_keys,
@@ -266,7 +336,8 @@ class AppModule
       included_modules_details: included_keys.map { |k| find(k) }.compact,
       extra_modules_details: extra_keys.map { |k| find(k) }.compact,
       total_modules_count: enabled_array.count,
-      has_extras: extra_keys.any?
+      has_extras: extra_keys.any?,
+      is_custom: false
     }
   end
 

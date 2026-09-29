@@ -138,4 +138,29 @@ class CompanyTest < ActiveSupport::TestCase
     assert_equal 1, company.extra_modules.count
     assert_equal "clients_crm", company.extra_modules.first[:key]
   end
+
+  test "soporta plan_tier personalizado con pricing_breakdown y descuentos" do
+    company = Company.create!(name: "Estudio Creativo", plan_tier: "personalizado", monthly_fee: 10.0)
+
+    # 2 modulos custom ($10 USD)
+    company.update_modules!({
+      "gigs" => true,
+      "finances" => true,
+      "inventory" => false,
+      "payroll" => false,
+      "clients_crm" => false,
+      "shopping_list" => false,
+      "songs_repertoire" => false
+    })
+
+    assert_equal "personalizado", company.effective_plan_tier
+    assert_equal "Plan Personalizado (2 Módulos)", company.plan_tier_name
+    assert_equal 10.0, company.calculated_monthly_fee
+    assert_equal false, company.has_extra_modules?
+
+    # Añadir un 3er módulo custom -> $13 USD (con descuento de $5 sobre regular $18)
+    company.enable_module!(:clients_crm)
+    assert_equal "Plan Personalizado (3 Módulos)", company.plan_tier_name
+    assert_equal 13.0, company.calculated_monthly_fee
+  end
 end

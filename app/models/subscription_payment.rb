@@ -73,7 +73,8 @@ class SubscriptionPayment < ApplicationRecord
     end
 
     user_name = user&.display_name.presence || company&.name.presence || "Cliente"
-    text = "Hola *#{user_name}*! 👋 Tu pago de *$#{'%.2f' % amount.to_f} USD* vía #{payment_method_label} (Ref: #{reference_number}) ha sido verificado exitosamente y tu suscripción a Gig Manager (Plan #{plan_tier.to_s.capitalize}) está *ACTIVA*."
+    plan_name_str = (plan_tier.to_s == 'personalizado') ? "Plan Personalizado" : "Plan #{plan_tier.to_s.capitalize}"
+    text = "Hola *#{user_name}*! 👋 Tu pago de *$#{'%.2f' % amount.to_f} USD* vía #{payment_method_label} (Ref: #{reference_number}) ha sido verificado exitosamente y tu suscripción a Gig Manager (#{plan_name_str}) está *ACTIVA*."
     "https://wa.me/#{formatted_num}?text=#{ERB::Util.url_encode(text)}"
   rescue => e
     Rails.logger.error "[SubscriptionPayment#whatsapp_confirmation_url] #{e.message}"
