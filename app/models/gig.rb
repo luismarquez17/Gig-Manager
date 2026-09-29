@@ -99,7 +99,7 @@ class Gig < ApplicationRecord
                     "⚠️ PENDIENTE POR ABONAR"
                   end
 
-    comp_name = company&.name.presence || "Gero Producciones"
+    comp_name = company&.name.presence || "Gig Manager"
     c_name = client_display_name.to_s.encode('UTF-8', invalid: :replace, undef: :replace)
     loc = (location.presence || 'Por definir').to_s.encode('UTF-8', invalid: :replace, undef: :replace)
     dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
@@ -138,7 +138,7 @@ class Gig < ApplicationRecord
   end
 
   def whatsapp_client_welcome_text(portal_url = nil)
-    comp_name = company&.name.presence || "Gero Producciones"
+    comp_name = company&.name.presence || "Gig Manager"
     c_name = client_display_name
     dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
     loc = location.presence || 'Por definir'
@@ -164,12 +164,12 @@ class Gig < ApplicationRecord
     end
 
     lines << ""
-    lines << "Cualquier consulta estamos a tu total disposición. ¡Será un evento inolvidable! 🎵🙌"
+    lines << "Cualquier consulta estamos a tu total disposición. ¡Será un evento inolvidable! 🙌"
     lines.join("\n")
   end
 
   def whatsapp_client_schedule_text(portal_url = nil)
-    comp_name = company&.name.presence || "Gero Producciones"
+    comp_name = company&.name.presence || "Gig Manager"
     c_name = client_display_name
     dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
     loc = location.presence || 'Por definir'
@@ -193,7 +193,7 @@ class Gig < ApplicationRecord
       end
       lines << "─────────────────────────"
     elsif start_time.present? && end_time.present?
-      lines << "⏱️ *Horario de Presentación:* #{formatted_time_range}"
+      lines << "⏱️ *Horario del Evento:* #{formatted_time_range}"
       lines << "─────────────────────────"
     end
 
@@ -205,15 +205,18 @@ class Gig < ApplicationRecord
   end
 
   def whatsapp_staff_call_sheet_text(staff_user = nil, stage_url = nil)
-    comp_name = company&.name.presence || "Gero Producciones"
+    comp_name = company&.name.presence || "Gig Manager"
     dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
     loc = location.presence || 'Por definir'
     c_name = client_display_name
+    is_venue = company&.business_type == 'venue_hall'
 
     assignment = staff_assignments.find_by(user_id: staff_user&.id) if staff_user.present?
 
+    sheet_title = is_venue ? "🏛️ *PAUTA DE PERSONAL - #{comp_name.to_s.upcase}*" : "🎸 *PAUTA DE CONVOCATORIA (CALL SHEET) - #{comp_name.to_s.upcase}*"
+
     lines = [
-      "🎸 *PAUTA DE CONVOCATORIA (CALL SHEET) - #{comp_name.to_s.upcase}*",
+      sheet_title,
       "─────────────────────────",
       "📅 *Fecha:* #{dt}",
       "👤 *Evento:* #{c_name}",
@@ -224,8 +227,8 @@ class Gig < ApplicationRecord
     if start_time.present?
       arr_time = (start_time - 90.minutes).strftime("%I:%M %p")
       lines << "🚪 *Convocatoria / Montaje:* #{arr_time}"
-      lines << "🎤 *Inicio del Show:* #{start_time.strftime('%I:%M %p')}"
-      lines << "🏁 *Fin del Show:* #{end_time ? end_time.strftime('%I:%M %p') : 'Por definir'}"
+      lines << "🎤 *Inicio:* #{start_time.strftime('%I:%M %p')}"
+      lines << "🏁 *Finalización:* #{end_time ? end_time.strftime('%I:%M %p') : 'Por definir'}"
     else
       lines << "🕐 *Horario:* Por coordinar en el grupo"
     end
@@ -247,13 +250,13 @@ class Gig < ApplicationRecord
 
     if has_music_notes?
       lines << "─────────────────────────"
-      lines << "🎵 *Protocolo / Canciones Especiales:*"
+      lines << "🎵 *Protocolo / Momentos Clave:*"
       lines << music_notes.to_s.lines.first(3).map { |l| "  • #{l.strip}" }.join("\n")
     end
 
     if stage_url.present?
       lines << "─────────────────────────"
-      lines << "⚡ *Modo Escenario en Vivo (Setlist & Cronograma):*"
+      lines << "⚡ *Modo Escenario en Vivo (Cronograma & Detalles):*"
       lines << stage_url.to_s
     end
 
