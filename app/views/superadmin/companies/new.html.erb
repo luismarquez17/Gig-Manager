@@ -8,6 +8,13 @@
     border: 2px solid #cbd5e1;
     position: relative;
     user-select: none;
+    background: #f8fafc;
+    color: #1e293b;
+    border-radius: 14px;
+    padding: 12px 10px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
   }
   .pkg-pill-btn:hover {
     transform: translateY(-2px);
@@ -29,6 +36,27 @@
   }
   .pkg-pill-btn.is-active .pkg-price-text {
     color: #38bdf8 !important;
+  }
+  .pkg-pill-btn.is-active .pkg-selection-status {
+    color: #38bdf8 !important;
+    border-top-color: rgba(255,255,255,0.15) !important;
+  }
+  .pkg-pill-btn:not(.is-active) {
+    background: #f8fafc !important;
+    color: #1e293b !important;
+  }
+  .pkg-pill-btn:not(.is-active) .pkg-name {
+    color: #0f172a !important;
+  }
+  .pkg-pill-btn:not(.is-active) .pkg-subtext {
+    color: #64748b !important;
+  }
+  .pkg-pill-btn:not(.is-active) .pkg-price-text {
+    color: #059669 !important;
+  }
+  .pkg-pill-btn:not(.is-active) .pkg-selection-status {
+    color: #64748b !important;
+    border-top-color: #e2e8f0 !important;
   }
   .calc-module-row {
     transition: all 0.15s ease;
@@ -157,13 +185,13 @@
         <div class="pkg-grid-5" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;" id="calc-package-tabs">
           <% AppModule.packages.each do |pkg| %>
             <% is_selected = (@company.effective_plan_tier == pkg[:key]) %>
-            <div class="pkg-pill-btn <%= 'is-active' if is_selected %>" data-pkg-key="<%= pkg[:key] %>" onclick="window.selectSuperadminPackage('<%= pkg[:key] %>')" style="background: <%= is_selected ? '#0f172a' : '#f8fafc' %>; color: <%= is_selected ? 'white' : '#1e293b' %>; border-radius: 14px; padding: 12px 10px; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="pkg-pill-btn <%= 'is-active' if is_selected %>" data-pkg-key="<%= pkg[:key] %>" onclick="window.selectSuperadminPackage('<%= pkg[:key] %>')">
               
               <div>
                 <%# Badge en fila superior %>
                 <div style="min-height: 18px; margin-bottom: 6px; display: flex; align-items: center; justify-content: flex-start;">
                   <% if pkg[:badge].present? %>
-                    <span class="pkg-badge-pill" style="font-size: 0.58rem; font-weight: 900; padding: 1px 6px; border-radius: 5px; background: <%= is_selected ? 'rgba(99, 102, 241, 0.3)' : '#e0e7ff' %>; color: <%= is_selected ? '#c7d2fe' : '#4338ca' %>; border: 1px solid <%= is_selected ? 'rgba(165, 180, 252, 0.4)' : '#c7d2fe' %>; text-transform: uppercase; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block;">
+                    <span class="pkg-badge-pill" style="font-size: 0.58rem; font-weight: 900; padding: 1px 6px; border-radius: 5px; text-transform: uppercase; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block;">
                       <%= pkg[:badge] %>
                     </span>
                   <% else %>
@@ -177,22 +205,22 @@
                 </div>
 
                 <%# Nombre %>
-                <div class="pkg-name" style="font-weight: 800; font-size: 0.85rem; margin-bottom: 4px; color: #0f172a; line-height: 1.2; min-height: 32px; display: flex; align-items: center;">
+                <div class="pkg-name" style="font-weight: 800; font-size: 0.85rem; margin-bottom: 4px; line-height: 1.2; min-height: 32px; display: flex; align-items: center;">
                   <%= pkg[:name] %>
                 </div>
 
                 <%# Precio %>
-                <div class="pkg-price-text" style="font-size: 1.3rem; font-weight: 900; color: #059669; line-height: 1.1; margin-bottom: 2px;">
-                  $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.68rem; font-weight: 700; color: #64748b;">USD/mes</span>
+                <div class="pkg-price-text" style="font-size: 1.3rem; font-weight: 900; line-height: 1.1; margin-bottom: 2px;">
+                  $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.68rem; font-weight: 700; opacity: 0.8;">USD/mes</span>
                 </div>
 
-                <div class="pkg-subtext" style="font-size: 0.72rem; color: #64748b; font-weight: 600;">
+                <div class="pkg-subtext" style="font-size: 0.72rem; font-weight: 600;">
                   <%= pkg[:modules].count %> módulos base
                 </div>
               </div>
 
               <%# Status Indicator %>
-              <div class="pkg-selection-status" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid <%= is_selected ? 'rgba(255,255,255,0.15)' : '#e2e8f0' %>; font-size: 0.68rem; font-weight: 800; text-align: center; color: <%= is_selected ? '#38bdf8' : '#64748b' %>;">
+              <div class="pkg-selection-status" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #e2e8f0; font-size: 0.68rem; font-weight: 800; text-align: center;">
                 <%= is_selected ? '✓ Seleccionado' : 'Elegir Plan' %>
               </div>
 
