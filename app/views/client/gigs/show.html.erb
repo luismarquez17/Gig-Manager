@@ -670,7 +670,7 @@
                 </span>
               <% when 'approved' %>
                 <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">
-                  ✅ Añadido al Show
+                  ✅ <%= venue_mode? ? 'Añadido al Evento' : 'Añadido al Show' %>
                 </span>
               <% when 'rejected' %>
                 <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">

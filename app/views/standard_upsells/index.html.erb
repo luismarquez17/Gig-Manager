@@ -21,7 +21,7 @@
           <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px;">
             <span style="font-size: 2.2em;"><%= upsell.emoji.presence || '🚀' %></span>
             <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.75em; font-weight: bold; <%= upsell.active? ? 'background: #dcfce7; color: #15803d;' : 'background: #f1f5f9; color: #64748b;' %>">
-              <%= upsell.active? ? 'Activo en todos los shows' : 'Inactivo Global' %>
+              <%= upsell.active? ? (venue_mode? ? 'Activo en todos los eventos' : 'Activo en todos los shows') : 'Inactivo Global' %>
             </span>
           </div>
 

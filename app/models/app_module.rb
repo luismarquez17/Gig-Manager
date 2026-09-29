@@ -124,11 +124,11 @@ class AppModule
       key: 'salon',
       name: 'Paquete Salones & Venues',
       icon: '🏛️',
-      badge: 'Salones',
+      badge: 'Salones & Academia',
       price: 15.00,
       savings: '$2 USD/mes',
-      description: 'Pensado para salones de fiesta, quintas, venues y centros de convenciones: Cotizaciones públicas, control de inventario y caja.',
-      modules: ['gigs', 'inventory', 'clients_crm', 'finances']
+      description: 'Pensado para salones de fiesta, quintas, venues y academias: Gestión de eventos, combos y cotizaciones públicas, finanzas y nómina de personal.',
+      modules: ['gigs', 'clients_crm', 'finances', 'payroll']
     },
     'negocio' => {
       key: 'negocio',

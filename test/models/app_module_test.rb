@@ -26,8 +26,10 @@ class AppModuleTest < ActiveSupport::TestCase
 
   test "obtiene configuraciones de paquetes preestablecidos" do
     assert_equal ["gigs", "payroll", "songs_repertoire", "finances"], AppModule.modules_for_package("banda")
+    assert_equal ["gigs", "clients_crm", "finances", "payroll"], AppModule.modules_for_package("salon")
     assert_equal ["clients_crm", "finances", "payroll"], AppModule.modules_for_package("negocio")
     assert_equal 15.00, AppModule.package_info("banda")[:price]
+    assert_equal 15.00, AppModule.package_info("salon")[:price]
     assert_equal 14.00, AppModule.package_info("negocio")[:price]
   end
 

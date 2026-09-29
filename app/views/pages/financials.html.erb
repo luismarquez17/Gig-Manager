@@ -51,7 +51,7 @@
         </h2>
       </div>
       <div style="margin-top: 14px; font-size: 0.82em; color: #64748b; line-height: 1.4; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-        <div style="font-weight: 600; color: #334155;">👥 Salarios y honorarios pagados a músicos y staff.</div>
+        <div style="font-weight: 600; color: #334155;">👥 <%= venue_mode? ? 'Salarios y honorarios pagados al personal y staff.' : 'Salarios y honorarios pagados a músicos y staff.' %></div>
         <div style="color: #94a3b8; margin-top: 4px;">
           Suma de pagos aprobados y registrados en el sistema.
         </div>
@@ -70,7 +70,7 @@
         </h2>
       </div>
       <div style="margin-top: 14px; font-size: 0.82em; color: #64748b; line-height: 1.4; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-        <div style="font-weight: 600; color: #334155;">🔧 Mantenimiento y reparaciones de instrumentos.</div>
+        <div style="font-weight: 600; color: #334155;">🔧 <%= venue_mode? ? 'Mantenimiento y reparaciones de mobiliario y equipos.' : 'Mantenimiento y reparaciones de instrumentos.' %></div>
         <div style="color: #94a3b8; margin-top: 4px;">
           <%= @maintenance_count %> <%= @maintenance_count == 1 ? "servicio registrado" : "servicios registrados" %> en el historial de taller.
         </div>
@@ -89,7 +89,7 @@
         </h2>
       </div>
       <div style="margin-top: 14px; font-size: 0.82em; color: #64748b; line-height: 1.4; border-top: 1px solid #f1f5f9; padding-top: 10px;">
-        <div style="font-weight: 600; color: #334155;">📦 <%= @investments_count %> <%= @investments_count == 1 ? "compra de equipo" : "compras de equipos" %> para la banda.</div>
+        <div style="font-weight: 600; color: #334155;">📦 <%= @investments_count %> <%= @investments_count == 1 ? (venue_mode? ? "compra de equipo / mobiliario" : "compra de equipo") : (venue_mode? ? "compras de equipos / mobiliario" : "compras de equipos") %> <%= venue_mode? ? 'para la empresa.' : 'para la banda.' %></div>
         <div style="margin-top: 4px;">
           <%= link_to "Ver detalle de inversiones →", investments_path, style: "color: #8b5cf6; text-decoration: none; font-weight: 700;" %>
         </div>
@@ -155,7 +155,7 @@
           <thead>
             <tr style="border-bottom: 2px solid #e2e8f0; color: #475569; font-size: 0.8em; text-transform: uppercase; letter-spacing: 0.5px;">
               <th style="padding: 12px 14px;">Mes</th>
-              <th style="padding: 12px 14px; text-align: center;">Shows</th>
+              <th style="padding: 12px 14px; text-align: center;"><%= venue_mode? ? 'Eventos' : 'Shows' %></th>
               <th style="padding: 12px 14px; text-align: right; color: #059669;">Cobrado Real</th>
               <th style="padding: 12px 14px; text-align: right; color: #2563eb;">Nómina Pagada</th>
               <th style="padding: 12px 14px; text-align: right; color: #e11d48;">Reparaciones</th>

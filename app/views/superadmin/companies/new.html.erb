@@ -22,10 +22,10 @@
     box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08);
   }
   .pkg-pill-btn.is-active {
-    border-color: #6366f1 !important;
-    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+    border: 2.5px solid #38bdf8 !important;
+    background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%) !important;
     color: white !important;
-    box-shadow: 0 10px 25px -4px rgba(99, 102, 241, 0.35) !important;
+    box-shadow: 0 0 0 1px #38bdf8, 0 12px 25px -4px rgba(56, 189, 248, 0.4) !important;
     transform: translateY(-2px);
   }
   .pkg-pill-btn.is-active .pkg-name {
@@ -39,7 +39,12 @@
   }
   .pkg-pill-btn.is-active .pkg-selection-status {
     color: #38bdf8 !important;
-    border-top-color: rgba(255,255,255,0.15) !important;
+    border-top-color: rgba(255,255,255,0.2) !important;
+  }
+  .pkg-pill-btn.is-active .pkg-badge-pill {
+    background: rgba(99, 102, 241, 0.3) !important;
+    color: #c7d2fe !important;
+    border-color: rgba(165, 180, 252, 0.5) !important;
   }
   .pkg-pill-btn:not(.is-active) {
     background: #f8fafc !important;

@@ -78,7 +78,7 @@
     </div>
 
     <h1 style="font-size: 2rem; font-weight: 800; margin: 0 0 10px 0; color: white; letter-spacing: -0.5px;">
-      Añadir y Configurar Opciones de tu Agrupación
+      Añadir y Configurar Opciones de <%= venue_mode? ? 'tu Empresa / Salón' : 'tu Agrupación' %>
     </h1>
     <p style="color: #cbd5e1; font-size: 1rem; margin: 0 0 18px 0; max-width: 680px; line-height: 1.6;">
       Personaliza las herramientas que aparecen en tu menú lateral izquierdo. Los módulos de tu paquete base están incluidos; cualquier módulo adicional se cotiza a <strong>+$3.00 USD/mes</strong>.
@@ -198,7 +198,7 @@
           <% if inactive_modules.any? %>
             Opciones y Módulos Adicionales Disponibles para Añadir (<%= inactive_modules.count %>)
           <% else %>
-            ¡Tu agrupación tiene todas las opciones y herramientas activadas! 🎉
+            ¡<%= venue_mode? ? 'Tu empresa' : 'Tu agrupación' %> tiene todas las opciones y herramientas activadas! 🎉
           <% end %>
         </h2>
       </div>
@@ -270,7 +270,7 @@
     <%# Botón Flotante / Inferior de Guardado %>
     <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 20px 28px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: 0 10px 25px rgba(0,0,0,0.06); position: sticky; bottom: 20px; z-index: 10;">
       <div>
-        <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">¿Listo para actualizar las herramientas de tu banda?</div>
+        <div style="font-weight: 800; color: #0f172a; font-size: 0.95rem;">¿Listo para actualizar las herramientas de <%= venue_mode? ? 'tu empresa' : 'tu banda' %>?</div>
         <div style="font-size: 0.82rem; color: #64748b;">Los módulos encendidos aparecerán inmediatamente en tu menú lateral izquierdo.</div>
       </div>
 

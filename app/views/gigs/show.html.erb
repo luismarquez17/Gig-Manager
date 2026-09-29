@@ -177,11 +177,11 @@
                 </div>
 
                 <div style="display: flex; gap: 8px; align-items: center;">
-                  <%= button_to approve_gig_upsell_request_path(req), method: :post, style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: transform 0.15s;", data: { turbo_confirm: "¿Añadir '#{req.title}' (+ $#{number_with_precision(req.price, precision: 2)} #{req.currency}) a este evento?\n\nEl monto acordado del show se incrementará automáticamente." } do %>
-                    <span>✅ Añadir al Show</span>
+                  <%= button_to approve_gig_upsell_request_path(req), method: :post, style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3); transition: transform 0.15s;", data: { turbo_confirm: "¿Añadir '#{req.title}' (+ $#{number_with_precision(req.price, precision: 2)} #{req.currency}) a este evento?\n\nEl monto acordado del #{venue_mode? ? 'evento' : 'show'} se incrementará automáticamente." } do %>
+                    <span>✅ <%= venue_mode? ? 'Añadir al Evento' : 'Añadir al Show' %></span>
                   <% end %>
 
-                  <%= button_to reject_gig_upsell_request_path(req), method: :post, style: "background: #f8fafc; color: #dc2626; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;", data: { turbo_confirm: "¿Rechazar esta solicitud de adicional (ej. por no tener disponibilidad de equipos)?\n\nEl presupuesto del show permanecerá sin cambios." } do %>
+                  <%= button_to reject_gig_upsell_request_path(req), method: :post, style: "background: #f8fafc; color: #dc2626; border: 1px solid #cbd5e1; padding: 10px 18px; border-radius: 12px; font-weight: 800; font-size: 0.9em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: background 0.15s;", data: { turbo_confirm: "¿Rechazar esta solicitud de adicional (ej. por no tener disponibilidad de equipos)?\n\nEl presupuesto del #{venue_mode? ? 'evento' : 'show'} permanecerá sin cambios." } do %>
                     <span>❌ No añadir</span>
                   <% end %>
                 </div>
@@ -229,7 +229,7 @@
           Enviar por WhatsApp
         </a>
         <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 10px 18px; border-radius: 12px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(67, 56, 202, 0.08); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s;">
-          📸 Ficha de Show
+          <%= company_term(:event_sheet, (venue_mode? ? '📸 Ficha del Evento' : '📸 Ficha de Show')) %>
         </button>
         <%= link_to print_contract_gig_path(@gig), target: "_blank", style: "background: #f1f5f9; color: #475569; padding: 10px 18px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: inline-flex; align-items: center; justify-content: center; transition: 0.2s;" do %>
           🖨️ Imprimir Físico
@@ -306,7 +306,7 @@
       <%# Contenido Desplegable (Oculto por defecto para optimizar espacio) %>
       <div id="upsells-collapsible-content" style="display: none; border-top: 1px solid #e2e8f0; padding: 25px; background: #fafafa;">
         <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.88em; line-height: 1.4;">
-          Todos los adicionales del catálogo estándar están activos automáticamente para este toque. Desactiva los que no desees mostrar en el portal de este cliente o modifica su precio/título si este evento lo requiere.
+          <%= venue_mode? ? 'Todos los adicionales del catálogo estándar están activos automáticamente para este evento. Desactiva los que no desees mostrar en el portal de este cliente o modifica su precio/título si este evento lo requiere.' : 'Todos los adicionales del catálogo estándar están activos automáticamente para este toque. Desactiva los que no desees mostrar en el portal de este cliente o modifica su precio/título si este evento lo requiere.' %>
         </p>
 
         <%# --- HISTORIAL DE SOLICITUDES DE CLIENTES --- %>
@@ -335,7 +335,7 @@
                     <% case req.status %>
                     <% when 'approved' %>
                       <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.78em;">
-                        ✓ Añadido al Show
+                        <%= venue_mode? ? '✓ Añadido al Evento' : '✓ Añadido al Show' %>
                       </span>
                     <% when 'rejected' %>
                       <span style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.78em;">
@@ -346,7 +346,7 @@
                         ⏳ Pendiente
                       </span>
                       <div style="display: flex; gap: 6px;">
-                        <%= button_to "Añadir", approve_gig_upsell_request_path(req), method: :post, style: "background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78em; cursor: pointer;", onclick: "return confirm('¿Aprobar y sumar al show?');" %>
+                        <%= button_to "Añadir", approve_gig_upsell_request_path(req), method: :post, style: "background: #10b981; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78em; cursor: pointer;", onclick: "return confirm('¿Aprobar y sumar al #{venue_mode? ? 'evento' : 'show'}?');" %>
                         <%= button_to "No añadir", reject_gig_upsell_request_path(req), method: :post, style: "background: #f1f5f9; color: #dc2626; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-weight: 700; font-size: 0.78em; cursor: pointer;", onclick: "return confirm('¿Rechazar adicional?');" %>
                       </div>
                     <% end %>
@@ -447,13 +447,13 @@
                     <%= hidden_field_tag "gig[custom_upsells][#{key}][disabled]", "1" %>
                     <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.82em; font-weight: bold; color: <%= is_active ? '#15803d' : '#64748b' %>; cursor: pointer;">
                       <%= check_box_tag "gig[custom_upsells][#{key}][disabled]", "0", is_active %>
-                      Activo en este toque
+                      Activo <%= company_term(:in_this_gig, (venue_mode? ? 'en este evento' : 'en este toque')) %>
                     </label>
                   </div>
                 </div>
                 
                 <div>
-                  <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Nombre (Personalizado para este show)</label>
+                  <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Nombre (Personalizado para este <%= venue_mode? ? 'evento' : 'show' %>)</label>
                   <%= text_field_tag "gig[custom_upsells][#{key}][title]", custom_data['title'], placeholder: "Estándar: #{std.title}", style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; outline: none; background: white;" %>
                 </div>
 
@@ -469,7 +469,7 @@
                 </div>
 
                 <div>
-                  <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Descripción (Personalizada para este show)</label>
+                  <label style="display: block; font-size: 0.78em; color: #64748b; font-weight: bold; margin-bottom: 3px;">Descripción (Personalizada para este <%= venue_mode? ? 'evento' : 'show' %>)</label>
                   <%= text_area_tag "gig[custom_upsells][#{key}][description]", custom_data['description'], rows: 2, placeholder: "Dejar vacío para usar la descripción estándar...", style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85em; outline: none; background: white; resize: vertical;" %>
                 </div>
 
@@ -513,7 +513,7 @@
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
         <div>
           <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
-            <span>📊</span> Rentabilidad & Finanzas del Show
+            <span>📊</span> Rentabilidad &amp; Finanzas del <%= company_term(:event_singular, (venue_mode? ? 'Evento' : 'Show')) %>
           </h3>
           <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.85em;">
             Desglose en tiempo real de ingresos cobrados, costos de nómina y ganancia neta para la empresa.
@@ -522,8 +522,8 @@
         <% if current_user.leader? %>
           <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "margin: 0;" do |f| %>
             <%= hidden_field_tag :upsell_key, 'extra_time' %>
-            <button type="submit" onclick="return confirm('¿Añadir 1 Hora Extra a este evento? Se sumará la tarifa correspondiente al monto del toque y 1 hora al horario final.');" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 7px 14px; border-radius: 10px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
-              🎵 + Añadir Hora Extra
+            <button type="submit" onclick="return confirm('¿Añadir 1 Hora Extra a este evento? Se sumará la tarifa correspondiente al monto del <%= venue_mode? ? 'evento' : 'toque' %> y 1 hora al horario final.');" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 7px 14px; border-radius: 10px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
+              <span><%= venue_mode? ? '⏰' : '🎵' %></span> + Añadir Hora Extra
             </button>
           <% end %>
         <% end %>
@@ -551,7 +551,7 @@
 
         <%# 2. Costo Total de Nómina %>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px;">
-          <div style="font-size: 0.78em; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">👥 Nómina del Show</div>
+          <div style="font-size: 0.78em; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">👥 <%= company_term(:payroll_title, (venue_mode? ? 'Nómina del Evento' : 'Nómina del Show')) %></div>
           <div style="font-size: 1.4em; font-weight: 900; color: #dc2626; margin-top: 4px;">
             - $<%= number_with_precision(@gig.total_payroll_agreed, precision: 2) %> <span style="font-size: 0.65em; color: #94a3b8;"><%= @gig.currency %></span>
           </div>
@@ -561,7 +561,7 @@
           </div>
         </div>
 
-        <%# 3. Ganancia Neta Estimada (Banda) %>
+        <%# 3. Ganancia Neta Estimada (Banda / Empresa) %>
         <%
           is_profitable = @gig.projected_net_profit >= 0
           margin = @gig.projected_profit_margin
@@ -571,7 +571,7 @@
         <div style="background: <%= is_profitable ? '#f0fdf4' : '#fff1f2' %>; border: 2px solid <%= is_profitable ? '#86efac' : '#fecaca' %>; border-radius: 14px; padding: 16px 18px; position: relative;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <div style="font-size: 0.78em; color: <%= is_profitable ? '#15803d' : '#991b1b' %>; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-              📈 Ganancia Neta Banda
+              📈 <%= company_term(:net_profit_label, (venue_mode? ? 'Ganancia Neta Evento' : 'Ganancia Neta Banda')) %>
             </div>
             <span style="background: <%= margin_badge_bg %>; color: <%= margin_badge_color %>; font-size: 0.75em; font-weight: 900; padding: 2px 8px; border-radius: 99px;">
               <%= margin %>% Margen
@@ -629,7 +629,7 @@
             <span style="font-size: 2em; line-height: 1;">🔔</span>
             <div>
               <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: #92400e;">
-                <%= pending_gig_reports.count %> reporte(s) de pago por confirmar en este show
+                <%= pending_gig_reports.count %> reporte(s) de pago por confirmar en este <%= venue_mode? ? 'evento' : 'show' %>
               </h3>
               <p style="margin: 3px 0 0 0; font-size: 0.88em; color: #b45309;">
                 Un trabajador indicó que ya se le pagó su parte de este evento. Confirma si ya le pagaste para actualizar sus cuentas:
@@ -690,25 +690,25 @@
     <%# --- ASIGNACIÓN DE TRABAJADORES --- %>
     <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
       <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;">
-        <span>👷 Trabajadores asignados</span>
+        <span>👷 <%= venue_mode? ? 'Personal asignado' : 'Trabajadores asignados' %></span>
         <span style="font-size: 0.85em; color: #64748b; font-weight: 600;">Total acordado: $<%= number_with_precision(@gig.staff_assignments.sum(:agreed_amount), precision: 2) %></span>
       </h3>
 
       <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
         <div style="flex: 1; min-width: 240px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">Seleccionar trabajador (Staff / Músico)</label>
-          <%= f.select :staff_id, current_company.users.workers.order(:name, :email).map { |w| ["#{w.display_name} (#{w.role.to_s.capitalize})", w.id] }, { prompt: "-- Seleccionar trabajador --" }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;"><%= company_term(:assign_worker_label, (venue_mode? ? 'Seleccionar personal (Staff / Instructor / Modelo)' : 'Seleccionar trabajador (Staff / Músico)')) %></label>
+          <%= f.select :staff_id, current_company.users.workers.order(:name, :email).map { |w| ["#{w.display_name} (#{w.role.to_s.capitalize})", w.id] }, { prompt: "-- Seleccionar personal --" }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
         </div>
         <div style="flex: 1; min-width: 220px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">¿Cuánto le vas a pagar a este trabajador? ($ USD)</label>
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">¿Cuánto le vas a pagar a este personal? ($ USD)</label>
           <%= f.text_field :agreed_amount, inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
         </div>
         <div>
-          <%= f.submit "➕ Asignar trabajador", style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
+          <%= f.submit (venue_mode? ? "➕ Asignar personal" : "➕ Asignar trabajador"), style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
         </div>
       <% end %>
       <div style="margin-bottom: 20px; font-size: 0.82rem; color: #64748b; padding-left: 4px;">
-        💡 ¿No encuentras a tu músico o staff en la lista? <%= link_to "Agrégalo o cámbiale el rol en Gestión de Usuarios →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
+        💡 ¿No encuentras a tu <%= venue_mode? ? 'personal o staff' : 'músico o staff' %> en la lista? <%= link_to "Agrégalo o cámbiale el rol en Gestión de Usuarios →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
@@ -736,7 +736,7 @@
                 <span style="color: #64748b; font-weight: 600;">Pagado:</span>
                 <strong style="color: #059669;">$ <%= number_with_precision(paid, precision: 2) %></strong>
                 <% if sa.general_credit_applied > 0 %>
-                  <span style="font-size: 0.75em; color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 6px; font-weight: 700; margin-left: 4px;" title="Incluye pago general o anticipo aplicado a este show">
+                  <span style="font-size: 0.75em; color: #0284c7; background: #e0f2fe; padding: 2px 6px; border-radius: 6px; font-weight: 700; margin-left: 4px;" title="Incluye pago general o anticipo aplicado a este <%= venue_mode? ? 'evento' : 'show' %>">
                     (incl. $<%= number_with_precision(sa.general_credit_applied, precision: 2) %> anticipo)
                   </span>
                 <% end %>
@@ -780,14 +780,14 @@
 
               <div style="display: flex; align-items: center; gap: 6px;">
                 <%= link_to '💳 Registrar Pago', new_employee_payment_path(gig_id: @gig.id, user_id: staff.id), style: 'background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.82em; font-weight: bold; text-decoration: none;' %>
-                <%= button_to '❌ Desasignar', remove_staff_gig_path(@gig, staff_id: staff.id), method: :delete, data: { confirm: '¿Seguro que deseas desasignar a este trabajador?' }, style: 'background: #f1f5f9; color: #ef4444; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; cursor: pointer;' %>
+                <%= button_to '❌ Desasignar', remove_staff_gig_path(@gig, staff_id: staff.id), method: :delete, data: { confirm: '¿Seguro que deseas desasignar a este personal?' }, style: 'background: #f1f5f9; color: #ef4444; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; cursor: pointer;' %>
               </div>
             </div>
           </div>
         <% end %>
 
         <% if @gig.staff_assignments.empty? %>
-          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic;">No hay trabajadores asignados a este show.</p>
+          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic;">No hay personal asignado a este <%= venue_mode? ? 'evento' : 'show' %>.</p>
         <% end %>
       </div>
     </div>
@@ -807,7 +807,7 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 16px;">
           <div>
             <h3 style="margin: 0; color: #0f172a; font-size: 1.2em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-              <span>💵</span> Tu Pago por este Show
+              <span>💵</span> Tu Pago por este <%= venue_mode? ? 'Evento' : 'Show' %>
             </h3>
             <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.9em;">
               Honorarios y registro de pagos para tu cuenta en este evento.
@@ -922,14 +922,14 @@
         </div>
       <% else %>
         <div style="background: rgba(255, 255, 255, 0.7); border: 1px dashed #d8b4fe; border-radius: 16px; padding: 25px; text-align: center; color: #6b21a8;">
-          <div style="font-size: 2.2em; margin-bottom: 8px;">🎶</div>
-          <h4 style="margin: 0 0 6px 0; font-size: 1.05em; font-weight: 800; color: #4c1d95;">No hay notas de protocolo ni canciones registradas aún</h4>
+          <div style="font-size: 2.2em; margin-bottom: 8px;"><%= venue_mode? ? '📋' : '🎶' %></div>
+          <h4 style="margin: 0 0 6px 0; font-size: 1.05em; font-weight: 800; color: #4c1d95;"><%= venue_mode? ? 'No hay notas de protocolo registradas aún' : 'No hay notas de protocolo ni canciones registradas aún' %></h4>
           <p style="margin: 0 0 14px 0; font-size: 0.88em; color: #7e22ce; max-width: 500px; margin-left: auto; margin-right: auto;">
-            ¿El cliente pidió un vals específico, una canción al salir la quinceañera, o un orden especial? Guárdalo aquí para que esté disponible para todos los músicos del show.
+            <%= venue_mode? ? '¿El cliente pidió un protocolo específico, momento de vals/entrada, o un requerimiento especial? Guárdalo aquí para que esté disponible para todo el equipo.' : '¿El cliente pidió un vals específico, una canción al salir la quinceañera, o un orden especial? Guárdalo aquí para que esté disponible para todos los músicos del show.' %>
           </p>
           <% if current_user.leader? %>
             <button type="button" onclick="toggleMusicNotesEdit()" style="background: #7c3aed; color: white; border: none; padding: 9px 18px; border-radius: 10px; font-weight: 700; font-size: 0.85em; cursor: pointer; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.2);">
-              ➕ Escribir Peticiones Musicales
+              ➕ <%= venue_mode? ? 'Escribir Protocolo del Evento' : 'Escribir Peticiones Musicales' %>
             </button>
           <% end %>
         </div>
@@ -941,17 +941,17 @@
       <div id="music-notes-edit-block" style="<%= @gig.has_music_notes? ? 'display: none;' : '' %>">
         <%= form_with model: @gig, local: true, style: "background: #ffffff; border: 1.5px solid #a78bfa; border-radius: 16px; padding: 20px; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.08);" do |f| %>
           <label style="display: block; font-weight: 800; color: #5b21b6; font-size: 0.95em; margin-bottom: 6px;">
-            📝 Escribe el orden de temas y peticiones musicales del cliente:
+            📝 <%= venue_mode? ? 'Escribe el protocolo y momentos especiales del evento:' : 'Escribe el orden de temas y peticiones musicales del cliente:' %>
           </label>
           <p style="margin: 0 0 10px 0; font-size: 0.82em; color: #6d28d9;">
-            Tip: Puedes estructurarlo por momentos (ej: "Vals:", "Entrada Quinceañera:", "Brindis:", "Set Bailable:", "No tocar:").
+            <%= venue_mode? ? 'Tip: Puedes estructurarlo por momentos (ej: "Entrada Quinceañera:", "Vals:", "Brindis:", "Desfile Pasarela:", "Música de fondo:").' : 'Tip: Puedes estructurarlo por momentos (ej: "Vals:", "Entrada Quinceañera:", "Brindis:", "Set Bailable:", "No tocar:").' %>
           </p>
-          <%= f.text_area :music_notes, rows: 6, placeholder: "• Vals de entrada: La señora pidió \"Tiempo de Vals\" al entrar la quinceañera.\n• Momento de la salida: Poner \"A Thousand Years\" al terminar el brindis.\n• Set en vivo: Iniciar con tanda de merengues y salsa bailable.\n• Canciones pedidas: \"Vivir Mi Vida\", \"Danza Kuduro\".\n• Exclusiones: No tocar reggaetón explícito.", style: "width: 100%; padding: 12px 14px; border: 1.5px solid #c4b5fd; border-radius: 10px; font-family: inherit; font-size: 0.92em; line-height: 1.5; box-sizing: border-box; outline: none; margin-bottom: 14px;" %>
+          <%= f.text_area :music_notes, rows: 6, placeholder: (venue_mode? ? "• Entrada / Pasarela: Protocolo de bienvenida y música suave.\n• Momento Central: Vals de la quinceañera / Palabras.\n• Brindis y Fotos: Sesión fotográfica en tarima con protocolo.\n• Requerimientos: Mesa de honor lista a las 8:00 PM." : "• Vals de entrada: La señora pidió \"Tiempo de Vals\" al entrar la quinceañera.\n• Momento de la salida: Poner \"A Thousand Years\" al terminar el brindis.\n• Set en vivo: Iniciar con tanda de merengues y salsa bailable.\n• Canciones pedidas: \"Vivir Mi Vida\", \"Danza Kuduro\".\n• Exclusiones: No tocar reggaetón explícito."), style: "width: 100%; padding: 12px 14px; border: 1.5px solid #c4b5fd; border-radius: 10px; font-family: inherit; font-size: 0.92em; line-height: 1.5; box-sizing: border-box; outline: none; margin-bottom: 14px;" %>
           <div style="display: flex; justify-content: flex-end; gap: 10px; align-items: center;">
             <button type="button" onclick="toggleMusicNotesEdit()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer;">
               Cancelar
             </button>
-            <%= f.submit "💾 Guardar Notas Musicales", style: "background: #7c3aed; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);" %>
+            <%= f.submit (venue_mode? ? "💾 Guardar Protocolo" : "💾 Guardar Notas Musicales"), style: "background: #7c3aed; color: white; border: none; padding: 9px 20px; border-radius: 8px; font-weight: 800; font-size: 0.88em; cursor: pointer; box-shadow: 0 4px 10px rgba(124, 58, 237, 0.25);" %>
           </div>
         <% end %>
       </div>
@@ -975,13 +975,13 @@
 
         function copyMusicProtocolText() {
           const clientName = '<%= escape_javascript(@gig.client_display_name) %>';
-          const gigDate = '<%= @gig.date ? @gig.date.strftime("%d/%m/%Y") : "Show" %>';
+          const gigDate = '<%= @gig.date ? @gig.date.strftime("%d/%m/%Y") : (venue_mode? ? "Evento" : "Show") %>';
           const musicNotes = `<%= escape_javascript(@gig.music_notes.to_s) %>`;
           
-          const formattedShare = `🎵 *PROTOCOLO Y REPERTORIO MUSICAL*\n` +
+          const formattedShare = `<%= venue_mode? ? "📋 *PROTOCOLO Y DETALLES DEL EVENTO*" : "🎵 *PROTOCOLO Y REPERTORIO MUSICAL*" %>\n` +
                                  `📌 *Evento:* ${clientName} (${gigDate})\n\n` +
                                  `${musicNotes}\n\n` +
-                                 `🎶 _Gig Manager_`;
+                                 `<%= venue_mode? ? "🏛️" : "🎶" %> _Gig Manager_`;
 
           const btnText = document.getElementById('copy-music-btn-text');
           navigator.clipboard.writeText(formattedShare).then(() => {
@@ -1004,10 +1004,10 @@
   <%# --- CRONOGRAMA PARA EL MÚSICO --- %>
   <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
     <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.25em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-      🎵 Cronograma de Actividades para Músicos
+      <%= venue_mode? ? '📋 Cronograma de Actividades del Personal' : '🎵 Cronograma de Actividades para Músicos' %>
     </h3>
     <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
-      Este es el cronograma de actividades específico para los músicos asignados a este evento.
+      <%= venue_mode? ? 'Este es el cronograma de actividades específico para el personal asignado a este evento.' : 'Este es el cronograma de actividades específico para los músicos asignados a este evento.' %>
     </p>
 
     <% musician_items = @gig.gig_timeline_items.for_musician %>
@@ -1033,7 +1033,7 @@
         </table>
       </div>
     <% else %>
-      <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de músicos para este show.</p>
+      <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma <%= venue_mode? ? 'del personal para este evento.' : 'de músicos para este show.' %></p>
     <% end %>
   </div>
 <% else %>
@@ -1043,7 +1043,7 @@
       📅 Cronograma y Agenda del Evento (Cliente)
     </h3>
     <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
-      Planifica el horario de las actividades del show. Estos hitos se actualizarán al instante en el portal del cliente.
+      Planifica el horario de las actividades del <%= venue_mode? ? 'evento' : 'show' %>. Estos hitos se actualizarán al instante en el portal del cliente.
     </p>
 
     <% client_items = @gig.gig_timeline_items.for_client %>
@@ -1079,7 +1079,7 @@
         </table>
       </div>
     <% else %>
-      <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de este show.</p>
+      <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de este <%= venue_mode? ? 'evento' : 'show' %>.</p>
     <% end %>
 
     <%# Formulario para añadir hito (solo líderes) %>
@@ -1094,11 +1094,11 @@
           </div>
           <div style="flex: 1; min-width: 200px;">
             <%= f.label :title, "Título", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
-            <%= f.text_field :title, placeholder: "e.g. Entrada de Novios / Inicio Show", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+            <%= f.text_field :title, placeholder: (venue_mode? ? "e.g. Entrada / Vals / Pasarela" : "e.g. Entrada de Novios / Inicio Show"), required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
           </div>
           <div style="flex: 2; min-width: 250px;">
             <%= f.label :description, "Descripción (Opcional)", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
-            <%= f.text_field :description, placeholder: "e.g. Usar chispa fría y canción especial", style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+            <%= f.text_field :description, placeholder: "e.g. Usar chispa fría y música especial", style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
           </div>
           <div>
             <%= f.submit "Agregar", style: "background: #7c3aed; color: white; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;" %>
@@ -1108,14 +1108,14 @@
     <% end %>
   </div>
 
-  <%# --- CRONOGRAMA PARA EL MÚSICO (Condicional para Líder y Staff si hay músicos asignados) --- %>
-  <% if @gig.staff_members.where(role: :musician).any? %>
+  <%# --- CRONOGRAMA PARA EL MÚSICO / PERSONAL (Condicional para Líder y Staff si hay miembros asignados) --- %>
+  <% if @gig.staff_members.where(role: [:musician, :staff]).any? %>
     <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
       <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.25em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
-        🎵 Cronograma para el Músico
+        <%= venue_mode? ? '📋 Cronograma para el Personal' : '🎵 Cronograma para el Músico' %>
       </h3>
       <p style="margin: 0 0 20px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
-        Planifica el cronograma interno para los músicos. El cliente no verá este cronograma en su portal.
+        <%= venue_mode? ? 'Planifica el cronograma interno para el personal. El cliente no verá este cronograma en su portal.' : 'Planifica el cronograma interno para los músicos. El cliente no verá este cronograma en su portal.' %>
       </p>
 
       <% musician_items = @gig.gig_timeline_items.for_musician %>
@@ -1140,7 +1140,7 @@
                   <td style="padding: 12px 18px; color: #475569; font-size: 0.9em;"><%= item.description %></td>
                   <% if current_user.leader? %>
                     <td style="padding: 12px 18px; text-align: center;">
-                      <%= button_to gig_gig_timeline_item_path(@gig, item), method: :delete, data: { turbo_confirm: "¿Remover actividad del cronograma del músico?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s;" do %>
+                      <%= button_to gig_gig_timeline_item_path(@gig, item), method: :delete, data: { turbo_confirm: "¿Remover actividad del cronograma #{venue_mode? ? 'del personal' : 'del músico'}?" }, style: "background: #fff0f0; border: 1px solid #fca5a5; color: #ef4444; font-size: 0.85em; font-weight: bold; cursor: pointer; padding: 6px 12px; border-radius: 8px; transition: 0.2s;" do %>
                         Eliminar
                       <% end %>
                     </td>
@@ -1151,13 +1151,13 @@
           </table>
         </div>
       <% else %>
-        <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma de músicos para este show.</p>
+        <p style="text-align: center; color: #94a3b8; font-style: italic; margin: 20px 0;">No se han agregado hitos al cronograma <%= venue_mode? ? 'del personal para este evento.' : 'de músicos para este show.' %></p>
       <% end %>
 
       <%# Formulario para añadir hito de músico (solo líderes) %>
       <% if current_user.leader? %>
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px;">
-          <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 0.95em; font-weight: bold; text-transform: uppercase;">➕ Agregar Nueva Actividad al Músico</h4>
+          <h4 style="margin: 0 0 15px 0; color: #334155; font-size: 0.95em; font-weight: bold; text-transform: uppercase;">➕ Agregar Nueva Actividad <%= venue_mode? ? 'al Personal' : 'al Músico' %></h4>
           <%= form_with(model: [@gig, GigTimelineItem.new], local: true, style: "display: flex; gap: 15px; align-items: flex-end; flex-wrap: wrap;") do |f| %>
             <%= f.hidden_field :for_musician, value: true %>
             <div style="width: 120px;">
@@ -1166,11 +1166,11 @@
             </div>
             <div style="flex: 1; min-width: 200px;">
               <%= f.label :title, "Título", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
-              <%= f.text_field :title, placeholder: "e.g. Soundcheck / Llegada", required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+              <%= f.text_field :title, placeholder: (venue_mode? ? "e.g. Llegada / Montaje / Ensayo Pasarela" : "e.g. Soundcheck / Llegada"), required: true, style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
             </div>
             <div style="flex: 2; min-width: 250px;">
               <%= f.label :description, "Descripción (Opcional)", style: "display: block; font-size: 0.8em; font-weight: 700; margin-bottom: 6px; color: #475569;" %>
-              <%= f.text_field :description, placeholder: "e.g. Traer vestimenta negra formal", style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
+              <%= f.text_field :description, placeholder: (venue_mode? ? "e.g. Vestimenta de protocolo / uniforme" : "e.g. Traer vestimenta negra formal"), style: "width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-family: inherit; font-size: 0.9em; box-sizing: border-box;" %>
             </div>
             <div>
               <%= f.submit "Agregar", style: "background: #2563eb; color: white; border: none; padding: 11px 22px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em;" %>

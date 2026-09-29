@@ -5,7 +5,7 @@
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
       <div>
         <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0; letter-spacing: -0.5px;">
-          🏦 Caja General (Fondo de la Banda)
+          🏦 Caja General (<%= company_term(:band_fund, 'Fondo de la Banda') %>)
         </h1>
         <p style="color: #64748b; font-size: 1.05em; margin-top: 6px;">
           Control centralizado de fondos disponibles, aportes de capital, retiros y libro diario de caja unificado.
@@ -57,7 +57,7 @@
     <%# Desglose de componentes %>
     <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.15); display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; font-size: 0.85em;">
       <div>
-        <div style="opacity: 0.75;">🎸 Shows Cobrados</div>
+        <div style="opacity: 0.75;"><%= venue_mode? ? '🏛️ Eventos Cobrados' : '🎸 Shows Cobrados' %></div>
         <div style="font-size: 1.15em; font-weight: 800; margin-top: 2px;">$ <%= number_with_precision(@total_gigs_received, precision: 2) %></div>
       </div>
       <div>

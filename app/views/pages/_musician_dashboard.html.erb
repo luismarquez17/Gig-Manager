@@ -4,9 +4,9 @@
   <header style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
     <div>
       <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0; background: linear-gradient(135deg, #1e1b4b, #4338ca); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
-        ¡Hola, <%= current_user.display_name %>! 🎵
+        ¡Hola, <%= current_user.display_name %>! <%= venue_mode? ? '🏛️' : '🎵' %>
       </h1>
-      <p style="color: #64748b; font-size: 1.05em; margin: 6px 0 0 0;">Panel de Músico — Control de tus toques, horarios y pagos.</p>
+      <p style="color: #64748b; font-size: 1.05em; margin: 6px 0 0 0;"><%= venue_mode? ? 'Panel de Personal — Control de tus eventos, horarios y pagos.' : 'Panel de Músico — Control de tus toques, horarios y pagos.' %></p>
     </div>
     
     <%# --- DEBT BADGE --- %>
@@ -32,13 +32,13 @@
         <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(30px);"></div>
         
         <h2 style="margin: 0 0 15px 0; font-size: 1.25em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #e0e7ff; display: flex; align-items: center; gap: 8px;">
-          <span>⚡</span> Siguiente Show
+          <span>⚡</span> <%= venue_mode? ? 'Siguiente Evento' : 'Siguiente Show' %>
         </h2>
         
         <% if @next_gig.present? %>
           <div style="display: flex; flex-direction: column; gap: 15px;">
             <div>
-              <div style="font-size: 1.6em; font-weight: 800;"><%= @next_gig.client&.name || 'Evento sin cliente' %></div>
+              <div style="font-size: 1.6em; font-weight: 800;"><%= @next_gig.client&.name || (venue_mode? ? 'Evento sin cliente' : 'Evento sin cliente') %></div>
               <div style="font-size: 1.1em; color: #c7d2fe; font-weight: 600; margin-top: 4px;">
                 📅 <%= @next_gig.date&.strftime('%A, %d de %B de %Y') rescue 'Fecha no definida' %>
               </div>
@@ -83,13 +83,13 @@
             <% end %>
             
             <div style="margin-top: 5px;">
-              <%= link_to 'Ver Detalles Completos del Show', gig_path(@next_gig), style: "display: inline-block; background: white; color: #3730a3; padding: 10px 20px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;" %>
+              <%= link_to (venue_mode? ? 'Ver Detalles Completos del Evento' : 'Ver Detalles Completos del Show'), gig_path(@next_gig), style: "display: inline-block; background: white; color: #3730a3; padding: 10px 20px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;" %>
             </div>
           </div>
         <% else %>
           <div style="text-align: center; padding: 20px 0; color: #c7d2fe;">
             <span style="font-size: 2.5em; display: block; margin-bottom: 10px;">🎉</span>
-            ¡Sin shows próximos por ahora! Disfruta de tu descanso.
+            <%= venue_mode? ? '¡Sin eventos próximos por ahora! Disfruta de tu descanso.' : '¡Sin shows próximos por ahora! Disfruta de tu descanso.' %>
           </div>
         <% end %>
       </section>
@@ -97,7 +97,7 @@
       <%# --- SECTION 2: PAYMENTS SUMMARY --- %>
       <section style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 22px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
         <h2 style="margin: 0 0 15px 0; font-size: 1.25em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-          <span>💵</span> Cuentas y Pagos por Show
+          <span>💵</span> <%= venue_mode? ? 'Cuentas y Pagos por Evento' : 'Cuentas y Pagos por Show' %>
         </h2>
 
         <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
@@ -135,12 +135,12 @@
         
         <div style="display: flex; flex-direction: column; gap: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-            <span style="color: #64748b; font-size: 0.9em;">Total de Shows:</span>
+            <span style="color: #64748b; font-size: 0.9em;"><%= venue_mode? ? 'Total de Eventos:' : 'Total de Shows:' %></span>
             <strong style="color: #0f172a; font-size: 1.05em;"><%= @assigned_gigs.count %></strong>
           </div>
           
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-            <span style="color: #64748b; font-size: 0.9em;">Próximos Shows:</span>
+            <span style="color: #64748b; font-size: 0.9em;"><%= venue_mode? ? 'Próximos Eventos:' : 'Próximos Shows:' %></span>
             <strong style="color: #4f46e5; font-size: 1.05em;"><%= @proximos_gigs.count %></strong>
           </div>
           
@@ -156,7 +156,7 @@
       <%# --- ASSIGNED GIGS LIST --- %>
       <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
         <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-          <span>📋</span> Shows Asignados
+          <span>📋</span> <%= venue_mode? ? 'Eventos Asignados' : 'Shows Asignados' %>
         </h3>
         
         <% if @assigned_gigs.present? %>
@@ -166,7 +166,7 @@
               <div style="padding: 10px; border-radius: 12px; border: 1px solid #f1f5f9; background: <%= is_upcoming ? '#f8fafc' : '#ffffff' %>; transition: transform 0.2s;">
                 <div style="display: flex; justify-content: space-between; align-items: start; gap: 4px;">
                   <span style="font-weight: 700; font-size: 0.9em; color: #0f172a; line-height: 1.2;">
-                    <%= gig.client&.name || 'Show' %>
+                    <%= gig.client&.name || (venue_mode? ? 'Evento' : 'Show') %>
                   </span>
                   <span style="font-size: 0.75em; padding: 2px 6px; border-radius: 9999px; font-weight: 700; background: <%= is_upcoming ? '#e0e7ff' : '#f1f5f9' %>; color: <%= is_upcoming ? '#4f46e5' : '#64748b' %>;">
                     <%= is_upcoming ? 'Próximo' : 'Pasado' %>
@@ -194,7 +194,7 @@
             <% end %>
           </div>
         <% else %>
-          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic; text-align: center;">No tienes shows asignados.</p>
+          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic; text-align: center;"><%= venue_mode? ? 'No tienes eventos asignados.' : 'No tienes shows asignados.' %></p>
         <% end %>
       </div>
 

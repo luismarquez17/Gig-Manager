@@ -269,7 +269,7 @@
     <% else %>
       <div class="ci-empty">
         <div class="empty-emoji">🤷‍♂️</div>
-        <h3>No tienes shows registrados todavía</h3>
+        <h3><%= venue_mode? ? 'No tienes eventos registrados todavía' : 'No tienes shows registrados todavía' %></h3>
         <p>Una vez que se te agende un evento, aparecerá aquí con toda su información.</p>
       </div>
     <% end %>

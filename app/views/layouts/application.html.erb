@@ -586,7 +586,7 @@
               <%# --- NÓMINA DE PERSONAL --- %>
               <% if module_enabled?(:payroll) %>
                 <%= link_to employee_payments_path, class: "sidebar-link #{'active' if controller_name == 'employee_payments'}" do %>
-                  <span class="icon">💰</span> <span>Pagos a trabajadores</span>
+                  <span class="icon">💰</span> <span><%= venue_mode? ? 'Pagos a personal' : 'Pagos a trabajadores' %></span>
                   <% 
                     pending_count = current_company&.employee_payments&.pending_approval&.count rescue 0 
                   %>
@@ -613,7 +613,7 @@
                     </span>
                   </div>
                   <div style="font-size: 0.75rem; color: #cbd5e1; margin-bottom: 8px; line-height: 1.3;">
-                    Personaliza tu plan y añade más herramientas a tu banda.
+                    <%= venue_mode? ? 'Personaliza tu plan y añade más herramientas a tu empresa.' : 'Personaliza tu plan y añade más herramientas a tu banda.' %>
                   </div>
                   <%= link_to subscriptions_path(anchor: 'gigmanager-modules-section'), style: "display: flex; align-items: center; justify-content: center; gap: 6px; width: 100%; padding: 7px 10px; font-size: 0.78rem; font-weight: 800; border-radius: 8px; background: linear-gradient(135deg, #6366f1 0%, #06b6d4 100%); color: white; text-decoration: none; box-shadow: 0 3px 10px rgba(6, 182, 212, 0.25); box-sizing: border-box;" do %>
                     <span>➕</span> <span>Personalizar Módulos</span>
@@ -634,7 +634,7 @@
                 <span class="icon">📜</span> <span>Normativas</span>
               <% end %>
             <% elsif current_user.staff? %>
-              <div class="nav-header">Agrupación</div>
+              <div class="nav-header"><%= venue_mode? ? 'Personal / Staff' : 'Agrupación' %></div>
               <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
                 <span class="icon">🎫</span> <span>Mis eventos</span>
               <% end %>
@@ -679,12 +679,12 @@
               %>
               <% if next_gig %>
                 <%= link_to client_gig_path(next_gig), class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'show'}" do %>
-                  <span class="icon">⭐</span> <span>Mi Próximo Show</span>
+                  <span class="icon">⭐</span> <span><%= venue_mode? ? 'Mi Próximo Evento' : 'Mi Próximo Show' %></span>
                 <% end %>
               <% end %>
 
               <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
-                <span class="icon">📋</span> <span>Presupuestos Base</span>
+                <span class="icon">📋</span> <span><%= venue_mode? ? 'Combos & Paquetes' : 'Presupuestos Base' %></span>
               <% end %>
 
               <%= link_to normativas_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'normativas'}" do %>

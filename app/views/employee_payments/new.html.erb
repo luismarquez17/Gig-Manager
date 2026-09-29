@@ -10,7 +10,7 @@
       </p>
 
       <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
-        <%= link_to '🎵 Ir a Shows', gigs_path,
+        <%= link_to (venue_mode? ? '🏛️ Ir a Eventos' : '🎵 Ir a Shows'), gigs_path,
             style: "background: #16a34a; color: #fff; padding: 12px 26px; border-radius: 12px; font-weight: 800; font-size: 1em; text-decoration: none;" %>
 
         <%= link_to '💳 Registrar otro pago',
@@ -27,7 +27,7 @@
 <div style="max-width: 800px; margin: 0 auto;">
   <div style="margin-bottom: 22px;">
     <%= link_to '← Volver a Pagos a Trabajadores', employee_payments_path, style: "text-decoration: none; color: #64748b; font-weight: 700; font-size: 0.9em;" %>
-    <h2 style="margin: 8px 0 0 0; color: #0f172a; font-weight: 800; font-size: 1.8em;">💳 Registrar Pago a Trabajador</h2>
+    <h2 style="margin: 8px 0 0 0; color: #0f172a; font-weight: 800; font-size: 1.8em;">💳 Registrar Pago a <%= venue_mode? ? 'Personal / Staff' : 'Trabajador' %></h2>
   </div>
 
   <% if @payment.errors.any? %>
@@ -48,12 +48,12 @@
   <div class="custom-card">
     <%= form_with model: @payment, local: true do |f| %>
       <div class="form-group-custom">
-        <%= f.label :user_id, 'Trabajador / Músico / Staff' %>
-        <%= f.collection_select :user_id, current_company.users.workers.order(:name, :email), :id, ->(w) { "#{w.display_name} (#{w.role.to_s.capitalize})" }, { include_blank: "-- Selecciona un trabajador --" }, { id: 'payment_user_select', class: 'form-input-custom', required: true, onchange: 'updateWorkerShows(this.value)' } %>
+        <%= f.label :user_id, (venue_mode? ? 'Personal / Staff / Modelo' : 'Trabajador / Músico / Staff') %>
+        <%= f.collection_select :user_id, current_company.users.workers.order(:name, :email), :id, ->(w) { "#{w.display_name} (#{w.role.to_s.capitalize})" }, { include_blank: (venue_mode? ? "-- Selecciona personal --" : "-- Selecciona un trabajador --") }, { id: 'payment_user_select', class: 'form-input-custom', required: true, onchange: 'updateWorkerShows(this.value)' } %>
       </div>
 
       <div class="form-group-custom">
-        <%= f.label :gig_id, 'Relacionado a show (opcional)' %>
+        <%= f.label :gig_id, (venue_mode? ? 'Relacionado a evento (opcional)' : 'Relacionado a show (opcional)') %>
         <% 
           options = [["-- Ninguno / Pago General --", ""]]
           if @available_gigs.present?
@@ -62,7 +62,7 @@
         %>
         <%= f.select :gig_id, options, { selected: @payment.gig_id }, { id: 'payment_gig_select', class: 'form-input-custom', onchange: 'onGigSelected(this)' } %>
         <small id="gig_select_hint" style="color: #64748b; font-size: 0.82em; display: block; margin-top: 4px;">
-          Solo se muestran los shows donde este trabajador tiene saldo pendiente por cobrar.
+          Solo se muestran los <%= venue_mode? ? 'eventos' : 'shows' %> donde este trabajador tiene saldo pendiente por cobrar.
         </small>
       </div>
 

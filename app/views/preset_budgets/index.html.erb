@@ -3,11 +3,11 @@
   <%# --- HEADER --- %>
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 15px;">
     <div>
-      <h1 style="color: #0f172a; margin: 0; font-weight: 800; font-size: 2.2em; letter-spacing: -0.5px;">📋 Presupuestos Base</h1>
-      <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1.05em;">Diseña y guarda paquetes de servicios estándar para enviárselos al instante a tus clientes.</p>
+      <h1 style="color: #0f172a; margin: 0; font-weight: 800; font-size: 2.2em; letter-spacing: -0.5px;">📋 <%= company_term(:packages, 'Presupuestos Base') %></h1>
+      <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1.05em;"><%= venue_mode? ? 'Diseña y guarda combos y paquetes de servicios para enviárselos al instante a tus clientes.' : 'Diseña y guarda paquetes de servicios estándar para enviárselos al instante a tus clientes.' %></p>
     </div>
     <% unless current_user.client? %>
-      <%= link_to '➕ Nuevo Presupuesto Base', new_preset_budget_path, style: "background: #2563eb; color: white; padding: 14px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); transition: 0.2s;", onmouseover: "this.style.background='#1d4ed8'", onmouseout: "this.style.background='#2563eb'" %>
+      <%= link_to (venue_mode? ? '➕ Nuevo Combo / Paquete' : '➕ Nuevo Presupuesto Base'), new_preset_budget_path, style: "background: #2563eb; color: white; padding: 14px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.2); transition: 0.2s;", onmouseover: "this.style.background='#1d4ed8'", onmouseout: "this.style.background='#2563eb'" %>
     <% end %>
   </div>
 
@@ -22,7 +22,7 @@
         </p>
       </div>
       <div>
-        <% wa_msg = "Hola! Estoy revisando los presupuestos base de la empresa y me gustaría cotizar algunos adicionales para mi evento." %>
+        <% wa_msg = "Hola! Estoy revisando los #{venue_mode? ? 'paquetes y combos' : 'presupuestos base'} de la empresa y me gustaría cotizar algunos adicionales para mi evento." %>
         <a href="https://wa.me/584140000000?text=<%= ERB::Util.url_encode(wa_msg) %>" target="_blank" style="background: #10b981; color: white; padding: 14px 24px; text-decoration: none; border-radius: 12px; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);">
           💬 Consultar Adicionales
         </a>
@@ -82,7 +82,7 @@
               <% unless current_user.client? %>
                 <%= link_to '⚙️', edit_preset_budget_path(budget), style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 9px 13px; border-radius: 10px; text-decoration: none; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center;", title: "Editar" %>
                 
-                <%= button_to preset_budget_path(budget), method: :delete, data: { turbo_confirm: "¿Estás seguro de eliminar este presupuesto base?" }, style: "background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; padding: 9px 13px; border-radius: 10px; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer;", title: "Eliminar" do %>
+                <%= button_to preset_budget_path(budget), method: :delete, data: { turbo_confirm: "¿Estás seguro de eliminar este #{venue_mode? ? 'combo / paquete' : 'presupuesto base'}?" }, style: "background: #fff5f5; color: #c53030; border: 1px solid #feb2b2; padding: 9px 13px; border-radius: 10px; font-size: 0.85em; font-weight: bold; display: flex; align-items: center; justify-content: center; cursor: pointer;", title: "Eliminar" do %>
                   🗑️
                 <% end %>
               <% end %>
@@ -96,12 +96,12 @@
     <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 60px 20px; text-align: center; color: #94a3b8; box-shadow: 0 4px 15px rgba(0,0,0,0.02);">
       <div style="font-size: 60px; margin-bottom: 15px;">📁</div>
       <% if current_user.client? %>
-        <h3 style="margin: 0; color: #475569; font-size: 1.3em;">No hay presupuestos base disponibles</h3>
+        <h3 style="margin: 0; color: #475569; font-size: 1.3em;"><%= venue_mode? ? 'No hay combos disponibles' : 'No hay presupuestos base disponibles' %></h3>
         <p style="margin: 5px 0 0 0; font-size: 0.95em;">Por el momento no hay paquetes configurados en la lista. Contacta a tu organizador para una cotización personalizada.</p>
       <% else %>
-        <h3 style="margin: 0; color: #475569; font-size: 1.3em;">Aún no has creado presupuestos base</h3>
-        <p style="margin: 5px 0 20px 0; font-size: 0.95em;">Crea tu primer paquete de servicios para agilizar el envío de cotizaciones a tus clientes.</p>
-        <%= link_to '➕ Crear Primer Presupuesto Base', new_preset_budget_path, style: "background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;" %>
+        <h3 style="margin: 0; color: #475569; font-size: 1.3em;"><%= venue_mode? ? 'Aún no has creado combos o paquetes' : 'Aún no has creado presupuestos base' %></h3>
+        <p style="margin: 5px 0 20px 0; font-size: 0.95em;"><%= venue_mode? ? 'Crea tu primer combo o paquete de servicios para agilizar el envío de cotizaciones a tus clientes.' : 'Crea tu primer paquete de servicios para agilizar el envío de cotizaciones a tus clientes.' %></p>
+        <%= link_to (venue_mode? ? '➕ Crear Primer Combo' : '➕ Crear Primer Presupuesto Base'), new_preset_budget_path, style: "background: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 10px; font-weight: bold; display: inline-block;" %>
       <% end %>
     </div>
   <% end %>

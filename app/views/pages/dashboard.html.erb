@@ -36,10 +36,10 @@
                 </div>
                 
                 <div style="margin-top: 3px; font-size: 0.88em; color: var(--text-muted, #334155);">
-                  <strong>Evento / Show:</strong> 
+                  <strong><%= venue_mode? ? 'Evento:' : 'Evento / Show:' %></strong> 
                   <% if p.gig.present? %>
                     <%= link_to gig_path(p.gig), style: "color: var(--color-primary, #2563eb); text-decoration: none; font-weight: 700;" do %>
-                      <%= p.gig.client&.name || "Show" %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
+                      <%= p.gig.client&.name || (venue_mode? ? "Evento" : "Show") %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
                     <% end %>
                   <% else %>
                     <span style="color: var(--text-muted, #64748b); font-style: italic;">Pago general / Anticipo</span>
@@ -112,7 +112,7 @@
                 <div>
                   <div style="font-size: 1em; font-weight: 800; color: var(--text-heading, #0f172a);"><%= req.title %></div>
                   <div style="font-size: 0.82em; color: var(--text-muted, #64748b); margin-top: 2px;">
-                    <strong>Show:</strong>
+                    <strong><%= venue_mode? ? 'Evento:' : 'Show:' %></strong>
                     <%= link_to gig_path(req.gig), style: "color: var(--color-primary, #2563eb); text-decoration: none; font-weight: 700;" do %>
                       <%= req.gig.client&.name || req.gig.client_email || "Evento" %> (<%= req.gig.date&.strftime("%d/%m/%Y") %>)
                     <% end %>
@@ -132,13 +132,13 @@
                 <div style="display: flex; gap: 6px;">
                   <%= button_to approve_gig_upsell_request_path(req), method: :post,
                         style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 9px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 3px 8px rgba(16, 185, 129, 0.3);",
-                        onclick: "return confirm('¿Añadir \\'#{escape_javascript(req.title)}\\' (+ $#{number_with_precision(req.price, precision: 2)} #{req.currency}) al evento?\\n\\nEl monto acordado del show se incrementará automáticamente.');" do %>
+                        onclick: "return confirm('¿Añadir \\'#{escape_javascript(req.title)}\\' (+ $#{number_with_precision(req.price, precision: 2)} #{req.currency}) al evento?\\n\\nEl monto acordado del #{venue_mode? ? 'evento' : 'show'} se incrementará automáticamente.');" do %>
                     ✅ Añadir
                   <% end %>
 
                   <%= button_to reject_gig_upsell_request_path(req), method: :post,
                         style: "background: var(--bg-card-subtle, #f8fafc); color: #ef4444; border: 1px solid var(--border-color, #cbd5e1); padding: 9px 14px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;",
-                        onclick: "return confirm('¿Rechazar esta solicitud de adicional?\\n\\nEl presupuesto del show permanecerá sin cambios.');" do %>
+                        onclick: "return confirm('¿Rechazar esta solicitud de adicional?\\n\\nEl presupuesto del #{venue_mode? ? 'evento' : 'show'} permanecerá sin cambios.');" do %>
                     ❌ No añadir
                   <% end %>
                 </div>
@@ -169,12 +169,12 @@
       <% if module_enabled?(:gigs) %>
         <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="color: var(--text-muted, #64748b); font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Total de Eventos</span>
-            <span style="background: var(--bg-card-subtle, #f3e8ff); padding: 8px; border-radius: 10px; font-size: 1.2em;">🎸</span>
+            <span style="color: var(--text-muted, #64748b); font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;"><%= venue_mode? ? 'Total de Eventos' : 'Total de Eventos' %></span>
+            <span style="background: var(--bg-card-subtle, #f3e8ff); padding: 8px; border-radius: 10px; font-size: 1.2em;"><%= venue_mode? ? '🏛️' : '🎸' %></span>
           </div>
           <h2 style="font-size: 2em; margin: 0; color: var(--text-heading, #0f172a);"><%= @total_gigs || (defined?(Gig) ? Gig.count : 0) %></h2>
           <div style="color: #8b5cf6; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
-            📋 Historial general de shows
+            <%= venue_mode? ? '📋 Historial general de eventos' : '📋 Historial general de shows' %>
           </div>
         </div>
 
@@ -186,7 +186,7 @@
           </div>
           <h2 style="font-size: 2em; margin: 0; color: var(--text-heading, #0f172a);"><%= @upcoming_gigs_count || (defined?(Gig) ? Gig.where("date >= ?", Date.today).count : 0) %></h2>
           <div style="color: #f59e0b; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
-            ⚡ Shows hoy y futuros
+            <%= venue_mode? ? '⚡ Eventos hoy y futuros' : '⚡ Shows hoy y futuros' %>
           </div>
         </div>
       <% end %>
@@ -209,7 +209,7 @@
       <div style="margin-bottom: 40px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
           <h3 style="color: var(--text-heading); font-size: 1.1em; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;">
-            <span style="color: var(--color-primary, #2563eb);">🏦</span> Flujo de Caja Real (Fondo de la Banda)
+            <span style="color: var(--color-primary, #2563eb);">🏦</span> Flujo de Caja Real (<%= company_term(:band_fund, 'Fondo de la Banda') %>)
           </h3>
           <%= link_to 'Administrar Caja General ➔', cash_adjustments_path, style: 'font-size: 0.85em; color: var(--color-primary, #2563eb); font-weight: 700; text-decoration: none;' %>
         </div>
@@ -219,7 +219,7 @@
           <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
             <div style="color: var(--text-muted, #64748b); font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💰 Total Ingresos (Entradas)</div>
             <h2 style="font-size: 1.85em; margin: 0; color: #10b981; font-weight: 900;"><%= number_to_currency(@total_inflow, unit: 'USD') %></h2>
-            <div style="color: #059669; font-size: 0.82em; margin-top: 6px; font-weight: 600;">Shows + Aportes/Saldo Inicial</div>
+            <div style="color: #059669; font-size: 0.82em; margin-top: 6px; font-weight: 600;"><%= venue_mode? ? 'Eventos' : 'Shows' %> + Aportes/Saldo Inicial</div>
           </div>
 
           <%# 2. Nómina Pagada %>
@@ -227,7 +227,7 @@
             <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
               <div style="color: var(--text-muted, #64748b); font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💼 Nómina pagada</div>
               <h2 style="font-size: 1.85em; margin: 0; color: var(--text-heading, #1e293b); font-weight: 900;"><%= number_to_currency(@total_payroll_paid, unit: 'USD') %></h2>
-              <div style="color: var(--text-muted, #64748b); font-size: 0.82em; margin-top: 6px; font-weight: 600;">Pagos realizados a trabajadores</div>
+              <div style="color: var(--text-muted, #64748b); font-size: 0.82em; margin-top: 6px; font-weight: 600;"><%= venue_mode? ? 'Pagos realizados a personal' : 'Pagos realizados a trabajadores' %></div>
             </div>
           <% end %>
 
@@ -240,7 +240,7 @@
 
           <%# 4. Fondo General / Caja Disponible Real %>
           <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
-            <div style="color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🏦 Saldo en Caja (Fondo)</div>
+            <div style="color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🏦 Saldo en Caja (<%= company_term(:band_fund, 'Fondo') %>)</div>
             <h2 style="font-size: 1.85em; margin: 0; color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-weight: 900;"><%= number_to_currency(@universal_fund_balance, unit: 'USD') %></h2>
             <div style="color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-size: 0.82em; margin-top: 6px; font-weight: 600;">
               <%= link_to 'Ver libro de caja →', cash_adjustments_path, style: "color: inherit; text-decoration: underline; font-weight: 700;" %>
@@ -256,14 +256,14 @@
                 <div style="font-size: 0.76em; color: var(--text-muted, #64748b); font-weight: 700; text-transform: uppercase;">⏳ Cuentas por cobrar a clientes</div>
                 <div style="font-size: 1.15em; font-weight: 800; color: #f59e0b; margin-top: 2px;"><%= number_to_currency(@total_client_receivables, unit: 'USD') %></div>
               </div>
-              <%= link_to 'Ver shows →', (module_enabled?(:gigs) ? gigs_path : clients_path), style: 'font-size: 0.82em; font-weight: 700; color: var(--color-primary, #2563eb); text-decoration: none;' %>
+              <%= link_to (venue_mode? ? 'Ver eventos →' : 'Ver shows →'), (module_enabled?(:gigs) ? gigs_path : clients_path), style: 'font-size: 0.82em; font-weight: 700; color: var(--color-primary, #2563eb); text-decoration: none;' %>
             </div>
           <% end %>
 
           <% if module_enabled?(:payroll) %>
             <div style="background: var(--bg-card-subtle, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-size: 0.76em; color: var(--text-muted, #64748b); font-weight: 700; text-transform: uppercase;">👥 Deuda pendiente con trabajadores</div>
+                <div style="font-size: 0.76em; color: var(--text-muted, #64748b); font-weight: 700; text-transform: uppercase;">👥 <%= venue_mode? ? 'Deuda pendiente con personal' : 'Deuda pendiente con trabajadores' %></div>
                 <div style="font-size: 1.15em; font-weight: 800; color: <%= @total_pending_worker_payments > 0 ? '#ef4444' : '#10b981' %>; margin-top: 2px;"><%= number_to_currency(@total_pending_worker_payments, unit: 'USD') %></div>
               </div>
               <%= link_to 'Gestionar nómina →', employee_payments_path, style: 'font-size: 0.82em; font-weight: 700; color: var(--color-primary, #2563eb); text-decoration: none;' %>
@@ -307,8 +307,8 @@
             <div style="background: var(--bg-card, white); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
                  onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--color-primary, #f59e0b)';"
                  onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color, #e2e8f0)';">
-              <span style="font-size: 1.5em;">🎸</span>
-              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;">Agendar Gig</span>
+              <span style="font-size: 1.5em;"><%= venue_mode? ? '🏛️' : '🎸' %></span>
+              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;"><%= venue_mode? ? 'Agendar Evento' : 'Agendar Gig' %></span>
             </div>
           <% end %>
         <% end %>
@@ -441,7 +441,7 @@
     <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
-          🗓️ Tus Próximos Eventos (Shows Confirmados)
+          🗓️ <%= venue_mode? ? 'Tus Próximos Eventos' : 'Tus Próximos Eventos (Shows Confirmados)' %>
         </h3>
         <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: var(--color-primary, #2563eb); font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
       </div>
@@ -477,7 +477,7 @@
       <% else %>
         <div style="text-align: center; padding: 30px; color: var(--text-subtle, #94a3b8);">
           <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
-          No tienes eventos confirmados en este momento. Una vez que la agrupación formalice tu fecha, aparecerá aquí.
+          <%= venue_mode? ? 'No tienes eventos confirmados en este momento. Una vez que el salón formalice tu fecha, aparecerá aquí.' : 'No tienes eventos confirmados en este momento. Una vez que la agrupación formalice tu fecha, aparecerá aquí.' %>
         </div>
       <% end %>
     </div>

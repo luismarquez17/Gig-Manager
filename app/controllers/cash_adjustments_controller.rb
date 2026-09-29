@@ -24,19 +24,20 @@ class CashAdjustmentsController < ApplicationController
     # 4. Libro Diario Unificado de Movimientos de Dinero
     transactions = []
 
-    # Cobros de shows
+    # Cobros de eventos/shows
+    event_term = current_company.term_for(:event_singular, "Show")
     GigPayment.joins(:gig).includes(gig: :client).where(gigs: { company_id: current_company.id }).where.not(date_paid: nil).find_each do |p|
-      client_name = p.gig.client&.name || p.gig.client_email || "Show"
-      show_date = p.gig.date ? "(Evento: #{p.gig.date.strftime('%d/%m/%Y')})" : ""
-      desc = "Cobro de Show - #{client_name} #{show_date}"
+      client_name = p.gig.client&.name || p.gig.client_email || event_term
+      show_date = p.gig.date ? "(Fecha: #{p.gig.date.strftime('%d/%m/%Y')})" : ""
+      desc = "Cobro de #{event_term} - #{client_name} #{show_date}"
       desc += " [#{p.notes}]" if p.notes.present?
 
       transactions << {
         date: p.date_paid,
         created_at: p.created_at,
         category: :gig_payment,
-        category_label: "Cobro de Show",
-        emoji: "🎸",
+        category_label: "Cobro de #{event_term}",
+        emoji: current_company.venue_mode? ? "🏛️" : "🎸",
         badge_bg: "#dcfce7",
         badge_color: "#166534",
         description: desc,
@@ -49,8 +50,8 @@ class CashAdjustmentsController < ApplicationController
 
     # Pagos de nómina aprobados
     current_company.employee_payments.approved.includes(:user, :gig).where.not(date_paid: nil).find_each do |ep|
-      worker_name = ep.user&.display_name || ep.user&.email || "Trabajador"
-      show_info = ep.gig.present? ? " (Show #{ep.gig.client&.name || ep.gig.id})" : " (Pago general)"
+      worker_name = ep.user&.display_name || ep.user&.email || (current_company.venue_mode? ? "Personal" : "Trabajador")
+      show_info = ep.gig.present? ? " (#{event_term} #{ep.gig.client&.name || ep.gig.id})" : " (Pago general)"
       desc = "Pago de Nómina - #{worker_name}#{show_info}"
       desc += " [#{ep.notes}]" if ep.notes.present?
 

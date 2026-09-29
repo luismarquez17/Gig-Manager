@@ -5,23 +5,23 @@
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px;">
       <div>
         <h1 style="font-size: 2em; font-weight: 800; margin: 0;
-          <% if current_user.musician? %>
+          <% if current_user.musician? && !venue_mode? %>
             background: linear-gradient(135deg, #1e1b4b, #4338ca); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
           <% else %>
             color: #0f172a;
           <% end %>
         ">
-          <% if current_user.musician? %>
+          <% if current_user.musician? && !venue_mode? %>
             🎸 Mis Shows
           <% else %>
-            🎫 Mis Eventos Asignados
+            <%= venue_mode? ? '🏛️ Mis Eventos Asignados' : '🎫 Mis Eventos Asignados' %>
           <% end %>
         </h1>
         <p style="color: #64748b; margin-top: 6px; font-size: 1em;">
-          <% if current_user.musician? %>
+          <% if current_user.musician? && !venue_mode? %>
             Lista de shows en los que participas. Consulta fecha, lugar y detalles de cada uno.
           <% else %>
-            Eventos a los que te han asignado. Accede al checklist para preparar la carga.
+            Eventos a los que te han asignado. Consulta los detalles y cronograma de cada uno.
           <% end %>
         </p>
       </div>
@@ -157,12 +157,12 @@
   <%# --- EMPTY STATE --- %>
   <% if @gigs.empty? %>
     <div style="background: white; padding: 50px 30px; border-radius: 16px; border: 1px solid #f1f5f9; text-align: center; color: #94a3b8;">
-      <div style="font-size: 3em; margin-bottom: 12px;">🎸</div>
+      <div style="font-size: 3em; margin-bottom: 12px;"><%= venue_mode? ? '🏛️' : '🎸' %></div>
       <div style="font-size: 1.1em; font-weight: 700; color: #64748b; margin-bottom: 6px;">
-        <% if current_user.musician? %>Sin shows asignados<% else %>Sin eventos asignados<% end %>
+        <% if current_user.musician? && !venue_mode? %>Sin shows asignados<% else %>Sin eventos asignados<% end %>
       </div>
       <div style="font-size: 0.9em;">
-        <% if current_user.musician? %>
+        <% if current_user.musician? && !venue_mode? %>
           Aún no has sido asignado a ningún show.
         <% else %>
           No tienes eventos asignados por ahora.

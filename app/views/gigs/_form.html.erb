@@ -113,16 +113,16 @@
     <div style="margin-bottom: 25px; background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); padding: 22px; border-radius: 16px; border: 1.5px solid #c4b5fd; box-shadow: 0 4px 12px rgba(124, 58, 237, 0.06);">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
         <label for="gig_music_notes" style="font-weight: 800; color: #5b21b6; font-size: 1.05rem; display: flex; align-items: center; gap: 8px; margin: 0;">
-          <span>🎵</span> Notas Musicales, Repertorio &amp; Protocolo del Cliente
+          <span><%= venue_mode? ? '📋' : '🎵' %></span> <%= company_term(:music_notes, (venue_mode? ? 'Protocolo & Notas Especiales del Evento' : 'Notas Musicales, Repertorio & Protocolo del Cliente')) %>
         </label>
         <span style="background: #7c3aed; color: white; padding: 3px 10px; border-radius: 99px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
-          Para Músicos &amp; Show
+          <%= venue_mode? ? 'Para Staff & Protocolo' : 'Para Músicos & Show' %>
         </span>
       </div>
       <p style="margin: 0 0 14px 0; font-size: 0.88rem; color: #6d28d9; line-height: 1.45;">
-        Escribe aquí las peticiones de canciones y el orden especial acordado con el cliente (vals de entrada, salida de la quinceañera/novios, brindis, canciones pedidas o exclusiones) para tenerlo centralizado en el show y no disperso en WhatsApp.
+        <%= venue_mode? ? 'Escribe aquí las peticiones del cliente sobre protocolo, temática, momentos clave (vals de 15 años, entrada de novios, desfile de pasarela, brindis, reconocimientos) y requerimientos especiales para tenerlo centralizado.' : 'Escribe aquí las peticiones de canciones y el orden especial acordado con el cliente (vals de entrada, salida de la quinceañera/novios, brindis, canciones pedidas o exclusiones) para tenerlo centralizado en el show y no disperso en WhatsApp.' %>
       </p>
-      <%= f.text_area :music_notes, rows: 5, placeholder: "Ejemplo:\n• Entrada / Vals: La señora pidió comenzar con \"Tiempo de Vals\" al entrar la quinceañera.\n• Salida / Brindis: Al salir la quinceañera tocar \"A Thousand Years\" de fondo.\n• Show en vivo: Comenzar con set de merengues clásicos, luego pop y hora loca.\n• Canciones pedidas: \"Vivir Mi Vida\", \"Danza Kuduro\".\n• Exclusiones: No tocar reggaetón explícito.", style: "width: 100%; padding: 14px; border: 1.5px solid #a78bfa; border-radius: 12px; box-sizing: border-box; font-size: 0.95rem; line-height: 1.5; outline: none; background: #ffffff; color: #1e1b4b; font-family: inherit; resize: vertical; transition: border-color 0.2s;" %>
+      <%= f.text_area :music_notes, rows: 5, placeholder: (venue_mode? ? "Ejemplo:\n• Entrada / Pasarela: Protocolo de bienvenida y música de fondo suave.\n• Momento Central: Vals de la quinceañera / Palabras de apertura.\n• Brindis y Fotos: Sesión fotográfica en tarima con protocolo.\n• Requerimientos: Mesa de honor lista a las 8:00 PM." : "Ejemplo:\n• Entrada / Vals: La señora pidió comenzar con \"Tiempo de Vals\" al entrar la quinceañera.\n• Salida / Brindis: Al salir la quinceañera tocar \"A Thousand Years\" de fondo.\n• Show en vivo: Comenzar con set de merengues clásicos, luego pop y hora loca.\n• Canciones pedidas: \"Vivir Mi Vida\", \"Danza Kuduro\".\n• Exclusiones: No tocar reggaetón explícito."), style: "width: 100%; padding: 14px; border: 1.5px solid #a78bfa; border-radius: 12px; box-sizing: border-box; font-size: 0.95rem; line-height: 1.5; outline: none; background: #ffffff; color: #1e1b4b; font-family: inherit; resize: vertical; transition: border-color 0.2s;" %>
     </div>
 
     <% if gig.new_record? %>
