@@ -19,6 +19,7 @@ module Superadmin
         status: :active,
         subscription_status: "active",
         plan_tier: "banda",
+        business_type: "music_band",
         trial_ends_at: 1.month.from_now
       )
       @company.enabled_modules = AppModule.build_modules_hash(default_pkg[:modules])
@@ -46,6 +47,11 @@ module Superadmin
 
       ActiveRecord::Base.transaction do
         if @company.save
+          if @company.venue_mode?
+            @company.seed_venue_combos! if @company.preset_budgets.empty?
+            @company.seed_venue_upsells! if @company.standard_upsells.empty?
+          end
+
           # If leader details are provided, create the leader user directly
           if params[:leader_email].present? && params[:leader_password].present?
             leader_user = @company.users.create!(

@@ -22,6 +22,8 @@ class Company < ApplicationRecord
   validates :invitation_token, uniqueness: true, allow_nil: true
   validates :monthly_fee, numericality: { greater_than_or_equal_to: 0 }
 
+  attribute :business_type, :string, default: 'music_band'
+
   DEFAULT_TRIAL_DAYS = 30
   VALID_PLAN_TIERS = ['banda', 'productora', 'salon', 'negocio', 'full'].freeze
 
