@@ -26,7 +26,7 @@ class Client::GigsControllerTest < ActionDispatch::IntegrationTest
   test "should show client gig details" do
     get client_gig_url(@gig)
     assert_response :success
-    assert_select "h1", /El Evento de/
+    assert_select "h1", /El (Evento|Show) de/
   end
 
   test "should redirect if client tries to access other client gig" do

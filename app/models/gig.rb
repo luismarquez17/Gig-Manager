@@ -375,6 +375,8 @@ class Gig < ApplicationRecord
   end
 
   def available_upsells
+    return [] if company.present? && !company.module_enabled?(:clients_crm)
+
     upsells = []
     
     details_text = details.to_s.downcase

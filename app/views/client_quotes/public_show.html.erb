@@ -362,8 +362,9 @@
     <input type="hidden" name="preset_budget_id" id="selected-preset-id" value="<%= @quote.preset_budget_id %>">
     <input type="hidden" name="package_name" id="selected-package-name" value="<%= @quote.package_name %>">
 
-    <%# --- PASO 1: SELECCIÓN DE PRESUPUESTO BASE (SI EXISTEN) --- %>
-    <% if @preset_budgets.present? && @preset_budgets.any? %>
+    <%# --- PASO 1: SELECCIÓN DE PRESUPUESTO BASE (SI EXISTEN Y CRM ACTIVO) --- %>
+    <% show_presets = @company.module_enabled?(:clients_crm) && @preset_budgets.present? && @preset_budgets.any? %>
+    <% if show_presets %>
       <section class="glass-card glass-card-highlight">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
           <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
@@ -440,7 +441,7 @@
                 Servicio a Medida / Personalizado
               </div>
               <p style="font-size: 0.85rem; color: #94a3b8; margin: 0; line-height: 1.5;">
-                ¿Tienes requerimientos especiales o quieres cotizar un número específico de horas o músicos? Elige esta opción.
+                ¿Tienes requerimientos especiales o quieres cotizar un número específico de horas o servicios? Elige esta opción.
               </p>
             </div>
             <div style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 14px;">
@@ -455,7 +456,7 @@
     <section class="glass-card">
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
         <span style="background: rgba(139, 92, 246, 0.25); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
-          <%= @preset_budgets.present? && @preset_budgets.any? ? '2' : '1' %>
+          <%= show_presets ? '2' : '1' %>
         </span>
         Tus Datos de Contacto
       </h2>
@@ -477,7 +478,7 @@
     <section class="glass-card">
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
         <span style="background: rgba(139, 92, 246, 0.25); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
-          <%= @preset_budgets.present? && @preset_budgets.any? ? '3' : '2' %>
+          <%= show_presets ? '3' : '2' %>
         </span>
         Detalles del Evento
       </h2>
@@ -503,7 +504,7 @@
 
         <div>
           <label class="input-label">Lugar / Salón / Ubicación *</label>
-          <input type="text" name="event_location" value="<%= @quote.event_location %>" required placeholder="Ej. Hotel Trinitarias / Quinta La Esmeralda" class="portal-input">
+          <input type="text" name="event_location" value="<%= @quote.event_location %>" required placeholder="Ej. Hotel Trinitarias / Salón Principal" class="portal-input">
         </div>
       </div>
 
@@ -524,7 +525,7 @@
     <section class="glass-card" style="border-color: rgba(16, 185, 129, 0.35);">
       <h2 style="font-size: 1.25rem; font-weight: 800; color: #34d399; margin: 0 0 16px 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
         <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
-          <%= @preset_budgets.present? && @preset_budgets.any? ? '4' : '3' %>
+          <%= show_presets ? '4' : '3' %>
         </span>
         Presupuesto Estimado & Adelanto (Anticipo)
       </h2>
@@ -548,8 +549,13 @@
       </div>
 
       <div>
-        <label class="input-label">Requerimientos Específicos / Canciones / Observaciones</label>
-        <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes preferencias musicales, canciones para la entrada o detalles del montaje técnico..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
+        <% if @company.module_enabled?(:songs_repertoire) %>
+          <label class="input-label">Requerimientos Específicos / Preferencias Musicales / Observaciones</label>
+          <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes preferencias musicales, canciones para la entrada, vals o detalles de la presentación..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
+        <% else %>
+          <label class="input-label">Requerimientos Específicos / Observaciones del Evento</label>
+          <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes requerimientos especiales de espacio, protocolo, temática o logística..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
+        <% end %>
       </div>
 
       <% if @company.any_payment_method_enabled? %>

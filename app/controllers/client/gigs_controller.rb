@@ -17,6 +17,11 @@ class Client::GigsController < ApplicationController
   end
 
   def request_upsell
+    unless current_company.module_enabled?(:clients_crm)
+      render json: { success: false, error: "El catálogo de adicionales no está disponible." }, status: :unprocessable_entity
+      return
+    end
+
     upsell_key = params[:upsell_key].to_s
     if upsell_key.blank?
       render json: { success: false, error: "Parámetros incompletos." }, status: :unprocessable_entity

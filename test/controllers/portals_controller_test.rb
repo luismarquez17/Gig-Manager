@@ -8,7 +8,7 @@ class PortalsControllerTest < ActionDispatch::IntegrationTest
   test "should show public portal" do
     get public_portal_url(token: @gig.portal_token)
     assert_response :success
-    assert_select "h1", text: /El Evento de/
+    assert_select "h1", text: /El (Evento|Show) de/
   end
 
   test "should sign contract" do
@@ -53,5 +53,27 @@ class PortalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal true, json["success"]
     assert_equal "smoke_machine", json["request"]["key"]
     assert_equal "pending", json["request"]["status"]
+  end
+
+  test "should block worker profile when payroll module is disabled" do
+    @gig.company.disable_module!(:payroll)
+    get public_portal_worker_url(token: @gig.portal_token, worker_id: users(:one).id)
+    assert_response :not_found
+  end
+
+  test "should block upsell request when clients_crm module is disabled" do
+    @gig.company.disable_module!(:clients_crm)
+    assert_no_difference -> { @gig.gig_upsell_requests.count } do
+      post request_public_portal_upsell_url(token: @gig.portal_token), params: {
+        upsell_key: "smoke_machine",
+        title: "Máquina de Humo",
+        emoji: "💨",
+        price: 30.0,
+        currency: "USD"
+      }, as: :json
+    end
+    assert_response :unprocessable_entity
+    json = JSON.parse(response.body)
+    assert_equal false, json["success"]
   end
 end

@@ -86,4 +86,11 @@ class ClientQuotesControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to client_quotes_url
   end
+
+  test "public_show should hide preset packages when clients_crm module is disabled" do
+    @company.disable_module!(:clients_crm)
+    get public_client_quote_url(token: @quote.public_token)
+    assert_response :success
+    assert_select ".preset-card", count: 0
+  end
 end

@@ -406,7 +406,7 @@
   <%# --- HEADER DEL PORTAL --- %>
   <header class="portal-header">
     <span class="badge">Portal Oficial • <%= @gig.company&.name || "Gig Manager" %></span>
-    <h1 class="title-accent">El Evento de <%= @gig.client&.name || "Cliente" %></h1>
+    <h1 class="title-accent">El <%= @gig.company&.term_for(:event_singular, 'Evento') %> de <%= @gig.client&.name || "Cliente" %></h1>
 
     <p>
       <span>📅 <%= @gig.date&.strftime("%d/%m/%Y") || "Fecha por definir" %></span>
@@ -421,7 +421,7 @@
 
   <%# --- CUENTA REGRESIVA --- %>
   <section class="glass-card">
-    <h2 class="countdown-title" id="countdown-label">Tiempo Restante para el Evento</h2>
+    <h2 class="countdown-title" id="countdown-label">Tiempo Restante para el <%= @gig.company&.term_for(:event_singular, 'Evento') %></h2>
     <div class="countdown-container">
       <div class="countdown-box">
         <div class="val" id="cd-days">--</div>
@@ -526,11 +526,11 @@
   </section>
 
   <%# --- EQUIPO DE TRABAJO --- %>
-  <% if @staff_members.present? %>
+  <% if @gig.company&.module_enabled?(:payroll) && @staff_members.present? %>
   <section class="glass-card">
     <h2 class="section-title">
       <span class="icon">👥</span>
-      Tu Equipo de Trabajo
+      Tu <%= @gig.company&.term_for(:musicians, "Equipo de Trabajo") %>
     </h2>
     <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
       <% @staff_members.each do |staff| %>
@@ -711,14 +711,14 @@
 
   <%# --- SECCIÓN DE ADICIONALES RECOMENDADOS (UPSELL HORIZONTAL) --- %>
   <% available_upsells = @gig.available_upsells %>
-  <% if available_upsells.any? %>
+  <% if @gig.company&.module_enabled?(:clients_crm) && available_upsells.any? %>
     <section class="glass-card" style="border-color: rgba(139, 92, 246, 0.25); box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.10); margin-bottom: 30px;">
       <h2 class="section-title" style="color: #a78bfa; margin-bottom: 5px;">
         <span class="icon" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;">🚀</span>
         ¿Quieres potenciar tu evento?
       </h2>
       <p style="color: var(--text-muted); font-size: 0.9em; margin: 0 0 15px 0; line-height: 1.4;">
-        Lleva tu fiesta al siguiente nivel agregando uno de nuestros servicios recomendados con un solo clic.
+        Lleva tu evento al siguiente nivel agregando uno de nuestros servicios recomendados con un solo clic.
       </p>
 
       <div style="display: flex; gap: 15px; overflow-x: auto; padding: 5px 5px 15px; scrollbar-width: thin; -webkit-overflow-scrolling: touch;">
@@ -743,7 +743,7 @@
             </div>
             <div id="upsell-action-<%= upsell[:key] %>" style="margin-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--font-outfit);">
-                +<%= number_to_currency(upsell[:price], unit: upsell[:currency] == "USD" ? "$" : "Bs. ", precision: 0) %> <span style="font-size: 0.7em; color: var(--text-muted); font-weight: normal;"><%= upsell[:currency] %></span>
+                +<%= number_to_currency(upsell[:price], unit: "$", precision: 0) %> <span style="font-size: 0.7em; color: var(--text-muted); font-weight: normal;"><%= upsell[:currency] || 'USD' %></span>
               </span>
               
               <% case upsell[:request_status] %>
@@ -753,7 +753,7 @@
                 </span>
               <% when 'approved' %>
                 <span style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); color: #34d399; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">
-                  ✅ Añadido al Show
+                  ✅ <%= @gig.company&.venue_mode? ? 'Añadido al Evento' : 'Añadido al Show' %>
                 </span>
               <% when 'rejected' %>
                 <span style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.35); color: #f87171; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em;">
@@ -778,6 +778,26 @@
         <% end %>
       </div>
     </section>
+
+    <%# --- MODAL DE CONFIRMACIÓN DE UPSELL --- %>
+    <div id="upsell-confirm-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+      <div style="background: #0f172a; border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 24px; padding: 30px; max-width: 440px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; color: white; box-sizing: border-box;">
+        <div id="modal-upsell-emoji" style="font-size: 3.5em; margin-bottom: 8px; line-height: 1;">🚀</div>
+        <h3 id="modal-upsell-title" style="font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800; margin: 0 0 10px 0; color: #f8fafc;">Añadir Adicional</h3>
+        <div id="modal-upsell-price" style="font-family: var(--font-outfit); font-size: 1.6em; font-weight: 800; color: #34d399; margin-bottom: 12px;">+ $0 USD</div>
+        <p id="modal-upsell-desc" style="color: #94a3b8; font-size: 0.9em; line-height: 1.5; margin: 0 0 24px 0;">
+          ¿Deseas solicitar este servicio adicional para tu evento? El equipo organizador recibirá tu aviso y confirmará la disponibilidad.
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <button type="button" onclick="closeUpsellModal()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95em; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+            Cancelar
+          </button>
+          <button type="button" id="btn-confirm-upsell" onclick="confirmUpsellRequest()" class="btn-portal" style="padding: 12px; margin: 0; width: 100%;">
+            ✅ Sí, solicitar
+          </button>
+        </div>
+      </div>
+    </div>
   <% end %>
 
   <%# --- FOOTER --- %>
@@ -785,26 +805,6 @@
     <p style="margin: 0;">Generado por <strong>Gig Manager</strong>. Todos los derechos reservados.</p>
   </footer>
 
-</div>
-
-<%# --- MODAL DE CONFIRMACIÓN DE UPSELL --- %>
-<div id="upsell-confirm-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
-  <div style="background: #0f172a; border: 1px solid rgba(139, 92, 246, 0.35); border-radius: 24px; padding: 30px; max-width: 440px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: center; color: white; box-sizing: border-box;">
-    <div id="modal-upsell-emoji" style="font-size: 3.5em; margin-bottom: 8px; line-height: 1;">🚀</div>
-    <h3 id="modal-upsell-title" style="font-family: var(--font-outfit); font-size: 1.4em; font-weight: 800; margin: 0 0 10px 0; color: #f8fafc;">Añadir Adicional</h3>
-    <div id="modal-upsell-price" style="font-family: var(--font-outfit); font-size: 1.6em; font-weight: 800; color: #34d399; margin-bottom: 12px;">+ $0 USD</div>
-    <p id="modal-upsell-desc" style="color: #94a3b8; font-size: 0.9em; line-height: 1.5; margin: 0 0 24px 0;">
-      ¿Deseas solicitar este servicio adicional para tu evento? El equipo organizador recibirá tu aviso y confirmará la disponibilidad.
-    </p>
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
-      <button type="button" onclick="closeUpsellModal()" style="background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 12px; border-radius: 12px; font-weight: 700; cursor: pointer; font-size: 0.95em; transition: background 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
-        Cancelar
-      </button>
-      <button type="button" id="btn-confirm-upsell" onclick="confirmUpsellRequest()" class="btn-portal" style="padding: 12px; margin: 0; width: 100%;">
-        ✅ Sí, solicitar
-      </button>
-    </div>
-  </div>
 </div>
 
 <style>

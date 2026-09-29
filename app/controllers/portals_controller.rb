@@ -13,6 +13,11 @@ class PortalsController < ApplicationController
   end
 
   def worker_profile
+    unless @gig.company&.module_enabled?(:payroll)
+      render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
+      return
+    end
+
     @worker = User.find(params[:worker_id])
     unless @gig.staff_members.include?(@worker)
       render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
@@ -56,6 +61,11 @@ class PortalsController < ApplicationController
   end
 
   def request_upsell
+    unless @gig.company&.module_enabled?(:clients_crm)
+      render json: { success: false, error: "El catálogo de adicionales no está disponible." }, status: :unprocessable_entity
+      return
+    end
+
     upsell_key = params[:upsell_key].to_s
     if upsell_key.blank?
       render json: { success: false, error: "Parámetros incompletos." }, status: :unprocessable_entity
