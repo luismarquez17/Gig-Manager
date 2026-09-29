@@ -606,6 +606,20 @@
         }
       });
 
+      // Sincronizar selector de Tipo de Negocio según el paquete elegido
+      const bTypeSelect = document.getElementById('company_business_type_select');
+      if (bTypeSelect) {
+        if (pkgKey === 'salon') {
+          bTypeSelect.value = 'venue_academy';
+        } else if (pkgKey === 'productora') {
+          bTypeSelect.value = 'production_company';
+        } else if (pkgKey === 'banda') {
+          bTypeSelect.value = 'music_band';
+        } else if (pkgKey === 'negocio') {
+          bTypeSelect.value = 'general_business';
+        }
+      }
+
       // Preseleccionar módulos del paquete elegido
       const pkgModules = pkg.modules || [];
       document.querySelectorAll('.superadmin-module-cb').forEach(cb => {
