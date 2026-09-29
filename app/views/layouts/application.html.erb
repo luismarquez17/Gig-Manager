@@ -114,8 +114,9 @@
       /* ======================================================
          BOTÓN CERRAR dentro del sidebar — oculto en desktop
          ====================================================== */
-      #sidebar-close-btn {
-        display: none;
+      #sidebar-close-btn,
+      .sidebar-close-btn {
+        display: none !important;
       }
 
       /* ======================================================
@@ -133,20 +134,25 @@
           height: 58px;
           background: #0f172a;
           z-index: 1000;
-          padding: 0 16px;
+          padding: 0 14px;
           box-shadow: 0 2px 12px rgba(0,0,0,0.25);
           border-bottom: 1px solid rgba(255,255,255,0.07);
+          gap: 8px;
         }
 
         #mobile-topbar .topbar-brand {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 8px;
           color: white;
           font-family: 'Inter', sans-serif;
           font-weight: 800;
           font-size: 1.05rem;
+          min-width: 0;
+          flex: 1 1 auto;
+          overflow: hidden;
         }
+
         #mobile-topbar .topbar-logo {
           background: linear-gradient(135deg, #2563eb, #3b82f6);
           color: white;
@@ -176,37 +182,76 @@
           border-radius: 2px;
         }
 
-        /* Sidebar se convierte en drawer off-canvas */
+        /* Sidebar se convierte en drawer off-canvas con scroll fluido unificado */
         .app-sidebar {
           position: fixed !important;
-          top: 0; left: 0; bottom: 0;
-          width: 280px !important;
-          max-width: 82vw;
-          transform: translateX(-100%);
-          transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-          z-index: 999;
-          overflow-y: auto;
+          top: 0 !important;
+          left: 0 !important;
+          bottom: 0 !important;
+          height: 100% !important;
+          height: 100dvh !important;
+          width: 295px !important;
+          max-width: 88vw !important;
+          transform: translateX(-100%) !important;
+          transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1) !important;
+          z-index: 999 !important;
+          overflow-y: auto !important;
+          overflow-x: hidden !important;
+          -webkit-overflow-scrolling: touch !important;
+          overscroll-behavior: contain !important;
+          touch-action: pan-y !important;
+          display: flex !important;
+          flex-direction: column !important;
+          padding: 16px 14px max(35px, env(safe-area-inset-bottom, 25px)) 14px !important;
+          box-sizing: border-box !important;
+          box-shadow: 6px 0 30px rgba(0,0,0,0.5) !important;
         }
         .app-sidebar.sidebar-open {
-          transform: translateX(0);
+          transform: translateX(0) !important;
         }
 
-        /* Botón cerrar sidebar visible */
-        #sidebar-close-btn {
-          display: flex;
-          align-items: center; justify-content: center;
-          position: absolute;
-          top: 14px; right: 14px;
-          width: 32px; height: 32px;
+        /* Unificar scroll: nav no bloquea el deslizamiento */
+        .app-sidebar .sidebar-nav {
+          overflow-y: visible !important;
+          flex: 1 0 auto !important;
+          min-height: auto !important;
+          padding-right: 0 !important;
+          margin-bottom: 20px !important;
+        }
+
+        .app-sidebar .sidebar-footer {
+          flex-shrink: 0 !important;
+          margin-top: auto !important;
+        }
+
+        #sidebar-scroll-indicator {
+          display: none !important;
+        }
+
+        /* Botón cerrar sidebar visible y estilizado */
+        #sidebar-close-btn,
+        .sidebar-close-btn {
+          display: inline-flex !important;
+          align-items: center;
+          justify-content: center;
+          width: 34px;
+          height: 34px;
           background: rgba(255,255,255,0.08);
-          border: 1px solid rgba(255,255,255,0.12);
-          border-radius: 8px;
+          border: 1px solid rgba(255,255,255,0.15);
+          border-radius: 9px;
           color: #94a3b8;
-          font-size: 1.3rem;
+          font-size: 1.35rem;
           line-height: 1;
           cursor: pointer;
-          z-index: 10;
+          flex-shrink: 0;
+          transition: all 0.2s ease;
           text-decoration: none;
+          margin-left: auto;
+        }
+        #sidebar-close-btn:hover,
+        .sidebar-close-btn:hover {
+          background: rgba(255,255,255,0.16);
+          color: white;
         }
 
         /* Main: quitar margin-left que aplica inline en desktop y poner top padding para topbar */
@@ -313,23 +358,23 @@
           <%# Mobile Default Brand %>
           <div class="brand-default-view">
             <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 8px; margin-right: 8px; flex-shrink: 0;" />
-            <span>Gig Manager</span>
+            <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Gig Manager</span>
           </div>
 
           <%# Mobile Gero VIP Co-Brand %>
-          <div class="brand-gerovip-view">
-            <div style="display: flex; align-items: center; gap: 4px; margin-right: 8px;">
-              <img src="/icons/logo.svg" alt="GigManager" style="width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;" />
-              <span style="font-weight: 900; color: #d4af37; font-size: 0.95rem; line-height: 1;">+</span>
-              <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(212,175,55,0.45));" />
+          <div class="brand-gerovip-view" style="display: flex; align-items: center; gap: 6px; min-width: 0; width: 100%;">
+            <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0; background: rgba(0,0,0,0.22); padding: 2px 5px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
+              <img src="/icons/logo.svg" alt="GigManager" style="width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;" />
+              <span style="font-weight: 900; color: #d4af37; font-size: 0.85rem; line-height: 1; flex-shrink: 0;">+</span>
+              <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(212,175,55,0.45));" />
             </div>
-            <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15;">
-              <span style="color: white; font-weight: 800; font-size: 0.84rem;">Gig Manager</span>
-              <span style="color: #ffd700; font-weight: 700; font-size: 0.7rem; white-space: nowrap;">+ Gero Producciones <span style="font-size: 0.62rem; opacity: 0.9; color: #fef08a;">(VIP)</span></span>
+            <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15; min-width: 0; overflow: hidden;">
+              <span style="color: white; font-weight: 800; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Gig Manager</span>
+              <span style="color: #ffd700; font-weight: 700; font-size: 0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">+ Gero Producciones <span style="font-size: 0.6rem; opacity: 0.9; color: #fef08a;">(VIP)</span></span>
             </div>
           </div>
         </div>
-        <div style="display: flex; align-items: center; gap: 8px;">
+        <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
           <button type="button" onclick="openThemeCustomizer()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.05rem;" aria-label="Personalizar Tema" title="Personalizar Tema">
             🎨
           </button>
@@ -362,15 +407,18 @@
         <aside class="app-sidebar" id="app-sidebar">
           
           <%# Logo + nombre de empresa + botón cerrar (sólo visible en móvil) %>
-          <div class="sidebar-brand" style="position: relative;">
+          <div class="sidebar-brand">
             <%# Vista de Marca Estándar %>
             <div class="brand-default-view">
-              <h2 style="display: flex; align-items: center; margin: 0;">
-                <img src="/icons/logo.svg" alt="GigManager" style="width: 38px; height: 38px; border-radius: 11px; margin-right: 10px; box-shadow: 0 4px 12px rgba(37,99,235,0.35); flex-shrink: 0;" />
-                <span>Gig Manager</span>
-              </h2>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <h2 style="display: flex; align-items: center; margin: 0; min-width: 0; flex: 1 1 auto;">
+                  <img src="/icons/logo.svg" alt="GigManager" style="width: 38px; height: 38px; border-radius: 11px; margin-right: 10px; box-shadow: 0 4px 12px rgba(37,99,235,0.35); flex-shrink: 0;" />
+                  <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Gig Manager</span>
+                </h2>
+                <button class="sidebar-close-btn" aria-label="Cerrar menú">&times;</button>
+              </div>
               <% if current_company.present? %>
-                <div style="font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                <div style="font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-top: 6px; display: flex; align-items: center; gap: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                   <span>🏢</span> <span><%= current_company.name %></span>
                 </div>
               <% end %>
@@ -378,34 +426,35 @@
 
             <%# Vista de Marca Co-Branded GERO VIP %>
             <div class="brand-gerovip-view">
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                <div style="display: flex; align-items: center; flex-shrink: 0;">
-                  <img src="/icons/logo.svg" alt="GigManager" style="width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 4px 10px rgba(37,99,235,0.35); flex-shrink: 0;" />
-                  <span style="margin: 0 5px; font-weight: 900; color: #d4af37; font-size: 1.15rem; line-height: 1;">+</span>
-                  <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(212,175,55,0.5));" />
-                </div>
-                <div style="min-width: 0;">
-                  <div style="font-weight: 800; font-size: 1.05rem; color: #ffffff; line-height: 1.15; letter-spacing: -0.3px;">
-                    Gig Manager
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1 1 auto;">
+                  <div style="display: flex; align-items: center; gap: 4px; flex-shrink: 0; background: rgba(0,0,0,0.25); padding: 4px 6px; border-radius: 10px; border: 1px solid rgba(212,175,55,0.3);">
+                    <img src="/icons/logo.svg" alt="GigManager" style="width: 32px; height: 32px; border-radius: 8px; box-shadow: 0 4px 10px rgba(37,99,235,0.35); flex-shrink: 0;" />
+                    <span style="margin: 0 2px; font-weight: 900; color: #d4af37; font-size: 1.1rem; line-height: 1; flex-shrink: 0;">+</span>
+                    <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 34px; height: 34px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(212,175,55,0.55));" />
                   </div>
-                  <div style="font-weight: 800; font-size: 0.84rem; color: #ffd700; line-height: 1.15;">
-                    + Gero Producciones
+                  <div style="min-width: 0; flex: 1 1 auto;">
+                    <div style="font-weight: 800; font-size: 1.02rem; color: #ffffff; line-height: 1.15; letter-spacing: -0.3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      Gig Manager
+                    </div>
+                    <div style="font-weight: 800; font-size: 0.8rem; color: #ffd700; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                      + Gero Producciones
+                    </div>
                   </div>
                 </div>
+                <button class="sidebar-close-btn" aria-label="Cerrar menú">&times;</button>
               </div>
-              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px;">
-                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(212, 175, 55, 0.18); border: 1px solid rgba(212, 175, 55, 0.4); padding: 2px 8px; border-radius: 6px; font-size: 0.68rem; color: #ffd700; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 6px;">
+                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(212, 175, 55, 0.18); border: 1px solid rgba(212, 175, 55, 0.4); padding: 3px 8px; border-radius: 6px; font-size: 0.68rem; color: #ffd700; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;">
                   <span>👑</span> <span>Colaborador VIP</span>
                 </div>
                 <% if current_company.present? %>
-                  <div style="font-size: 0.72rem; color: #cbd5e1; font-weight: 600; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 105px;" title="<%= current_company.name %>">
+                  <div style="font-size: 0.72rem; color: #cbd5e1; font-weight: 600; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 125px; text-align: right;" title="<%= current_company.name %>">
                     🏢 <%= current_company.name %>
                   </div>
                 <% end %>
               </div>
             </div>
-
-            <button id="sidebar-close-btn" aria-label="Cerrar menú">&times;</button>
           </div>
 
           <%# Navegación %>
@@ -1278,7 +1327,7 @@
         function initDrawer() {
           var sidebar   = document.getElementById('app-sidebar');
           var hamburger = document.getElementById('hamburger-btn');
-          var closeBtn  = document.getElementById('sidebar-close-btn');
+          var closeBtns = document.querySelectorAll('#sidebar-close-btn, .sidebar-close-btn');
           var backdrop  = document.getElementById('mobile-backdrop');
           if (!sidebar) return;
 
@@ -1296,7 +1345,9 @@
           }
 
           if (hamburger) hamburger.addEventListener('click', open);
-          if (closeBtn)  closeBtn.addEventListener('click', close);
+          closeBtns.forEach(function(btn) {
+            btn.addEventListener('click', close);
+          });
           if (backdrop)  backdrop.addEventListener('click', close);
 
           // Cerrar al navegar en móvil
