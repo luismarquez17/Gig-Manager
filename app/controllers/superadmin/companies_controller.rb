@@ -128,7 +128,7 @@ module Superadmin
       params.require(:company).permit(
         :name, :slug, :status, :monthly_fee, :currency, :billing_day,
         :contact_email, :contact_phone, :notes, :subscription_status,
-        :plan_tier, :trial_started_at, :trial_ends_at
+        :plan_tier, :business_type, :trial_started_at, :trial_ends_at
       )
     end
   end

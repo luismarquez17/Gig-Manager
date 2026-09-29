@@ -90,6 +90,53 @@ class Gig < ApplicationRecord
     amount.to_f > 0 && total_received >= amount.to_f
   end
 
+  def whatsapp_payment_statement_text(portal_url = nil)
+    status_text = if paid_in_full?
+                    "✅ SALDADO EN SU TOTALIDAD"
+                  elsif total_received.positive?
+                    "⏳ ABONADO PARCIALMENTE (#{payment_percentage}%)"
+                  else
+                    "⚠️ PENDIENTE POR ABONAR"
+                  end
+
+    comp_name = company&.name.presence || "Gero Producciones"
+    c_name = client_display_name.to_s.encode('UTF-8', invalid: :replace, undef: :replace)
+    loc = (location.presence || 'Por definir').to_s.encode('UTF-8', invalid: :replace, undef: :replace)
+    dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
+
+    lines = [
+      "📋 *ESTADO DE CUENTA - #{comp_name.to_s.upcase}*",
+      "─────────────────────────",
+      "👤 *Cliente:* #{c_name}",
+      "📅 *Fecha:* #{dt}",
+      "📍 *Ubicación:* #{loc}",
+      "─────────────────────────",
+      "💰 *Total Acordado:* $#{sprintf('%.2f', amount.to_f)} #{currency || 'USD'}",
+      "💵 *Total Abonado:* $#{sprintf('%.2f', total_received)} #{currency || 'USD'}",
+      "💳 *Saldo Pendiente:* $#{sprintf('%.2f', remaining_amount)} #{currency || 'USD'}",
+      "📊 *Estado:* #{status_text}",
+      "─────────────────────────"
+    ]
+
+    payments = gig_payments.order(date_paid: :asc)
+    if payments.any?
+      lines << "🧾 *Abonos Registrados:*"
+      payments.each_with_index do |p, i|
+        p_date = p.date_paid ? p.date_paid.strftime('%d/%m/%Y') : '---'
+        p_cat = (p.category.presence || 'Abono').to_s.encode('UTF-8', invalid: :replace, undef: :replace)
+        lines << "  • #{p_date} - $#{sprintf('%.2f', p.amount.to_f)} #{p.currency} (#{p_cat})"
+      end
+      lines << "─────────────────────────"
+    end
+
+    if portal_url.present?
+      lines << "🔗 *Portal Privado y Recibos Digitales:*"
+      lines << portal_url.to_s
+    end
+
+    lines.map { |l| l.encode('UTF-8', invalid: :replace, undef: :replace) }.join("\n")
+  end
+
   # --- MÉTRICAS DE RENTABILIDAD Y NÓMINA DEL SHOW ---
   def total_payroll_agreed
     if staff_assignments.loaded?

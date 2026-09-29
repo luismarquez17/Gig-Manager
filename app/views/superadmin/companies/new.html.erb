@@ -122,7 +122,7 @@
           <%= f.text_field :name, placeholder: "Ej: Mariachi Los Arrieros, Producciones VIP, Salón Imperial...", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box; outline: none; background: white;" %>
         </div>
 
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
           <div>
             <%= f.label :contact_email, "Email Oficial de Contacto", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
             <%= f.email_field :contact_email, placeholder: "contacto@empresa.com", style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
@@ -132,6 +132,14 @@
             <%= f.label :contact_phone, "Teléfono / WhatsApp (Opcional)", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
             <%= f.text_field :contact_phone, placeholder: "+58 412 1234567", style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
           </div>
+        </div>
+
+        <div>
+          <%= f.label :business_type, "Tipo de Negocio / Industria", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+          <%= f.select :business_type, Company::BUSINESS_TYPES.map { |k, v| ["#{v[:icon]} #{v[:name]} (#{v[:badge]})", k] }, { selected: (@company.business_type.presence || 'music_band') }, style: "width: 100%; padding: 11px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white; font-weight: 600; color: #0f172a;" %>
+          <small style="color: #64748b; font-size: 0.78rem; display: block; margin-top: 4px;">
+            💡 Adapta automáticamente el vocabulario, pestañas y opciones (ej. elimina términos musicales en Salones de Fiesta & Academia).
+          </small>
         </div>
       </div>
 

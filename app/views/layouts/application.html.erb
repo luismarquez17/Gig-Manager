@@ -499,7 +499,7 @@
               <%# --- EVENTOS & SHOWS --- %>
               <% if module_enabled?(:gigs) %>
                 <%= link_to gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name != 'my'}" do %>
-                  <span class="icon">🎸</span> <span>Gigs / Eventos</span>
+                  <span class="icon"><%= venue_mode? ? '🏛️' : '🎸' %></span> <span><%= company_term(:gig_plural, 'Gigs / Eventos') %></span>
                   <% 
                     pending_upsells_count = current_company&.gig_upsell_requests&.pending&.count rescue 0 
                   %>
@@ -511,7 +511,7 @@
                 <% end %>
 
                 <%= link_to gig_payments_path, class: "sidebar-link #{'active' if controller_name == 'gig_payments'}" do %>
-                  <span class="icon">💳</span> <span>Pagos Eventos / Shows</span>
+                  <span class="icon">💳</span> <span>Pagos de <%= company_term(:event_plural, 'Eventos') %></span>
                 <% end %>
               <% end %>
 
@@ -552,7 +552,7 @@
                 <% end %>
 
                 <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
-                  <span class="icon">📄</span> <span>Presupuestos Base</span>
+                  <span class="icon">📄</span> <span><%= venue_mode? ? 'Combos & Paquetes' : 'Presupuestos Base' %></span>
                 <% end %>
 
                 <%= link_to client_quotes_path, class: "sidebar-link #{'active' if controller_name == 'client_quotes'}" do %>

@@ -61,21 +61,46 @@
     </div>
 
     <% if current_user.leader? %>
-      <div style="min-width: 240px;">
-        <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Monto Acordado &amp; Pagos</p>
-        <p style="margin: 5px 0 10px 0; font-size: 1.4em; font-weight: bold; color: #10b981;">
-          <%= number_with_precision(@gig.amount, precision: 2) %> 
-          <span style="font-size: 0.6em; color: #94a3b8; vertical-align: middle;"><%= @gig.currency %></span>
-        </p>
+      <div style="min-width: 280px; background: #ffffff; padding: 18px 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 10px;">
+          <div>
+            <p style="margin: 0; color: #64748b; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Presupuesto del <%= company_term(:event_singular, 'Evento') %></p>
+            <p style="margin: 4px 0 0 0; font-size: 1.5em; font-weight: 900; color: #0f172a;">
+              $<%= number_with_precision(@gig.amount, precision: 2) %> 
+              <span style="font-size: 0.55em; color: #64748b; font-weight: 700; vertical-align: middle;"><%= @gig.currency %></span>
+            </p>
+          </div>
+          <% if @gig.paid_in_full? %>
+            <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
+              ✓ 100% Cobrado
+            </span>
+          <% elsif @gig.total_received.positive? %>
+            <span style="background: #eff6ff; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
+              ⏳ <%= @gig.payment_percentage %>% Abonado
+            </span>
+          <% else %>
+            <span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
+              ⚠️ Sin Abonos
+            </span>
+          <% end %>
+        </div>
         
         <div style="background: #f8fafc; padding: 12px 14px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px;">
           <%= render 'gigs/payment_progress', gig: @gig, size: :normal, show_details: true, show_footer: true %>
         </div>
 
-        <div style="display:flex; gap:8px; flex-wrap: wrap;">
-          <%= link_to 'Ver pagos', gig_gig_payments_path(@gig), style: 'background: #eef2ff; color: #3730a3; padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em;' %>
-          <%= link_to '➕ Registrar pago', new_gig_gig_payment_path(@gig), style: 'background: #dcfce7; color: #065f46; padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em;' %>
+        <div style="display:flex; gap:8px; flex-wrap: wrap; margin-bottom: 10px;">
+          <%= link_to '📋 Ver pagos y recibos', gig_gig_payments_path(@gig), style: 'background: #eef2ff; color: #3730a3; padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em; flex: 1; text-align: center;' %>
+          <%= link_to '➕ Registrar abono', new_gig_gig_payment_path(@gig), style: 'background: #dcfce7; color: #065f46; padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em; flex: 1; text-align: center;' %>
         </div>
+
+        <%
+          statement_wa_text = @gig.whatsapp_payment_statement_text(public_portal_url(token: @gig.portal_token))
+          statement_wa_url = @gig.client&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@gig.client.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(statement_wa_text)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(statement_wa_text)}"
+        %>
+        <a href="<%= statement_wa_url %>" target="_blank" style="background: #25d366; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.82em; width: 100%; box-sizing: border-box; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.25);">
+          <span>📲 Enviar Estado de Cuenta por WhatsApp</span>
+        </a>
       </div>
     <% end %>
 
@@ -839,22 +864,22 @@
     <%# Cabecera %>
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 18px;">
       <div style="display: flex; align-items: flex-start; gap: 14px;">
-        <span style="font-size: 1.8em; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); flex-shrink: 0;">🎵</span>
+        <span style="font-size: 1.8em; background: linear-gradient(135deg, #8b5cf6 0%, #6d28d9 100%); color: white; width: 48px; height: 48px; border-radius: 14px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3); flex-shrink: 0;"><%= venue_mode? ? '📋' : '🎵' %></span>
         <div>
           <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
-            <h3 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #2e1065;">Repertorio, Momentos Clave &amp; Protocolo Musical</h3>
+            <h3 style="margin: 0; font-size: 1.25em; font-weight: 800; color: #2e1065;"><%= company_term(:music_notes, 'Repertorio, Momentos Clave & Protocolo') %></h3>
             <% if @gig.has_music_notes? %>
               <span style="background: #ede9fe; color: #6d28d9; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 800; border: 1px solid #c4b5fd;">
-                ✓ Peticiones Registradas
+                ✓ <%= venue_mode? ? 'Protocolo Registrado' : 'Peticiones Registradas' %>
               </span>
             <% else %>
               <span style="background: #f1f5f9; color: #64748b; padding: 3px 10px; border-radius: 99px; font-size: 0.75em; font-weight: 700;">
-                Sin notas musicales
+                <%= venue_mode? ? 'Sin notas de protocolo' : 'Sin notas musicales' %>
               </span>
             <% end %>
           </div>
           <p style="margin: 4px 0 0 0; color: #6b21a8; font-size: 0.88em; line-height: 1.4;">
-            Peticiones de canciones, orden del show (vals de entrada, salida de la quinceañera/novios, brindis, hora loca) acordadas con el cliente para que todo el equipo esté alineado.
+            <%= company_term(:music_notes_desc, 'Peticiones de canciones, orden del show (vals de entrada, salida de la quinceañera/novios, brindis, hora loca) acordadas con el cliente.') %>
           </p>
         </div>
       </div>
