@@ -20,7 +20,7 @@
     </div>
 
     <%# ── BANNER EXCLUSIVO GERO VIP (Colaborador Especial) ── %>
-    <div style="background: linear-gradient(135deg, #2b0512 0%, #150208 100%); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 16px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 20px rgba(136, 19, 55, 0.35);">
+    <div style="background: linear-gradient(135deg, #2b0512 0%, #150208 100%); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 16px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 20px rgba(136, 19, 55, 0.35); flex-wrap: wrap;">
       <div style="display: flex; align-items: center; gap: 12px;">
         <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
           <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;" />
@@ -30,16 +30,21 @@
         <div>
           <div style="color: #ffd700; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
             <span>👑 Gig Manager + Gero Producciones</span>
-            <span style="font-size: 0.65rem; background: rgba(212, 175, 55, 0.25); color: #ffd700; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; border-radius: 6px; text-transform: uppercase; font-weight: 800;">Colaborador Oficial</span>
+            <span style="font-size: 0.65rem; background: rgba(212, 175, 55, 0.25); color: #ffd700; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; border-radius: 6px; text-transform: uppercase; font-weight: 800;">Edición VIP</span>
           </div>
           <div style="color: #cbd5e1; font-size: 0.78rem; margin-top: 2px;">
-            Edición Especial en Rojo Rubí Terciopelo & Oro Champagne Imperial.
+            Elige entre el nuevo estilo <strong>Marfil Claro</strong> o el clásico <strong>Rubí Oscuro</strong>.
           </div>
         </div>
       </div>
-      <button type="button" onclick="applyQuickGeroVipTheme()" style="background: linear-gradient(135deg, #e5be49 0%, #d4af37 100%); color: #160308; border: none; padding: 7px 14px; border-radius: 9px; font-weight: 800; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4); white-space: nowrap;">
-        Aplicar VIP 👑
-      </button>
+      <div style="display: flex; gap: 8px; flex-shrink: 0; flex-wrap: wrap;">
+        <button type="button" onclick="applyQuickGeroVipTheme('gerovip-light')" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); color: #78350f; border: 1.5px solid #d4af37; padding: 7px 12px; border-radius: 9px; font-weight: 800; font-size: 0.78rem; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15); white-space: nowrap;">
+          ✨ VIP Marfil (Claro)
+        </button>
+        <button type="button" onclick="applyQuickGeroVipTheme('gerovip')" style="background: linear-gradient(135deg, #e5be49 0%, #d4af37 100%); color: #160308; border: none; padding: 7px 12px; border-radius: 9px; font-weight: 800; font-size: 0.78rem; cursor: pointer; box-shadow: 0 2px 8px rgba(212, 175, 55, 0.4); white-space: nowrap;">
+          👑 VIP Rubí (Oscuro)
+        </button>
+      </div>
     </div>
 
     <%# ── SECCIÓN 1: MODO DE COLOR / TEMA ── %>
@@ -67,11 +72,18 @@
           <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">OLED Puro</div>
         </button>
 
+        <button type="button" class="theme-mode-btn" data-theme-val="gerovip-light" onclick="setAppTheme('gerovip-light')" style="background: linear-gradient(135deg, #fffdfa 0%, #fef7ed 100%); border: 2px solid rgba(212, 175, 55, 0.45); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: #1e293b; transition: all 0.2s ease; position: relative;">
+          <div style="position: absolute; top: -6px; right: -4px; background: #d4af37; color: #1a0309; font-size: 0.62rem; font-weight: 900; padding: 1px 5px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">VIP</div>
+          <div style="font-size: 1.4rem; margin-bottom: 4px;">✨</div>
+          <div style="font-weight: 800; font-size: 0.82rem; color: #b45309;">GERO Marfil</div>
+          <div style="font-size: 0.7rem; color: #78350f;">Claro Elegante</div>
+        </button>
+
         <button type="button" class="theme-mode-btn" data-theme-val="gerovip" onclick="setAppTheme('gerovip')" style="background: linear-gradient(135deg, rgba(136, 19, 55, 0.15) 0%, rgba(212, 175, 55, 0.15) 100%); border: 2px solid rgba(212, 175, 55, 0.4); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease; position: relative;">
           <div style="position: absolute; top: -6px; right: -4px; background: #d4af37; color: #1a0309; font-size: 0.62rem; font-weight: 900; padding: 1px 5px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">VIP</div>
           <div style="font-size: 1.4rem; margin-bottom: 4px;">👑</div>
-          <div style="font-weight: 800; font-size: 0.82rem; color: #d4af37;">GERO VIP</div>
-          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">Rubí & Oro</div>
+          <div style="font-weight: 800; font-size: 0.82rem; color: #d4af37;">GERO Rubí</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">Oscuro Imperial</div>
         </button>
 
         <button type="button" class="theme-mode-btn" data-theme-val="system" onclick="setAppTheme('system')" style="background: var(--bg-card-subtle, #f8fafc); border: 2px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease;">
@@ -251,7 +263,7 @@
   function setAppTheme(themeVal) {
     var cfg = getSavedThemeConfig();
     cfg.theme = themeVal;
-    if (themeVal === 'gerovip') {
+    if (themeVal === 'gerovip' || themeVal === 'gerovip-light') {
       cfg.accent = 'gold';
     }
     saveThemeConfig(cfg);
@@ -279,9 +291,9 @@
     applyThemeToDOM(cfg);
   }
 
-  function applyQuickGeroVipTheme() {
+  function applyQuickGeroVipTheme(variant) {
     var cfg = getSavedThemeConfig();
-    cfg.theme = 'gerovip';
+    cfg.theme = variant || 'gerovip-light';
     cfg.accent = 'gold';
     cfg.radius = 'smooth';
     saveThemeConfig(cfg);
