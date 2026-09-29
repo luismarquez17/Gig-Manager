@@ -75,4 +75,48 @@ module GigsHelper
 
     filtered_lines.join(" · ")
   end
+
+  def whatsapp_url_for_message(phone = nil, text = "")
+    encoded = ERB::Util.url_encode(text.to_s)
+    clean_phone = phone.to_s.gsub(/[^0-9]/, '')
+    if clean_phone.present?
+      "https://wa.me/#{clean_phone}?text=#{encoded}"
+    else
+      "https://web.whatsapp.com/send?text=#{encoded}"
+    end
+  end
+
+  def profit_health_badge_tag(gig)
+    status = gig.profit_health_status
+    margin = gig.projected_profit_margin
+
+    case status
+    when :excellent
+      content_tag(:span, "💎 #{margin}% Margen VIP", style: "background: #dcfce7; color: #15803d; border: 1px solid #86efac; padding: 3px 9px; border-radius: 99px; font-weight: 800; font-size: 0.78em; display: inline-flex; align-items: center; gap: 4px;")
+    when :healthy
+      content_tag(:span, "✨ #{margin}% Margen Óptimo", style: "background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 3px 9px; border-radius: 99px; font-weight: 800; font-size: 0.78em; display: inline-flex; align-items: center; gap: 4px;")
+    when :tight
+      content_tag(:span, "⚠️ #{margin}% Margen Ajustado", style: "background: #fefce8; color: #854d0e; border: 1px solid #fef08a; padding: 3px 9px; border-radius: 99px; font-weight: 800; font-size: 0.78em; display: inline-flex; align-items: center; gap: 4px;")
+    else
+      content_tag(:span, "🚨 #{margin}% En Déficit", style: "background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; padding: 3px 9px; border-radius: 99px; font-weight: 800; font-size: 0.78em; display: inline-flex; align-items: center; gap: 4px;")
+    end
+  end
+
+  def time_until_gig_in_words(gig)
+    return "" unless gig.date.present?
+    today = Date.today
+    days = (gig.date - today).to_i
+
+    if days == 0
+      "🔥 ¡HOY ES EL DÍA DEL SHOW!"
+    elsif days == 1
+      "⏳ Mañana es el evento"
+    elsif days > 1
+      "⏳ Faltan #{days} días"
+    elsif days == -1
+      "✅ Evento realizado ayer"
+    else
+      "✅ Evento pasado hace #{days.abs} días"
+    end
+  end
 end

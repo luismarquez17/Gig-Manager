@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_29_180650) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_29_210000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -514,8 +514,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_180650) do
     t.bigint "company_id"
     t.boolean "show_on_landing", default: true, null: false
     t.integer "landing_position", default: 0
+    t.index ["company_id", "key"], name: "index_standard_upsells_on_company_id_and_key", unique: true
     t.index ["company_id"], name: "index_standard_upsells_on_company_id"
-    t.index ["key"], name: "index_standard_upsells_on_key", unique: true
   end
 
   create_table "sub_categories", force: :cascade do |t|

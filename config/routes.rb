@@ -120,6 +120,7 @@ Rails.application.routes.draw do
       patch :update_staff_pay
       get :print_contract
       get :flashcard
+      get :stage_mode
       post :add_upsell
     end
     resources :gig_timeline_items, only: [:create, :destroy]

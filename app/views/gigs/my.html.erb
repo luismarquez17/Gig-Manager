@@ -96,6 +96,11 @@
               <% end %>
             </div>
             <div style="display: flex; gap: 8px; flex-shrink: 0; align-items: center; flex-wrap: wrap;">
+              <%= link_to stage_mode_gig_path(gig), target: "_blank",
+                  style: 'background: linear-gradient(135deg, #090d16, #1e1b4b); border: 1.5px solid #6366f1; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #818cf8; font-weight: 800; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.2);',
+                  title: 'Abrir modo escenario en vivo para tarima' do %>
+                <span>⚡</span> En Vivo
+              <% end %>
               <%= link_to new_worker_report_employee_payments_path(gig_id: gig.id),
                   style: 'background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 12px; border-radius: 8px; text-decoration: none; color: #065f46; font-weight: 700; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;',
                   title: 'Reportar pago recibido por este show' do %>

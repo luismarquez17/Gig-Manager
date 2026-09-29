@@ -12,9 +12,17 @@
       </div>
       <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
     </div>
-    <div style="text-align: right; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end;">
+    <div style="text-align: right; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
+      <%= link_to stage_mode_gig_path(@gig), target: "_blank", style: "background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%); color: #818cf8; border: 1.5px solid #6366f1; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); transition: all 0.15s;" do %>
+        <span>⚡</span> Modo Escenario
+      <% end %>
+
+      <button type="button" onclick="openWhatsAppShareModal('whatsapp-share-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25); transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+        <span>💬</span> Mensajes WhatsApp
+      </button>
+
       <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25); transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
-        <span>📸</span> Ficha para WhatsApp
+        <span>📸</span> Ficha Visual WA
       </button>
 
       <% if @gig.client %>
@@ -564,18 +572,13 @@
         <%# 3. Ganancia Neta Estimada (Banda / Empresa) %>
         <%
           is_profitable = @gig.projected_net_profit >= 0
-          margin = @gig.projected_profit_margin
-          margin_badge_bg = margin >= 30 ? '#dcfce7' : (margin >= 10 ? '#fef9c3' : '#fee2e2')
-          margin_badge_color = margin >= 30 ? '#166534' : (margin >= 10 ? '#854d0e' : '#991b1b')
         %>
         <div style="background: <%= is_profitable ? '#f0fdf4' : '#fff1f2' %>; border: 2px solid <%= is_profitable ? '#86efac' : '#fecaca' %>; border-radius: 14px; padding: 16px 18px; position: relative;">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
+          <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
             <div style="font-size: 0.78em; color: <%= is_profitable ? '#15803d' : '#991b1b' %>; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
               📈 <%= company_term(:net_profit_label, (venue_mode? ? 'Ganancia Neta Evento' : 'Ganancia Neta Banda')) %>
             </div>
-            <span style="background: <%= margin_badge_bg %>; color: <%= margin_badge_color %>; font-size: 0.75em; font-weight: 900; padding: 2px 8px; border-radius: 99px;">
-              <%= margin %>% Margen
-            </span>
+            <%= profit_health_badge_tag(@gig) %>
           </div>
           <div style="font-size: 1.4em; font-weight: 900; color: <%= is_profitable ? '#16a34a' : '#dc2626' %>; margin-top: 4px;">
             <%= is_profitable ? '+' : '' %>$<%= number_with_precision(@gig.projected_net_profit, precision: 2) %> <span style="font-size: 0.65em; color: #64748b;"><%= @gig.currency %></span>
@@ -1795,6 +1798,7 @@
   });
 </script>
 
-<%# --- MODAL FLASHCARD PARA WHATSAPP --- %>
+<%# --- MODALES PARA WHATSAPP --- %>
 <%= render 'gigs/flashcard_modal', gig: @gig %>
+<%= render 'gigs/whatsapp_share_modal', gig: @gig %>
 

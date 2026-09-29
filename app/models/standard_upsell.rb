@@ -2,6 +2,7 @@ class StandardUpsell < ApplicationRecord
   include TenantScoped
 
   validates :title, presence: true
+  validates :key, uniqueness: { scope: :company_id }, allow_blank: true
 
   before_validation :ensure_key
 
@@ -56,7 +57,11 @@ class StandardUpsell < ApplicationRecord
         upsell.currency = attrs[:currency]
         upsell.description = attrs[:description]
         upsell.active = attrs[:active]
-        upsell.save!
+        begin
+          upsell.save!
+        rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid
+          # Ignorar si ya fue creado concurrentemente
+        end
       end
     end
   end

@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>⚡ Modo Escenario · <%= @gig.client_display_name %> | <%= @gig.company&.name || 'Gero Producciones' %></title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: #090d16;
+      color: #f1f5f9;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      min-height: 100vh;
+      padding-bottom: 90px;
+      overflow-x: hidden;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Top Sticky Nav */
+    .top-nav {
+      position: sticky;
+      top: 0;
+      background: rgba(9, 13, 22, 0.95);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      z-index: 100;
+      padding: 12px 16px;
+    }
+
+    .nav-container {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .brand-title {
+      font-size: 0.75em;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: #818cf8;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: rgba(239, 68, 68, 0.2);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      font-size: 0.72em;
+      font-weight: 900;
+      padding: 3px 8px;
+      border-radius: 99px;
+      letter-spacing: 0.5px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { transform: scale(1); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .main-wrapper {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    /* Event Hero Card */
+    .hero-card {
+      background: linear-gradient(145deg, #131b2e 0%, #1a153b 100%);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 20px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+
+    .hero-date-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .event-date {
+      color: #38bdf8;
+      font-weight: 800;
+      font-size: 0.9em;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .event-title {
+      font-size: 1.55em;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      margin-bottom: 8px;
+    }
+
+    .event-location {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      color: #94a3b8;
+      font-size: 0.92em;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+
+    /* Quick Action Buttons */
+    .quick-actions-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 8px;
+    }
+
+    .quick-btn {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      text-decoration: none;
+      padding: 10px 12px;
+      border-radius: 12px;
+      font-size: 0.82em;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.15s ease;
+      text-align: center;
+    }
+
+    .quick-btn:active {
+      transform: scale(0.97);
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .quick-btn.primary {
+      background: #2563eb;
+      border-color: #3b82f6;
+    }
+
+    .quick-btn.success {
+      background: #059669;
+      border-color: #10b981;
+    }
+
+    /* Section Tabs */
+    .stage-tabs {
+      display: flex;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 14px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 20px;
+    }
+
+    .stage-tab-btn {
+      flex: 1;
+      padding: 10px 8px;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-size: 0.85em;
+      font-weight: 800;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+    }
+
+    .stage-tab-btn.active {
+      background: #4f46e5;
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.4);
+    }
+
+    /* Timeline Items */
+    .timeline-card {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: border-color 0.2s;
+    }
+
+    .timeline-card.highlight {
+      border: 1.5px solid #818cf8;
+      background: linear-gradient(145deg, #181b36 0%, #111827 100%);
+    }
+
+    .timeline-time-box {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 6px 10px;
+      border-radius: 10px;
+      font-size: 0.9em;
+      font-weight: 800;
+      color: #38bdf8;
+      white-space: nowrap;
+    }
+
+    /* Song / Setlist */
+    .search-box {
+      width: 100%;
+      background: #111827;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      padding: 12px 16px;
+      color: #ffffff;
+      font-size: 0.95em;
+      margin-bottom: 16px;
+      outline: none;
+    }
+
+    .search-box:focus {
+      border-color: #818cf8;
+      box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.25);
+    }
+
+    .song-item {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .song-title {
+      font-size: 1.05em;
+      font-weight: 800;
+      color: #ffffff;
+      margin-bottom: 2px;
+    }
+
+    .song-artist {
+      font-size: 0.85em;
+      color: #94a3b8;
+    }
+
+    .song-genre-badge {
+      background: rgba(129, 140, 248, 0.15);
+      border: 1px solid rgba(129, 140, 248, 0.3);
+      color: #c7d2fe;
+      font-size: 0.72em;
+      font-weight: 800;
+      padding: 4px 8px;
+      border-radius: 99px;
+    }
+
+    /* Bottom Fixed Status Bar */
+    .bottom-status-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(9, 13, 22, 0.96);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 10px 16px;
+      z-index: 100;
+    }
+
+    .bottom-container {
+      max-width: 720px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .clock-display {
+      font-size: 1.15em;
+      font-weight: 900;
+      color: #34d399;
+      letter-spacing: 0.5px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top Sticky Header -->
+  <header class="top-nav">
+    <div class="nav-container">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <%= link_to gig_path(@gig), style: "color: #94a3b8; text-decoration: none; font-size: 1.2em; display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; background: rgba(255,255,255,0.06); border-radius: 8px;" do %>
+          ✕
+        <% end %>
+        <div>
+          <div class="brand-title">
+            <span>⚡</span> <%= @gig.company&.name.presence || "GERO PRODUCCIONES" %>
+          </div>
+          <div style="font-size: 0.85em; font-weight: 800; color: #ffffff;">MODO ESCENARIO</div>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span class="live-badge">
+          <span class="live-dot"></span> EN VIVO
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-wrapper">
+
+    <!-- Hero Card -->
+    <div class="hero-card">
+      <div class="hero-date-row">
+        <span class="event-date">📅 <%= spanish_long_date(@gig.date) %></span>
+        <span style="font-size: 0.78em; background: rgba(255,255,255,0.1); color: #e2e8f0; padding: 3px 8px; border-radius: 99px; font-weight: 700;">
+          <%= time_until_gig_in_words(@gig) %>
+        </span>
+      </div>
+
+      <h1 class="event-title"><%= @gig.client_display_name %></h1>
+      
+      <div class="event-location">
+        <span>📍</span>
+        <span><%= @gig.location.presence || "Ubicación por confirmar" %></span>
+      </div>
+
+      <% if @gig.start_time.present? %>
+        <div style="background: rgba(0,0,0,0.25); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div style="font-size: 0.85em; color: #94a3b8;">
+            🚪 Convocatoria: <strong style="color: #34d399;"><%= gig_arrival_time(@gig) %></strong>
+          </div>
+          <div style="font-size: 0.85em; color: #94a3b8;">
+            🎤 Show: <strong style="color: #38bdf8;"><%= @gig.formatted_time_range %></strong>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Quick Action Buttons -->
+      <div class="quick-actions-grid">
+        <% if @gig.location.present? %>
+          <a href="https://www.google.com/maps/search/?api=1&query=<%= ERB::Util.url_encode(@gig.location) %>" target="_blank" class="quick-btn primary">
+            <span>🗺️</span> Abrir Mapa
+          </a>
+        <% end %>
+
+        <% if @gig.client&.phone.present? %>
+          <a href="tel:<%= @gig.client.phone %>" class="quick-btn success">
+            <span>📞</span> Llamar Cliente
+          </a>
+        <% end %>
+
+        <a href="javascript:void(0)" onclick="openWhatsAppShareModal('whatsapp-share-modal-<%= @gig.id %>')" class="quick-btn" style="background: #16a34a; border-color: #22c55e;">
+          <span>💬</span> WhatsApp
+        </a>
+
+        <%= link_to load_in_checklist_gig_path(@gig), target: "_blank", class: "quick-btn" do %>
+          <span>📦</span> Carga / Checklist
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="stage-tabs">
+      <button type="button" class="stage-tab-btn active" id="btn-tab-timeline" onclick="showStageSection('timeline')">
+        <span>⏱️</span> Cronograma
+      </button>
+      <button type="button" class="stage-tab-btn" id="btn-tab-music" onclick="showStageSection('music')">
+        <span>🎵</span> Repertorio &amp; Notas
+      </button>
+      <button type="button" class="stage-tab-btn" id="btn-tab-crew" onclick="showStageSection('crew')">
+        <span>👥</span> Staff &amp; Músicos
+      </button>
+    </div>
+
+    <!-- ============================================== -->
+    <!-- SECTION 1: CRONOGRAMA ACTIVO EN TARIMA        -->
+    <!-- ============================================== -->
+    <section id="section-timeline" style="display: block;">
+      
+      <% if @timeline_items.any? %>
+        <% @timeline_items.each_with_index do |item, idx| %>
+          <div class="timeline-card <%= 'highlight' if idx == 0 %>">
+            <div class="timeline-time-box mono">
+              <%= item.time.presence || "Pauta" %>
+            </div>
+            <div style="flex: 1;">
+              <h3 style="font-size: 1.05em; font-weight: 800; color: #ffffff; margin-bottom: 3px;">
+                <%= item.title %>
+              </h3>
+              <% if item.description.present? %>
+                <p style="font-size: 0.85em; color: #cbd5e1; line-height: 1.4;">
+                  <%= item.description %>
+                </p>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      <% else %>
+        <div style="background: #111827; border: 1px dashed rgba(255,255,255,0.15); border-radius: 16px; padding: 24px; text-align: center; color: #94a3b8;">
+          <p style="font-size: 1.2em; margin-bottom: 6px;">⏱️</p>
+          <p style="font-weight: 700;">No hay hitos de cronograma desglosados para este show.</p>
+          <p style="font-size: 0.85em; margin-top: 4px;">Horario pactado: <%= @gig.formatted_time_range || 'Por definir' %></p>
+        </div>
+      <% end %>
+
+      <!-- Dress Code Banner -->
+      <% dress_hint = gig_dress_code_hint(@gig) %>
+      <% if dress_hint.present? %>
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 14px; padding: 14px 18px; margin-top: 16px; display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 1.4em;">👔</span>
+          <div>
+            <div style="font-size: 0.72em; text-transform: uppercase; font-weight: 800; color: #fbbf24; letter-spacing: 0.5px;">CÓDIGO DE VESTIMENTA</div>
+            <div style="font-size: 1em; font-weight: 800; color: #fef3c7;"><%= dress_hint %></div>
+          </div>
+        </div>
+      <% end %>
+
+    </section>
+
+    <!-- ============================================== -->
+    <!-- SECTION 2: REPERTORIO & PROTOCOLO MUSICAL      -->
+    <!-- ============================================== -->
+    <section id="section-music" style="display: none;">
+      
+      <!-- Protocolo y Momentos Especiales (Notas) -->
+      <% if @gig.has_music_notes? %>
+        <div style="background: linear-gradient(135deg, rgba(124, 58, 237, 0.2) 0%, rgba(79, 70, 229, 0.15) 100%); border: 1.5px solid #8b5cf6; border-radius: 16px; padding: 18px; margin-bottom: 20px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 10px;">
+            <span style="font-size: 1.3em;">⭐</span>
+            <h3 style="margin: 0; font-size: 1.05em; font-weight: 900; color: #e9d5ff;">MOMENTOS ESPECIALES &amp; PROTOCOLO</h3>
+          </div>
+          <div style="background: rgba(0, 0, 0, 0.3); border-radius: 12px; padding: 14px; color: #ffffff; font-size: 0.92em; line-height: 1.6; white-space: pre-wrap; border: 1px solid rgba(139, 92, 246, 0.3);">
+            <%= @gig.music_notes %>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Buscador de Canciones -->
+      <input type="text" id="song-search-input" class="search-box" placeholder="🔍 Buscar tema o artista en el repertorio..." onkeyup="filterSongs()">
+
+      <!-- Listado de Canciones Activas -->
+      <% if @songs.present? && @songs.any? %>
+        <div id="songs-list-container">
+          <% @songs.each do |song| %>
+            <div class="song-item song-row" data-song-text="<%= "#{song.title} #{song.artist} #{song.genre}".downcase %>">
+              <div>
+                <div class="song-title"><%= song.title %></div>
+                <div class="song-artist"><%= song.artist.presence || "Artista / Tradicional" %></div>
+              </div>
+              <span class="song-genre-badge"><%= song.genre %></span>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div style="background: #111827; border: 1px dashed rgba(255,255,255,0.15); border-radius: 14px; padding: 20px; text-align: center; color: #94a3b8; font-size: 0.9em;">
+          No hay canciones registradas en el catálogo maestro.
+        </div>
+      <% end %>
+
+    </section>
+
+    <!-- ============================================== -->
+    <!-- SECTION 3: STAFF & MÚSICOS CONVOCADOS         -->
+    <!-- ============================================== -->
+    <section id="section-crew" style="display: none;">
+      
+      <% if @staff_assignments.any? %>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <% @staff_assignments.each do |assignment| %>
+            <% user = assignment.user %>
+            <div style="background: #111827; border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <div style="background: linear-gradient(135deg, #4f46e5, #06b6d4); width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.1em; color: white;">
+                  <%= user.display_name.first.upcase rescue 'M' %>
+                </div>
+                <div>
+                  <div style="font-weight: 800; color: #ffffff; font-size: 0.98em;">
+                    <%= user.display_name %>
+                  </div>
+                  <div style="font-size: 0.82em; color: #94a3b8;">
+                    <%= user.specialty.presence || user.role_name rescue 'Músico' %>
+                  </div>
+                </div>
+              </div>
+
+              <% if user.respond_to?(:phone) && user.phone.present? %>
+                <a href="tel:<%= user.phone %>" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #6ee7b7; padding: 6px 12px; border-radius: 10px; font-size: 0.82em; font-weight: 800; text-decoration: none;">
+                  📞 Llamar
+                </a>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div style="background: #111827; border: 1px dashed rgba(255,255,255,0.15); border-radius: 14px; padding: 20px; text-align: center; color: #94a3b8; font-size: 0.9em;">
+          No hay músicos ni personal asignado aún a este show.
+        </div>
+      <% end %>
+
+    </section>
+
+  </main>
+
+  <!-- Bottom Fixed Status Bar -->
+  <div class="bottom-status-bar">
+    <div class="bottom-container">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span style="font-size: 0.72em; text-transform: uppercase; color: #94a3b8; font-weight: 800;">HORA EN VIVO:</span>
+        <span id="live-clock" class="clock-display mono">--:--:--</span>
+      </div>
+
+      <%= link_to gig_path(@gig), style: "background: rgba(255,255,255,0.08); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12); padding: 6px 12px; border-radius: 8px; font-size: 0.78em; font-weight: 700; text-decoration: none;" do %>
+        Volver al Panel
+      <% end %>
+    </div>
+  </div>
+
+  <!-- WhatsApp Modal Render -->
+  <%= render 'gigs/whatsapp_share_modal', gig: @gig %>
+
+  <script>
+    // Live Clock
+    function updateClock() {
+      var now = new Date();
+      var hours = String(now.getHours()).padStart(2, '0');
+      var minutes = String(now.getMinutes()).padStart(2, '0');
+      var seconds = String(now.getSeconds()).padStart(2, '0');
+      var clockEl = document.getElementById('live-clock');
+      if (clockEl) {
+        clockEl.textContent = hours + ':' + minutes + ':' + seconds;
+      }
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // Tab Switcher
+    function showStageSection(sectionName) {
+      document.getElementById('section-timeline').style.display = 'none';
+      document.getElementById('section-music').style.display = 'none';
+      document.getElementById('section-crew').style.display = 'none';
+
+      document.getElementById('btn-tab-timeline').classList.remove('active');
+      document.getElementById('btn-tab-music').classList.remove('active');
+      document.getElementById('btn-tab-crew').classList.remove('active');
+
+      document.getElementById('section-' + sectionName).style.display = 'block';
+      document.getElementById('btn-tab-' + sectionName).classList.add('active');
+    }
+
+    // Fast Song Filter
+    function filterSongs() {
+      var query = document.getElementById('song-search-input').value.toLowerCase();
+      var rows = document.querySelectorAll('.song-row');
+      rows.forEach(function(row) {
+        var text = row.getAttribute('data-song-text');
+        if (!query || text.indexOf(query) !== -1) {
+          row.style.display = 'flex';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>

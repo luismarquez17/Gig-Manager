@@ -1,9 +1,9 @@
 class GigsController < ApplicationController
-  before_action :require_leader!, except: [:show, :load_in_checklist, :my, :flashcard]
+  before_action :require_leader!, except: [:show, :load_in_checklist, :my, :flashcard, :stage_mode]
   before_action -> { require_module!(:gigs) }
-  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract, :flashcard]
-  before_action :check_gig_assignment, only: [:show, :load_in_checklist, :flashcard]
-  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :add_upsell, :edit, :update, :destroy]
+  before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract, :flashcard, :stage_mode]
+  before_action :check_gig_assignment, only: [:show, :load_in_checklist, :flashcard, :stage_mode]
+  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :stage_mode, :add_upsell, :edit, :update, :destroy]
 
   def check_gig_assignment
     @gig = current_company.gigs.find_by!(id: params[:id])
@@ -223,6 +223,15 @@ class GigsController < ApplicationController
   end
 
   def flashcard
+    render layout: false
+  end
+
+  def stage_mode
+    @gig = current_company.gigs.includes(:client, :gig_timeline_items, staff_assignments: :user, gig_items: :item).find(params[:id])
+    @timeline_items = @gig.gig_timeline_items.order(position: :asc, time: :asc)
+    @staff_assignments = @gig.staff_assignments.includes(:user)
+    @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
+    @songs = current_company.songs.where(active: true).order(genre: :asc, title: :asc) rescue []
     render layout: false
   end
 

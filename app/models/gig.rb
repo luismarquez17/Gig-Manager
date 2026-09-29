@@ -137,6 +137,129 @@ class Gig < ApplicationRecord
     lines.map { |l| l.encode('UTF-8', invalid: :replace, undef: :replace) }.join("\n")
   end
 
+  def whatsapp_client_welcome_text(portal_url = nil)
+    comp_name = company&.name.presence || "Gero Producciones"
+    c_name = client_display_name
+    dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
+    loc = location.presence || 'Por definir'
+    time_str = formatted_time_range.presence || 'Horario por coordinar'
+
+    lines = [
+      "✨ *¡Hola #{c_name}! Te saluda el equipo de #{comp_name}* ✨",
+      "",
+      "¡Estamos muy felices de acompañarte en tu próximo evento! 🎉",
+      "Hemos preparado tu *Portal Privado de Cliente* donde podrás consultar todos los detalles en tiempo real:",
+      "",
+      "📅 *Fecha:* #{dt}",
+      "🕐 *Horario Acordado:* #{time_str}",
+      "📍 *Lugar:* #{loc}",
+      ""
+    ]
+
+    if portal_url.present?
+      lines << "🔗 *Accede a tu Portal Exclusivo aquí:*"
+      lines << portal_url.to_s
+      lines << ""
+      lines << "Desde allí podrás revisar el cronograma del día, validar tus abonos y recibos, y solicitar adicionales para tu evento."
+    end
+
+    lines << ""
+    lines << "Cualquier consulta estamos a tu total disposición. ¡Será un evento inolvidable! 🎵🙌"
+    lines.join("\n")
+  end
+
+  def whatsapp_client_schedule_text(portal_url = nil)
+    comp_name = company&.name.presence || "Gero Producciones"
+    c_name = client_display_name
+    dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
+    loc = location.presence || 'Por definir'
+
+    lines = [
+      "⏰ *CRONOGRAMA Y PAUTA TÉCNICA - #{comp_name.to_s.upcase}*",
+      "─────────────────────────",
+      "👤 *Cliente:* #{c_name}",
+      "📅 *Fecha:* #{dt}",
+      "📍 *Lugar:* #{loc}",
+      "─────────────────────────"
+    ]
+
+    timeline_items = gig_timeline_items.order(position: :asc, time: :asc)
+    if timeline_items.any?
+      lines << "⏱️ *Itinerario del Evento:*"
+      timeline_items.each do |item|
+        t_str = item.time.presence || "--:--"
+        lines << "  • *#{t_str}* - #{item.title}"
+        lines << "    _#{item.description}_" if item.description.present?
+      end
+      lines << "─────────────────────────"
+    elsif start_time.present? && end_time.present?
+      lines << "⏱️ *Horario de Presentación:* #{formatted_time_range}"
+      lines << "─────────────────────────"
+    end
+
+    if portal_url.present?
+      lines << "📱 *Portal en Vivo:* #{portal_url}"
+    end
+
+    lines.join("\n")
+  end
+
+  def whatsapp_staff_call_sheet_text(staff_user = nil, stage_url = nil)
+    comp_name = company&.name.presence || "Gero Producciones"
+    dt = date ? date.strftime('%d/%m/%Y') : 'Por definir'
+    loc = location.presence || 'Por definir'
+    c_name = client_display_name
+
+    assignment = staff_assignments.find_by(user_id: staff_user&.id) if staff_user.present?
+
+    lines = [
+      "🎸 *PAUTA DE CONVOCATORIA (CALL SHEET) - #{comp_name.to_s.upcase}*",
+      "─────────────────────────",
+      "📅 *Fecha:* #{dt}",
+      "👤 *Evento:* #{c_name}",
+      "📍 *Ubicación:* #{loc}",
+      "─────────────────────────"
+    ]
+
+    if start_time.present?
+      arr_time = (start_time - 90.minutes).strftime("%I:%M %p")
+      lines << "🚪 *Convocatoria / Montaje:* #{arr_time}"
+      lines << "🎤 *Inicio del Show:* #{start_time.strftime('%I:%M %p')}"
+      lines << "🏁 *Fin del Show:* #{end_time ? end_time.strftime('%I:%M %p') : 'Por definir'}"
+    else
+      lines << "🕐 *Horario:* Por coordinar en el grupo"
+    end
+
+    # Dress code si existe en notas
+    if details.to_s.match?(/negro|black/i)
+      lines << "👔 *Código de Vestimenta:* Total Black (Todo Negro)"
+    elsif details.to_s.match?(/formal|traje|etiqueta/i)
+      lines << "👔 *Código de Vestimenta:* Traje Formal"
+    elsif details.to_s.match?(/casual|semiformal/i)
+      lines << "👔 *Código de Vestimenta:* Casual Elegante"
+    elsif details.to_s.match?(/blanco|white/i)
+      lines << "👔 *Código de Vestimenta:* Blanco / Claro"
+    end
+
+    if assignment.present? && assignment.agreed_amount.to_f > 0
+      lines << "💰 *Pago Acordado:* $#{sprintf('%.2f', assignment.agreed_amount.to_f)} #{currency || 'USD'}"
+    end
+
+    if has_music_notes?
+      lines << "─────────────────────────"
+      lines << "🎵 *Protocolo / Canciones Especiales:*"
+      lines << music_notes.to_s.lines.first(3).map { |l| "  • #{l.strip}" }.join("\n")
+    end
+
+    if stage_url.present?
+      lines << "─────────────────────────"
+      lines << "⚡ *Modo Escenario en Vivo (Setlist & Cronograma):*"
+      lines << stage_url.to_s
+    end
+
+    lines.join("\n")
+  end
+
   # --- MÉTRICAS DE RENTABILIDAD Y NÓMINA DEL SHOW ---
   def total_payroll_agreed
     if staff_assignments.loaded?
@@ -172,6 +295,19 @@ class Gig < ApplicationRecord
   # Ganancia Neta Real en Mano (Cobrado a la fecha - Nómina pagada a la fecha)
   def actual_cash_profit
     (total_received - total_payroll_paid).round(2)
+  end
+
+  def profit_health_status
+    m = projected_profit_margin
+    if m >= 40.0
+      :excellent
+    elsif m >= 20.0
+      :healthy
+    elsif m >= 0.0
+      :tight
+    else
+      :loss
+    end
   end
 
   def event_duration
