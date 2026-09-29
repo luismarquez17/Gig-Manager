@@ -1185,8 +1185,8 @@
   <% end %>
 <% end %>
 
-  <%# --- CHECKLIST DE INVENTARIO (oculto para músicos) --- %>
-  <% unless current_user.musician? %>
+  <%# --- CHECKLIST DE INVENTARIO (solo si el módulo de inventario está activo y no es músico) --- %>
+  <% if module_enabled?(:inventory) && !current_user.musician? %>
   <div class="checklist-panel" style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 50px;">
     
     <%# CABECERA CHECKLIST %>
@@ -1790,12 +1790,18 @@
   }
 
   // Cerrar modals al hacer click fuera
-  document.getElementById('report-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeReportModal();
-  });
-  document.getElementById('lost-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeLostModal();
-  });
+  var rModal = document.getElementById('report-modal');
+  if (rModal) {
+    rModal.addEventListener('click', function(e) {
+      if (e.target === this) closeReportModal();
+    });
+  }
+  var lModal = document.getElementById('lost-modal');
+  if (lModal) {
+    lModal.addEventListener('click', function(e) {
+      if (e.target === this) closeLostModal();
+    });
+  }
 </script>
 
 <%# --- MODALES PARA WHATSAPP --- %>

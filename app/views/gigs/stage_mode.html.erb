@@ -396,8 +396,10 @@
           <span>💬</span> WhatsApp
         </a>
 
-        <%= link_to load_in_checklist_gig_path(@gig), target: "_blank", class: "quick-btn" do %>
-          <span>📦</span> Carga / Checklist
+        <% if module_enabled?(:inventory) %>
+          <%= link_to load_in_checklist_gig_path(@gig), target: "_blank", class: "quick-btn" do %>
+            <span>📦</span> Carga / Checklist
+          <% end %>
         <% end %>
       </div>
     </div>
