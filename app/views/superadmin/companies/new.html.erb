@@ -1,17 +1,103 @@
-<div style="max-width: 700px; margin: 0 auto;">
+<style>
+  .superadmin-calc-container {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  .pkg-pill-btn {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+    border: 2px solid #cbd5e1;
+    position: relative;
+    user-select: none;
+  }
+  .pkg-pill-btn:hover {
+    transform: translateY(-2px);
+    border-color: #94a3b8;
+    box-shadow: 0 8px 20px -4px rgba(0,0,0,0.08);
+  }
+  .pkg-pill-btn.is-active {
+    border-color: #6366f1 !important;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%) !important;
+    color: white !important;
+    box-shadow: 0 10px 25px -4px rgba(99, 102, 241, 0.35) !important;
+    transform: translateY(-2px);
+  }
+  .pkg-pill-btn.is-active .pkg-name {
+    color: white !important;
+  }
+  .pkg-pill-btn.is-active .pkg-subtext {
+    color: #cbd5e1 !important;
+  }
+  .pkg-pill-btn.is-active .pkg-price-text {
+    color: #38bdf8 !important;
+  }
+  .calc-module-row {
+    transition: all 0.15s ease;
+  }
+  .calc-module-row:hover {
+    border-color: #94a3b8 !important;
+  }
+  .calc-module-row.is-included {
+    background: #f0fdf4 !important;
+    border-color: #86efac !important;
+  }
+  .calc-module-row.is-extra-active {
+    background: #fefce8 !important;
+    border-color: #fde047 !important;
+    box-shadow: 0 3px 10px rgba(234, 179, 8, 0.08) !important;
+  }
+  .calc-glow-card {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+    border: 1.5px solid #6366f1;
+    color: white;
+    box-shadow: 0 15px 35px -8px rgba(15, 23, 42, 0.25);
+  }
+
+  @media (max-width: 960px) {
+    .calc-main-grid {
+      grid-template-columns: 1fr !important;
+    }
+    .pkg-grid-5 {
+      grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+    .pkg-grid-5 .pkg-pill-btn:last-child {
+      grid-column: span 2 !important;
+    }
+  }
+  @media (max-width: 600px) {
+    .pkg-grid-5 {
+      grid-template-columns: 1fr !important;
+    }
+    .pkg-grid-5 .pkg-pill-btn:last-child {
+      grid-column: span 1 !important;
+    }
+  }
+</style>
+
+<div class="superadmin-calc-container" style="max-width: 1000px; margin: 0 auto; padding: 10px 0 40px 0;">
   
   <div style="margin-bottom: 20px;">
-    <%= link_to "← Volver al Panel Superadmin", superadmin_dashboard_path, style: "color: #6366f1; text-decoration: none; font-weight: 600; font-size: 0.9rem;" %>
+    <%= link_to "← Volver al Panel Superadmin", superadmin_dashboard_path, style: "color: #6366f1; text-decoration: none; font-weight: 700; font-size: 0.9rem;" %>
   </div>
 
-  <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05);">
-    <h1 style="margin: 0 0 8px 0; font-size: 1.6rem; font-weight: 800; color: #0f172a;">🏢 Registrar Nueva Empresa en el Universo</h1>
-    <p style="margin: 0 0 24px 0; color: #64748b; font-size: 0.9rem;">Crea una nueva organización aislada y configura su cuota de mensualidad.</p>
+  <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 32px; box-shadow: 0 10px 30px -5px rgba(0,0,0,0.05);">
+    
+    <%# Header %>
+    <div style="text-align: center; max-width: 750px; margin: 0 auto 28px auto;">
+      <div style="display: inline-flex; align-items: center; gap: 6px; padding: 4px 14px; border-radius: 50px; background: rgba(99, 102, 241, 0.1); border: 1px solid rgba(99, 102, 241, 0.25); color: #4f46e5; font-size: 0.8rem; font-weight: 800; text-transform: uppercase; margin-bottom: 10px;">
+        <span>👑</span> Creación de Empresa Superadmin
+      </div>
+      <h1 style="margin: 0 0 8px 0; font-size: 1.85rem; font-weight: 800; color: #0f172a; letter-spacing: -0.5px;">
+        Registrar Nueva Empresa con Plan & Módulos
+      </h1>
+      <p style="margin: 0; color: #64748b; font-size: 0.95rem; line-height: 1.5;">
+        Configura la organización con un plan preestablecido, añade las herramientas que necesite y déjala <strong>100% lista para entregar a tu cliente</strong>.
+      </p>
+    </div>
 
-    <%= form_with model: [:superadmin, @company], local: true do |f| %>
+    <%= form_with model: [:superadmin, @company], local: true, id: "superadmin-new-company-form" do |f| %>
       
       <% if @company.errors.any? %>
-        <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; padding: 16px; border-radius: 12px; margin-bottom: 20px; font-size: 0.9rem;">
+        <div style="background: #fff1f2; border: 1px solid #fecdd3; color: #e11d48; padding: 16px; border-radius: 12px; margin-bottom: 24px; font-size: 0.9rem;">
           <strong style="display: block; margin-bottom: 6px;">Corrige los siguientes errores:</strong>
           <ul style="margin: 0; padding-left: 20px;">
             <% @company.errors.full_messages.each do |msg| %>
@@ -21,66 +107,517 @@
         </div>
       <% end %>
 
-      <div style="margin-bottom: 20px;">
-        <%= f.label :name, "Nombre de la Empresa / Agrupación *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
-        <%= f.text_field :name, placeholder: "Ej: Mariachi Los Arrieros, Eventos VIP, etc.", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
-      </div>
+      <%# Hidden fields para plan_tier y monthly_fee %>
+      <%= f.hidden_field :plan_tier, id: "company_plan_tier_input", value: (@company.plan_tier.presence || "banda") %>
+      <%= f.hidden_field :currency, value: "USD" %>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-        <div>
-          <%= f.label :monthly_fee, "Cuota Mensual Pactada ($) *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
-          <%= f.number_field :monthly_fee, step: "0.01", placeholder: "50.00", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+      <%# ── SECCIÓN 1: DATOS DE LA EMPRESA ── %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; margin-bottom: 26px;">
+        <h3 style="margin: 0 0 14px 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>🏢</span> 1. Información General de la Organización
+        </h3>
+
+        <div style="margin-bottom: 16px;">
+          <%= f.label :name, "Nombre de la Empresa / Agrupación *", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+          <%= f.text_field :name, placeholder: "Ej: Mariachi Los Arrieros, Producciones VIP, Salón Imperial...", required: true, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box; outline: none; background: white;" %>
         </div>
 
-        <div>
-          <%= f.label :currency, "Moneda de Cobro", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
-          <div style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-weight: 800; text-align: center;">
-            USD ($)
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <%= f.label :contact_email, "Email Oficial de Contacto", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+            <%= f.email_field :contact_email, placeholder: "contacto@empresa.com", style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
           </div>
-          <%= f.hidden_field :currency, value: "USD" %>
+
+          <div>
+            <%= f.label :contact_phone, "Teléfono / WhatsApp (Opcional)", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+            <%= f.text_field :contact_phone, placeholder: "+58 412 1234567", style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
+          </div>
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px;">
-        <div>
-          <%= f.label :status, "Estado de Suscripción", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
-          <%= f.select :status, Company.statuses.keys.map { |s| [s.capitalize, s] }, {}, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+      <%# ── SECCIÓN 2: SELECCIÓN DE PLAN PREESTABLECIDO ── %>
+      <div style="margin-bottom: 26px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 6px;">
+          <h3 style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>🚀</span> 2. Selecciona el Plan Preestablecido
+          </h3>
+          <span style="font-size: 0.78rem; color: #64748b; font-weight: 600;">
+            💡 Al elegir un plan, sus módulos base quedan incluidos automáticamente ($0)
+          </span>
         </div>
 
-        <div>
-          <%= f.label :contact_email, "Email de Contacto / Jefe", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
-          <%= f.email_field :contact_email, placeholder: "jefe@empresa.com", style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+        <div class="pkg-grid-5" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px;" id="calc-package-tabs">
+          <% AppModule.packages.each do |pkg| %>
+            <% is_selected = (@company.effective_plan_tier == pkg[:key]) %>
+            <div class="pkg-pill-btn <%= 'is-active' if is_selected %>" data-pkg-key="<%= pkg[:key] %>" onclick="window.selectSuperadminPackage('<%= pkg[:key] %>')" style="background: <%= is_selected ? '#0f172a' : '#f8fafc' %>; color: <%= is_selected ? 'white' : '#1e293b' %>; border-radius: 14px; padding: 12px 10px; display: flex; flex-direction: column; justify-content: space-between;">
+              
+              <div>
+                <%# Badge en fila superior %>
+                <div style="min-height: 18px; margin-bottom: 6px; display: flex; align-items: center; justify-content: flex-start;">
+                  <% if pkg[:badge].present? %>
+                    <span class="pkg-badge-pill" style="font-size: 0.58rem; font-weight: 900; padding: 1px 6px; border-radius: 5px; background: <%= is_selected ? 'rgba(99, 102, 241, 0.3)' : '#e0e7ff' %>; color: <%= is_selected ? '#c7d2fe' : '#4338ca' %>; border: 1px solid <%= is_selected ? 'rgba(165, 180, 252, 0.4)' : '#c7d2fe' %>; text-transform: uppercase; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; display: inline-block;">
+                      <%= pkg[:badge] %>
+                    </span>
+                  <% else %>
+                    <span style="visibility: hidden; font-size: 0.58rem;">&nbsp;</span>
+                  <% end %>
+                </div>
+
+                <%# Icono %>
+                <div style="font-size: 1.6rem; line-height: 1; margin-bottom: 4px;">
+                  <%= pkg[:icon] %>
+                </div>
+
+                <%# Nombre %>
+                <div class="pkg-name" style="font-weight: 800; font-size: 0.85rem; margin-bottom: 4px; color: #0f172a; line-height: 1.2; min-height: 32px; display: flex; align-items: center;">
+                  <%= pkg[:name] %>
+                </div>
+
+                <%# Precio %>
+                <div class="pkg-price-text" style="font-size: 1.3rem; font-weight: 900; color: #059669; line-height: 1.1; margin-bottom: 2px;">
+                  $<%= '%.0f' % pkg[:price] %> <span style="font-size: 0.68rem; font-weight: 700; color: #64748b;">USD/mes</span>
+                </div>
+
+                <div class="pkg-subtext" style="font-size: 0.72rem; color: #64748b; font-weight: 600;">
+                  <%= pkg[:modules].count %> módulos base
+                </div>
+              </div>
+
+              <%# Status Indicator %>
+              <div class="pkg-selection-status" style="margin-top: 8px; padding-top: 6px; border-top: 1px solid <%= is_selected ? 'rgba(255,255,255,0.15)' : '#e2e8f0' %>; font-size: 0.68rem; font-weight: 800; text-align: center; color: <%= is_selected ? '#38bdf8' : '#64748b' %>;">
+                <%= is_selected ? '✓ Seleccionado' : 'Elegir Plan' %>
+              </div>
+
+            </div>
+          <% end %>
         </div>
       </div>
 
-      <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 28px 0;" />
+      <%# ── SECCIÓN 3: MÓDULOS ACTIVOS & ADICIONALES (CHECKLIST + PROFORMA EN VIVO) ── %>
+      <div style="margin-bottom: 26px;">
+        <div class="calc-main-grid" style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 18px; align-items: start;">
+          
+          <%# Columna Izquierda: Checklist de 7 Módulos %>
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 18px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
+              <h4 style="margin: 0; font-size: 0.92rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+                🧩 3. Módulos & Herramientas Activas
+              </h4>
+              <span id="superadmin-module-count-badge" style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 16px; background: #e0e7ff; color: #4338ca;">
+                -- módulos
+              </span>
+            </div>
 
-      <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">👤 Crear Cuenta Inicial del Jefe (Opcional)</h3>
-      <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: #64748b;">Si lo deseas, puedes crear directamente el usuario para el jefe de esta empresa. De lo contrario, puedes compartirle el link de registro más tarde.</p>
+            <p style="font-size: 0.78rem; color: #64748b; margin: 0 0 12px 0; line-height: 1.35;">
+              Marca los módulos para esta empresa. Los módulos adicionales fuera del plan base suman <strong>+$3.00 USD/mes</strong>.
+            </p>
 
-      <div style="margin-bottom: 16px;">
-        <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Nombre del Jefe</label>
-        <input type="text" name="leader_name" placeholder="Ej: Carlos Pérez" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" />
+            <div style="display: flex; flex-direction: column; gap: 8px;" id="superadmin-modules-list">
+              <% AppModule.all.each do |mod| %>
+                <% is_checked = @company.module_enabled?(mod[:key]) %>
+                <div class="calc-module-row" id="superadmin-row-<%= mod[:key] %>" style="background: white; border: 1.5px solid #e2e8f0; border-radius: 12px; overflow: hidden; padding: 9px 12px; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                  
+                  <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; flex: 1; min-width: 0; user-select: none;">
+                    <%= hidden_field_tag "company[enabled_modules][#{mod[:key]}]", "0" %>
+                    <%= check_box_tag "company[enabled_modules][#{mod[:key]}]", "1", is_checked, class: "superadmin-module-cb", data: { mod_key: mod[:key] }, onchange: "window.recalculateSuperadminPricing()", style: "width: 18px; height: 18px; accent-color: #6366f1; cursor: pointer; flex-shrink: 0;" %>
+                    
+                    <span style="font-size: 1.35rem; line-height: 1; flex-shrink: 0;"><%= mod[:icon] %></span>
+                    
+                    <div style="min-width: 0; flex: 1;">
+                      <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                        <%= mod[:name] %>
+                      </div>
+                      <div style="font-size: 0.72rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2;">
+                        <span style="font-weight: 700; color: #475569;"><%= mod[:category] %>:</span> <%= mod[:description].truncate(45) %>
+                      </div>
+                    </div>
+                  </label>
+
+                  <div class="superadmin-module-badge" data-mod-key="<%= mod[:key] %>" style="flex-shrink: 0;">
+                    <!-- Badge insertado por JS -->
+                  </div>
+
+                </div>
+              <% end %>
+            </div>
+          </div>
+
+          <%# Columna Derecha: Resumen de Cuota y Configuración Financiera %>
+          <div class="calc-glow-card" style="border-radius: 18px; padding: 20px; display: flex; flex-direction: column; justify-content: space-between;">
+            
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.12); padding-bottom: 9px;">
+                <span style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #a5b4fc;">
+                  🧾 Resumen de Cuota
+                </span>
+                <span id="superadmin-plan-badge" style="font-size: 0.7rem; font-weight: 800; padding: 2px 8px; border-radius: 16px; background: rgba(99, 102, 241, 0.3); color: #c7d2fe; border: 1px solid rgba(165, 180, 252, 0.4);">
+                  Plan Base
+                </span>
+              </div>
+
+              <%# Título del Plan %>
+              <div style="margin-bottom: 10px;">
+                <div id="superadmin-plan-title" style="font-weight: 800; font-size: 1.05rem; color: #ffffff; line-height: 1.25;">
+                  Paquete Bandas & Orquestas
+                </div>
+                <div id="superadmin-plan-subtitle" style="font-size: 0.74rem; color: #94a3b8; margin-top: 1px;">
+                  Configuración inicial del plan
+                </div>
+              </div>
+
+              <%# Línea 1: Plan Base %>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.86rem; background: rgba(255,255,255,0.05); padding: 7px 10px; border-radius: 9px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span id="superadmin-pkg-icon" style="font-size: 1.1rem;">🎸</span>
+                  <span id="superadmin-pkg-name" style="font-weight: 700; color: white;">Paquete Bandas</span>
+                </div>
+                <span id="superadmin-base-price" style="font-weight: 800; color: #38bdf8; font-size: 0.98rem;">$15.00 USD</span>
+              </div>
+
+              <%# Lista de Módulos Incluidos %>
+              <div style="margin-bottom: 10px; padding: 7px 9px; border-radius: 9px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
+                <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #94a3b8; margin-bottom: 4px;">
+                  ✓ Incluidos en el Paquete ($0):
+                </div>
+                <div id="superadmin-included-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <!-- Insertado por JS -->
+                </div>
+              </div>
+
+              <%# Línea 2: Módulos Adicionales (+3 c/u) %>
+              <div id="superadmin-extra-line" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 0.86rem; background: rgba(253, 224, 71, 0.08); border: 1px solid rgba(253, 224, 71, 0.2); padding: 6px 10px; border-radius: 9px;">
+                <div style="display: flex; align-items: center; gap: 6px;">
+                  <span style="font-size: 0.95rem;">➕</span>
+                  <span style="font-weight: 700; color: #fde047;">Adicionales (<span id="superadmin-extra-count">0</span>):</span>
+                </div>
+                <span id="superadmin-extra-cost" style="font-weight: 800; color: #fde047; font-size: 0.98rem;">+$0.00 USD</span>
+              </div>
+
+              <%# Lista de Módulos Extra %>
+              <div id="superadmin-extra-container" style="display: none; margin-bottom: 10px; padding: 7px 9px; border-radius: 9px; background: rgba(253, 224, 71, 0.06); border: 1px solid rgba(253, 224, 71, 0.25);">
+                <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #fef08a; margin-bottom: 4px;">
+                  Módulos Extra (+$3.00 USD/mes):
+                </div>
+                <div id="superadmin-extra-list" style="display: flex; flex-wrap: wrap; gap: 4px;">
+                  <!-- Insertado por JS -->
+                </div>
+              </div>
+
+              <%# Recomendación Full Suite %>
+              <div id="superadmin-full-suite-tip" style="display: none; margin-bottom: 10px; padding: 8px 10px; border-radius: 10px; background: linear-gradient(135deg, rgba(234, 179, 8, 0.2) 0%, rgba(245, 158, 11, 0.2) 100%); border: 1px solid rgba(251, 191, 36, 0.4); color: #fef08a; font-size: 0.72rem;">
+                👑 <strong>Tope Full Suite Aplicado:</strong> Tarifa máxima de $22.00 USD/mes con todos los módulos.
+              </div>
+
+              <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.12); margin: 12px 0;" />
+
+              <%# CAMPO DE CUOTA MENSUAL PACTADA %>
+              <div style="margin-bottom: 10px;">
+                <label style="display: block; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: #cbd5e1; margin-bottom: 4px;">
+                  Cuota Mensual Pactada ($ USD) *
+                </label>
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <span style="font-size: 1.4rem; font-weight: 900; color: #38bdf8;">$</span>
+                  <%= f.number_field :monthly_fee, step: "0.01", required: true, id: "company_monthly_fee_input", style: "width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.25); background: rgba(0,0,0,0.3); color: white; font-weight: 800; font-size: 1.25rem; box-sizing: border-box; outline: none;" %>
+                  <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 700;">USD</span>
+                </div>
+                <div style="font-size: 0.7rem; color: #94a3b8; margin-top: 4px;">
+                  💡 Calculado automáticamente. Puedes ajustarlo manualmente si pactaste una tarifa especial.
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-        <div>
-          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Correo del Jefe</label>
-          <input type="email" name="leader_email" placeholder="carlos@empresa.com" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" />
+      <%# ── SECCIÓN 4: ESTADO INICIAL DE LA SUSCRIPCIÓN ── %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; margin-bottom: 26px;">
+        <h3 style="margin: 0 0 14px 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>⏱️</span> 4. Estado de Suscripción & Entrega
+        </h3>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 12px;">
+          <div>
+            <%= f.label :subscription_status, "Modalidad de Entrega", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+            <%= f.select :subscription_status, [
+              ["✨ Suscripción Activa / Pagada (Listo para Entregar)", "active"],
+              ["⏱️ Período de Prueba de 30 Días (Trial)", "trialing"],
+              ["⚠️ Pago Pendiente (Past Due)", "past_due"]
+            ], {}, id: "company_sub_status_select", style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
+          </div>
+
+          <div>
+            <%= f.label :status, "Acceso a la Plataforma", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+            <%= f.select :status, [["Activo (Permitir Ingreso Inmediato)", "active"], ["Suspendido", "suspended"]], {}, style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
+          </div>
         </div>
 
         <div>
-          <label style="display: block; font-weight: 600; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Contraseña Temporal</label>
-          <input type="password" name="leader_password" placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 10px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box;" />
+          <%= f.label :trial_ends_at, "Fecha de Vencimiento del Primer Ciclo / Fin de Prueba", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;" %>
+          <%= f.date_field :trial_ends_at, value: (@company.trial_ends_at || 1.month.from_now).to_date, style: "width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" %>
+          <span style="font-size: 0.72rem; color: #64748b;">La empresa tendrá acceso garantizado hasta esta fecha antes de requerir su próxima mensualidad.</span>
         </div>
       </div>
 
-      <div style="display: flex; justify-content: flex-end; gap: 12px;">
-        <%= link_to "Cancelar", superadmin_dashboard_path, style: "padding: 12px 20px; border-radius: 10px; background: #f1f5f9; color: #475569; text-decoration: none; font-weight: 600;" %>
-        <%= f.submit "✨ Crear Empresa", style: "padding: 12px 24px; border-radius: 10px; background: #6366f1; color: white; border: none; font-weight: 700; cursor: pointer;" %>
+      <%# ── SECCIÓN 5: CREAR JEFE INICIAL (OPCIONAL) ── %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; margin-bottom: 28px;">
+        <h3 style="margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>👤</span> 5. Crear Cuenta del Jefe / Director (Opcional)
+        </h3>
+        <p style="margin: 0 0 16px 0; font-size: 0.85rem; color: #64748b;">
+          Crea directamente las credenciales de acceso para el dueño o director de la agrupación para que pueda iniciar sesión de inmediato.
+        </p>
+
+        <div style="margin-bottom: 16px;">
+          <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Nombre Completo del Jefe</label>
+          <input type="text" name="leader_name" placeholder="Ej: Carlos Pérez" style="width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" />
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <div>
+            <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Correo Electrónico (Login)</label>
+            <input type="email" name="leader_email" placeholder="carlos@empresa.com" style="width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" />
+          </div>
+
+          <div>
+            <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.88rem;">Contraseña Inicial</label>
+            <input type="password" name="leader_password" placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 11px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 0.95rem; box-sizing: border-box; background: white;" />
+          </div>
+        </div>
+      </div>
+
+      <%# Botones de Envío %>
+      <div style="display: flex; justify-content: flex-end; align-items: center; gap: 14px;">
+        <%= link_to "Cancelar", superadmin_dashboard_path, style: "padding: 13px 22px; border-radius: 12px; background: #f1f5f9; color: #475569; text-decoration: none; font-weight: 700; font-size: 0.95rem;" %>
+        <button type="submit" id="superadmin-submit-btn" style="padding: 14px 28px; border-radius: 12px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; border: none; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 16px rgba(99, 102, 241, 0.35); display: inline-flex; align-items: center; gap: 8px;">
+          <span>✨ Crear Empresa y Configurar Plan</span>
+        </button>
       </div>
 
     <% end %>
   </div>
 
 </div>
+
+<%# JavaScript de Cálculo y Selección de Planes %>
+<script>
+  (function() {
+    const PACKAGES_DATA = <%= raw AppModule::PACKAGES.to_json %>;
+    const MODULES_DATA = <%= raw AppModule::MODULES.to_json %>;
+    const EXTRA_PRICE = <%= AppModule::EXTRA_MODULE_PRICE %>;
+
+    let selectedPackageKey = "<%= @company.effective_plan_tier.presence || 'banda' %>";
+
+    function getSelectedModuleKeys() {
+      const checkboxes = document.querySelectorAll('.superadmin-module-cb:checked');
+      return Array.from(checkboxes).map(cb => cb.dataset.modKey);
+    }
+
+    window.recalculateSuperadminPricing = function() {
+      const pkg = PACKAGES_DATA[selectedPackageKey] || PACKAGES_DATA['banda'];
+      const pkgModules = pkg.modules || [];
+      const basePrice = parseFloat(pkg.price) || 15.00;
+      const selectedKeys = getSelectedModuleKeys();
+
+      const includedKeys = selectedKeys.filter(k => pkgModules.includes(k));
+      const extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
+      const extraCost = extraKeys.length * EXTRA_PRICE;
+      const subtotal = basePrice + extraCost;
+
+      const fullSuitePrice = 22.00;
+      const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
+      const finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
+
+      // Actualizar Filas y Badges de Módulos
+      document.querySelectorAll('.superadmin-module-cb').forEach(cb => {
+        const modKey = cb.dataset.modKey;
+        const rowEl = document.getElementById(`superadmin-row-${modKey}`);
+        const badgeContainer = document.querySelector(`.superadmin-module-badge[data-mod-key="${modKey}"]`);
+        if (!badgeContainer) return;
+
+        const isPartOfPackage = pkgModules.includes(modKey);
+        const isChecked = cb.checked;
+
+        if (rowEl) {
+          rowEl.classList.remove('is-included', 'is-extra-active');
+        }
+
+        if (isPartOfPackage) {
+          if (rowEl && isChecked) rowEl.classList.add('is-included');
+          badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
+            ✓ $0
+          </span>`;
+        } else {
+          if (isChecked) {
+            if (rowEl) rowEl.classList.add('is-extra-active');
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; display: inline-block;">
+              + $${EXTRA_PRICE.toFixed(2)} Extra
+            </span>`;
+          } else {
+            badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 700; padding: 2px 7px; border-radius: 5px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-block;">
+              + $${EXTRA_PRICE.toFixed(2)}
+            </span>`;
+          }
+        }
+      });
+
+      // Actualizar Badges y Títulos del Resumen
+      const summaryPlanBadge = document.getElementById('superadmin-plan-badge');
+      const summaryPlanTitle = document.getElementById('superadmin-plan-title');
+      const summaryPlanSubtitle = document.getElementById('superadmin-plan-subtitle');
+      const summaryPkgIcon = document.getElementById('superadmin-pkg-icon');
+      const summaryPkgName = document.getElementById('superadmin-pkg-name');
+      const summaryBasePrice = document.getElementById('superadmin-base-price');
+
+      const hasExtras = extraKeys.length > 0;
+
+      if (summaryPlanBadge) {
+        if (hasExtras) {
+          summaryPlanBadge.textContent = '✨ Plan Personalizado';
+          summaryPlanBadge.style.background = 'rgba(234, 179, 8, 0.25)';
+          summaryPlanBadge.style.color = '#fef08a';
+          summaryPlanBadge.style.borderColor = 'rgba(251, 191, 36, 0.4)';
+        } else {
+          summaryPlanBadge.textContent = 'Plan Base';
+          summaryPlanBadge.style.background = 'rgba(99, 102, 241, 0.3)';
+          summaryPlanBadge.style.color = '#c7d2fe';
+          summaryPlanBadge.style.borderColor = 'rgba(165, 180, 252, 0.4)';
+        }
+      }
+
+      if (summaryPlanTitle) {
+        if (selectedPackageKey === 'full') {
+          summaryPlanTitle.textContent = pkg.name;
+        } else if (hasExtras) {
+          summaryPlanTitle.textContent = `${pkg.name} + ${extraKeys.length} Extra`;
+        } else {
+          summaryPlanTitle.textContent = pkg.name;
+        }
+      }
+
+      if (summaryPlanSubtitle) {
+        if (hasExtras) {
+          summaryPlanSubtitle.textContent = `Base (${pkg.name}) + ${extraKeys.length} adicional(es)`;
+        } else {
+          summaryPlanSubtitle.textContent = 'Configuración estándar del paquete';
+        }
+      }
+
+      if (summaryPkgIcon) summaryPkgIcon.textContent = pkg.icon || '🎸';
+      if (summaryPkgName) summaryPkgName.textContent = pkg.name || 'Paquete';
+      if (summaryBasePrice) summaryBasePrice.textContent = `$${basePrice.toFixed(2)} USD`;
+
+      // Lista de Módulos Incluidos
+      const includedListEl = document.getElementById('superadmin-included-list');
+      if (includedListEl) {
+        includedListEl.innerHTML = includedKeys.map(k => {
+          const m = MODULES_DATA[k];
+          return m ? `<span style="font-size: 0.7rem; background: rgba(255,255,255,0.08); padding: 1px 6px; border-radius: 5px; color: #e2e8f0; font-weight: 600;">${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
+        }).join('') || '<span style="font-size: 0.7rem; color: #94a3b8;">Ninguno seleccionado</span>';
+      }
+
+      // Módulos Extra
+      const extraCountEl = document.getElementById('superadmin-extra-count');
+      const extraCostEl = document.getElementById('superadmin-extra-cost');
+      const extraContainer = document.getElementById('superadmin-extra-container');
+      const extraListEl = document.getElementById('superadmin-extra-list');
+
+      if (extraCountEl) extraCountEl.textContent = extraKeys.length;
+      if (extraCostEl) extraCostEl.textContent = `+$${extraCost.toFixed(2)} USD`;
+
+      if (extraContainer) {
+        extraContainer.style.display = hasExtras ? 'block' : 'none';
+      }
+
+      if (extraListEl) {
+        extraListEl.innerHTML = extraKeys.map(k => {
+          const m = MODULES_DATA[k];
+          return m ? `<span style="font-size: 0.7rem; background: rgba(253, 224, 71, 0.2); border: 1px solid rgba(253, 224, 71, 0.4); padding: 1px 6px; border-radius: 5px; color: #fef08a; font-weight: 700;">+ ${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
+        }).join('');
+      }
+
+      // Tip Full Suite
+      const tipEl = document.getElementById('superadmin-full-suite-tip');
+      if (tipEl) {
+        tipEl.style.display = suggestsFullSuite ? 'block' : 'none';
+      }
+
+      // Contador de módulos
+      const moduleCountBadge = document.getElementById('superadmin-module-count-badge');
+      if (moduleCountBadge) {
+        moduleCountBadge.textContent = `${selectedKeys.length} de ${Object.keys(MODULES_DATA).length} Módulos`;
+      }
+
+      // Sincronizar input de Cuota Mensual
+      const monthlyFeeInput = document.getElementById('company_monthly_fee_input');
+      if (monthlyFeeInput) {
+        monthlyFeeInput.value = finalTotal.toFixed(2);
+      }
+
+      // Sincronizar botón de envío
+      const submitBtn = document.getElementById('superadmin-submit-btn');
+      if (submitBtn) {
+        submitBtn.innerHTML = `<span>✨ Crear Empresa ($${finalTotal.toFixed(2)} USD/mes)</span>`;
+      }
+    };
+
+    window.selectSuperadminPackage = function(pkgKey) {
+      if (!PACKAGES_DATA[pkgKey]) pkgKey = 'banda';
+      selectedPackageKey = pkgKey;
+      const pkg = PACKAGES_DATA[pkgKey];
+
+      // Actualizar hidden field
+      const planTierInput = document.getElementById('company_plan_tier_input');
+      if (planTierInput) {
+        planTierInput.value = pkgKey;
+      }
+
+      // Actualizar estado de las 5 cards
+      document.querySelectorAll('.pkg-pill-btn').forEach(btn => {
+        const isThis = (btn.dataset.pkgKey === pkgKey);
+        const statusEl = btn.querySelector('.pkg-selection-status');
+        const badgeEl = btn.querySelector('.pkg-badge-pill');
+        if (isThis) {
+          btn.classList.add('is-active');
+          if (statusEl) statusEl.textContent = '✓ Seleccionado';
+          if (badgeEl) {
+            badgeEl.style.background = 'rgba(99, 102, 241, 0.3)';
+            badgeEl.style.color = '#c7d2fe';
+            badgeEl.style.borderColor = 'rgba(165, 180, 252, 0.4)';
+          }
+        } else {
+          btn.classList.remove('is-active');
+          if (statusEl) statusEl.textContent = 'Elegir Plan';
+          if (badgeEl) {
+            badgeEl.style.background = '#e0e7ff';
+            badgeEl.style.color = '#4338ca';
+            badgeEl.style.borderColor = '#c7d2fe';
+          }
+        }
+      });
+
+      // Preseleccionar módulos del paquete elegido
+      const pkgModules = pkg.modules || [];
+      document.querySelectorAll('.superadmin-module-cb').forEach(cb => {
+        cb.checked = pkgModules.includes(cb.dataset.modKey);
+      });
+
+      window.recalculateSuperadminPricing();
+    };
+
+    function initSuperadminCalculator() {
+      window.selectSuperadminPackage(selectedPackageKey);
+    }
+
+    if (document.readyState !== 'loading') {
+      initSuperadminCalculator();
+    } else {
+      document.addEventListener('DOMContentLoaded', initSuperadminCalculator);
+    }
+
+    document.addEventListener('turbo:load', initSuperadminCalculator);
+    document.addEventListener('turbo:render', initSuperadminCalculator);
+  })();
+</script>

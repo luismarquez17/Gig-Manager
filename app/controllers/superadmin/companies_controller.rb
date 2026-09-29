@@ -12,11 +12,37 @@ module Superadmin
     end
 
     def new
-      @company = Company.new(monthly_fee: 50.0, currency: "USD", status: :active)
+      default_pkg = AppModule.package_info('banda')
+      @company = Company.new(
+        monthly_fee: default_pkg[:price],
+        currency: "USD",
+        status: :active,
+        subscription_status: "active",
+        plan_tier: "banda",
+        trial_ends_at: 1.month.from_now
+      )
+      @company.enabled_modules = AppModule.build_modules_hash(default_pkg[:modules])
     end
 
     def create
       @company = Company.new(company_params)
+
+      if params[:company][:enabled_modules].present?
+        modules_hash = {}
+        AppModule.keys.each do |k|
+          val = params[:company][:enabled_modules][k]
+          modules_hash[k] = (val == "1" || val == true || val == "true")
+        end
+        @company.enabled_modules = modules_hash
+      elsif @company.plan_tier.present?
+        @company.enabled_modules = AppModule.build_modules_hash(AppModule.modules_for_package(@company.plan_tier))
+      end
+
+      if @company.subscription_status == 'active' && @company.trial_ends_at.blank?
+        @company.trial_ends_at = 1.month.from_now
+      elsif @company.subscription_status == 'trialing' && @company.trial_ends_at.blank?
+        @company.trial_ends_at = 30.days.from_now
+      end
 
       ActiveRecord::Base.transaction do
         if @company.save
@@ -30,7 +56,7 @@ module Superadmin
             )
           end
 
-          redirect_to superadmin_company_path(@company), notice: "🎉 Empresa '#{@company.name}' creada exitosamente."
+          redirect_to superadmin_company_path(@company), notice: "🎉 Empresa '#{@company.name}' creada exitosamente con Plan #{@company.effective_plan_tier.titleize}."
         else
           render :new, status: :unprocessable_entity
         end
