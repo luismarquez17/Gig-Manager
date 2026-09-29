@@ -17,6 +17,7 @@ class ClientQuote < ApplicationRecord
 
   before_validation :generate_public_token, on: :create
   before_validation :set_default_status, on: :create
+  before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
   before_save :sync_or_create_client!, if: -> { company.present? && (client_name.present? || client_phone.present?) }
 
   scope :recent_first, -> { order(created_at: :desc) }

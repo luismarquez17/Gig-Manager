@@ -660,7 +660,7 @@
             </div>
             <div id="p-upsell-action-<%= upsell[:key] %>" style="margin-top: 15px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 12px; display: flex; justify-content: space-between; align-items: center;">
               <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--portal-font-outfit);">
-                +<%= number_to_currency(upsell[:price], unit: upsell[:currency] == "USD" ? "$" : "Bs. ", precision: 0) %> <span style="font-size: 0.7em; color: var(--portal-text-muted); font-weight: normal;"><%= upsell[:currency] %></span>
+                +<%= number_to_currency(upsell[:price], unit: "$", precision: 0) %> <span style="font-size: 0.7em; color: var(--portal-text-muted); font-weight: normal;">USD</span>
               </span>
 
               <% case upsell[:request_status] %>
@@ -884,9 +884,8 @@
     if (titleEl) titleEl.textContent = activeClientUpsell.title;
 
     const formattedPrice = Number(activeClientUpsell.price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-    const symbol = activeClientUpsell.currency === 'USD' ? '$' : 'Bs. ';
     const priceEl = document.getElementById('c-modal-upsell-price');
-    if (priceEl) priceEl.textContent = `+ ${symbol}${formattedPrice} ${activeClientUpsell.currency}`;
+    if (priceEl) priceEl.textContent = `+ $${formattedPrice} USD`;
 
     const descEl = document.getElementById('c-modal-upsell-desc');
     if (descEl) {
@@ -935,7 +934,7 @@
         title: activeClientUpsell.title,
         emoji: activeClientUpsell.emoji,
         price: activeClientUpsell.price,
-        currency: activeClientUpsell.currency
+        currency: 'USD'
       })
     })
     .then(res => {
@@ -952,10 +951,9 @@
         const actionContainer = document.getElementById(`p-upsell-action-${data.request?.key || savedUpsell.key}`);
         if (actionContainer) {
           const priceFormatted = Number(savedUpsell.price).toLocaleString('es-ES', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
-          const symbol = savedUpsell.currency === 'USD' ? '$' : 'Bs. ';
           actionContainer.innerHTML = `
             <span style="font-weight: 800; color: #34d399; font-size: 1.05em; font-family: var(--portal-font-outfit);">
-              +${symbol}${priceFormatted} <span style="font-size: 0.7em; color: var(--text-muted); font-weight: normal;">${savedUpsell.currency}</span>
+              +$${priceFormatted} <span style="font-size: 0.7em; color: var(--text-muted); font-weight: normal;">USD</span>
             </span>
             <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.35); color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-weight: 700; font-size: 0.78em; animation: p-scaleIn 0.35s ease;">
               ⏳ Solicitud Enviada

@@ -38,7 +38,7 @@
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px;">
         <div class="form-group-custom">
-          <%= f.label :amount, 'Monto pagado' %>
+          <%= f.label :amount, 'Monto pagado ($ USD)' %>
           <%= f.text_field :amount,
             inputmode: 'decimal',
             id: 'payment_amount_input',
@@ -50,7 +50,10 @@
 
         <div class="form-group-custom">
           <%= f.label :currency, 'Moneda' %>
-          <%= f.select :currency, [['USD ($)', 'USD'], ['BS (Bs)', 'BS']], {}, { id: 'payment_currency_select', class: 'form-input-custom' } %>
+          <div style="padding: 12px 14px; background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; font-weight: 800; color: #1e293b; text-align: center;">
+            USD ($)
+          </div>
+          <%= f.hidden_field :currency, value: 'USD', id: 'payment_currency_select' %>
         </div>
       </div>
 

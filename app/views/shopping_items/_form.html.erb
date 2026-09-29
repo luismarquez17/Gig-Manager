@@ -70,7 +70,7 @@
   <div style="display: grid; grid-template-columns: 1.5fr 1fr 1.5fr; gap: 20px;">
     <div>
       <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
-        💰 Precio estimado
+        💰 Precio estimado ($ USD)
       </label>
       <%= f.number_field :estimated_price,
           step: 0.01,
@@ -83,10 +83,10 @@
       <label style="display: block; font-size: 0.8em; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">
         💱 Moneda
       </label>
-      <%= f.select :currency,
-          options_for_select([["🇺🇸 USD", "USD"], ["🇻🇪 BS", "BS"], ["🇪🇺 EUR", "EUR"]], shopping_item.currency.presence || "USD"),
-          {},
-          style: "width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; background: white; color: #0f172a; box-sizing: border-box;" %>
+      <div style="width: 100%; padding: 13px 16px; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 1em; background: #f8fafc; color: #0f172a; font-weight: 800; text-align: center; box-sizing: border-box;">
+        USD ($)
+      </div>
+      <%= f.hidden_field :currency, value: "USD" %>
     </div>
 
     <div>

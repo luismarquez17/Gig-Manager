@@ -157,8 +157,8 @@
                 <div style="text-align: right;">
                   <div style="font-size: 0.72em; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 2px;">Precio est.</div>
                   <div style="font-size: 1.4em; font-weight: 800; color: #1e293b;">
-                    <%= number_to_currency(item.estimated_price, unit: item.currency == 'BS' ? 'Bs.' : '$') %>
-                    <span style="font-size: 0.6em; color: #94a3b8; font-weight: 600;"><%= item.currency %></span>
+                    <%= number_to_currency(item.estimated_price, unit: '$') %>
+                    <span style="font-size: 0.6em; color: #94a3b8; font-weight: 600;">USD</span>
                   </div>
                 </div>
               <% end %>

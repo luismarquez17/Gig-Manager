@@ -4,10 +4,12 @@ class ShoppingItem < ApplicationRecord
   enum priority: { low: 0, medium: 1, high: 2 }
   enum status: { pending: 0, purchased: 1 }
 
+  before_validation { self.currency = 'USD' if currency.blank? }
+
   validates :name, presence: true
   validates :priority, presence: true
   validates :status, presence: true
-  validates :currency, inclusion: { in: %w[USD BS EUR] }, allow_blank: true
+  validates :currency, inclusion: { in: %w[USD] }, allow_blank: true
 
   CATEGORIES = [
     "Cables",

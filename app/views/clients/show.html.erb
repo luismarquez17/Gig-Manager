@@ -307,14 +307,17 @@
           <%= f.fields_for :gigs, @ultimo_gig do |g_form| %>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
               <div>
-                <%= g_form.label :amount, "Monto Cobrado", style: "display: block; font-size: 0.85em; font-weight: bold;" %>
+                <%= g_form.label :amount, "Monto Cobrado ($ USD)", style: "display: block; font-size: 0.85em; font-weight: bold;" %>
                 <div style="display: flex; gap: 5px;">
                   <%= g_form.text_field :amount,
                   inputmode: 'decimal',
                   data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
                   placeholder: '0.00',
                   style: "flex-grow: 1; padding: 8px; border: 1px solid #ddd; border-radius: 5px;" %>
-                  <%= g_form.select :currency, [["USD", "USD"], ["BS", "BS"]], {}, { style: "padding: 8px; border-radius: 5px; background: #f8f9fa;" } %>
+                  <div style="padding: 8px 12px; border-radius: 5px; background: #f8f9fa; border: 1px solid #ddd; font-weight: 800; font-size: 0.85em; color: #1e293b; display: flex; align-items: center;">
+                    USD ($)
+                  </div>
+                  <%= g_form.hidden_field :currency, value: "USD" %>
                 </div>
               </div>
               <div>

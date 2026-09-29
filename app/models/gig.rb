@@ -19,6 +19,7 @@ class Gig < ApplicationRecord
   validates :client_email, format: { with: URI::MailTo::EMAIL_REGEXP }, allow_blank: true
 
   before_validation :copy_client_email
+  before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
   before_create :generate_portal_token
   after_save :refresh_client_priority
   after_destroy :refresh_client_priority

@@ -84,7 +84,7 @@ class EmployeePaymentsController < ApplicationController
       if amount > max_pending && max_pending > 0
         @payment = current_company.employee_payments.build(report_params)
         @payment.user = current_user
-        @payment.errors.add(:amount, "no puede exceder el monto acordado para este show (#{view_context.number_to_currency(max_pending, unit: (gig.currency.presence || '$'))})")
+        @payment.errors.add(:amount, "no puede exceder el monto acordado para este show (#{view_context.number_to_currency(max_pending, unit: '$')})")
         @assigned_gigs = current_user.assigned_gigs.includes(:client).order(date: :desc)
         @gig = gig
         render :new_worker_report, status: :unprocessable_entity and return
@@ -116,8 +116,7 @@ class EmployeePaymentsController < ApplicationController
     )
 
     if @payment.save
-      currency_sym = @payment.currency.presence || '$'
-      amount_formatted = view_context.number_to_currency(@payment.amount, unit: currency_sym)
+      amount_formatted = view_context.number_to_currency(@payment.amount, unit: '$')
       show_label = @payment.gig.present? ? (@payment.gig.client&.name || "Show del #{@payment.gig.date&.strftime('%d/%m/%Y')}") : "Pago general / Anticipo"
       notes_info = @payment.notes.present? ? " Notas: \"#{@payment.notes}\"." : ""
 
@@ -148,8 +147,7 @@ class EmployeePaymentsController < ApplicationController
     end
 
     target_area = @payment.user.musician? ? 'musicians' : 'staffs'
-    currency_sym = @payment.currency.presence || '$'
-    amount_formatted = view_context.number_to_currency(@payment.amount, unit: currency_sym)
+    amount_formatted = view_context.number_to_currency(@payment.amount, unit: '$')
     show_label = @payment.gig.present? ? (@payment.gig.client&.name || "Show del #{@payment.gig.date&.strftime('%d/%m/%Y')}") : "Pago general"
 
     AppNotification.create(
@@ -174,8 +172,7 @@ class EmployeePaymentsController < ApplicationController
     @payment.save!
 
     target_area = @payment.user.musician? ? 'musicians' : 'staffs'
-    currency_sym = @payment.currency.presence || '$'
-    amount_formatted = view_context.number_to_currency(@payment.amount, unit: currency_sym)
+    amount_formatted = view_context.number_to_currency(@payment.amount, unit: '$')
 
     AppNotification.create(
       company: current_company,
@@ -340,9 +337,9 @@ class EmployeePaymentsController < ApplicationController
         date_str = @gig.date ? @gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
         @available_gigs << {
           id: @gig.id,
-          title: "#{client_name} - #{date_str} (Pendiente: #{view_context.number_to_currency(pending_val, unit: (@gig.currency || '$'))})",
+          title: "#{client_name} - #{date_str} (Pendiente: #{view_context.number_to_currency(pending_val, unit: '$')})",
           pending_amount: pending_val,
-          currency: @gig.currency.presence || "USD"
+          currency: "USD"
         }
       end
     else
@@ -450,12 +447,12 @@ class EmployeePaymentsController < ApplicationController
       map[w.id] = unpaid.map do |sa|
         client_name = sa.gig.client&.name || "Show"
         date_str = sa.gig.date ? sa.gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
-        pending_str = view_context.number_to_currency(sa.pending_balance, unit: (sa.gig.currency.presence || '$'))
+        pending_str = view_context.number_to_currency(sa.pending_balance, unit: '$')
         {
           id: sa.gig_id,
           title: "#{client_name} - #{date_str} (Pendiente: #{pending_str})",
           pending_amount: sa.pending_balance,
-          currency: sa.gig.currency.presence || "USD"
+          currency: "USD"
         }
       end
     end

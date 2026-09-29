@@ -16,6 +16,7 @@ class EmployeePayment < ApplicationRecord
   before_validation :ensure_expected_amount
   before_validation :set_default_funding_source
   before_validation :set_default_status
+  before_validation :ensure_currency
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :expected_amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
@@ -79,5 +80,9 @@ class EmployeePayment < ApplicationRecord
 
   def ensure_expected_amount
     self.expected_amount = 0.0 if expected_amount.nil? || expected_amount.to_s.blank?
+  end
+
+  def ensure_currency
+    self.currency = 'USD' if currency.blank? || currency != 'USD'
   end
 end

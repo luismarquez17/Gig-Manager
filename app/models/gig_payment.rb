@@ -3,6 +3,8 @@ class GigPayment < ApplicationRecord
 
   CATEGORIES = %w[reinvest waste other].freeze
 
+  before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
+
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :category, inclusion: { in: CATEGORIES }, allow_blank: true
 

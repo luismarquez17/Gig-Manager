@@ -63,7 +63,7 @@
     <%# --- MONTO Y MONEDA --- %>
     <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 15px; margin-bottom: 20px; align-items: end;">
       <div>
-        <%= f.label :amount, "💰 Monto acordado", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.label :amount, "💰 Monto acordado ($ USD)", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
         <%= f.text_field :amount,
           inputmode: 'decimal',
           data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
@@ -72,7 +72,10 @@
       </div>
       <div>
         <%= f.label :currency, "Moneda", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
-        <%= f.select :currency, [["USD ($)", "USD"], ["BS (Bs)", "BS"]], {}, { style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e0; background: #f8fafc; font-weight: bold; width: 100%; height: 46px;" } %>
+        <div style="width: 100%; height: 46px; border-radius: 10px; border: 1px solid #cbd5e0; background: #f8fafc; font-weight: 800; color: #1e293b; display: flex; align-items: center; justify-content: center; box-sizing: border-box;">
+          USD ($)
+        </div>
+        <%= f.hidden_field :currency, value: "USD" %>
       </div>
     </div>
 

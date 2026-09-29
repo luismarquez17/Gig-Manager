@@ -201,11 +201,9 @@
   <% if @gigs.any? %>
     <div style="margin-top: 30px; padding: 25px; background: #ffffff; border-radius: 12px; border: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
       <div>
-        <h3 style="margin: 0; color: #64748b; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Balance Filtrado</h3>
+        <h3 style="margin: 0; color: #64748b; font-size: 0.9em; text-transform: uppercase; letter-spacing: 1px;">Cobrado en Shows Filtrados</h3>
         <p style="margin: 5px 0 0 0; font-size: 1.5em; font-weight: bold;">
-          <span style="color: #10b981;">$ <%= number_with_precision(@total_usd, precision: 2) %></span>
-          <span style="color: #cbd5e1; margin: 0 15px;">|</span>
-          <span style="color: #3b82f6;">Bs <%= number_with_precision(@total_bs, precision: 2) %></span>
+          <span style="color: #10b981;">$ <%= number_with_precision(@total_usd, precision: 2) %> USD</span>
         </p>
       </div>
       <div style="text-align: right; color: #94a3b8; font-size: 0.9em;">

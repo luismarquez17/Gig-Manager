@@ -18,19 +18,19 @@ class ShoppingItemsController < ApplicationController
     @total_count    = current_company.shopping_items.count
     @pending_count  = current_company.shopping_items.pending.count
     @purchased_count = current_company.shopping_items.purchased.count
-    @total_estimated = current_company.shopping_items.pending.where(currency: 'USD').sum(:estimated_price).to_f
-    @total_estimated_bs = current_company.shopping_items.pending.where(currency: 'BS').sum(:estimated_price).to_f
+    @total_estimated = current_company.shopping_items.pending.sum(:estimated_price).to_f
 
     @categories = ShoppingItem::CATEGORIES
   end
 
   def new
-    @shopping_item = current_company.shopping_items.build
+    @shopping_item = current_company.shopping_items.build(currency: 'USD')
     @categories = ShoppingItem::CATEGORIES
   end
 
   def create
     @shopping_item = current_company.shopping_items.build(shopping_item_params)
+    @shopping_item.currency = 'USD'
 
     if @shopping_item.save
       redirect_to shopping_items_path, notice: "✅ Ítem agregado a la lista de compras."

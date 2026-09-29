@@ -10,6 +10,8 @@ class CashAdjustment < ApplicationRecord
     initial_balance: 2
   }
 
+  before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
+
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :date, presence: true
   validates :description, presence: true

@@ -33,8 +33,11 @@
         </div>
 
         <div>
-          <%= f.label :currency, "Moneda", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
-          <%= f.select :currency, [["USD - Dólares", "USD"], ["BS - Bolívares", "BS"]], {}, style: "width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box;" %>
+          <%= f.label :currency, "Moneda de Cobro", style: "display: block; font-weight: 700; color: #334155; margin-bottom: 6px; font-size: 0.9rem;" %>
+          <div style="width: 100%; padding: 12px; border-radius: 10px; border: 1px solid #cbd5e1; font-size: 1rem; box-sizing: border-box; background: #f8fafc; color: #1e293b; font-weight: 800; text-align: center;">
+            USD ($)
+          </div>
+          <%= f.hidden_field :currency, value: "USD" %>
         </div>
       </div>
 

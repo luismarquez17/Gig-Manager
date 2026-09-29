@@ -47,21 +47,22 @@
         </small>
       </div>
 
-      <%# 2. Monto y Moneda %>
-      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 20px;">
-        <div class="form-group-custom" style="margin-bottom: 0;">
-          <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
-            💵 Monto que recibiste:
-          </label>
-          <%= f.number_field :amount, step: :any, placeholder: "0.00", required: true, class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1.1em; font-weight: 800; color: #0f172a;" %>
+      <%# 2. Monto en Dólares %>
+      <div class="form-group-custom" style="margin-bottom: 20px;">
+        <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
+          💵 Monto que recibiste (en Dólares USD $):
+        </label>
+        <div style="position: relative; display: flex; align-items: center;">
+          <span style="position: absolute; left: 16px; font-weight: 900; font-size: 1.1em; color: #16a34a;">$</span>
+          <%= f.number_field :amount, step: :any, placeholder: "0.00", required: true, class: "form-input-custom", style: "width: 100%; padding: 12px 16px 12px 34px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1.1em; font-weight: 800; color: #0f172a;" %>
+          <div style="position: absolute; right: 14px; background: #f1f5f9; color: #475569; font-weight: 800; font-size: 0.78rem; padding: 4px 8px; border-radius: 6px; border: 1px solid #cbd5e1;">
+            USD ($)
+          </div>
         </div>
-
-        <div class="form-group-custom" style="margin-bottom: 0;">
-          <label style="display: block; font-weight: 700; color: #334155; margin-bottom: 8px; font-size: 0.92em;">
-            Moneda:
-          </label>
-          <%= f.select :currency, [["USD ($)", "USD"], ["BS (Bs)", "BS"]], { selected: @payment.currency || "USD" }, { class: "form-input-custom", style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 2px solid #e2e8f0; font-size: 1em; background: white; font-weight: 700;" } %>
-        </div>
+        <%= f.hidden_field :currency, value: "USD" %>
+        <small style="color: #64748b; font-size: 0.82em; display: block; margin-top: 6px;">
+          💡 <strong>Importante:</strong> Ingresa el monto en <strong>dólares ($)</strong>. Si recibiste el pago en bolívares por Pago Móvil o efectivo, introduce el equivalente en dólares acordado para este show (Ej: 20 o 30).
+        </small>
       </div>
 
       <%# 3. Fecha de pago %>

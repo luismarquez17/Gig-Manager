@@ -11,7 +11,9 @@ class Investment < ApplicationRecord
     "Otros"
   ].freeze
 
-  CURRENCIES = %w[USD BS].freeze
+  CURRENCIES = %w[USD].freeze
+
+  before_validation { self.currency = 'USD' if currency.blank? }
 
   SOURCES = {
     business: "Capital del Negocio (Caja del Grupo)",
