@@ -20,6 +20,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <%= stylesheet_link_tag "application", "data-turbo-track": "reload" %>
     <%= javascript_importmap_tags %>
+
+    <%# ── FAST PRE-RENDERER: Cero FOUC / Cero retraso en renderizado ── %>
+    <script>
+      (function() {
+        try {
+          var isGeroCompany = <%= (user_signed_in? && current_company.present? && (current_company.name.to_s.downcase.include?('gero') || current_company.slug.to_s.downcase.include?('gero'))).to_json %>;
+          var saved = localStorage.getItem('gig_theme_config');
+          var cfg = saved ? JSON.parse(saved) : null;
+          if (!cfg) {
+            cfg = isGeroCompany ? { theme: 'gerovip', accent: 'gold', density: 'normal', radius: 'smooth' } : { theme: 'light', accent: 'sapphire', density: 'normal', radius: 'smooth' };
+          }
+          var doc = document.documentElement;
+          var isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+          if (cfg.theme === 'system') {
+            doc.setAttribute('data-theme', isDark ? 'dark' : 'light');
+          } else {
+            doc.setAttribute('data-theme', cfg.theme || (isGeroCompany ? 'gerovip' : 'light'));
+          }
+          doc.setAttribute('data-accent', cfg.accent || (isGeroCompany ? 'gold' : 'sapphire'));
+          doc.setAttribute('data-density', cfg.density || 'normal');
+          doc.setAttribute('data-radius', cfg.radius || 'smooth');
+        } catch (e) {}
+      })();
+    </script>
     <style>
       /* Hide native scrollbar but keep scroll functionality */
       aside {
@@ -270,14 +294,12 @@
         from { transform: scaleX(1); }
         to   { transform: scaleX(0); }
       }
-      body {
-        background-color: #f8fafc !important;
-        color: #1e293b !important;
-      }
     </style>
   </head>
-
-  <body style="margin: 0; padding: 0; background-color: #f8fafc !important; color: #1e293b !important;">
+  <%
+    is_gero_company = user_signed_in? && current_company.present? && (current_company.name.to_s.downcase.include?('gero') || current_company.slug.to_s.downcase.include?('gero'))
+  %>
+  <body class="<%= 'is-gero-company' if is_gero_company %>" style="margin: 0; padding: 0;">
 
     <%# =============================================
         TOPBAR MÓVIL (oculto en desktop por CSS)
@@ -287,11 +309,30 @@
         <button class="topbar-hamburger" id="hamburger-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="app-sidebar">
           <span></span><span></span><span></span>
         </button>
-        <div class="topbar-brand" style="display: flex; align-items: center;">
-          <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 8px; margin-right: 8px;" />
-          Gig Manager
+        <div class="topbar-brand">
+          <%# Mobile Default Brand %>
+          <div class="brand-default-view">
+            <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 8px; margin-right: 8px; flex-shrink: 0;" />
+            <span>Gig Manager</span>
+          </div>
+
+          <%# Mobile Gero VIP Co-Brand %>
+          <div class="brand-gerovip-view">
+            <div style="display: flex; align-items: center; gap: 4px; margin-right: 8px;">
+              <img src="/icons/logo.svg" alt="GigManager" style="width: 24px; height: 24px; border-radius: 6px; flex-shrink: 0;" />
+              <span style="font-weight: 900; color: #d4af37; font-size: 0.95rem; line-height: 1;">+</span>
+              <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 26px; height: 26px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(212,175,55,0.45));" />
+            </div>
+            <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15;">
+              <span style="color: white; font-weight: 800; font-size: 0.84rem;">Gig Manager</span>
+              <span style="color: #ffd700; font-weight: 700; font-size: 0.7rem; white-space: nowrap;">+ Gero Producciones <span style="font-size: 0.62rem; opacity: 0.9; color: #fef08a;">(VIP)</span></span>
+            </div>
+          </div>
         </div>
         <div style="display: flex; align-items: center; gap: 8px;">
+          <button type="button" onclick="openThemeCustomizer()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.05rem;" aria-label="Personalizar Tema" title="Personalizar Tema">
+            🎨
+          </button>
           <%= link_to notifications_path, style: "background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; text-decoration: none; font-size: 1.05rem;", aria: { label: "Notificaciones" } do %>
             🔔
             <% unread_count = current_user&.unread_notifications_count.to_i %>
@@ -322,15 +363,48 @@
           
           <%# Logo + nombre de empresa + botón cerrar (sólo visible en móvil) %>
           <div class="sidebar-brand" style="position: relative;">
-            <h2 style="display: flex; align-items: center;">
-              <img src="/icons/logo.svg" alt="GigManager" style="width: 38px; height: 38px; border-radius: 11px; margin-right: 10px; box-shadow: 0 4px 12px rgba(37,99,235,0.35); flex-shrink: 0;" />
-              <span>Gig Manager</span>
-            </h2>
-            <% if current_company.present? %>
-              <div style="font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
-                <span>🏢</span> <span><%= current_company.name %></span>
+            <%# Vista de Marca Estándar %>
+            <div class="brand-default-view">
+              <h2 style="display: flex; align-items: center; margin: 0;">
+                <img src="/icons/logo.svg" alt="GigManager" style="width: 38px; height: 38px; border-radius: 11px; margin-right: 10px; box-shadow: 0 4px 12px rgba(37,99,235,0.35); flex-shrink: 0;" />
+                <span>Gig Manager</span>
+              </h2>
+              <% if current_company.present? %>
+                <div style="font-size: 0.78rem; color: #818cf8; font-weight: 600; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                  <span>🏢</span> <span><%= current_company.name %></span>
+                </div>
+              <% end %>
+            </div>
+
+            <%# Vista de Marca Co-Branded GERO VIP %>
+            <div class="brand-gerovip-view">
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; flex-shrink: 0;">
+                  <img src="/icons/logo.svg" alt="GigManager" style="width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 4px 10px rgba(37,99,235,0.35); flex-shrink: 0;" />
+                  <span style="margin: 0 5px; font-weight: 900; color: #d4af37; font-size: 1.15rem; line-height: 1;">+</span>
+                  <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 36px; height: 36px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 8px rgba(212,175,55,0.5));" />
+                </div>
+                <div style="min-width: 0;">
+                  <div style="font-weight: 800; font-size: 1.05rem; color: #ffffff; line-height: 1.15; letter-spacing: -0.3px;">
+                    Gig Manager
+                  </div>
+                  <div style="font-weight: 800; font-size: 0.84rem; color: #ffd700; line-height: 1.15;">
+                    + Gero Producciones
+                  </div>
+                </div>
               </div>
-            <% end %>
+              <div style="display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-top: 4px;">
+                <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(212, 175, 55, 0.18); border: 1px solid rgba(212, 175, 55, 0.4); padding: 2px 8px; border-radius: 6px; font-size: 0.68rem; color: #ffd700; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  <span>👑</span> <span>Colaborador VIP</span>
+                </div>
+                <% if current_company.present? %>
+                  <div style="font-size: 0.72rem; color: #cbd5e1; font-weight: 600; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 105px;" title="<%= current_company.name %>">
+                    🏢 <%= current_company.name %>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
             <button id="sidebar-close-btn" aria-label="Cerrar menú">&times;</button>
           </div>
 
@@ -576,6 +650,17 @@
                 <span class="icon">❓</span> <span>Ayuda</span>
               <% end %>
             <% end %>
+
+            <%# --- BOTÓN PERSONALIZACIÓN DE TEMA --- %>
+            <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--sidebar-border, rgba(255,255,255,0.08));">
+              <button type="button" onclick="openThemeCustomizer()" class="sidebar-link" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; color: #cbd5e1; display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
+                <span class="icon">🎨</span> <span>Personalizar Tema</span>
+                <% if is_gero_company %>
+                  <span style="background: linear-gradient(135deg, #ffd700, #d4af37); color: #1a0309; border-radius: 99px; font-size: 0.68em; padding: 2px 7px; font-weight: 900; margin-left: auto;">VIP</span>
+                <% end %>
+              </button>
+            </div>
+
             <div id="sidebar-scroll-indicator" aria-hidden="true"></div>
           </nav>
 
@@ -1334,5 +1419,8 @@
         </button>
       </div>
     </div>
+
+    <%# ── MODAL DE PERSONALIZACIÓN Y TEMAS ── %>
+    <%= render 'shared/theme_customizer_modal' %>
   </body>
 </html>

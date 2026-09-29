@@ -109,9 +109,24 @@
         </div>
       </div>
 
-      <div style="display: flex; flex-direction: column; gap: 12px;">
+      <%# --- PERSONALIZACIÓN DE APARIENCIA & TEMA --- %>
+      <div style="margin-top: 25px; margin-bottom: 25px; background: var(--bg-card-subtle, #f8fafc); padding: 20px; border-radius: 15px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="font-size: 1.6rem; background: var(--color-primary-glow, rgba(37,99,235,0.1)); color: var(--color-primary, #2563eb); width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            🎨
+          </div>
+          <div>
+            <h4 style="margin: 0; color: var(--text-heading, #1e293b); font-weight: 700; font-size: 1rem;">Tema y Apariencia Visual</h4>
+            <p style="margin: 2px 0 0 0; font-size: 0.82rem; color: var(--text-muted, #64748b);">Personaliza colores, modo oscuro, densidad y alertas de audio.</p>
+          </div>
+        </div>
+        <button type="button" onclick="openThemeCustomizer()" style="background: var(--bg-card, white); border: 1.5px solid var(--border-color, #cbd5e0); color: var(--text-main, #1e293b); padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.03);">
+          🎨 Personalizar Tema
+        </button>
+      </div>
 
-        <%= f.submit "💾 Guardar Perfil", style: "width: 100%; background: #2563eb; color: white; padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);" %>
+      <div style="display: flex; flex-direction: column; gap: 12px;">
+        <%= f.submit "💾 Guardar Perfil", style: "width: 100%; background: var(--color-primary-gradient, #2563eb); color: var(--color-primary-text, white); padding: 16px; border: none; border-radius: 12px; font-weight: bold; font-size: 1.1em; cursor: pointer; box-shadow: var(--shadow-primary, 0 4px 12px rgba(37, 99, 235, 0.2));" %>
         <%= link_to "🚫 Cancelar", back_path, style: "text-align: center; text-decoration: none; color: #64748b; font-weight: 600; font-size: 0.9em; padding: 10px; border: 1px solid #e2e8f0; border-radius: 12px;" %>
       </div>
     <% end %>

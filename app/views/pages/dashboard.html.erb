@@ -3,21 +3,21 @@
 
     <%# --- BIENVENIDA --- %>
     <header style="margin-bottom: 25px;">
-      <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.display_name %>! 👋</h1>
-      <p style="color: #64748b; font-size: 1.1em; margin-top: 5px;">Este es el estado actual de tu operación en <%= current_company&.name || 'Gig Manager' %>.</p>
+      <h1 style="color: var(--text-heading); font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.display_name %>! 👋</h1>
+      <p style="color: var(--text-muted); font-size: 1.1em; margin-top: 5px;">Este es el estado actual de tu operación en <%= current_company&.name || 'Gig Manager' %>.</p>
     </header>
 
     <%# --- NOTIFICACIÓN DE PAGOS REPORTADOS POR TRABAJADORES PENDIENTES DE APROBACIÓN --- %>
     <% if module_enabled?(:payroll) && @pending_worker_reports.present? && @pending_worker_reports.any? %>
-      <div style="background: #fffbeb; border: 2px solid #fde68a; border-radius: 20px; padding: 22px 24px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.12);">
+      <div style="background: var(--bg-card-subtle, #fffbeb); border: 2px solid #fde68a; border-radius: 20px; padding: 22px 24px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.12);">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 12px;">
             <span style="font-size: 2em; line-height: 1;">🔔</span>
             <div>
-              <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #92400e;">
+              <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #f59e0b;">
                 Notificación: <%= @pending_worker_reports.count %> pago(s) reportado(s) por trabajadores
               </h3>
-              <p style="margin: 3px 0 0 0; font-size: 0.9em; color: #b45309;">
+              <p style="margin: 3px 0 0 0; font-size: 0.9em; color: var(--text-muted, #b45309);">
                 Un trabajador indicó que ya se le pagó este monto. ¿Es cierto? Confirma para actualizar los saldos y fondos:
               </p>
             </div>
@@ -27,22 +27,22 @@
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <% @pending_worker_reports.each do |p| %>
-            <div style="background: white; border-radius: 14px; padding: 14px 18px; border: 1px solid #fef3c7; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div style="background: var(--bg-card, white); border-radius: 14px; padding: 14px 18px; border: 1px solid var(--border-color, #fef3c7); display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
               
               <div>
-                <div style="font-size: 1.02em; font-weight: 800; color: #0f172a;">
+                <div style="font-size: 1.02em; font-weight: 800; color: var(--text-heading, #0f172a);">
                   👤 <%= p.user.display_name rescue p.user.email %>
-                  <span style="font-weight: 500; color: #64748b; font-size: 0.85em;">(<%= p.user.email %>)</span>
+                  <span style="font-weight: 500; color: var(--text-muted, #64748b); font-size: 0.85em;">(<%= p.user.email %>)</span>
                 </div>
                 
-                <div style="margin-top: 3px; font-size: 0.88em; color: #334155;">
+                <div style="margin-top: 3px; font-size: 0.88em; color: var(--text-muted, #334155);">
                   <strong>Evento / Show:</strong> 
                   <% if p.gig.present? %>
-                    <%= link_to gig_path(p.gig), style: "color: #2563eb; text-decoration: none; font-weight: 700;" do %>
+                    <%= link_to gig_path(p.gig), style: "color: var(--color-primary, #2563eb); text-decoration: none; font-weight: 700;" do %>
                       <%= p.gig.client&.name || "Show" %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
                     <% end %>
                   <% else %>
-                    <span style="color: #64748b; font-style: italic;">Pago general / Anticipo</span>
+                    <span style="color: var(--text-muted, #64748b); font-style: italic;">Pago general / Anticipo</span>
                   <% end %>
                   &nbsp;•&nbsp;
                   <strong>Fecha:</strong> <%= p.date_paid&.strftime("%d/%m/%Y") %>
@@ -51,7 +51,7 @@
                 </div>
 
                 <% if p.notes.present? %>
-                  <div style="margin-top: 3px; font-size: 0.82em; color: #64748b;">
+                  <div style="margin-top: 3px; font-size: 0.82em; color: var(--text-muted, #64748b);">
                     📝 <em>"<%= p.notes %>"</em>
                   </div>
                 <% end %>
@@ -59,10 +59,10 @@
 
               <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <div style="text-align: right;">
-                  <span style="font-size: 1.3em; font-weight: 900; color: #059669; display: block;">
+                  <span style="font-size: 1.3em; font-weight: 900; color: #10b981; display: block;">
                     <%= number_to_currency(p.amount, unit: p.currency) %>
                   </span>
-                  <span style="font-size: 0.72em; font-weight: 700; color: #b45309; text-transform: uppercase;">
+                  <span style="font-size: 0.72em; font-weight: 700; color: #f59e0b; text-transform: uppercase;">
                     Pendiente
                   </span>
                 </div>
@@ -86,34 +86,34 @@
 
     <%# --- NOTIFICACIÓN DE SOLICITUDES DE ADICIONALES (UPSELLS) PENDIENTES DEL CLIENTE --- %>
     <% if module_enabled?(:clients_crm) && @pending_upsell_requests.present? && @pending_upsell_requests.any? %>
-      <div style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border: 2px solid #3b82f6; border-radius: 20px; padding: 22px 24px; margin-bottom: 30px; box-shadow: 0 8px 24px rgba(59, 130, 246, 0.12);">
+      <div style="background: var(--bg-card-subtle, #eff6ff); border: 2px solid var(--color-primary, #3b82f6); border-radius: 20px; padding: 22px 24px; margin-bottom: 30px; box-shadow: 0 8px 24px var(--color-primary-glow, rgba(59, 130, 246, 0.12));">
         <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;">
           <div style="display: flex; align-items: center; gap: 12px;">
-            <span style="font-size: 1.8em; background: #2563eb; color: white; width: 46px; height: 46px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); flex-shrink: 0;">🚀</span>
+            <span style="font-size: 1.8em; background: var(--color-primary, #2563eb); color: white; width: 46px; height: 46px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px var(--color-primary-glow); flex-shrink: 0;">🚀</span>
             <div>
-              <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: #1e3a8a;">
+              <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: var(--text-heading, #1e3a8a);">
                 <%= @pending_upsell_requests.count %> solicitud<%= 'es' if @pending_upsell_requests.count > 1 %> de adicional<%= 'es' if @pending_upsell_requests.count > 1 %> pendiente<%= 's' if @pending_upsell_requests.count > 1 %>
               </h3>
-              <p style="margin: 3px 0 0 0; font-size: 0.88em; color: #2563eb; font-weight: 600;">
+              <p style="margin: 3px 0 0 0; font-size: 0.88em; color: var(--color-primary, #2563eb); font-weight: 600;">
                 Un cliente solicitó añadir servicios adicionales a su evento. Acepta o rechaza con 1 clic:
               </p>
             </div>
           </div>
-          <span style="background: #2563eb; color: white; padding: 5px 14px; border-radius: 99px; font-weight: 800; font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
+          <span style="background: var(--color-primary, #2563eb); color: var(--color-primary-text, white); padding: 5px 14px; border-radius: 99px; font-weight: 800; font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">
             Decisión en 1 Clic
           </span>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 10px;">
           <% @pending_upsell_requests.each do |req| %>
-            <div style="background: white; border-radius: 14px; padding: 14px 18px; border: 1px solid #bfdbfe; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div style="background: var(--bg-card, white); border-radius: 14px; padding: 14px 18px; border: 1px solid var(--border-color, #bfdbfe); display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
               <div style="display: flex; align-items: center; gap: 12px; min-width: 200px;">
                 <span style="font-size: 2em; line-height: 1;"><%= req.emoji.presence || '🚀' %></span>
                 <div>
-                  <div style="font-size: 1em; font-weight: 800; color: #0f172a;"><%= req.title %></div>
-                  <div style="font-size: 0.82em; color: #64748b; margin-top: 2px;">
+                  <div style="font-size: 1em; font-weight: 800; color: var(--text-heading, #0f172a);"><%= req.title %></div>
+                  <div style="font-size: 0.82em; color: var(--text-muted, #64748b); margin-top: 2px;">
                     <strong>Show:</strong>
-                    <%= link_to gig_path(req.gig), style: "color: #2563eb; text-decoration: none; font-weight: 700;" do %>
+                    <%= link_to gig_path(req.gig), style: "color: var(--color-primary, #2563eb); text-decoration: none; font-weight: 700;" do %>
                       <%= req.gig.client&.name || req.gig.client_email || "Evento" %> (<%= req.gig.date&.strftime("%d/%m/%Y") %>)
                     <% end %>
                     &nbsp;•&nbsp; Solicitado: <strong><%= req.requested_at&.strftime("%d/%m/%Y %I:%M %p") || req.created_at.strftime("%d/%m/%Y %I:%M %p") %></strong>
@@ -123,9 +123,9 @@
 
               <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
                 <div style="text-align: right;">
-                  <span style="display: block; font-size: 0.72em; font-weight: 700; color: #64748b; text-transform: uppercase;">Monto a Sumar</span>
-                  <span style="font-size: 1.3em; font-weight: 900; color: #059669;">
-                    + $<%= number_with_precision(req.price, precision: 2) %> <span style="font-size: 0.65em; color: #64748b;"><%= req.currency %></span>
+                  <span style="display: block; font-size: 0.72em; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase;">Monto a Sumar</span>
+                  <span style="font-size: 1.3em; font-weight: 900; color: #10b981;">
+                    + $<%= number_with_precision(req.price, precision: 2) %> <span style="font-size: 0.65em; color: var(--text-muted, #64748b);"><%= req.currency %></span>
                   </span>
                 </div>
 
@@ -137,7 +137,7 @@
                   <% end %>
 
                   <%= button_to reject_gig_upsell_request_path(req), method: :post,
-                        style: "background: #f8fafc; color: #dc2626; border: 1px solid #cbd5e1; padding: 9px 14px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;",
+                        style: "background: var(--bg-card-subtle, #f8fafc); color: #ef4444; border: 1px solid var(--border-color, #cbd5e1); padding: 9px 14px; border-radius: 10px; font-weight: 800; font-size: 0.88em; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;",
                         onclick: "return confirm('¿Rechazar esta solicitud de adicional?\\n\\nEl presupuesto del show permanecerá sin cambios.');" do %>
                     ❌ No añadir
                   <% end %>
@@ -153,12 +153,12 @@
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px;">
       <%# Card Inventario %>
       <% if module_enabled?(:inventory) %>
-        <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Equipos en Stock</span>
-            <span style="background: #eff6ff; padding: 8px; border-radius: 10px; font-size: 1.2em;">📦</span>
+            <span style="color: var(--text-muted, #64748b); font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Equipos en Stock</span>
+            <span style="background: var(--bg-card-subtle, #eff6ff); padding: 8px; border-radius: 10px; font-size: 1.2em;">📦</span>
           </div>
-          <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= @total_items %></h2>
+          <h2 style="font-size: 2em; margin: 0; color: var(--text-heading, #0f172a);"><%= @total_items %></h2>
           <div style="color: #10b981; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
             ✓ <%= @items_excelente %> unidades disponibles
           </div>
@@ -167,24 +167,24 @@
 
       <%# Card Total Eventos (Historial) %>
       <% if module_enabled?(:gigs) %>
-        <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Total de Eventos</span>
-            <span style="background: #f3e8ff; padding: 8px; border-radius: 10px; font-size: 1.2em;">🎸</span>
+            <span style="color: var(--text-muted, #64748b); font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Total de Eventos</span>
+            <span style="background: var(--bg-card-subtle, #f3e8ff); padding: 8px; border-radius: 10px; font-size: 1.2em;">🎸</span>
           </div>
-          <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= @total_gigs || (defined?(Gig) ? Gig.count : 0) %></h2>
-          <div style="color: #7c3aed; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
+          <h2 style="font-size: 2em; margin: 0; color: var(--text-heading, #0f172a);"><%= @total_gigs || (defined?(Gig) ? Gig.count : 0) %></h2>
+          <div style="color: #8b5cf6; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
             📋 Historial general de shows
           </div>
         </div>
 
         <%# Card Próximos Eventos (Shows a partir de hoy) %>
-        <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+        <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="color: #64748b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Próximos Eventos</span>
-            <span style="background: #fef3c7; padding: 8px; border-radius: 10px; font-size: 1.2em;">🗓️</span>
+            <span style="color: var(--text-muted, #64748b); font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Próximos Eventos</span>
+            <span style="background: var(--bg-card-subtle, #fef3c7); padding: 8px; border-radius: 10px; font-size: 1.2em;">🗓️</span>
           </div>
-          <h2 style="font-size: 2em; margin: 0; color: #0f172a;"><%= @upcoming_gigs_count || (defined?(Gig) ? Gig.where("date >= ?", Date.today).count : 0) %></h2>
+          <h2 style="font-size: 2em; margin: 0; color: var(--text-heading, #0f172a);"><%= @upcoming_gigs_count || (defined?(Gig) ? Gig.where("date >= ?", Date.today).count : 0) %></h2>
           <div style="color: #f59e0b; font-size: 0.85em; font-weight: 600; margin-top: 8px;">
             ⚡ Shows hoy y futuros
           </div>
@@ -193,13 +193,13 @@
 
       <%# Card Alerta Dañados %>
       <% if module_enabled?(:inventory) %>
-        <div style="background: #fff1f2; padding: 20px; border-radius: 20px; border: 1px solid #ffe4e6;">
+        <div style="background: var(--bg-card, #fff1f2); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid rgba(239, 68, 68, 0.35); box-shadow: var(--shadow-card);">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="color: #e11d48; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Requiere Atención</span>
-            <span style="background: #ffe4e6; padding: 8px; border-radius: 10px; font-size: 1.2em;">⚠️</span>
+            <span style="color: #ef4444; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px;">Requiere Atención</span>
+            <span style="background: rgba(239, 68, 68, 0.15); padding: 8px; border-radius: 10px; font-size: 1.2em;">⚠️</span>
           </div>
-          <h2 style="font-size: 2em; margin: 0; color: #9f1239;"><%= @items_danados %></h2>
-          <p style="color: #e11d48; font-size: 0.85em; margin: 8px 0 0 0; font-weight: 600;">Unidades dañadas o en mantenimiento</p>
+          <h2 style="font-size: 2em; margin: 0; color: #ef4444;"><%= @items_danados %></h2>
+          <p style="color: #f87171; font-size: 0.85em; margin: 8px 0 0 0; font-weight: 600;">Unidades dañadas o en mantenimiento</p>
         </div>
       <% end %>
     </div>
@@ -208,41 +208,41 @@
     <% if module_enabled?(:finances) %>
       <div style="margin-bottom: 40px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
-          <h3 style="color: #0f172a; font-size: 1.1em; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;">
-            <span style="color: #2563eb;">🏦</span> Flujo de Caja Real (Fondo de la Banda)
+          <h3 style="color: var(--text-heading); font-size: 1.1em; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;">
+            <span style="color: var(--color-primary, #2563eb);">🏦</span> Flujo de Caja Real (Fondo de la Banda)
           </h3>
-          <%= link_to 'Administrar Caja General ➔', cash_adjustments_path, style: 'font-size: 0.85em; color: #2563eb; font-weight: 700; text-decoration: none;' %>
+          <%= link_to 'Administrar Caja General ➔', cash_adjustments_path, style: 'font-size: 0.85em; color: var(--color-primary, #2563eb); font-weight: 700; text-decoration: none;' %>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;">
           <%# 1. Total Entradas %>
-          <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-            <div style="color: #64748b; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💰 Total Ingresos (Entradas)</div>
-            <h2 style="font-size: 1.85em; margin: 0; color: #065f46; font-weight: 900;"><%= number_to_currency(@total_inflow, unit: 'USD') %></h2>
+          <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
+            <div style="color: var(--text-muted, #64748b); font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💰 Total Ingresos (Entradas)</div>
+            <h2 style="font-size: 1.85em; margin: 0; color: #10b981; font-weight: 900;"><%= number_to_currency(@total_inflow, unit: 'USD') %></h2>
             <div style="color: #059669; font-size: 0.82em; margin-top: 6px; font-weight: 600;">Shows + Aportes/Saldo Inicial</div>
           </div>
 
           <%# 2. Nómina Pagada %>
           <% if module_enabled?(:payroll) %>
-            <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-              <div style="color: #64748b; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💼 Nómina pagada</div>
-              <h2 style="font-size: 1.85em; margin: 0; color: #1e293b; font-weight: 900;"><%= number_to_currency(@total_payroll_paid, unit: 'USD') %></h2>
-              <div style="color: #64748b; font-size: 0.82em; margin-top: 6px; font-weight: 600;">Pagos realizados a trabajadores</div>
+            <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
+              <div style="color: var(--text-muted, #64748b); font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💼 Nómina pagada</div>
+              <h2 style="font-size: 1.85em; margin: 0; color: var(--text-heading, #1e293b); font-weight: 900;"><%= number_to_currency(@total_payroll_paid, unit: 'USD') %></h2>
+              <div style="color: var(--text-muted, #64748b); font-size: 0.82em; margin-top: 6px; font-weight: 600;">Pagos realizados a trabajadores</div>
             </div>
           <% end %>
 
           <%# 3. Inversiones y Gastos %>
-          <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-            <div style="color: #64748b; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">⚙️ Gastos y compras</div>
-            <h2 style="font-size: 1.85em; margin: 0; color: #7c3aed; font-weight: 900;"><%= number_to_currency(@total_maintenance_spent + @total_investments_spent + @total_cash_withdrawals, unit: 'USD') %></h2>
-            <div style="color: #6b21a8; font-size: 0.82em; margin-top: 6px; font-weight: 600;">Taller + Equipos + Retiros</div>
+          <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
+            <div style="color: var(--text-muted, #64748b); font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">⚙️ Gastos y compras</div>
+            <h2 style="font-size: 1.85em; margin: 0; color: #8b5cf6; font-weight: 900;"><%= number_to_currency(@total_maintenance_spent + @total_investments_spent + @total_cash_withdrawals, unit: 'USD') %></h2>
+            <div style="color: #a855f7; font-size: 0.82em; margin-top: 6px; font-weight: 600;">Taller + Equipos + Retiros</div>
           </div>
 
           <%# 4. Fondo General / Caja Disponible Real %>
-          <div style="background: <%= @universal_fund_balance >= 0 ? '#f0fdf4' : '#fef2f2' %>; padding: 20px; border-radius: 20px; border: 1px solid <%= @universal_fund_balance >= 0 ? '#bbf7d0' : '#fecaca' %>; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
-            <div style="color: <%= @universal_fund_balance >= 0 ? '#15803d' : '#b91c1c' %>; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🏦 Saldo en Caja (Fondo)</div>
-            <h2 style="font-size: 1.85em; margin: 0; color: <%= @universal_fund_balance >= 0 ? '#16a34a' : '#dc2626' %>; font-weight: 900;"><%= number_to_currency(@universal_fund_balance, unit: 'USD') %></h2>
-            <div style="color: <%= @universal_fund_balance >= 0 ? '#15803d' : '#991b1b' %>; font-size: 0.82em; margin-top: 6px; font-weight: 600;">
+          <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
+            <div style="color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🏦 Saldo en Caja (Fondo)</div>
+            <h2 style="font-size: 1.85em; margin: 0; color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-weight: 900;"><%= number_to_currency(@universal_fund_balance, unit: 'USD') %></h2>
+            <div style="color: <%= @universal_fund_balance >= 0 ? '#10b981' : '#ef4444' %>; font-size: 0.82em; margin-top: 6px; font-weight: 600;">
               <%= link_to 'Ver libro de caja →', cash_adjustments_path, style: "color: inherit; text-decoration: underline; font-weight: 700;" %>
             </div>
           </div>
@@ -251,22 +251,22 @@
         <%# Resumen secundario de cuentas pendientes %>
         <div style="margin-top: 14px; display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px;">
           <% if module_enabled?(:clients_crm) %>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: var(--bg-card-subtle, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-size: 0.76em; color: #64748b; font-weight: 700; text-transform: uppercase;">⏳ Cuentas por cobrar a clientes</div>
-                <div style="font-size: 1.15em; font-weight: 800; color: #ea580c; margin-top: 2px;"><%= number_to_currency(@total_client_receivables, unit: 'USD') %></div>
+                <div style="font-size: 0.76em; color: var(--text-muted, #64748b); font-weight: 700; text-transform: uppercase;">⏳ Cuentas por cobrar a clientes</div>
+                <div style="font-size: 1.15em; font-weight: 800; color: #f59e0b; margin-top: 2px;"><%= number_to_currency(@total_client_receivables, unit: 'USD') %></div>
               </div>
-              <%= link_to 'Ver shows →', (module_enabled?(:gigs) ? gigs_path : clients_path), style: 'font-size: 0.82em; font-weight: 700; color: #2563eb; text-decoration: none;' %>
+              <%= link_to 'Ver shows →', (module_enabled?(:gigs) ? gigs_path : clients_path), style: 'font-size: 0.82em; font-weight: 700; color: var(--color-primary, #2563eb); text-decoration: none;' %>
             </div>
           <% end %>
 
           <% if module_enabled?(:payroll) %>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div style="background: var(--bg-card-subtle, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center;">
               <div>
-                <div style="font-size: 0.76em; color: #64748b; font-weight: 700; text-transform: uppercase;">👥 Deuda pendiente con trabajadores</div>
-                <div style="font-size: 1.15em; font-weight: 800; color: <%= @total_pending_worker_payments > 0 ? '#dc2626' : '#16a34a' %>; margin-top: 2px;"><%= number_to_currency(@total_pending_worker_payments, unit: 'USD') %></div>
+                <div style="font-size: 0.76em; color: var(--text-muted, #64748b); font-weight: 700; text-transform: uppercase;">👥 Deuda pendiente con trabajadores</div>
+                <div style="font-size: 1.15em; font-weight: 800; color: <%= @total_pending_worker_payments > 0 ? '#ef4444' : '#10b981' %>; margin-top: 2px;"><%= number_to_currency(@total_pending_worker_payments, unit: 'USD') %></div>
               </div>
-              <%= link_to 'Gestionar nómina →', employee_payments_path, style: 'font-size: 0.82em; font-weight: 700; color: #2563eb; text-decoration: none;' %>
+              <%= link_to 'Gestionar nómina →', employee_payments_path, style: 'font-size: 0.82em; font-weight: 700; color: var(--color-primary, #2563eb); text-decoration: none;' %>
             </div>
           <% end %>
         </div>
@@ -275,62 +275,62 @@
 
     <%# --- 2. ACCIONES RÁPIDAS (Botones adaptativos a los módulos) --- %>
     <div style="margin-bottom: 45px;">
-      <h3 style="color: #0f172a; font-size: 1.1em; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
-        <span style="color: #2563eb;">⚡</span> Acceso Directo
+      <h3 style="color: var(--text-heading); font-size: 1.1em; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+        <span style="color: var(--color-primary, #2563eb);">⚡</span> Acceso Directo
       </h3>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px;">
         
         <% if module_enabled?(:inventory) %>
           <%= link_to new_item_path, style: "text-decoration: none;" do %>
-            <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#2563eb';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <div style="background: var(--bg-card, white); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--color-primary, #2563eb)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color, #e2e8f0)';">
               <span style="font-size: 1.5em;">📦</span>
-              <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Nuevo Equipo</span>
+              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;">Nuevo Equipo</span>
             </div>
           <% end %>
         <% end %>
 
         <% if module_enabled?(:clients_crm) %>
           <%= link_to new_client_path, style: "text-decoration: none;" do %>
-            <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#6366f1';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <div style="background: var(--bg-card, white); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--color-primary, #6366f1)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color, #e2e8f0)';">
               <span style="font-size: 1.5em;">👥</span>
-              <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Nuevo Cliente</span>
+              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;">Nuevo Cliente</span>
             </div>
           <% end %>
         <% end %>
 
         <% if module_enabled?(:gigs) %>
           <%= link_to new_gig_path, style: "text-decoration: none;" do %>
-            <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#f59e0b';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <div style="background: var(--bg-card, white); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--color-primary, #f59e0b)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color, #e2e8f0)';">
               <span style="font-size: 1.5em;">🎸</span>
-              <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Agendar Gig</span>
+              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;">Agendar Gig</span>
             </div>
           <% end %>
         <% end %>
 
         <% if module_enabled?(:clients_crm) %>
           <%= link_to clients_path, style: "text-decoration: none;" do %>
-            <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#10b981';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <div style="background: var(--bg-card, white); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--color-primary, #10b981)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color, #e2e8f0)';">
               <span style="font-size: 1.5em;">📇</span>
-              <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Directorio Clientes</span>
+              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;">Directorio Clientes</span>
             </div>
           <% end %>
         <% end %>
 
         <% if module_enabled?(:finances) %>
           <%= link_to new_cash_adjustment_path, style: "text-decoration: none;" do %>
-            <div style="background: white; padding: 20px; border-radius: 18px; border: 1px solid #e2e8f0; display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
-                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='#059669';"
-                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#e2e8f0';">
+            <div style="background: var(--bg-card, white); padding: 20px; border-radius: 18px; border: 1px solid var(--border-color, #e2e8f0); display: flex; align-items: center; gap: 15px; transition: all 0.2s ease;"
+                 onmouseover="this.style.transform='translateY(-3px)'; this.style.borderColor='var(--color-primary, #059669)';"
+                 onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='var(--border-color, #e2e8f0)';">
               <span style="font-size: 1.5em;">🏦</span>
-              <span style="font-weight: 700; color: #1e293b; font-size: 0.9em;">Movimiento de Caja</span>
+              <span style="font-weight: 700; color: var(--text-heading, #1e293b); font-size: 0.9em;">Movimiento de Caja</span>
             </div>
           <% end %>
         <% end %>
@@ -340,42 +340,42 @@
 
     <%# --- 3. SECCIÓN INFERIOR: DETALLES DE MANTENIMIENTO --- %>
     <% if module_enabled?(:inventory) %>
-      <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+      <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 30px; box-shadow: var(--shadow-card);">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-          <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px;">
+          <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px;">
             🛠️ Equipos en Mantenimiento
           </h3>
-          <%= link_to "Ver inventario completo", items_path, style: "color: #2563eb; font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
+          <%= link_to "Ver inventario completo", items_path, style: "color: var(--color-primary, #2563eb); font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
         </div>
         
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="text-align: left; border-bottom: 2px solid #f8fafc;">
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase;">Equipo</th>
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase;">Categoría</th>
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; text-align: right;">Acción</th>
+            <tr style="text-align: left; border-bottom: 2px solid var(--border-subtle, #f8fafc);">
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase;">Equipo</th>
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase;">Categoría</th>
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; text-align: right;">Acción</th>
             </tr>
           </thead>
           <tbody>
             <% Item.includes(:inventory_items).joins(:inventory_items).where(inventory_items: { status: ['damaged', 'maintenance'] }).distinct.limit(5).each do |item| %>
-              <tr style="border-bottom: 1px solid #f8fafc;">
-                <td style="padding: 15px 0; font-weight: 600; color: #334155; font-size: 0.95em;">
+              <tr style="border-bottom: 1px solid var(--border-subtle, #f8fafc);">
+                <td style="padding: 15px 0; font-weight: 600; color: var(--text-main, #334155); font-size: 0.95em;">
                   <%= item.name %>
                   <% dmg = item.damaged_count; mnt = item.maintenance_count %>
                   <% if dmg > 0 || mnt > 0 %>
-                    <span style="font-size: 0.75em; color: #e11d48; font-weight: normal;">(<%= dmg %> dañadas, <%= mnt %> en taller)</span>
+                    <span style="font-size: 0.75em; color: #ef4444; font-weight: normal;">(<%= dmg %> dañadas, <%= mnt %> en taller)</span>
                   <% end %>
                 </td>
-                <td style="padding: 15px 0; color: #64748b; font-size: 0.9em;"><%= item.category %></td>
+                <td style="padding: 15px 0; color: var(--text-muted, #64748b); font-size: 0.9em;"><%= item.category %></td>
                 <td style="padding: 15px 0; text-align: right;">
-                  <%= link_to "Ver unidades", item_path(item), style: "background: #fff1f2; color: #e11d48; padding: 6px 12px; border-radius: 8px; font-size: 0.75em; font-weight: 800; text-decoration: none;" %>
+                  <%= link_to "Ver unidades", item_path(item), style: "background: rgba(239, 68, 68, 0.15); color: #ef4444; padding: 6px 12px; border-radius: 8px; font-size: 0.75em; font-weight: 800; text-decoration: none;" %>
                 </td>
               </tr>
             <% end %>
           </tbody>
         </table>
         <% if Item.joins(:inventory_items).where(inventory_items: { status: ['damaged', 'maintenance'] }).empty? %>
-          <div style="text-align: center; padding: 30px; color: #94a3b8;">
+          <div style="text-align: center; padding: 30px; color: var(--text-subtle, #94a3b8);">
             <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
             Todo el equipo está operativo.
           </div>
@@ -393,27 +393,27 @@
     
     <%# --- BIENVENIDA --- %>
     <header style="margin-bottom: 28px;">
-      <h1 style="color: #0f172a; font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.display_name %>! 👋</h1>
-      <p style="color: #64748b; font-size: 1.05em; margin-top: 5px;">Bienvenido a tu portal de cliente en <%= current_company&.name || 'Gig Manager' %>. Aquí puedes dar seguimiento a tus presupuestos y eventos.</p>
+      <h1 style="color: var(--text-heading); font-size: 2.2em; font-weight: 800; margin: 0;">¡Hola, <%= current_user.display_name %>! 👋</h1>
+      <p style="color: var(--text-muted); font-size: 1.05em; margin-top: 5px;">Bienvenido a tu portal de cliente en <%= current_company&.name || 'Gig Manager' %>. Aquí puedes dar seguimiento a tus presupuestos y eventos.</p>
     </header>
 
     <%# --- TUS PRESUPUESTOS Y COTIZACIONES --- %>
     <% if defined?(@mis_presupuestos) && @mis_presupuestos.present? && @mis_presupuestos.any? %>
-      <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 26px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 28px;">
+      <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-          <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+          <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
             📋 Tus Presupuestos y Solicitudes
           </h3>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 14px;">
           <% @mis_presupuestos.each do |quote| %>
-            <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="background: var(--bg-card-subtle, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 18px 20px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
               <div>
-                <div style="font-weight: 800; font-size: 1.05em; color: #0f172a; margin-bottom: 4px;">
+                <div style="font-weight: 800; font-size: 1.05em; color: var(--text-heading, #0f172a); margin-bottom: 4px;">
                   <%= quote.package_display_title %>
                 </div>
-                <div style="font-size: 0.88em; color: #64748b; display: flex; gap: 14px; flex-wrap: wrap;">
+                <div style="font-size: 0.88em; color: var(--text-muted, #64748b); display: flex; gap: 14px; flex-wrap: wrap;">
                   <span>📅 <%= quote.event_date ? quote.event_date.strftime("%d/%m/%Y") : "Fecha por confirmar" %></span>
                   <% if quote.event_location.present? %>
                     <span>📍 <%= quote.event_location %></span>
@@ -427,7 +427,7 @@
                   <%= quote.status_label %>
                 </span>
 
-                <%= link_to public_client_quote_path(quote.public_token), target: "_blank", style: "background: #eff6ff; color: #2563eb; padding: 8px 14px; border-radius: 10px; font-size: 0.84em; font-weight: 700; text-decoration: none; border: 1px solid #bfdbfe;" do %>
+                <%= link_to public_client_quote_path(quote.public_token), target: "_blank", style: "background: var(--color-primary-glow, #eff6ff); color: var(--color-primary, #2563eb); padding: 8px 14px; border-radius: 10px; font-size: 0.84em; font-weight: 700; text-decoration: none; border: 1px solid var(--border-color, #bfdbfe);" do %>
                   👁️ Ver Formulario
                 <% end %>
               </div>
@@ -438,44 +438,44 @@
     <% end %>
 
     <%# --- PRÓXIMOS EVENTOS --- %>
-    <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 26px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 28px;">
+    <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="margin: 0; font-size: 1.2em; color: #1e293b; display: flex; align-items: center; gap: 10px; font-weight: 800;">
+        <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
           🗓️ Tus Próximos Eventos (Shows Confirmados)
         </h3>
-        <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: #2563eb; font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
+        <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: var(--color-primary, #2563eb); font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
       </div>
 
       <% if @proximos_gigs.any? %>
         <table style="width: 100%; border-collapse: collapse;">
           <thead>
-            <tr style="text-align: left; border-bottom: 2px solid #f8fafc;">
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Fecha</th>
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Ubicación</th>
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700; min-width: 170px;">Monto &amp; Estado de Pago</th>
-              <th style="padding: 12px 0; color: #64748b; font-size: 0.8em; text-transform: uppercase; font-weight: 700; text-align: right;">Detalles</th>
+            <tr style="text-align: left; border-bottom: 2px solid var(--border-subtle, #f8fafc);">
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Fecha</th>
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Ubicación</th>
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700; min-width: 170px;">Monto &amp; Estado de Pago</th>
+              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700; text-align: right;">Detalles</th>
             </tr>
           </thead>
           <tbody>
             <% @proximos_gigs.each do |gig| %>
-              <tr style="border-bottom: 1px solid #f8fafc;">
-                <td style="padding: 15px 0; font-weight: 600; color: #1e293b;"><%= gig.date.strftime("%d/%m/%Y") %></td>
-                <td style="padding: 15px 0; color: #475569;"><%= gig.location.presence || "No especificada" %></td>
+              <tr style="border-bottom: 1px solid var(--border-subtle, #f8fafc);">
+                <td style="padding: 15px 0; font-weight: 600; color: var(--text-main, #1e293b);"><%= gig.date.strftime("%d/%m/%Y") %></td>
+                <td style="padding: 15px 0; color: var(--text-muted, #475569);"><%= gig.location.presence || "No especificada" %></td>
                 <td style="padding: 15px 0;">
-                  <div style="font-weight: 700; color: #0f172a; margin-bottom: 4px;">
-                    <%= number_with_precision(gig.amount, precision: 2) %> <small style="color: #64748b;"><%= gig.currency %></small>
+                  <div style="font-weight: 700; color: var(--text-heading, #0f172a); margin-bottom: 4px;">
+                    <%= number_with_precision(gig.amount, precision: 2) %> <small style="color: var(--text-muted, #64748b);"><%= gig.currency %></small>
                   </div>
                   <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: false, show_footer: true %>
                 </td>
                 <td style="padding: 15px 0; text-align: right; vertical-align: middle;">
-                  <%= link_to "Ver Detalles ➔", client_gig_path(gig), style: "background: #eff6ff; color: #2563eb; padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 700; text-decoration: none;" %>
+                  <%= link_to "Ver Detalles ➔", client_gig_path(gig), style: "background: var(--color-primary-glow, #eff6ff); color: var(--color-primary, #2563eb); padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 700; text-decoration: none;" %>
                 </td>
               </tr>
             <% end %>
           </tbody>
         </table>
       <% else %>
-        <div style="text-align: center; padding: 30px; color: #94a3b8;">
+        <div style="text-align: center; padding: 30px; color: var(--text-subtle, #94a3b8);">
           <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
           No tienes eventos confirmados en este momento. Una vez que la agrupación formalice tu fecha, aparecerá aquí.
         </div>
@@ -484,11 +484,11 @@
 
     <%# --- MÉTODOS DE PAGO DISPONIBLES --- %>
     <% if defined?(current_company) && current_company&.any_payment_method_enabled? %>
-      <div style="background: white; border-radius: 24px; border: 1px solid #e2e8f0; padding: 26px 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); margin-bottom: 30px;">
-        <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
+      <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 30px;">
+        <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-heading, #0f172a); margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
           <span>💳</span> Cuentas Oficiales para Transferencias & Anticipos
         </h3>
-        <p style="color: #64748b; font-size: 0.88rem; margin: 0 0 16px 0;">
+        <p style="color: var(--text-muted, #64748b); font-size: 0.88rem; margin: 0 0 16px 0;">
           Utiliza estos datos bancarios para realizar tus anticipos o pagos y notifícanos por WhatsApp para acreditarlos de inmediato.
         </p>
         <%= render 'shared/payment_methods_cards', company: current_company, dark_theme: false %>

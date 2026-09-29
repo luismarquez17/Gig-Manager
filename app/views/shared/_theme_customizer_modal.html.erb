@@ -1,0 +1,418 @@
+<%
+  is_gero_company = current_company.present? && (current_company.name.to_s.downcase.include?('gero') || current_company.slug.to_s.downcase.include?('gero'))
+%>
+
+<div id="theme-customizer-modal" style="display: none; position: fixed; inset: 0; background: rgba(10, 15, 29, 0.75); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); z-index: 100000; align-items: center; justify-content: center; padding: 16px; opacity: 0; transition: opacity 0.25s ease; font-family: 'Inter', system-ui, sans-serif;">
+  <div style="background: var(--bg-card, #ffffff); border: 1px solid var(--border-color, #e2e8f0); border-radius: 24px; padding: 26px; width: 100%; max-width: 580px; color: var(--text-main, #1e293b); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45); max-height: 90vh; overflow-y: auto; position: relative;">
+    
+    <%# ── Header del Modal ── %>
+    <div style="display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; border-bottom: 1px solid var(--border-subtle, #f1f5f9); padding-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="background: var(--color-primary-gradient, linear-gradient(135deg, #2563eb, #3b82f6)); color: var(--color-primary-text, white); width: 44px; height: 44px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; box-shadow: 0 4px 14px var(--color-primary-glow, rgba(37,99,235,0.3)); flex-shrink: 0;">
+          🎨
+        </div>
+        <div>
+          <h3 style="margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--text-heading, #0f172a); letter-spacing: -0.3px;">Personalización de Apariencia</h3>
+          <p style="margin: 3px 0 0 0; font-size: 0.82rem; color: var(--text-muted, #64748b);">Cambia temas, colores de acento y sonidos al instante.</p>
+        </div>
+      </div>
+      <button type="button" onclick="closeThemeCustomizer()" style="background: var(--bg-card-subtle, #f1f5f9); border: 1px solid var(--border-color, #e2e8f0); border-radius: 50%; width: 34px; height: 34px; color: var(--text-muted, #64748b); font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease;" title="Cerrar">✕</button>
+    </div>
+
+    <%# ── BANNER EXCLUSIVO GERO VIP (Colaborador Especial) ── %>
+    <div style="background: linear-gradient(135deg, #2b0512 0%, #150208 100%); border: 1px solid rgba(212, 175, 55, 0.45); border-radius: 16px; padding: 14px 18px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 4px 20px rgba(136, 19, 55, 0.35);">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 6px; flex-shrink: 0;">
+          <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;" />
+          <span style="font-weight: 900; color: #d4af37; font-size: 0.95rem; line-height: 1;">+</span>
+          <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 32px; height: 32px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 6px rgba(212,175,55,0.5));" />
+        </div>
+        <div>
+          <div style="color: #ffd700; font-weight: 800; font-size: 0.9rem; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+            <span>👑 Gig Manager + Gero Producciones</span>
+            <span style="font-size: 0.65rem; background: rgba(212, 175, 55, 0.25); color: #ffd700; border: 1px solid rgba(212, 175, 55, 0.4); padding: 1px 6px; border-radius: 6px; text-transform: uppercase; font-weight: 800;">Colaborador Oficial</span>
+          </div>
+          <div style="color: #cbd5e1; font-size: 0.78rem; margin-top: 2px;">
+            Edición Especial en Rojo Rubí Terciopelo & Oro Champagne Imperial.
+          </div>
+        </div>
+      </div>
+      <button type="button" onclick="applyQuickGeroVipTheme()" style="background: linear-gradient(135deg, #e5be49 0%, #d4af37 100%); color: #160308; border: none; padding: 7px 14px; border-radius: 9px; font-weight: 800; font-size: 0.8rem; cursor: pointer; box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4); white-space: nowrap;">
+        Aplicar VIP 👑
+      </button>
+    </div>
+
+    <%# ── SECCIÓN 1: MODO DE COLOR / TEMA ── %>
+    <div style="margin-bottom: 22px;">
+      <label style="display: block; font-weight: 800; font-size: 0.88rem; color: var(--text-heading, #0f172a); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+        🌓 Modo de Apariencia
+      </label>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(115px, 1fr)); gap: 10px;">
+        
+        <button type="button" class="theme-mode-btn" data-theme-val="light" onclick="setAppTheme('light')" style="background: var(--bg-card-subtle, #f8fafc); border: 2px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease;">
+          <div style="font-size: 1.4rem; margin-bottom: 4px;">☀️</div>
+          <div style="font-weight: 700; font-size: 0.82rem;">Modo Claro</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">Día / Nítido</div>
+        </button>
+
+        <button type="button" class="theme-mode-btn" data-theme-val="dark" onclick="setAppTheme('dark')" style="background: var(--bg-card-subtle, #f8fafc); border: 2px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease;">
+          <div style="font-size: 1.4rem; margin-bottom: 4px;">🌙</div>
+          <div style="font-weight: 700; font-size: 0.82rem;">Modo Oscuro</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">Midnight Slate</div>
+        </button>
+
+        <button type="button" class="theme-mode-btn" data-theme-val="stage" onclick="setAppTheme('stage')" style="background: var(--bg-card-subtle, #f8fafc); border: 2px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease;">
+          <div style="font-size: 1.4rem; margin-bottom: 4px;">🎸</div>
+          <div style="font-weight: 700; font-size: 0.82rem;">Escenario</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">OLED Puro</div>
+        </button>
+
+        <button type="button" class="theme-mode-btn" data-theme-val="gerovip" onclick="setAppTheme('gerovip')" style="background: linear-gradient(135deg, rgba(136, 19, 55, 0.15) 0%, rgba(212, 175, 55, 0.15) 100%); border: 2px solid rgba(212, 175, 55, 0.4); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease; position: relative;">
+          <div style="position: absolute; top: -6px; right: -4px; background: #d4af37; color: #1a0309; font-size: 0.62rem; font-weight: 900; padding: 1px 5px; border-radius: 6px; box-shadow: 0 2px 6px rgba(0,0,0,0.2);">VIP</div>
+          <div style="font-size: 1.4rem; margin-bottom: 4px;">👑</div>
+          <div style="font-weight: 800; font-size: 0.82rem; color: #d4af37;">GERO VIP</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">Rubí & Oro</div>
+        </button>
+
+        <button type="button" class="theme-mode-btn" data-theme-val="system" onclick="setAppTheme('system')" style="background: var(--bg-card-subtle, #f8fafc); border: 2px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 8px; text-align: center; cursor: pointer; color: var(--text-main, #1e293b); transition: all 0.2s ease;">
+          <div style="font-size: 1.4rem; margin-bottom: 4px;">💻</div>
+          <div style="font-weight: 700; font-size: 0.82rem;">Sistema</div>
+          <div style="font-size: 0.7rem; color: var(--text-muted, #64748b);">Automático</div>
+        </button>
+
+      </div>
+    </div>
+
+    <%# ── SECCIÓN 2: PALETA DE ACENTO DE COLOR ── %>
+    <div style="margin-bottom: 22px;">
+      <label style="display: block; font-weight: 800; font-size: 0.88rem; color: var(--text-heading, #0f172a); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.5px;">
+        🎨 Acento de Color Principal
+      </label>
+      <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;">
+        
+        <button type="button" class="accent-btn" data-accent-val="sapphire" onclick="setAppAccent('sapphire')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #2563eb; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(37,99,235,0.4);"></span>
+          <span>Zafiro</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="purple" onclick="setAppAccent('purple')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #8b5cf6; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(139,92,246,0.4);"></span>
+          <span>Púrpura</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="emerald" onclick="setAppAccent('emerald')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #10b981; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(16,185,129,0.4);"></span>
+          <span>Estudio</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="amber" onclick="setAppAccent('amber')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #f59e0b; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(245,158,11,0.4);"></span>
+          <span>Ámbar</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="crimson" onclick="setAppAccent('crimson')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #ef4444; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(239,68,68,0.4);"></span>
+          <span>Rock</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="cyan" onclick="setAppAccent('cyan')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #06b6d4; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(6,182,212,0.4);"></span>
+          <span>Cian</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="rose" onclick="setAppAccent('rose')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid var(--border-color, #e2e8f0); background: var(--bg-card-subtle, #f8fafc); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 700;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: #ec4899; display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(236,72,153,0.4);"></span>
+          <span>Glamour</span>
+        </button>
+
+        <button type="button" class="accent-btn" data-accent-val="gold" onclick="setAppAccent('gold')" style="display: flex; align-items: center; gap: 8px; padding: 10px; border-radius: 12px; border: 2px solid rgba(212,175,55,0.4); background: rgba(212,175,55,0.1); cursor: pointer; color: var(--text-main, #1e293b); font-size: 0.82rem; font-weight: 800;">
+          <span style="width: 18px; height: 18px; border-radius: 50%; background: linear-gradient(135deg, #ffd700, #d4af37); display: inline-block; flex-shrink: 0; box-shadow: 0 0 8px rgba(212,175,55,0.5);"></span>
+          <span>Oro VIP</span>
+        </button>
+
+      </div>
+    </div>
+
+    <%# ── SECCIÓN 3: DENSIDAD & BORDES ── %>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 22px;">
+      
+      <div>
+        <label style="display: block; font-weight: 800; font-size: 0.88rem; color: var(--text-heading, #0f172a); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+          📊 Densidad
+        </label>
+        <div style="display: flex; gap: 6px; background: var(--bg-card-subtle, #f8fafc); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+          <button type="button" id="density-normal-btn" onclick="setAppDensity('normal')" style="flex: 1; padding: 7px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            📱 Cómodo
+          </button>
+          <button type="button" id="density-compact-btn" onclick="setAppDensity('compact')" style="flex: 1; padding: 7px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            📊 Compacto
+          </button>
+        </div>
+      </div>
+
+      <div>
+        <label style="display: block; font-weight: 800; font-size: 0.88rem; color: var(--text-heading, #0f172a); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">
+          🔘 Bordes
+        </label>
+        <div style="display: flex; gap: 6px; background: var(--bg-card-subtle, #f8fafc); padding: 4px; border-radius: 12px; border: 1px solid var(--border-color, #e2e8f0);">
+          <button type="button" id="radius-smooth-btn" onclick="setAppRadius('smooth')" style="flex: 1; padding: 7px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            🟢 Suave
+          </button>
+          <button type="button" id="radius-sleek-btn" onclick="setAppRadius('sleek')" style="flex: 1; padding: 7px 6px; border-radius: 8px; border: none; font-size: 0.8rem; font-weight: 700; cursor: pointer; transition: all 0.2s;">
+            📐 Recto
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <%# ── SECCIÓN 4: EFECTOS DE SONIDO ── %>
+    <div style="background: var(--bg-card-subtle, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 16px; padding: 14px 18px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.3rem;">🔊</span>
+        <div>
+          <div style="font-weight: 700; font-size: 0.88rem; color: var(--text-heading, #0f172a);">Efectos de Audio y Alertas</div>
+          <div style="font-size: 0.76rem; color: var(--text-muted, #64748b);">Tonos sintetizados instantáneos para notificaciones y cobros</div>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button type="button" onclick="testCustomizerSound()" style="background: var(--bg-card, white); border: 1px solid var(--border-color, #e2e8f0); color: var(--text-main, #1e293b); padding: 6px 12px; border-radius: 8px; font-weight: 700; font-size: 0.78rem; cursor: pointer;">
+          🎵 Probar
+        </button>
+        <label style="position: relative; display: inline-block; width: 44px; height: 24px; margin: 0; cursor: pointer;">
+          <input type="checkbox" id="theme-sound-toggle" onchange="toggleCustomizerSound(this.checked)" style="opacity: 0; width: 0; height: 0;">
+          <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #cbd5e1; transition: .3s; border-radius: 24px;" id="theme-sound-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <%# ── Footer / Botones ── %>
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--border-subtle, #f1f5f9); padding-top: 18px;">
+      <button type="button" onclick="resetAppThemeSettings()" style="background: transparent; border: 1px solid var(--border-color, #e2e8f0); color: var(--text-muted, #64748b); padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.84rem; cursor: pointer; transition: all 0.2s;">
+        🔄 Restablecer
+      </button>
+      <button type="button" onclick="closeThemeCustomizer()" style="background: var(--color-primary-gradient, linear-gradient(135deg, #2563eb, #3b82f6)); color: var(--color-primary-text, white); border: none; padding: 11px 24px; border-radius: 12px; font-weight: 800; font-size: 0.9rem; cursor: pointer; box-shadow: var(--shadow-primary);">
+        ✨ Listo / Guardar
+      </button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  /* ── GIG MANAGER: MOTOR DE PERSONALIZACIÓN Y TEMAS ── */
+  var DEFAULT_THEME_CONFIG = {
+    theme: 'light',
+    accent: 'sapphire',
+    density: 'normal',
+    radius: 'smooth',
+    sound: true
+  };
+
+  function getSavedThemeConfig() {
+    try {
+      var saved = localStorage.getItem('gig_theme_config');
+      if (saved) return Object.assign({}, DEFAULT_THEME_CONFIG, JSON.parse(saved));
+    } catch(e){}
+    return Object.assign({}, DEFAULT_THEME_CONFIG);
+  }
+
+  function saveThemeConfig(cfg) {
+    try {
+      localStorage.setItem('gig_theme_config', JSON.stringify(cfg));
+      localStorage.setItem('gig_sound_enabled', cfg.sound ? 'true' : 'false');
+    } catch(e){}
+  }
+
+  function applyThemeToDOM(cfg) {
+    var doc = document.documentElement;
+    var isDarkPref = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    
+    // Aplicar Modo
+    if (cfg.theme === 'system') {
+      doc.setAttribute('data-theme', isDarkPref ? 'dark' : 'light');
+    } else {
+      doc.setAttribute('data-theme', cfg.theme || 'light');
+    }
+
+    // Aplicar Acento
+    doc.setAttribute('data-accent', cfg.accent || 'sapphire');
+
+    // Aplicar Densidad
+    doc.setAttribute('data-density', cfg.density || 'normal');
+
+    // Aplicar Radio
+    doc.setAttribute('data-radius', cfg.radius || 'smooth');
+
+    // Sincronizar UI de modal si está abierto
+    syncModalControls(cfg);
+  }
+
+  function setAppTheme(themeVal) {
+    var cfg = getSavedThemeConfig();
+    cfg.theme = themeVal;
+    if (themeVal === 'gerovip') {
+      cfg.accent = 'gold';
+    }
+    saveThemeConfig(cfg);
+    applyThemeToDOM(cfg);
+  }
+
+  function setAppAccent(accentVal) {
+    var cfg = getSavedThemeConfig();
+    cfg.accent = accentVal;
+    saveThemeConfig(cfg);
+    applyThemeToDOM(cfg);
+  }
+
+  function setAppDensity(densityVal) {
+    var cfg = getSavedThemeConfig();
+    cfg.density = densityVal;
+    saveThemeConfig(cfg);
+    applyThemeToDOM(cfg);
+  }
+
+  function setAppRadius(radiusVal) {
+    var cfg = getSavedThemeConfig();
+    cfg.radius = radiusVal;
+    saveThemeConfig(cfg);
+    applyThemeToDOM(cfg);
+  }
+
+  function applyQuickGeroVipTheme() {
+    var cfg = getSavedThemeConfig();
+    cfg.theme = 'gerovip';
+    cfg.accent = 'gold';
+    cfg.radius = 'smooth';
+    saveThemeConfig(cfg);
+    applyThemeToDOM(cfg);
+    if (typeof playTone === 'function') {
+      var ctx = getGigAudioContext();
+      if (ctx) {
+        var now = ctx.currentTime;
+        playTone(523.25, now, 0.12, 'sine', 0.25);
+        playTone(659.25, now + 0.1, 0.12, 'sine', 0.28);
+        playTone(783.99, now + 0.2, 0.25, 'triangle', 0.32);
+      }
+    }
+  }
+
+  function toggleCustomizerSound(enabled) {
+    var cfg = getSavedThemeConfig();
+    cfg.sound = enabled;
+    saveThemeConfig(cfg);
+    syncSoundToggleUI(enabled);
+  }
+
+  function testCustomizerSound() {
+    if (typeof playNotificationSound === 'function') {
+      playNotificationSound('payment');
+    }
+  }
+
+  function resetAppThemeSettings() {
+    var cfg = Object.assign({}, DEFAULT_THEME_CONFIG);
+    saveThemeConfig(cfg);
+    applyThemeToDOM(cfg);
+  }
+
+  function syncModalControls(cfg) {
+    // 1. Botones de Tema
+    document.querySelectorAll('.theme-mode-btn').forEach(function(btn) {
+      var val = btn.getAttribute('data-theme-val');
+      if (val === cfg.theme) {
+        btn.style.borderColor = 'var(--color-primary, #2563eb)';
+        btn.style.boxShadow = '0 0 0 2px var(--color-primary-glow, rgba(37,99,235,0.25))';
+      } else {
+        btn.style.borderColor = 'var(--border-color, #e2e8f0)';
+        btn.style.boxShadow = 'none';
+      }
+    });
+
+    // 2. Botones de Acento
+    document.querySelectorAll('.accent-btn').forEach(function(btn) {
+      var val = btn.getAttribute('data-accent-val');
+      if (val === cfg.accent) {
+        btn.style.borderColor = 'var(--color-primary, #2563eb)';
+        btn.style.boxShadow = '0 0 0 2px var(--color-primary-glow, rgba(37,99,235,0.25))';
+      } else {
+        btn.style.borderColor = 'var(--border-color, #e2e8f0)';
+        btn.style.boxShadow = 'none';
+      }
+    });
+
+    // 3. Densidad
+    var normBtn = document.getElementById('density-normal-btn');
+    var compBtn = document.getElementById('density-compact-btn');
+    if (normBtn && compBtn) {
+      if (cfg.density === 'compact') {
+        compBtn.style.background = 'var(--color-primary, #2563eb)';
+        compBtn.style.color = 'var(--color-primary-text, #ffffff)';
+        normBtn.style.background = 'transparent';
+        normBtn.style.color = 'var(--text-muted, #64748b)';
+      } else {
+        normBtn.style.background = 'var(--color-primary, #2563eb)';
+        normBtn.style.color = 'var(--color-primary-text, #ffffff)';
+        compBtn.style.background = 'transparent';
+        compBtn.style.color = 'var(--text-muted, #64748b)';
+      }
+    }
+
+    // 4. Radio
+    var smBtn = document.getElementById('radius-smooth-btn');
+    var slBtn = document.getElementById('radius-sleek-btn');
+    if (smBtn && slBtn) {
+      if (cfg.radius === 'sleek') {
+        slBtn.style.background = 'var(--color-primary, #2563eb)';
+        slBtn.style.color = 'var(--color-primary-text, #ffffff)';
+        smBtn.style.background = 'transparent';
+        smBtn.style.color = 'var(--text-muted, #64748b)';
+      } else {
+        smBtn.style.background = 'var(--color-primary, #2563eb)';
+        smBtn.style.color = 'var(--color-primary-text, #ffffff)';
+        slBtn.style.background = 'transparent';
+        slBtn.style.color = 'var(--text-muted, #64748b)';
+      }
+    }
+
+    // 5. Sound toggle
+    syncSoundToggleUI(cfg.sound);
+  }
+
+  function syncSoundToggleUI(enabled) {
+    var chk = document.getElementById('theme-sound-toggle');
+    var slider = document.getElementById('theme-sound-slider');
+    if (chk) chk.checked = !!enabled;
+    if (slider) {
+      slider.style.backgroundColor = enabled ? 'var(--color-primary, #2563eb)' : '#cbd5e1';
+      slider.innerHTML = '<span style="position: absolute; content: \'\'; height: 18px; width: 18px; left: ' + (enabled ? '23px' : '3px') + '; bottom: 3px; background-color: white; transition: .25s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.2);"></span>';
+    }
+  }
+
+  function openThemeCustomizer() {
+    var modal = document.getElementById('theme-customizer-modal');
+    if (!modal) return;
+    syncModalControls(getSavedThemeConfig());
+    modal.style.display = 'flex';
+    requestAnimationFrame(function() {
+      modal.style.opacity = '1';
+    });
+  }
+
+  function closeThemeCustomizer() {
+    var modal = document.getElementById('theme-customizer-modal');
+    if (!modal) return;
+    modal.style.opacity = '0';
+    setTimeout(function() {
+      modal.style.display = 'none';
+    }, 250);
+  }
+
+  // Inicializar al cargar Turbo o DOM
+  document.addEventListener('turbo:load', function() {
+    applyThemeToDOM(getSavedThemeConfig());
+  });
+  document.addEventListener('DOMContentLoaded', function() {
+    applyThemeToDOM(getSavedThemeConfig());
+  });
+</script>
