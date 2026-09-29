@@ -62,10 +62,10 @@ class Company < ApplicationRecord
 
   TERMINOLOGY = {
     'music_band' => {
-      gig_singular: 'Show / Concierto',
-      gig_plural: 'Shows & Conciertos',
+      gig_singular: 'Gig / Show',
+      gig_plural: 'Gigs / Eventos',
       event_singular: 'Show',
-      event_plural: 'Shows',
+      event_plural: 'Eventos / Shows',
       musicians: 'Músicos & Artistas',
       musician_singular: 'Músico',
       musicians_timeline: 'Cronograma para Músicos',
