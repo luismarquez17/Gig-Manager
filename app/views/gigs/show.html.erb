@@ -1,139 +1,205 @@
 <div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', 'Segoe UI', sans-serif;">
 
-  <%# --- HEADER Y ACCIONES BASICAS --- %>
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+  <%# --- HEADER Y BARRA SUPERIOR DE ACCIONES --- %>
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
     <div>
-      <div style="display: flex; gap: 15px; align-items: center; margin-bottom: 10px;">
-        <%= link_to '⬅ Volver al Historial', gigs_path, style: "color: #64748b; text-decoration: none; font-weight: bold; font-size: 0.9em;" %>
+      <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+        <%= link_to gigs_path, style: "color: #64748b; text-decoration: none; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 5px; transition: color 0.15s;" do %>
+          <span>⬅</span> Volver al Historial
+        <% end %>
         <% if current_user.leader? %>
-          <span style="color: #cbd5e1;">|</span>
-          <%= link_to '✏️ Editar Evento', edit_gig_path(@gig), style: "color: #2563eb; text-decoration: none; font-weight: bold; font-size: 0.9em;" %>
+          <span style="color: #cbd5e1;">•</span>
+          <%= link_to edit_gig_path(@gig), style: "color: #2563eb; text-decoration: none; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 4px;" do %>
+            <span>✏️</span> Editar <%= company_term(:event_singular, 'Evento') %>
+          <% end %>
         <% end %>
       </div>
-      <h1 style="color: #2c3e50; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">📋 Panel del Evento</h1>
+      
+      <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+        <h1 style="color: var(--text-heading, #0f172a); margin: 0; font-weight: 900; font-size: 1.85rem; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+          <span>📋</span> Panel del <%= company_term(:event_singular, 'Evento') %>
+        </h1>
+        
+        <% if @gig.client %>
+          <%
+            priority_bg = case @gig.client.priority
+                          when 'alta' then '#ecfdf5'
+                          when 'media' then '#fffbeb'
+                          when 'baja' then '#fef2f2'
+                          else '#f1f5f9'
+                          end
+            priority_border = case @gig.client.priority
+                              when 'alta' then '#a7f3d0'
+                              when 'media' then '#fde68a'
+                              when 'baja' then '#fecaca'
+                              else '#cbd5e1'
+                              end
+            priority_color = case @gig.client.priority
+                             when 'alta' then '#059669'
+                             when 'media' then '#d97706'
+                             when 'baja' then '#dc2626'
+                             else '#64748b'
+                             end
+          %>
+          <span style="background: <%= priority_bg %>; color: <%= priority_color %>; border: 1px solid <%= priority_border %>; padding: 4px 12px; border-radius: 99px; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+            Prioridad: <%= @gig.client.priority.capitalize %>
+          </span>
+        <% end %>
+      </div>
     </div>
-    <div style="text-align: right; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end;">
-      <%= link_to stage_mode_gig_path(@gig), target: "_blank", style: "background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%); color: #818cf8; border: 1.5px solid #6366f1; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.25); transition: all 0.15s;" do %>
+
+    <%# Botones de Acción Rápida Alineados %>
+    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <%= link_to stage_mode_gig_path(@gig), target: "_blank", style: "background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%); color: #a5b4fc; border: 1px solid #4f46e5; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: transform 0.15s;" do %>
         <span>⚡</span> Modo Escenario
       <% end %>
 
-      <button type="button" onclick="openWhatsAppShareModal('whatsapp-share-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25); transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <button type="button" onclick="openWhatsAppShareModal('whatsapp-share-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: opacity 0.15s;">
         <span>💬</span> Mensajes WhatsApp
       </button>
 
-      <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 800; font-size: 0.85em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.25); transition: opacity 0.15s;" onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+      <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); transition: opacity 0.15s;">
         <span>📸</span> Ficha Visual WA
       </button>
-
-      <% if @gig.client %>
-        <%
-          priority_color = case @gig.client.priority
-                           when 'alta' then '#10b981'
-                           when 'media' then '#f59e0b'
-                           when 'baja' then '#ef4444'
-                           else '#64748b'
-                           end
-        %>
-        <span style="background: <%= priority_color %>; padding: 8px 18px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85em; box-shadow: 0 4px 6px <%= priority_color %>33;">
-          Prioridad: <%= @gig.client.priority.capitalize %>
-        </span>
-      <% else %>
-        <span style="background: #94a3b8; padding: 8px 18px; border-radius: 20px; color: white; font-weight: bold; font-size: 0.85em; box-shadow: 0 4px 6px rgba(148, 163, 184, 0.2);">
-          Sin Cliente
-        </span>
-      <% end %>
     </div>
   </div>
 
-  <%# --- DETALLES PRINCIPALES DEL EVENTO --- %>
-  <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
-    
-    <div>
-      <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Cliente</p>
-      <% if @gig.client %>
-        <p style="margin: 5px 0 0 0; font-size: 1.2em; font-weight: bold; color: #1e293b;"><%= link_to @gig.client.name, client_path(@gig.client), style: "color: #0ea5e9; text-decoration: none;" %></p>
-        <small style="color: #94a3b8;"><%= @gig.client.phone %></small>
-      <% else %>
-        <p style="margin: 5px 0 0 0; font-size: 1.2em; font-weight: bold; color: #64748b;">Sin Cliente Registrado</p>
-        <small style="color: #94a3b8;"><%= @gig.client_email %></small>
-      <% end %>
-    </div>
+  <%# --- TARJETA PRINCIPAL DEL EVENTO (LAYOUT LIMPIO Y BALANCEADO) --- %>
+  <div style="background: white; padding: 26px; border-radius: 20px; box-shadow: 0 4px 20px rgba(15, 23, 42, 0.04); border: 1px solid #e2e8f0; margin-bottom: 28px;">
+    <div style="display: grid; grid-template-columns: 1fr 360px; gap: 28px; align-items: stretch;" class="gig-hero-grid">
+      
+      <%# Lado Izquierdo: Información del Cliente y Fecha %>
+      <div style="display: flex; flex-direction: column; justify-content: space-between; gap: 20px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+          
+          <%# Bloque Cliente %>
+          <div style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #f1f5f9;">
+            <p style="margin: 0 0 6px 0; color: #64748b; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">👤 Cliente</p>
+            <% if @gig.client %>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 4px;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); color: white; display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 1.1rem; flex-shrink: 0;">
+                  <%= @gig.client.name.first&.upcase || 'C' %>
+                </div>
+                <div style="min-width: 0;">
+                  <p style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                    <%= link_to @gig.client.name, client_path(@gig.client), style: "color: #0284c7; text-decoration: none;" %>
+                  </p>
+                  <% if @gig.client.phone.present? && @gig.client.phone != '0000000000' %>
+                    <small style="color: #64748b; font-weight: 600; font-size: 0.82rem;">📞 <%= @gig.client.phone %></small>
+                  <% elsif @gig.client_email.present? %>
+                    <small style="color: #64748b; font-weight: 600; font-size: 0.82rem;">✉️ <%= @gig.client_email %></small>
+                  <% else %>
+                    <small style="color: #94a3b8; font-size: 0.8rem;">Sin teléfono registrado</small>
+                  <% end %>
+                </div>
+              </div>
+            <% else %>
+              <p style="margin: 0; font-size: 1.1rem; font-weight: 800; color: #64748b;">Sin Cliente Registrado</p>
+              <small style="color: #94a3b8;"><%= @gig.client_email.presence || 'Sin correo' %></small>
+            <% end %>
+          </div>
 
-    <div>
-      <p style="margin: 0; color: #64748b; font-size: 0.85em; font-weight: bold; text-transform: uppercase;">Fecha &amp; Ubicación</p>
-      <p style="margin: 5px 0 0 0; font-size: 1.1em; font-weight: bold; color: #1e293b;">📅 <%= @gig.date&.strftime("%d/%m/%Y") || "---" %></p>
-      <p style="margin: 2px 0 0 0; color: #475569;">📍 <%= @gig.location.presence || "No especificada" %></p>
-      <% if @gig.start_time.present? && @gig.end_time.present? %>
-        <p style="margin: 4px 0 0 0; color: #4f46e5; font-size: 0.9em; font-weight: 600;">🕐 <%= @gig.formatted_time_range %></p>
-      <% end %>
-    </div>
-
-    <% if current_user.leader? %>
-      <div style="min-width: 280px; background: #ffffff; padding: 18px 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03);">
-        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 10px;">
-          <div>
-            <p style="margin: 0; color: #64748b; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Presupuesto del <%= company_term(:event_singular, 'Evento') %></p>
-            <p style="margin: 4px 0 0 0; font-size: 1.5em; font-weight: 900; color: #0f172a;">
-              $<%= number_with_precision(@gig.amount, precision: 2) %> 
-              <span style="font-size: 0.55em; color: #64748b; font-weight: 700; vertical-align: middle;"><%= @gig.currency %></span>
+          <%# Bloque Fecha & Ubicación %>
+          <div style="background: #f8fafc; padding: 18px; border-radius: 16px; border: 1px solid #f1f5f9;">
+            <p style="margin: 0 0 6px 0; color: #64748b; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📅 Fecha &amp; Ubicación</p>
+            <p style="margin: 0 0 4px 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 6px;">
+              <span>📅</span> <%= @gig.date&.strftime("%d/%m/%Y") || "Fecha no definida" %>
             </p>
+            <p style="margin: 0; color: #475569; font-size: 0.88rem; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+              <span>📍</span> <%= @gig.location.presence || "Ubicación no especificada" %>
+            </p>
+            <% if @gig.start_time.present? && @gig.end_time.present? %>
+              <p style="margin: 4px 0 0 0; color: #4f46e5; font-size: 0.85rem; font-weight: 700; display: flex; align-items: center; gap: 6px;">
+                <span>🕐</span> <%= @gig.formatted_time_range %>
+              </p>
+            <% end %>
           </div>
-          <% if @gig.paid_in_full? %>
-            <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
-              ✓ 100% Cobrado
-            </span>
-          <% elsif @gig.total_received.positive? %>
-            <span style="background: #eff6ff; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
-              ⏳ <%= @gig.payment_percentage %>% Abonado
-            </span>
-          <% else %>
-            <span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.75em; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
-              ⚠️ Sin Abonos
-            </span>
-          <% end %>
-        </div>
-        
-        <div style="background: #f8fafc; padding: 12px 14px; border-radius: 12px; border: 1px solid #e2e8f0; margin-bottom: 12px;">
-          <%= render 'gigs/payment_progress', gig: @gig, size: :normal, show_details: true, show_footer: true %>
+
         </div>
 
-        <div style="display:flex; gap:8px; flex-wrap: wrap; margin-bottom: 10px;">
-          <%= link_to '📋 Ver pagos y recibos', gig_gig_payments_path(@gig), style: 'background: #eef2ff; color: #3730a3; padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em; flex: 1; text-align: center;' %>
-          <%= link_to '➕ Registrar abono', new_gig_gig_payment_path(@gig), style: 'background: #dcfce7; color: #065f46; padding: 8px 14px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em; flex: 1; text-align: center;' %>
-        </div>
+        <%# Bloque Opcional de Detalles Técnicos o Repertorio %>
+        <% show_music_preview = (current_user.leader? || current_user.staff?) && @gig.has_music_notes? %>
+        <% if @gig.details.present? || show_music_preview %>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px;">
+            <% if @gig.details.present? %>
+              <div style="background: #f1f5f9; padding: 14px 16px; border-radius: 12px; border-left: 4px solid #3b82f6;">
+                <p style="margin: 0; color: #475569; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📦 Paquete &amp; Detalles</p>
+                <p style="margin: 4px 0 0 0; color: #1e293b; line-height: 1.45; font-size: 0.88rem;"><%= @gig.details %></p>
+              </div>
+            <% end %>
 
-        <%
-          statement_wa_text = @gig.whatsapp_payment_statement_text(public_portal_url(token: @gig.portal_token))
-          statement_wa_url = @gig.client&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@gig.client.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(statement_wa_text)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(statement_wa_text)}"
-        %>
-        <a href="<%= statement_wa_url %>" target="_blank" style="background: #25d366; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 8px 12px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.82em; width: 100%; box-sizing: border-box; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.25);">
-          <span>📲 Enviar Estado de Cuenta por WhatsApp</span>
-        </a>
-      </div>
-    <% end %>
-
-    <% show_music_preview = (current_user.leader? || current_user.staff?) && @gig.has_music_notes? %>
-    <% if @gig.details.present? || show_music_preview %>
-      <div style="grid-column: 1 / -1; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-        <% if @gig.details.present? %>
-          <div style="background: #f8fafc; padding: 16px; border-radius: 14px; border-left: 4px solid #3b82f6;">
-            <p style="margin: 0; color: #64748b; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">📦 Detalles Técnicos / Paquete</p>
-            <p style="margin: 6px 0 0 0; color: #334155; line-height: 1.5; font-size: 0.92em;"><%= @gig.details %></p>
+            <% if show_music_preview %>
+              <div style="background: #faf5ff; padding: 14px 16px; border-radius: 12px; border-left: 4px solid #8b5cf6;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <p style="margin: 0; color: #6d28d9; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🎵 Repertorio &amp; Protocolo</p>
+                  <a href="#seccion-notas-musicales" style="color: #7c3aed; font-size: 0.75rem; font-weight: 700; text-decoration: none;">Ver ↓</a>
+                </div>
+                <p style="margin: 4px 0 0 0; color: #3b0764; line-height: 1.45; font-size: 0.88rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;"><%= @gig.music_notes %></p>
+              </div>
+            <% end %>
           </div>
         <% end %>
+      </div>
 
-        <% if show_music_preview %>
-          <div style="background: #faf5ff; padding: 16px; border-radius: 14px; border-left: 4px solid #8b5cf6;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-              <p style="margin: 0; color: #6d28d9; font-size: 0.82em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🎵 Repertorio &amp; Protocolo Musical</p>
-              <a href="#seccion-notas-musicales" style="color: #7c3aed; font-size: 0.8em; font-weight: 700; text-decoration: none;">Ver completo ↓</a>
+      <%# Lado Derecho: Widget de Finanzas y Cobranzas %>
+      <% if current_user.leader? %>
+        <div style="background: #ffffff; padding: 20px 22px; border-radius: 16px; border: 1.5px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; gap: 14px;">
+          
+          <div>
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 6px; gap: 8px;">
+              <div>
+                <p style="margin: 0; color: #64748b; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+                  Presupuesto del <%= company_term(:event_singular, 'Evento') %>
+                </p>
+                <p style="margin: 2px 0 0 0; font-size: 1.65rem; font-weight: 900; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">
+                  $<%= number_with_precision(@gig.amount, precision: 2) %> 
+                  <span style="font-size: 0.55em; color: #64748b; font-weight: 700; vertical-align: middle;"><%= @gig.currency %></span>
+                </p>
+              </div>
+              
+              <% if @gig.paid_in_full? %>
+                <span style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
+                  ✓ 100% Cobrado
+                </span>
+              <% elsif @gig.total_received.positive? %>
+                <span style="background: #eff6ff; color: #0284c7; border: 1px solid #bae6fd; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
+                  ⏳ <%= @gig.payment_percentage %>% Abonado
+                </span>
+              <% else %>
+                <span style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; font-size: 0.75rem; font-weight: 800; padding: 4px 10px; border-radius: 99px; white-space: nowrap;">
+                  ⚠️ Sin Abonos
+                </span>
+              <% end %>
             </div>
-            <p style="margin: 6px 0 0 0; color: #3b0764; line-height: 1.5; font-size: 0.92em; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;"><%= @gig.music_notes %></p>
+            
+            <div style="background: #f8fafc; padding: 10px 12px; border-radius: 12px; border: 1px solid #e2e8f0; margin-top: 10px;">
+              <%= render 'gigs/payment_progress', gig: @gig, size: :normal, show_details: true, show_footer: true %>
+            </div>
           </div>
-        <% end %>
-      </div>
-    <% end %>
 
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+              <%= link_to gig_gig_payments_path(@gig), style: 'background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 9px 12px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.82rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s;' do %>
+                <span>📋</span> Ver Pagos
+              <% end %>
+              
+              <%= link_to new_gig_gig_payment_path(@gig), style: 'background: #059669; color: white; border: none; padding: 9px 12px; border-radius: 10px; font-weight: 800; text-decoration: none; font-size: 0.82rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25); transition: opacity 0.15s;' do %>
+                <span>➕</span> Registrar Abono
+              <% end %>
+            </div>
+
+            <%
+              statement_wa_text = @gig.whatsapp_payment_statement_text(public_portal_url(token: @gig.portal_token))
+              statement_wa_url = @gig.client&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@gig.client.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(statement_wa_text)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(statement_wa_text)}"
+            %>
+            <a href="<%= statement_wa_url %>" target="_blank" style="background: #25d366; color: white; display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 9px 12px; border-radius: 10px; font-weight: 800; text-decoration: none; font-size: 0.82rem; width: 100%; box-sizing: border-box; box-shadow: 0 2px 8px rgba(37, 211, 102, 0.25); transition: opacity 0.15s;">
+              <span>📲</span> Enviar Estado de Cuenta por WhatsApp
+            </a>
+          </div>
+        </div>
+      <% end %>
+
+    </div>
   </div>
 
   <%# --- BANNER DE SOLICITUDES DE ADICIONALES (UPSELLS) DEL CLIENTE --- %>

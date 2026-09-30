@@ -1167,3 +1167,10 @@ html, body {
     margin-bottom: 20px !important;
   }
 }
+
+@media (max-width: 960px) {
+  .gig-hero-grid {
+    grid-template-columns: 1fr !important;
+    gap: 20px !important;
+  }
+}
