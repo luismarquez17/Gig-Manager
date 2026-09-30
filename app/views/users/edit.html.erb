@@ -65,10 +65,36 @@
         <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #94a3b8;">Si lo dejas en blanco, se usará la parte del correo electrónico como nombre.</p>
       </div>
 
+      <%# --- DATOS DE CONTACTO (TELÉFONO) --- %>
+      <div style="margin-bottom: 20px;">
+        <%= f.label :phone, "📞 Teléfono / WhatsApp", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+        <%= f.telephone_field :phone, placeholder: "Ej: 04121234567 / +584141234567", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
+        <p style="margin: 5px 0 0 0; font-size: 0.8em; color: #94a3b8;">Utilizado para compartir pautas de shows y notificaciones por WhatsApp.</p>
+      </div>
+
+      <%# --- TRABAJADOR EVENTUAL / ASIGNACIÓN DE CORREO --- %>
+      <% if @user.eventual? && (current_user.leader? || current_user.superadmin?) %>
+        <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 14px; padding: 16px; margin-bottom: 22px;">
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+            <span style="font-size: 1.2rem;">⚡</span>
+            <h4 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #92400e;">
+              Trabajador Eventual (Sin Cuenta de Inicio de Sesión)
+            </h4>
+          </div>
+          <p style="margin: 0 0 12px 0; font-size: 0.85rem; color: #78350f; line-height: 1.45;">
+            Si deseas que este trabajador pueda iniciar sesión en la aplicación, asígnale su correo electrónico oficial a continuación. Conservará todo su historial previo de eventos, pagos y balances.
+          </p>
+          <div>
+            <%= f.label :email, "📧 Correo Electrónico para Inicio de Sesión", style: "display: block; font-weight: 800; color: #92400e; margin-bottom: 4px; font-size: 0.85rem;" %>
+            <%= f.email_field :email, value: (@user.placeholder_email? ? '' : @user.email), placeholder: "correo@trabajador.com", style: "width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e0; border-radius: 8px; box-sizing: border-box; font-size: 0.95rem; background: white;" %>
+          </div>
+        </div>
+      <% end %>
+
       <%# --- DATOS DE CLIENTE --- %>
       <% if @user.client? && @user.client.present? %>
         <div style="margin-bottom: 20px;">
-          <label style="display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;">📞 Teléfono de Contacto</label>
+          <label style="display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;">📞 Teléfono de Cliente</label>
           <%= text_field_tag "user[client_phone]", @user.client.phone, placeholder: "Ej: +584141234567", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
         </div>
       <% end %>
@@ -77,14 +103,14 @@
       <% unless @user.client? %>
         <%# --- ESPECIALIDAD --- %>
         <div style="margin-bottom: 20px;">
-          <%= f.label :specialty, "🎸 Especialidad o Rol", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
-          <%= f.text_field :specialty, placeholder: "Ej: DJ Principal, Sonidista, Técnico de Luces, Cantante", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
+          <%= f.label :specialty, "🎸 Especialidad o Cargo", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+          <%= f.text_field :specialty, placeholder: "Ej: DJ Principal, Mesonero, Técnico de Sonido, Protocolo", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em;" %>
         </div>
 
         <%# --- BIO --- %>
         <div style="margin-bottom: 25px;">
-          <%= f.label :bio, "📝 Biografía Corta (Mensaje para el Cliente)", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
-          <%= f.text_area :bio, rows: 4, placeholder: "Ej: Con más de 8 años de experiencia animando eventos corporativos y bodas. Especialista en música crossover y mezclas en vivo...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em; resize: vertical; font-family: inherit;" %>
+          <%= f.label :bio, "📝 Biografía Corta / Notas", style: "display: block; font-weight: bold; color: #4a5568; margin-bottom: 8px;" %>
+          <%= f.text_area :bio, rows: 4, placeholder: "Ej: Experiencia animando eventos, manejo de audio en vivo, etc...", style: "width: 100%; padding: 12px; border: 1px solid #cbd5e0; border-radius: 10px; box-sizing: border-box; font-size: 1em; resize: vertical; font-family: inherit;" %>
         </div>
       <% end %>
 

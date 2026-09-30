@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_29_230000) do
+ActiveRecord::Schema[7.1].define(version: 2026_09_30_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -561,9 +561,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_29_230000) do
     t.bigint "company_id"
     t.boolean "show_on_landing", default: true, null: false
     t.integer "landing_position", default: 0
+    t.boolean "is_eventual", default: false, null: false
+    t.string "phone"
     t.index ["client_id"], name: "index_users_on_client_id"
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
+    t.index ["is_eventual"], name: "index_users_on_is_eventual"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 

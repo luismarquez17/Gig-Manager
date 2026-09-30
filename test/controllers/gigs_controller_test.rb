@@ -42,6 +42,29 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_not_includes other_worker.app_notifications, personal_notif
   end
 
+  test "should quick-create and assign eventual worker in gig without email" do
+    assert_difference "User.count", 1 do
+      assert_difference "@gig.staff_assignments.count", 1 do
+        post assign_staff_gig_url(@gig), params: {
+          new_eventual_worker_name: "Técnico Luces Eventual",
+          new_eventual_worker_role: "staff",
+          new_eventual_worker_phone: "04120001122",
+          agreed_amount: 80.0
+        }
+      end
+    end
+
+    assert_redirected_to gig_url(@gig)
+    created_worker = User.last
+    assert created_worker.eventual?
+    assert_equal "Técnico Luces Eventual", created_worker.name
+    assert_equal "04120001122", created_worker.phone
+
+    assignment = @gig.staff_assignments.find_by(user_id: created_worker.id)
+    assert_not_nil assignment
+    assert_equal 80.0, assignment.agreed_amount.to_f
+  end
+
   test "should remove staff from gig" do
     worker = users(:two)
     @gig.staff_assignments.create!(user: worker, agreed_amount: 100.0)

@@ -1,27 +1,48 @@
 class UsersController < ApplicationController
-  before_action :set_user, only: [:show, :edit, :update, :update_role]
-  before_action :require_leader!, only: [:index, :create_worker, :update_role]
+  before_action :set_user, only: [:show, :edit, :update, :update_role, :claim_account]
+  before_action :require_leader!, only: [:index, :create_worker, :update_role, :claim_account]
   before_action :require_profile_viewer_or_self!, only: [:show]
   before_action :require_self_or_leader!, only: [:edit, :update]
 
   def index
-    @users = current_company.users.order(created_at: :desc)
+    @users = current_company.users.order(is_eventual: :asc, created_at: :desc)
     @new_user = User.new
   end
 
   def create_worker
+    is_eventual = params[:eventual] == '1' || params.dig(:user, :is_eventual) == '1' || params.dig(:user, :email).blank?
     email = params.dig(:user, :email).to_s.strip.downcase
     name = params.dig(:user, :name).to_s.strip
     role = params.dig(:user, :role).to_s.presence || 'staff'
+    phone = params.dig(:user, :phone).to_s.strip.presence
+    specialty = params.dig(:user, :specialty).to_s.strip.presence
     password = params.dig(:user, :password).to_s.presence
-
-    if email.blank?
-      redirect_to users_path, alert: "Debes ingresar un correo electrónico válido."
-      return
-    end
 
     unless %w[staff musician leader].include?(role)
       role = 'staff'
+    end
+
+    if is_eventual && email.blank?
+      if name.blank?
+        redirect_to users_path, alert: "Debes ingresar al menos el nombre del trabajador eventual."
+        return
+      end
+
+      worker = User.create_eventual_worker!(
+        company: current_company,
+        name: name,
+        role: role,
+        phone: phone,
+        specialty: specialty
+      )
+
+      redirect_to users_path, notice: "⚡ Trabajador eventual '#{worker.display_name}' agregado exitosamente a #{current_company.name} como #{worker.role.capitalize}. ¡Listo para asignar en eventos y nómina!"
+      return
+    end
+
+    if email.blank?
+      redirect_to users_path, alert: "Debes ingresar un correo electrónico válido o registrar como trabajador eventual."
+      return
     end
 
     existing_user = User.find_by(email: email)
@@ -31,6 +52,9 @@ class UsersController < ApplicationController
       existing_user.company = current_company
       existing_user.role = role
       existing_user.name = name if name.present?
+      existing_user.phone = phone if phone.present?
+      existing_user.specialty = specialty if specialty.present?
+      existing_user.is_eventual = false
       if password.present?
         existing_user.password = password
         existing_user.password_confirmation = password
@@ -47,7 +71,10 @@ class UsersController < ApplicationController
         email: email,
         name: name.presence || email.split('@').first.capitalize,
         role: role,
+        phone: phone,
+        specialty: specialty,
         company: current_company,
+        is_eventual: false,
         password: temp_password,
         password_confirmation: temp_password
       )
@@ -58,6 +85,33 @@ class UsersController < ApplicationController
         redirect_to users_path, alert: "No se pudo agregar al trabajador: #{new_user.errors.full_messages.to_sentence}"
       end
     end
+  end
+
+  def claim_account
+    new_email = params.dig(:user, :email).to_s.strip.downcase
+    new_password = params.dig(:user, :password).to_s.presence
+    new_name = params.dig(:user, :name).to_s.strip.presence || @user.name
+
+    if new_email.blank?
+      redirect_to users_path, alert: "Debes ingresar un correo electrónico válido para habilitar el inicio de sesión."
+      return
+    end
+
+    if new_password.blank? || new_password.length < 6
+      redirect_to users_path, alert: "La contraseña debe tener al menos 6 caracteres."
+      return
+    end
+
+    existing = User.where.not(id: @user.id).find_by(email: new_email)
+    if existing
+      redirect_to users_path, alert: "El correo #{new_email} ya pertenece a otra cuenta en el sistema."
+      return
+    end
+
+    @user.claim_account!(new_email, new_password, new_name)
+    redirect_to users_path, notice: "🎉 ¡Acceso habilitado con éxito para #{@user.display_name}! Ahora puede iniciar sesión con #{new_email}."
+  rescue => e
+    redirect_to users_path, alert: "No se pudo habilitar la cuenta: #{e.message}"
   end
 
   def show
@@ -140,6 +194,9 @@ class UsersController < ApplicationController
   end
 
   def user_params
-    params.require(:user).permit(:name, :specialty, :bio, :avatar, :avatar_base64, :password, :password_confirmation)
+    permitted = [:name, :phone, :specialty, :bio, :avatar, :avatar_base64, :password, :password_confirmation]
+    permitted << :email if current_user&.leader? || current_user&.superadmin? || @user&.eventual?
+    permitted << :is_eventual if current_user&.leader? || current_user&.superadmin?
+    params.require(:user).permit(permitted)
   end
 end

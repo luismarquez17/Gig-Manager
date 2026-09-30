@@ -173,6 +173,7 @@ Rails.application.routes.draw do
     end
     member do
       patch :update_role
+      post :claim_account
     end
   end
   resources :employee_payments, only: [:index, :new, :create, :edit, :update, :destroy] do

@@ -126,4 +126,47 @@ class UsersControllerTest < ActionDispatch::IntegrationTest
     end
     assert_redirected_to root_path
   end
+
+  test "leader should create eventual worker without email" do
+    sign_in @leader
+    assert_difference("User.count", 1) do
+      post create_worker_users_url, params: {
+        eventual: "1",
+        user: {
+          name: "Ramón Mesonero",
+          role: "staff",
+          specialty: "Mesonero",
+          phone: "04249998877"
+        }
+      }
+    end
+    assert_redirected_to users_path
+    new_worker = User.last
+    assert new_worker.eventual?
+    assert_equal "Ramón Mesonero", new_worker.name
+    assert_equal "04249998877", new_worker.phone
+    assert_equal @leader.company_id, new_worker.company_id
+  end
+
+  test "leader should claim eventual worker account and set real credentials" do
+    sign_in @leader
+    eventual_worker = User.create_eventual_worker!(
+      company: @leader.company,
+      name: "Laura Protocolo",
+      role: "staff"
+    )
+
+    post claim_account_user_url(eventual_worker), params: {
+      user: {
+        email: "laura.protocolo@example.com",
+        password: "password123"
+      }
+    }
+
+    assert_redirected_to users_path
+    eventual_worker.reload
+    assert_not eventual_worker.eventual?
+    assert_equal "laura.protocolo@example.com", eventual_worker.email
+    assert eventual_worker.valid_password?("password123")
+  end
 end

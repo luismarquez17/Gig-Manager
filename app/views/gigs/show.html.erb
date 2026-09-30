@@ -697,21 +697,98 @@
         <span style="font-size: 0.85em; color: #64748b; font-weight: 600;">Total acordado: $<%= number_with_precision(@gig.staff_assignments.sum(:agreed_amount), precision: 2) %></span>
       </h3>
 
-      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
-        <div style="flex: 1; min-width: 240px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;"><%= company_term(:assign_worker_label, (venue_mode? ? 'Seleccionar trabajador o proveedor (Staff / Pasapalos / Protocolo / Sonido)' : 'Seleccionar trabajador (Staff / Músico)')) %></label>
-          <%= f.select :staff_id, current_company.users.workers.order(:name, :email).map { |w| ["#{w.display_name} (#{w.role.to_s.capitalize})", w.id] }, { prompt: company_term(:assign_worker_prompt, (venue_mode? ? "-- Seleccionar trabajador o proveedor --" : "-- Seleccionar personal --")) }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, id: "assign-staff-form", style: "background: #f8fafc; padding: 16px; border-radius: 14px; border: 1px solid #e2e8f0; margin-bottom: 12px;" do |f| %>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 8px;">
+          <label style="font-size: 0.85em; font-weight: 800; color: #334155; text-transform: uppercase; letter-spacing: 0.5px;">
+            <%= company_term(:assign_worker_label, (venue_mode? ? 'Asignar Personal o Proveedor a este Evento' : 'Asignar Personal o Músico a este Show')) %>
+          </label>
+          <button type="button" onclick="toggleQuickEventualWorker()" id="toggle-eventual-btn" style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; font-size: 0.78rem; font-weight: 800; padding: 3px 10px; border-radius: 8px; cursor: pointer;">
+            ⚡ Crear Nuevo Trabajador Eventual Rápido
+          </button>
         </div>
-        <div style="flex: 1; min-width: 220px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;"><%= company_term(:assign_worker_help, (venue_mode? ? '¿Cuánto le vas a pagar a este trabajador o proveedor? ($ USD)' : '¿Cuánto le vas a pagar a este personal? ($ USD)')) %></label>
-          <%= f.text_field :agreed_amount, inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+
+        <%# Opción 1: Seleccionar Personal Existente %>
+        <div id="assign-existing-worker-box" style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+          <div style="flex: 1.3; min-width: 240px;">
+            <label style="display: block; font-size: 0.82em; font-weight: 700; color: #64748b; margin-bottom: 4px;">Seleccionar integrante:</label>
+            <%= f.select :staff_id, current_company.users.workers.order(:is_eventual, :name, :email).map { |w| [w.eventual? ? "⚡ #{w.display_name} (Eventual - #{w.role.to_s.capitalize})" : "#{w.display_name} (#{w.role.to_s.capitalize})", w.id] }, { prompt: company_term(:assign_worker_prompt, (venue_mode? ? "-- Seleccionar trabajador o proveedor --" : "-- Seleccionar personal --")) }, id: "gig-staff-select-input", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: white;" %>
+          </div>
+          <div style="flex: 1; min-width: 180px;">
+            <label style="display: block; font-size: 0.82em; font-weight: 700; color: #64748b; margin-bottom: 4px;"><%= company_term(:assign_worker_help, 'Pago acordado ($ USD):') %></label>
+            <%= f.text_field :agreed_amount, inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: white;" %>
+          </div>
+          <div>
+            <%= f.submit company_term(:assign_worker_btn, (venue_mode? ? "➕ Asignar al Evento" : "➕ Asignar al Show")), style: "background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.88rem; box-shadow: 0 2px 8px rgba(37,99,235,0.25);" %>
+          </div>
         </div>
-        <div>
-          <%= f.submit company_term(:assign_worker_btn, (venue_mode? ? "➕ Asignar trabajador / proveedor" : "➕ Asignar trabajador")), style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
+
+        <%# Opción 2: Crear Trabajador Eventual en 1 paso %>
+        <div id="assign-new-eventual-box" style="display: none; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 14px; margin-top: 10px;">
+          <div style="font-size: 0.82rem; font-weight: 800; color: #92400e; margin-bottom: 8px; display: flex; align-items: center; gap: 6px;">
+            <span>⚡</span> Crear y Asignar Trabajador Eventual (Sin pedirle correo)
+          </div>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: flex-end;">
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Nombre / Apodo *</label>
+              <input type="text" name="new_eventual_worker_name" id="new_eventual_worker_name" placeholder="Ej: Pedro Mesonero / DJ Carlos" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Rol / Función</label>
+              <select name="new_eventual_worker_role" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+                <option value="staff">Staff (Técnico / Salón)</option>
+                <option value="musician">Músico / Artista</option>
+              </select>
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Teléfono WhatsApp (Opcional)</label>
+              <input type="tel" name="new_eventual_worker_phone" placeholder="Ej: 04121234567" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+            </div>
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Pago Acordado ($ USD) *</label>
+              <input type="text" name="agreed_amount" inputmode="decimal" placeholder="0.00" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+            </div>
+            <div>
+              <button type="submit" style="width: 100%; background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: white; border: none; padding: 9px 14px; border-radius: 7px; font-weight: 800; cursor: pointer; font-size: 0.88rem; box-shadow: 0 2px 8px rgba(180,83,9,0.25);">
+                ⚡ Crear y Asignar
+              </button>
+            </div>
+          </div>
         </div>
+
       <% end %>
+
+      <script>
+        function toggleQuickEventualWorker() {
+          const existingBox = document.getElementById('assign-existing-worker-box');
+          const eventualBox = document.getElementById('assign-new-eventual-box');
+          const toggleBtn = document.getElementById('toggle-eventual-btn');
+          const selectStaff = document.getElementById('gig-staff-select-input');
+          const newNameInput = document.getElementById('new_eventual_worker_name');
+
+          if (eventualBox.style.display === 'none') {
+            eventualBox.style.display = 'block';
+            existingBox.style.display = 'none';
+            toggleBtn.textContent = '👤 Elegir Integrante Existente';
+            toggleBtn.style.background = '#e0f2fe';
+            toggleBtn.style.color = '#0369a1';
+            toggleBtn.style.borderColor = '#bae6fd';
+            if (selectStaff) selectStaff.value = '';
+            if (newNameInput) newNameInput.focus();
+          } else {
+            eventualBox.style.display = 'none';
+            existingBox.style.display = 'flex';
+            toggleBtn.textContent = '⚡ Crear Nuevo Trabajador Eventual Rápido';
+            toggleBtn.style.background = '#fef3c7';
+            toggleBtn.style.color = '#92400e';
+            toggleBtn.style.borderColor = '#fde68a';
+            if (newNameInput) newNameInput.value = '';
+          }
+        }
+      </script>
+
       <div style="margin-bottom: 20px; font-size: 0.82rem; color: #64748b; padding-left: 4px;">
-        💡 <%= company_term(:assign_worker_tip, (venue_mode? ? '¿No encuentras a tu trabajador o proveedor (ej. pasapalos, sonido, protocolo) en la lista?' : '¿No encuentras a tu músico o staff en la lista?')) %> <%= link_to "Agrégalo o cámbiale el rol en Gestión de Usuarios →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
+        💡 <%= company_term(:assign_worker_tip, (venue_mode? ? '¿Deseas gestionar todos tus trabajadores y proveedores?' : '¿Deseas gestionar tu equipo y roles?')) %> <%= link_to "Ir a Gestión de Usuarios y Personal →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
@@ -720,12 +797,37 @@
           <% paid = sa.total_paid %>
           <% agreed = sa.agreed_amount.to_f %>
           <% balance = sa.balance %>
-          <div style="background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+          <div style="background: <%= staff.eventual? ? '#fffbeb' : '#f8fafc' %>; padding: 12px 16px; border-radius: 12px; border: 1.5px solid <%= staff.eventual? ? '#fde68a' : '#e2e8f0' %>; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-              <span style="font-size: 1.2em;">👤</span>
+              <span style="font-size: 1.25em;"><%= staff.eventual? ? '⚡' : '👤' %></span>
               <div>
-                <%= link_to staff.display_name, user_path(staff), style: "color: #0f172a; font-weight: 700; text-decoration: none;" %>
-                <div style="font-size: 0.8em; color: #64748b;"><%= staff.email %></div>
+                <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                  <%= link_to staff.display_name, user_path(staff), style: "color: #0f172a; font-weight: 800; text-decoration: none; font-size: 0.95rem;" %>
+                  <% if staff.eventual? %>
+                    <span style="font-size: 0.7rem; font-weight: 800; padding: 1px 6px; border-radius: 4px; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+                      ⚡ Eventual
+                    </span>
+                  <% end %>
+                  <% if staff.specialty.present? %>
+                    <span style="font-size: 0.72rem; font-weight: 600; color: #64748b; background: rgba(0,0,0,0.04); padding: 1px 6px; border-radius: 4px;">
+                      <%= staff.specialty %>
+                    </span>
+                  <% end %>
+                </div>
+                
+                <div style="font-size: 0.78em; color: #64748b; margin-top: 1px;">
+                  <% if staff.eventual? %>
+                    <span style="color: #92400e; font-weight: 600;">Sin cuenta</span>
+                    <% if staff.phone.present? %>
+                      • <span style="color: #059669; font-weight: 700;">📱 <%= staff.phone %></span>
+                    <% end %>
+                  <% else %>
+                    <%= staff.email %>
+                    <% if staff.phone.present? %>
+                      • <span style="color: #059669; font-weight: 700;">📱 <%= staff.phone %></span>
+                    <% end %>
+                  <% end %>
+                </div>
               </div>
             </div>
 

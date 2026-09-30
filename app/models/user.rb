@@ -11,6 +11,16 @@ class User < ApplicationRecord
     base_scope = where(role: [:staff, :leader, :musician, :superadmin])
     tenant.present? ? base_scope.where(company_id: tenant.id) : base_scope
   }
+  scope :eventual, -> { where(is_eventual: true) }
+  scope :registered, -> { where(is_eventual: false) }
+
+  def eventual?
+    is_eventual == true
+  end
+
+  def placeholder_email?
+    email.to_s.end_with?('@eventual.gigmanager.local')
+  end
 
   def leader?
     super || superadmin?
@@ -73,11 +83,44 @@ class User < ApplicationRecord
   end
 
   def display_name
-    name.presence || email.split('@').first.capitalize
+    if name.present?
+      name
+    elsif eventual?
+      "Trabajador Eventual"
+    else
+      email.split('@').first.capitalize
+    end
   end
 
   def phone_number
-    client&.phone.presence || company&.whatsapp_number.presence || company&.contact_phone.presence
+    phone.presence || client&.phone.presence || company&.whatsapp_number.presence || company&.contact_phone.presence
+  end
+
+  def claim_account!(new_email, new_password, new_name = nil)
+    self.email = new_email.to_s.strip.downcase
+    self.password = new_password
+    self.password_confirmation = new_password
+    self.name = new_name.to_s.strip if new_name.present?
+    self.is_eventual = false
+    save!
+  end
+
+  def self.create_eventual_worker!(company:, name:, role: 'staff', phone: nil, specialty: nil)
+    dummy_email = "eventual_#{SecureRandom.hex(6)}@eventual.gigmanager.local"
+    dummy_pass = SecureRandom.hex(16)
+    valid_role = %w[staff musician leader].include?(role.to_s) ? role.to_s : 'staff'
+
+    create!(
+      company: company,
+      name: name.to_s.strip,
+      role: valid_role,
+      phone: phone.presence,
+      specialty: specialty.presence,
+      email: dummy_email,
+      password: dummy_pass,
+      password_confirmation: dummy_pass,
+      is_eventual: true
+    )
   end
 
   def formatted_phone_for_whatsapp

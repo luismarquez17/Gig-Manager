@@ -188,7 +188,7 @@
               <%
                 user = assignment.user
                 ind_text = gig.whatsapp_staff_call_sheet_text(user, stage_url)
-                user_phone = user.respond_to?(:phone) ? user.phone : nil
+                user_phone = user.phone_number
                 user_snippet_id = "text-staff-#{gig.id}-#{assignment.id}"
               %>
               <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap;">

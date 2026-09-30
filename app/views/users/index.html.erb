@@ -1,89 +1,214 @@
-<div style="max-width: 1000px; margin: 0 auto;">
-  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+<div style="max-width: 1050px; margin: 0 auto; padding-bottom: 40px;">
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
     <div>
-      <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👥 Gestión de Usuarios & Equipo</h1>
-      <p style="color: #64748b; margin: 5px 0 0 0;"><%= venue_mode? ? 'Asigna roles a los trabajadores, proveedores de servicios (pasapalos, sonido, protocolo) o líderes de tu empresa.' : 'Asigna roles de Staff, Músico o Líder a los integrantes de tu agrupación.' %></p>
+      <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👥 Gestión de Personal & Equipo</h1>
+      <p style="color: #64748b; margin: 5px 0 0 0;"><%= venue_mode? ? 'Gestiona tu equipo fijo, trabajadores eventuales (mesoneros, técnicos, protocolo) y proveedores de servicios.' : 'Gestiona integrantes fijos, músicos y trabajadores eventuales de tu agrupación.' %></p>
+    </div>
+
+    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <span style="font-size: 0.8rem; font-weight: 800; padding: 6px 12px; border-radius: 10px; background: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd;">
+        👤 Total: <%= @users.count %>
+      </span>
+      <span style="font-size: 0.8rem; font-weight: 800; padding: 6px 12px; border-radius: 10px; background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;">
+        🔑 Con Cuenta: <%= @users.registered.count %>
+      </span>
+      <span style="font-size: 0.8rem; font-weight: 800; padding: 6px 12px; border-radius: 10px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">
+        ⚡ Eventuales: <%= @users.eventual.count %>
+      </span>
     </div>
   </div>
 
   <!-- Caja de Enlace de Invitación Directa para el Equipo -->
   <% if current_company.present? %>
-    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 20px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #334155; shadow: 0 10px 25px rgba(0,0,0,0.1);">
+    <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 18px 22px; border-radius: 16px; margin-bottom: 22px; border: 1px solid #334155; box-shadow: 0 8px 20px rgba(0,0,0,0.08);">
       <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
         <div>
-          <div style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">🔗 Enlace de Registro para tu Equipo</div>
-          <div style="font-size: 0.95rem; color: #cbd5e1;">Comparte este enlace a tus <%= venue_mode? ? 'nuevos trabajadores o proveedores' : 'nuevos músicos o trabajadores' %> para que se unan directamente a <strong style="color: white;"><%= current_company.name %></strong>:</div>
-          <div style="margin-top: 8px; font-family: monospace; font-size: 0.9em; background: rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 8px; color: #a7f3d0; word-break: break-all; display: inline-block;">
+          <div style="font-size: 0.76rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px;">🔗 Enlace de Registro para tu Equipo</div>
+          <div style="font-size: 0.9rem; color: #cbd5e1;">Comparte este enlace si deseas que un trabajador se registre por su cuenta y se vincule a <strong style="color: white;"><%= current_company.name %></strong>:</div>
+          <div style="margin-top: 6px; font-family: monospace; font-size: 0.85em; background: rgba(255,255,255,0.08); padding: 6px 12px; border-radius: 8px; color: #a7f3d0; word-break: break-all; display: inline-block;">
             <%= join_company_url(slug: current_company.slug) %>
           </div>
         </div>
-        <button onclick="navigator.clipboard.writeText('<%= join_company_url(slug: current_company.slug) %>'); alert('¡Enlace de invitación copiado al portapapeles! 📋');" style="background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: transform 0.2s;">
+        <button onclick="navigator.clipboard.writeText('<%= join_company_url(slug: current_company.slug) %>'); alert('¡Enlace de invitación copiado al portapapeles! 📋');" style="background: linear-gradient(135deg, #0ea5e9 0%, #2563eb 100%); color: white; border: none; padding: 9px 16px; border-radius: 10px; font-weight: 800; cursor: pointer; font-size: 0.85rem; box-shadow: 0 4px 12px rgba(37,99,235,0.3); transition: transform 0.2s;">
           Copiar Enlace 📋
         </button>
       </div>
     </div>
   <% end %>
 
-  <!-- Formulario para Agregar o Vincular Trabajador Directamente -->
-  <div style="background: white; border-radius: 16px; padding: 22px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
-    <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
-      <span>➕</span> <span>Agregar o Vincular <%= venue_mode? ? 'Trabajador o Proveedor (Staff / Servicios / Pasapalos)' : 'Trabajador (Staff / Músico)' %></span>
-    </h3>
-    <p style="margin: 0 0 16px 0; font-size: 0.88em; color: #64748b;">
-      <%= venue_mode? ? "Ingresa el correo del trabajador o proveedor (ej: pasapalos, DJ, luces, protocolo). Si ya se registró por su cuenta en la app, se vinculará automáticamente a #{current_company.name} con el rol que elijas para que puedas asignarlo a eventos y nómina/pagos." : "Ingresa el correo del trabajador. Si ya se registró por su cuenta en la app, se vinculará automáticamente a #{current_company.name} con el rol que elijas para que puedas asignarlo a shows y pagos." %>
-    </p>
+  <!-- Panel con Pestañas para Crear Trabajador Eventual o Invitar con Cuenta -->
+  <div style="background: white; border-radius: 18px; padding: 22px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
+    
+    <!-- Pestañas Superiores -->
+    <div style="display: flex; gap: 10px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 18px;">
+      <button type="button" id="tab-btn-eventual" onclick="switchUserTab('eventual')" style="background: #fef3c7; color: #92400e; border: 1.5px solid #fde68a; padding: 8px 16px; border-radius: 10px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <span>⚡</span> Registrar Trabajador Eventual (Sin Cuenta)
+      </button>
+      <button type="button" id="tab-btn-registered" onclick="switchUserTab('registered')" style="background: #f8fafc; color: #64748b; border: 1.5px solid #e2e8f0; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <span>📧</span> Invitar / Vincular con Correo Electrónico
+      </button>
+    </div>
 
-    <%= form_with model: @new_user, url: create_worker_users_path, method: :post, local: true, style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: flex-end;" do |f| %>
-      <div>
-        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Correo Electrónico *</label>
-        <%= f.email_field :email, placeholder: "ejemplo@correo.com", required: true, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+    <!-- 1. Formulario: Trabajador Eventual (Rápido, Sin Cuenta) -->
+    <div id="form-tab-eventual">
+      <div style="margin-bottom: 14px;">
+        <h3 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.1em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>⚡</span> Registro Rápido de Trabajador Eventual
+        </h3>
+        <p style="margin: 0; font-size: 0.85em; color: #64748b; line-height: 1.45;">
+          Ideal para personal por día, mesoneros, técnicos de refuerzo, transporte o protocolo. <strong>No requiere correo ni contraseña</strong>. Podrá asignarse a eventos y nóminas inmediatamente, y podrás habilitarle inicio de sesión cuando lo desees.
+        </p>
       </div>
 
-      <div>
-        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Nombre Completo (Opcional)</label>
-        <%= f.text_field :name, placeholder: "Nombre y Apellido", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+      <%= form_with model: @new_user, url: create_worker_users_path, method: :post, local: true do |f| %>
+        <%= hidden_field_tag :eventual, "1" %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Nombre / Apodo *</label>
+            <%= f.text_field :name, placeholder: "Ej: Juan Mesonero / Carlos DJ", required: true, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Rol en la Empresa *</label>
+            <%= f.select :role, [['Staff (Técnico / Apoyo / Salón)', 'staff'], ['Músico / Artista', 'musician'], ['Líder / Admin', 'leader']], {}, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Especialidad / Cargo (Opcional)</label>
+            <%= f.text_field :specialty, placeholder: "Ej: Mesonero, Luces, Chofer, Pasapalos", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Teléfono / WhatsApp (Opcional)</label>
+            <%= f.telephone_field :phone, placeholder: "Ej: 04121234567", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
+
+          <div>
+            <%= f.submit "⚡ Crear Trabajador Eventual", style: "width: 100%; background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.88em; box-shadow: 0 3px 10px rgba(180, 83, 9, 0.25);" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <!-- 2. Formulario: Invitar con Correo Electrónico (Con Cuenta) -->
+    <div id="form-tab-registered" style="display: none;">
+      <div style="margin-bottom: 14px;">
+        <h3 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.1em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>📧</span> Invitar o Vincular con Correo Electrónico
+        </h3>
+        <p style="margin: 0; font-size: 0.85em; color: #64748b; line-height: 1.45;">
+          Ingresa el correo del trabajador. Si ya se registró en la app, se vinculará automáticamente. Si es nuevo, se creará su cuenta de acceso.
+        </p>
       </div>
 
-      <div>
-        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Rol en la Empresa *</label>
-        <%= f.select :role, [['Staff (Técnico/Equipo)', 'staff'], ['Músico', 'musician'], ['Líder / Admin', 'leader']], {}, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
-      </div>
+      <%= form_with model: @new_user, url: create_worker_users_path, method: :post, local: true do |f| %>
+        <%= hidden_field_tag :eventual, "0" %>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: flex-end;">
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Correo Electrónico *</label>
+            <%= f.email_field :email, placeholder: "trabajador@correo.com", required: true, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
 
-      <div>
-        <label style="display: block; font-size: 0.82em; font-weight: 700; color: #475569; margin-bottom: 4px;">Contraseña (Opcional)</label>
-        <%= f.password_field :password, placeholder: "Auto-generada si se deja vacío", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
-      </div>
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Nombre Completo (Opcional)</label>
+            <%= f.text_field :name, placeholder: "Nombre y Apellido", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
 
-      <div>
-        <%= f.submit "➕ Vincular / Agregar", style: "width: 100%; background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9em; box-shadow: 0 2px 8px rgba(37,99,235,0.25);" %>
-      </div>
-    <% end %>
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Rol en la Empresa *</label>
+            <%= f.select :role, [['Staff (Técnico / Equipo)', 'staff'], ['Músico', 'musician'], ['Líder / Admin', 'leader']], {}, style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82em; font-weight: 800; color: #334155; margin-bottom: 4px;">Contraseña (Opcional)</label>
+            <%= f.password_field :password, placeholder: "Auto-generada si se deja vacío", style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: #fff;" %>
+          </div>
+
+          <div>
+            <%= f.submit "➕ Vincular / Agregar", style: "width: 100%; background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.88em; box-shadow: 0 3px 10px rgba(37,99,235,0.25);" %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
   </div>
 
+  <!-- Tabla de Usuarios y Trabajadores -->
   <div style="background: white; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; overflow: hidden;">
+    <div style="padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+      <h3 style="margin: 0; font-size: 0.95rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+        📋 Lista de Integrantes (<%= @users.count %>)
+      </h3>
+    </div>
+
     <table style="width: 100%; border-collapse: collapse;">
       <thead>
-        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Usuario / Nombre</th>
-          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Rol Actual</th>
-          <th style="padding: 15px 20px; text-align: left; color: #475569; font-size: 0.85em; font-weight: 800; text-transform: uppercase;">Acciones</th>
+        <tr style="background: #ffffff; border-bottom: 1px solid #e2e8f0;">
+          <th style="padding: 14px 18px; text-align: left; color: #475569; font-size: 0.82em; font-weight: 800; text-transform: uppercase;">Nombre / Contacto</th>
+          <th style="padding: 14px 18px; text-align: left; color: #475569; font-size: 0.82em; font-weight: 800; text-transform: uppercase;">Tipo / Cuenta</th>
+          <th style="padding: 14px 18px; text-align: left; color: #475569; font-size: 0.82em; font-weight: 800; text-transform: uppercase;">Rol Actual</th>
+          <th style="padding: 14px 18px; text-align: right; color: #475569; font-size: 0.82em; font-weight: 800; text-transform: uppercase;">Acciones</th>
         </tr>
       </thead>
       <tbody>
         <% @users.each do |user| %>
-          <tr style="border-bottom: 1px solid #f1f5f9;">
-            <td style="padding: 15px 20px;">
-              <div style="font-weight: 700; color: #1e293b;"><%= user.display_name %></div>
-              <div style="font-size: 0.82em; color: #64748b;"><%= user.email %></div>
+          <tr style="border-bottom: 1px solid #f1f5f9; background: <%= user.eventual? ? '#fffbeb' : '#ffffff' %>;">
+            
+            <%# Columna: Nombre & Contacto %>
+            <td style="padding: 14px 18px;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <div style="width: 38px; height: 38px; border-radius: 10px; background: <%= user.eventual? ? '#fef3c7' : '#e0f2fe' %>; border: 1px solid <%= user.eventual? ? '#fde68a' : '#bae6fd' %>; display: flex; align-items: center; justify-content: center; font-size: 1.15rem; flex-shrink: 0;">
+                  <%= user.eventual? ? '⚡' : (user.leader? ? '👑' : (user.musician? ? '🎵' : '🔧')) %>
+                </div>
+                <div>
+                  <div style="font-weight: 800; color: #0f172a; font-size: 0.92rem;">
+                    <%= user.display_name %>
+                    <% if user.specialty.present? %>
+                      <span style="font-size: 0.75rem; font-weight: 700; color: #64748b; background: rgba(0,0,0,0.04); padding: 1px 6px; border-radius: 4px; margin-left: 4px;">
+                        <%= user.specialty %>
+                      </span>
+                    <% end %>
+                  </div>
+                  
+                  <div style="font-size: 0.8em; color: #64748b; margin-top: 1px;">
+                    <% if user.eventual? %>
+                      <span style="color: #92400e; font-weight: 600;">Sin correo asignado</span>
+                      <% if user.phone.present? %>
+                        • <span style="color: #059669; font-weight: 700;">📱 <%= user.phone %></span>
+                      <% end %>
+                    <% else %>
+                      <%= user.email %>
+                      <% if user.phone.present? %>
+                        • <span style="color: #059669; font-weight: 700;">📱 <%= user.phone %></span>
+                      <% end %>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
             </td>
-            <td style="padding: 15px 20px;">
+
+            <%# Columna: Tipo de Cuenta %>
+            <td style="padding: 14px 18px;">
+              <% if user.eventual? %>
+                <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 800; text-transform: uppercase; background: #fef3c7; color: #92400e; border: 1px solid #fde68a; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>⚡</span> Eventual (Sin Cuenta)
+                </span>
+              <% else %>
+                <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.74em; font-weight: 800; text-transform: uppercase; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>✓</span> Cuenta Activa
+                </span>
+              <% end %>
+            </td>
+
+            <%# Columna: Rol %>
+            <td style="padding: 14px 18px;">
               <%
                 role_style = if user.leader?
-                  "background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; box-shadow: 0 0 8px rgba(37,99,235,0.18);"
+                  "background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;"
                 elsif user.staff?
-                  "background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7; box-shadow: 0 0 8px rgba(5,150,105,0.18);"
+                  "background: #ecfdf5; color: #059669; border: 1px solid #6ee7b7;"
                 elsif user.musician?
-                  "background: #fdf4ff; color: #a21caf; border: 1px solid #e879f9; box-shadow: 0 0 8px rgba(162,28,175,0.2);"
+                  "background: #fdf4ff; color: #a21caf; border: 1px solid #e879f9;"
                 else
                   "background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;"
                 end
@@ -98,26 +223,124 @@
                   "👤"
                 end
               %>
-              <span style="padding: 5px 12px; border-radius: 20px; font-size: 0.78em; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; <%= role_style %>">
+              <span style="padding: 4px 10px; border-radius: 20px; font-size: 0.76em; font-weight: 800; text-transform: uppercase; display: inline-flex; align-items: center; gap: 4px; <%= role_style %>">
                 <%= role_icon %> <%= user.role %>
               </span>
             </td>
-            <td style="padding: 15px 20px;">
-              <div style="display: flex; gap: 12px; align-items: center;">
+
+            <%# Columna: Acciones %>
+            <td style="padding: 14px 18px; text-align: right;">
+              <div style="display: inline-flex; gap: 8px; align-items: center; justify-content: flex-end; flex-wrap: wrap;">
+                
+                <% if user.eventual? %>
+                  <!-- Botón para Habilitar Acceso / Asignar Correo a Trabajador Eventual -->
+                  <button type="button" onclick="openClaimModal('<%= user.id %>', '<%= j user.display_name %>')" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; border: none; padding: 7px 12px; border-radius: 8px; font-weight: 800; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 6px rgba(5,150,105,0.25);">
+                    <span>🔑</span> Habilitar Acceso
+                  </button>
+                <% end %>
+
                 <% if current_user == user %>
-                  <span style="color: #94a3b8; font-size: 0.85em; font-style: italic;">(Tú)</span>
+                  <span style="color: #94a3b8; font-size: 0.8em; font-style: italic; padding: 0 6px;">(Tú)</span>
                 <% else %>
-                  <%= form_with url: update_role_user_path(user), method: :patch, local: true, style: "display: flex; gap: 10px; align-items: center; margin: 0;" do |f| %>
-                    <%= f.select :role, User.roles.keys.map { |r| [r.capitalize, r] }, { selected: user.role }, style: "padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none;" %>
-                    <%= f.submit "Actualizar Rol", style: "background: #1e293b; color: white; border: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.85em;" %>
+                  <%= form_with url: update_role_user_path(user), method: :patch, local: true, style: "display: inline-flex; gap: 5px; align-items: center; margin: 0;" do |f| %>
+                    <%= f.select :role, User.roles.keys.map { |r| [r.capitalize, r] }, { selected: user.role }, style: "padding: 6px 8px; border-radius: 7px; border: 1px solid #cbd5e1; font-size: 0.8rem; outline: none; background: white;" %>
+                    <%= f.submit "Cambiar", style: "background: #1e293b; color: white; border: none; padding: 6px 10px; border-radius: 7px; font-weight: 700; cursor: pointer; font-size: 0.78rem;" %>
                   <% end %>
                 <% end %>
-                <%= link_to "✏️ Editar Perfil", edit_user_path(user), style: "background: #2563eb; color: white; text-decoration: none; padding: 8px 12px; border-radius: 8px; font-weight: bold; font-size: 0.85em; display: inline-block;" %>
+
+                <%= link_to "✏️ Editar", edit_user_path(user), style: "background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; text-decoration: none; padding: 6px 10px; border-radius: 7px; font-weight: 700; font-size: 0.78rem; display: inline-block;" %>
               </div>
             </td>
+
           </tr>
         <% end %>
       </tbody>
     </table>
   </div>
 </div>
+
+<!-- Modal para Habilitar Acceso / Asignar Correo a Trabajador Eventual -->
+<div id="claim-account-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 15px;">
+  <div style="background: white; border-radius: 20px; max-width: 480px; width: 100%; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid #e2e8f0; position: relative;">
+    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+        <span>🔑</span> Habilitar Inicio de Sesión
+      </h3>
+      <button type="button" onclick="closeClaimModal()" style="background: none; border: none; font-size: 1.3rem; cursor: pointer; color: #64748b;">✕</button>
+    </div>
+
+    <p style="font-size: 0.88rem; color: #475569; margin: 0 0 16px 0; line-height: 1.45;">
+      Asigna un correo electrónico y contraseña a <strong id="claim-modal-username" style="color: #0f172a;"></strong> para que pueda iniciar sesión en la aplicación. Todo su historial de eventos, pagos y saldos se conservará intacto.
+    </p>
+
+    <form id="claim-account-form" action="" method="POST">
+      <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
+
+      <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+        <div>
+          <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 4px;">Correo Electrónico Oficial *</label>
+          <input type="email" name="user[email]" id="claim-modal-email" required placeholder="correo@ejemplo.com" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; font-size: 0.9rem;">
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 4px;">Contraseña de Acceso (mínimo 6 caracteres) *</label>
+          <input type="password" name="user[password]" id="claim-modal-password" required minlength="6" placeholder="Contraseña segura" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; font-size: 0.9rem;">
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" onclick="closeClaimModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.88rem;">
+          Cancelar
+        </button>
+        <button type="submit" style="background: linear-gradient(135deg, #059669 0%, #047857 100%); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.88rem; box-shadow: 0 4px 12px rgba(5,150,105,0.25);">
+          ✓ Guardar y Activar Acceso
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+  function switchUserTab(tab) {
+    const tabEventual = document.getElementById('form-tab-eventual');
+    const tabRegistered = document.getElementById('form-tab-registered');
+    const btnEventual = document.getElementById('tab-btn-eventual');
+    const btnRegistered = document.getElementById('tab-btn-registered');
+
+    if (tab === 'eventual') {
+      tabEventual.style.display = 'block';
+      tabRegistered.style.display = 'none';
+      btnEventual.style.background = '#fef3c7';
+      btnEventual.style.color = '#92400e';
+      btnEventual.style.borderColor = '#fde68a';
+      btnRegistered.style.background = '#f8fafc';
+      btnRegistered.style.color = '#64748b';
+      btnRegistered.style.borderColor = '#e2e8f0';
+    } else {
+      tabEventual.style.display = 'none';
+      tabRegistered.style.display = 'block';
+      btnRegistered.style.background = '#eff6ff';
+      btnRegistered.style.color = '#1d4ed8';
+      btnRegistered.style.borderColor = '#bfdbfe';
+      btnEventual.style.background = '#f8fafc';
+      btnEventual.style.color = '#64748b';
+      btnEventual.style.borderColor = '#e2e8f0';
+    }
+  }
+
+  function openClaimModal(userId, userName) {
+    const modal = document.getElementById('claim-account-modal');
+    const form = document.getElementById('claim-account-form');
+    const nameEl = document.getElementById('claim-modal-username');
+    
+    nameEl.textContent = userName;
+    form.action = `/users/${userId}/claim_account`;
+    modal.style.display = 'flex';
+  }
+
+  function closeClaimModal() {
+    const modal = document.getElementById('claim-account-modal');
+    modal.style.display = 'none';
+  }
+</script>
