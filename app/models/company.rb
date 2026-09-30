@@ -71,7 +71,12 @@ class Company < ApplicationRecord
       gigs_filter: 'Buscador & Filtros de Toques',
       event_sheet: '📸 Ficha de Show',
       in_this_gig: 'en este toque',
+      assigned_workers_title: 'Trabajadores asignados',
       assign_worker_label: 'Seleccionar trabajador (Staff / Músico)',
+      assign_worker_help: '¿Cuánto le vas a pagar a este personal? ($ USD)',
+      assign_worker_btn: '➕ Asignar trabajador',
+      assign_worker_tip: '¿No encuentras a tu músico o staff en la lista?',
+      assign_worker_prompt: '-- Seleccionar personal --',
       band_fund: 'Fondo de la Banda',
       net_profit_label: 'Ganancia Neta Banda',
       payroll_title: 'Nómina del Show',
@@ -96,18 +101,23 @@ class Company < ApplicationRecord
       gigs_filter: 'Buscador & Filtros de Eventos',
       event_sheet: '📸 Ficha del Evento',
       in_this_gig: 'en este evento',
-      assign_worker_label: 'Seleccionar personal (Staff / Instructor / Modelo)',
+      assigned_workers_title: 'Trabajadores y Proveedores asignados',
+      assign_worker_label: 'Seleccionar trabajador o proveedor (Staff / Pasapalos / Protocolo / Sonido)',
+      assign_worker_help: '¿Cuánto le vas a pagar a este trabajador o proveedor? ($ USD)',
+      assign_worker_btn: '➕ Asignar trabajador / proveedor',
+      assign_worker_tip: '¿No encuentras a tu trabajador o proveedor (ej. pasapalos, sonido, protocolo) en la lista?',
+      assign_worker_prompt: '-- Seleccionar trabajador o proveedor --',
       band_fund: 'Fondo de la Empresa',
       net_profit_label: 'Ganancia Neta Evento',
-      payroll_title: 'Nómina del Evento',
-      musicians: 'Personal, Staff & Modelos',
-      musician_singular: 'Personal / Instructor / Modelo',
+      payroll_title: 'Nómina & Proveedores del Evento',
+      musicians: 'Trabajadores, Proveedores & Modelos',
+      musician_singular: 'Trabajador / Proveedor',
       musicians_timeline: 'Cronograma de Operaciones & Protocolo',
       arrival_time: 'Llegada al Salón / Montaje',
       soundcheck: 'Prueba Técnica & Ensayo de Pasarela',
       music_notes: 'Protocolo & Notas Especiales del Evento',
       music_notes_desc: 'Detalles del protocolo, temática, momentos clave y requerimientos especiales',
-      gig_fee: 'Honorario / Jornada de Trabajo',
+      gig_fee: 'Honorario / Pago de Servicio o Proveedor',
       inventory_badge: 'Mobiliario, Sonido & Pasarela',
       packages: 'Combos de Salón & Academia'
     },
@@ -121,18 +131,23 @@ class Company < ApplicationRecord
       gigs_filter: 'Buscador & Filtros de Eventos',
       event_sheet: '📸 Ficha del Evento',
       in_this_gig: 'en este evento',
-      assign_worker_label: 'Seleccionar personal de salón (Staff / Apoyo)',
+      assigned_workers_title: 'Trabajadores y Proveedores asignados',
+      assign_worker_label: 'Seleccionar personal de salón o proveedor (Staff / Pasapalos / Decoración / Apoyo)',
+      assign_worker_help: '¿Cuánto le vas a pagar a este trabajador o proveedor? ($ USD)',
+      assign_worker_btn: '➕ Asignar personal / proveedor',
+      assign_worker_tip: '¿No encuentras a tu personal o proveedor en la lista?',
+      assign_worker_prompt: '-- Seleccionar personal o proveedor --',
       band_fund: 'Fondo del Salón',
       net_profit_label: 'Ganancia Neta Salón',
-      payroll_title: 'Nómina del Evento',
-      musicians: 'Personal de Salón & Staff',
-      musician_singular: 'Personal de Salón',
+      payroll_title: 'Nómina & Proveedores del Evento',
+      musicians: 'Personal de Salón, Staff & Proveedores',
+      musician_singular: 'Personal / Proveedor',
       musicians_timeline: 'Cronograma de Operaciones',
       arrival_time: 'Llegada al Salón / Apertura',
       soundcheck: 'Prueba de Sonido & Luces',
       music_notes: 'Protocolo & Cronograma del Evento',
       music_notes_desc: 'Protocolo de la fiesta, vals, brindis, entrada y momentos clave',
-      gig_fee: 'Honorario de Jornada',
+      gig_fee: 'Honorario / Pago de Servicio o Proveedor',
       inventory_badge: 'Mobiliario & Equipos',
       packages: 'Combos de Salón'
     },
@@ -146,18 +161,23 @@ class Company < ApplicationRecord
       gigs_filter: 'Buscador & Filtros de Producciones',
       event_sheet: '📸 Ficha de Producción',
       in_this_gig: 'en esta producción',
-      assign_worker_label: 'Seleccionar personal técnico (Operador / Staff)',
+      assigned_workers_title: 'Equipo Técnico y Proveedores asignados',
+      assign_worker_label: 'Seleccionar personal técnico o proveedor (Operador / Staff / Servicios / Pasapalos)',
+      assign_worker_help: '¿Cuánto le vas a pagar a este personal técnico o proveedor? ($ USD)',
+      assign_worker_btn: '➕ Asignar técnico / proveedor',
+      assign_worker_tip: '¿No encuentras a tu técnico o proveedor en la lista?',
+      assign_worker_prompt: '-- Seleccionar técnico o proveedor --',
       band_fund: 'Fondo de la Productora',
       net_profit_label: 'Margen Neto Producción',
-      payroll_title: 'Nómina de Producción',
-      musicians: 'Equipo Técnico & Staff',
-      musician_singular: 'Técnico / Operador',
+      payroll_title: 'Nómina & Proveedores de Producción',
+      musicians: 'Equipo Técnico, Staff & Proveedores',
+      musician_singular: 'Técnico / Proveedor',
       musicians_timeline: 'Cronograma de Montaje y Desmontaje',
       arrival_time: 'Llegada al Venue / Carga',
       soundcheck: 'Alineación de Sistema & Prueba',
       music_notes: 'Rider Técnico & Notas del Evento',
       music_notes_desc: 'Requerimientos técnicos, canales, microfonía y especificaciones',
-      gig_fee: 'Honorario Técnico / Jornada',
+      gig_fee: 'Honorario Técnico / Proveedor',
       inventory_badge: 'Equipos & Cajas QR',
       packages: 'Paquetes de Producción'
     }
@@ -225,19 +245,24 @@ class Company < ApplicationRecord
   end
 
   def venue_mode?
-    business_type.to_s.in?(['venue_academy', 'party_hall']) || effective_plan_tier == 'salon'
+    business_type.to_s.in?(['venue_academy', 'party_hall', 'production_company']) || effective_plan_tier == 'salon' || name.to_s.downcase.include?('gero') || slug.to_s.downcase.include?('gero')
   end
 
   def academy_mode?
-    business_type.to_s == 'venue_academy'
+    business_type.to_s == 'venue_academy' || (name.to_s.downcase.include?('gero') && business_type.to_s != 'music_band')
   end
 
   def music_mode?
-    business_type.to_s == 'music_band' && effective_plan_tier != 'salon'
+    business_type.to_s == 'music_band' && effective_plan_tier != 'salon' && !name.to_s.downcase.include?('gero')
   end
 
   def term_for(key, fallback = nil)
-    dict = TERMINOLOGY[business_type.to_s] || TERMINOLOGY['music_band']
+    effective_type = if (name.to_s.downcase.include?('gero') || slug.to_s.downcase.include?('gero')) && business_type.to_s == 'music_band'
+      'venue_academy'
+    else
+      business_type.to_s
+    end
+    dict = TERMINOLOGY[effective_type] || TERMINOLOGY['music_band']
     dict[key.to_sym] || fallback || TERMINOLOGY['music_band'][key.to_sym] || key.to_s.humanize
   end
 

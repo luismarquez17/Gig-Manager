@@ -1,8 +1,8 @@
 <div style="max-width: 1000px; margin: 0 auto;">
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
-      <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👥 Gestión de Usuarios</h1>
-      <p style="color: #64748b; margin: 5px 0 0 0;">Asigna roles de Staff, Músico o Líder a los integrantes de tu agrupación.</p>
+      <h1 style="color: #1e293b; margin: 0; font-weight: 800; font-size: 2em; letter-spacing: -0.5px;">👥 Gestión de Usuarios & Equipo</h1>
+      <p style="color: #64748b; margin: 5px 0 0 0;"><%= venue_mode? ? 'Asigna roles a los trabajadores, proveedores de servicios (pasapalos, sonido, protocolo) o líderes de tu empresa.' : 'Asigna roles de Staff, Músico o Líder a los integrantes de tu agrupación.' %></p>
     </div>
   </div>
 
@@ -12,7 +12,7 @@
       <div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 15px;">
         <div>
           <div style="font-size: 0.78rem; font-weight: 800; color: #38bdf8; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;">🔗 Enlace de Registro para tu Equipo</div>
-          <div style="font-size: 0.95rem; color: #cbd5e1;">Comparte este enlace a tus nuevos músicos o trabajadores para que se unan directamente a <strong style="color: white;"><%= current_company.name %></strong>:</div>
+          <div style="font-size: 0.95rem; color: #cbd5e1;">Comparte este enlace a tus <%= venue_mode? ? 'nuevos trabajadores o proveedores' : 'nuevos músicos o trabajadores' %> para que se unan directamente a <strong style="color: white;"><%= current_company.name %></strong>:</div>
           <div style="margin-top: 8px; font-family: monospace; font-size: 0.9em; background: rgba(255,255,255,0.08); padding: 8px 14px; border-radius: 8px; color: #a7f3d0; word-break: break-all; display: inline-block;">
             <%= join_company_url(slug: current_company.slug) %>
           </div>
@@ -27,10 +27,10 @@
   <!-- Formulario para Agregar o Vincular Trabajador Directamente -->
   <div style="background: white; border-radius: 16px; padding: 22px; margin-bottom: 25px; border: 1px solid #e2e8f0; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
     <h3 style="margin: 0 0 8px 0; color: #0f172a; font-size: 1.15em; display: flex; align-items: center; gap: 8px;">
-      <span>➕</span> <span>Agregar o Vincular Trabajador (Staff / Músico)</span>
+      <span>➕</span> <span>Agregar o Vincular <%= venue_mode? ? 'Trabajador o Proveedor (Staff / Servicios / Pasapalos)' : 'Trabajador (Staff / Músico)' %></span>
     </h3>
     <p style="margin: 0 0 16px 0; font-size: 0.88em; color: #64748b;">
-      Ingresa el correo del trabajador. Si ya se registró por su cuenta en la app, se vinculará automáticamente a <strong><%= current_company.name %></strong> con el rol que elijas para que puedas asignarlo a shows y pagos.
+      <%= venue_mode? ? "Ingresa el correo del trabajador o proveedor (ej: pasapalos, DJ, luces, protocolo). Si ya se registró por su cuenta en la app, se vinculará automáticamente a #{current_company.name} con el rol que elijas para que puedas asignarlo a eventos y nómina/pagos." : "Ingresa el correo del trabajador. Si ya se registró por su cuenta en la app, se vinculará automáticamente a #{current_company.name} con el rol que elijas para que puedas asignarlo a shows y pagos." %>
     </p>
 
     <%= form_with model: @new_user, url: create_worker_users_path, method: :post, local: true, style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; align-items: flex-end;" do |f| %>

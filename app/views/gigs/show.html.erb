@@ -690,28 +690,28 @@
       </div>
     <% end %>
 
-    <%# --- ASIGNACIÓN DE TRABAJADORES --- %>
+    <%# --- ASIGNACIÓN DE TRABAJADORES Y PROVEEDORES --- %>
     <div style="background: white; padding: 25px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
       <h3 style="margin: 0 0 15px 0; color: #1e293b; font-size: 1.1em; display: flex; align-items: center; justify-content: space-between;">
-        <span>👷 <%= venue_mode? ? 'Personal asignado' : 'Trabajadores asignados' %></span>
+        <span>👷 <%= company_term(:assigned_workers_title, (venue_mode? ? 'Trabajadores y Proveedores asignados' : 'Trabajadores asignados')) %></span>
         <span style="font-size: 0.85em; color: #64748b; font-weight: 600;">Total acordado: $<%= number_with_precision(@gig.staff_assignments.sum(:agreed_amount), precision: 2) %></span>
       </h3>
 
       <%= form_with url: assign_staff_gig_path(@gig), method: :post, local: true, style: "display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; margin-bottom: 8px; background: #f8fafc; padding: 16px; border-radius: 12px; border: 1px solid #e2e8f0;" do |f| %>
         <div style="flex: 1; min-width: 240px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;"><%= company_term(:assign_worker_label, (venue_mode? ? 'Seleccionar personal (Staff / Instructor / Modelo)' : 'Seleccionar trabajador (Staff / Músico)')) %></label>
-          <%= f.select :staff_id, current_company.users.workers.order(:name, :email).map { |w| ["#{w.display_name} (#{w.role.to_s.capitalize})", w.id] }, { prompt: "-- Seleccionar personal --" }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;"><%= company_term(:assign_worker_label, (venue_mode? ? 'Seleccionar trabajador o proveedor (Staff / Pasapalos / Protocolo / Sonido)' : 'Seleccionar trabajador (Staff / Músico)')) %></label>
+          <%= f.select :staff_id, current_company.users.workers.order(:name, :email).map { |w| ["#{w.display_name} (#{w.role.to_s.capitalize})", w.id] }, { prompt: company_term(:assign_worker_prompt, (venue_mode? ? "-- Seleccionar trabajador o proveedor --" : "-- Seleccionar personal --")) }, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
         </div>
         <div style="flex: 1; min-width: 220px;">
-          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;">¿Cuánto le vas a pagar a este personal? ($ USD)</label>
+          <label style="display: block; font-size: 0.85em; font-weight: 700; color: #475569; margin-bottom: 4px;"><%= company_term(:assign_worker_help, (venue_mode? ? '¿Cuánto le vas a pagar a este trabajador o proveedor? ($ USD)' : '¿Cuánto le vas a pagar a este personal? ($ USD)')) %></label>
           <%= f.text_field :agreed_amount, inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; background: white;" %>
         </div>
         <div>
-          <%= f.submit (venue_mode? ? "➕ Asignar personal" : "➕ Asignar trabajador"), style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
+          <%= f.submit company_term(:assign_worker_btn, (venue_mode? ? "➕ Asignar trabajador / proveedor" : "➕ Asignar trabajador")), style: "background: #2563eb; color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; cursor: pointer;" %>
         </div>
       <% end %>
       <div style="margin-bottom: 20px; font-size: 0.82rem; color: #64748b; padding-left: 4px;">
-        💡 ¿No encuentras a tu <%= venue_mode? ? 'personal o staff' : 'músico o staff' %> en la lista? <%= link_to "Agrégalo o cámbiale el rol en Gestión de Usuarios →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
+        💡 <%= company_term(:assign_worker_tip, (venue_mode? ? '¿No encuentras a tu trabajador o proveedor (ej. pasapalos, sonido, protocolo) en la lista?' : '¿No encuentras a tu músico o staff en la lista?')) %> <%= link_to "Agrégalo o cámbiale el rol en Gestión de Usuarios →", users_path, style: "color: #2563eb; font-weight: 700; text-decoration: underline;" %>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
