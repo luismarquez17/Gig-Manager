@@ -195,7 +195,7 @@
   </div>
 
   <%# Resumen rápido %>
-  <% if @gigs.any? %>
+  <% if current_company.module_enabled?(:finances) && @gigs.any? %>
     <%
       total_agreed = @gigs.sum { |g| g.amount.to_f }
       total_paid   = @gigs.sum { |g| g.total_received.to_f }
@@ -232,7 +232,7 @@
                           end %>
         <div class="ci-event-card" onclick="window.location='<%= client_gig_path(gig) %>'" style="cursor:pointer;">
           <div class="ci-event-card-inner">
-            <div class="ci-event-accent <%= status_class %>"></div>
+            <div class="ci-event-accent <%= current_company.module_enabled?(:finances) ? status_class : 'paid' %>"></div>
             <div class="ci-event-content">
 
               <% if gig.date %>
@@ -244,18 +244,24 @@
 
               <div class="ci-event-info" style="flex: 1; min-width: 220px;">
                 <p class="ci-event-location">📍 <%= gig.location.presence || "Ubicación por confirmar" %></p>
-                <div style="margin-top: 8px; max-width: 360px;">
-                  <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: true, show_footer: true %>
-                </div>
+                <% if current_company.module_enabled?(:finances) %>
+                  <div style="margin-top: 8px; max-width: 360px;">
+                    <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: true, show_footer: true %>
+                  </div>
+                <% elsif gig.formatted_time_range.present? %>
+                  <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.82em; font-weight: 600;">🕐 <%= gig.formatted_time_range %></p>
+                <% end %>
               </div>
 
-              <div class="ci-event-status <%= status_class %>">
-                <%= case gig.payment_status
-                    when :paid    then '✓ Pagado'
-                    when :partial then '◑ Parcial'
-                    else               '○ Pendiente'
-                    end %>
-              </div>
+              <% if current_company.module_enabled?(:finances) %>
+                <div class="ci-event-status <%= status_class %>">
+                  <%= case gig.payment_status
+                      when :paid    then '✓ Pagado'
+                      when :partial then '◑ Parcial'
+                      else               '○ Pendiente'
+                      end %>
+                </div>
+              <% end %>
 
             </div>
             <div class="ci-event-cta">

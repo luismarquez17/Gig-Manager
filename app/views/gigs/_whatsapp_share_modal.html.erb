@@ -33,13 +33,16 @@
     </div>
 
     <!-- Tabs Header -->
+    <% show_staff_tab = gig.company&.module_enabled?(:payroll) %>
     <div style="display: flex; background: #f8fafc; border-bottom: 1px solid #e2e8f0; padding: 6px 12px; gap: 8px;">
       <button type="button" id="tab-btn-client-<%= gig.id %>" onclick="switchWhatsAppTab('<%= gig.id %>', 'client')" style="flex: 1; padding: 10px 16px; border: none; background: white; color: #0f172a; font-weight: 800; font-size: 0.88em; border-radius: 12px; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,0.05); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
         <span>👤</span> Para el Cliente
       </button>
-      <button type="button" id="tab-btn-staff-<%= gig.id %>" onclick="switchWhatsAppTab('<%= gig.id %>', 'staff')" style="flex: 1; padding: 10px 16px; border: none; background: transparent; color: #64748b; font-weight: 700; font-size: 0.88em; border-radius: 12px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
-        <span>🎸</span> Para Músicos &amp; Staff
-      </button>
+      <% if show_staff_tab %>
+        <button type="button" id="tab-btn-staff-<%= gig.id %>" onclick="switchWhatsAppTab('<%= gig.id %>', 'staff')" style="flex: 1; padding: 10px 16px; border: none; background: transparent; color: #64748b; font-weight: 700; font-size: 0.88em; border-radius: 12px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
+          <span>🎸</span> Para Músicos &amp; Staff
+        </button>
+      <% end %>
     </div>
 
     <!-- Modal Body -->
@@ -95,54 +98,58 @@
           </div>
 
           <!-- Template 2: Estado de Cuenta & Saldo Pendiente -->
-          <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; transition: border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-              <div>
-                <h4 style="margin: 0; color: #0f172a; font-size: 1em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                  <span>💳</span> Estado de Cuenta &amp; Resumen de Pagos
-                </h4>
-                <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.82em;">Muestra el total, los abonos recibidos, recibos y saldo pendiente.</p>
+          <% if gig.company&.module_enabled?(:finances) %>
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; transition: border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div>
+                  <h4 style="margin: 0; color: #0f172a; font-size: 1em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                    <span>💳</span> Estado de Cuenta &amp; Resumen de Pagos
+                  </h4>
+                  <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.82em;">Muestra el total, los abonos recibidos, recibos y saldo pendiente.</p>
+                </div>
+                <span style="background: <%= gig.paid_in_full? ? '#dcfce7' : '#fef3c7' %>; color: <%= gig.paid_in_full? ? '#166534' : '#92400e' %>; font-size: 0.72em; font-weight: 800; padding: 3px 8px; border-radius: 99px;">
+                  <%= gig.paid_in_full? ? 'Saldado' : 'Cobranza' %>
+                </span>
               </div>
-              <span style="background: <%= gig.paid_in_full? ? '#dcfce7' : '#fef3c7' %>; color: <%= gig.paid_in_full? ? '#166534' : '#92400e' %>; font-size: 0.72em; font-weight: 800; padding: 3px 8px; border-radius: 99px;">
-                <%= gig.paid_in_full? ? 'Saldado' : 'Cobranza' %>
-              </span>
-            </div>
 
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 0.82em; color: #334155; white-space: pre-wrap; max-height: 120px; overflow-y: auto; line-height: 1.45; margin-bottom: 12px;" id="text-statement-<%= gig.id %>"><%= tpl_statement %></div>
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 0.82em; color: #334155; white-space: pre-wrap; max-height: 120px; overflow-y: auto; line-height: 1.45; margin-bottom: 12px;" id="text-statement-<%= gig.id %>"><%= tpl_statement %></div>
 
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-              <button type="button" onclick="copySnippetText('text-statement-<%= gig.id %>', this)" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-size: 0.82em; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                📋 Copiar
-              </button>
-              <a href="<%= whatsapp_url_for_message(client_phone, tpl_statement) %>" target="_blank" style="background: #25d366; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.82em; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
-                <span>📲</span> Enviar por WhatsApp
-              </a>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" onclick="copySnippetText('text-statement-<%= gig.id %>', this)" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-size: 0.82em; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                  📋 Copiar
+                </button>
+                <a href="<%= whatsapp_url_for_message(client_phone, tpl_statement) %>" target="_blank" style="background: #25d366; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.82em; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
+                  <span>📲</span> Enviar por WhatsApp
+                </a>
+              </div>
             </div>
-          </div>
+          <% end %>
 
           <!-- Template 3: Itinerario & Ficha Técnica -->
-          <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; transition: border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
-              <div>
-                <h4 style="margin: 0; color: #0f172a; font-size: 1em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-                  <span>⏰</span> Cronograma &amp; Horarios Técnicos
-                </h4>
-                <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.82em;">Horarios de llegada, prueba de sonido y sets de música para el organizador.</p>
+          <% if gig.company&.module_enabled?(:gigs) %>
+            <div style="background: #ffffff; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px; transition: border-color 0.2s; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+              <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                <div>
+                  <h4 style="margin: 0; color: #0f172a; font-size: 1em; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+                    <span>⏰</span> Cronograma &amp; Horarios Técnicos
+                  </h4>
+                  <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.82em;">Horarios de llegada, prueba de sonido y sets de música para el organizador.</p>
+                </div>
+                <span style="background: #f3e8ff; color: #6b21a8; font-size: 0.72em; font-weight: 800; padding: 3px 8px; border-radius: 99px;">Itinerario</span>
               </div>
-              <span style="background: #f3e8ff; color: #6b21a8; font-size: 0.72em; font-weight: 800; padding: 3px 8px; border-radius: 99px;">Itinerario</span>
-            </div>
 
-            <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 0.82em; color: #334155; white-space: pre-wrap; max-height: 120px; overflow-y: auto; line-height: 1.45; margin-bottom: 12px;" id="text-schedule-<%= gig.id %>"><%= tpl_schedule %></div>
+              <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 0.82em; color: #334155; white-space: pre-wrap; max-height: 120px; overflow-y: auto; line-height: 1.45; margin-bottom: 12px;" id="text-schedule-<%= gig.id %>"><%= tpl_schedule %></div>
 
-            <div style="display: flex; gap: 8px; justify-content: flex-end;">
-              <button type="button" onclick="copySnippetText('text-schedule-<%= gig.id %>', this)" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-size: 0.82em; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
-                📋 Copiar
-              </button>
-              <a href="<%= whatsapp_url_for_message(client_phone, tpl_schedule) %>" target="_blank" style="background: #25d366; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.82em; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
-                <span>📲</span> Enviar por WhatsApp
-              </a>
+              <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                <button type="button" onclick="copySnippetText('text-schedule-<%= gig.id %>', this)" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 8px 14px; border-radius: 8px; font-size: 0.82em; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+                  📋 Copiar
+                </button>
+                <a href="<%= whatsapp_url_for_message(client_phone, tpl_schedule) %>" target="_blank" style="background: #25d366; color: white; padding: 8px 16px; border-radius: 8px; font-size: 0.82em; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(37, 211, 102, 0.3);">
+                  <span>📲</span> Enviar por WhatsApp
+                </a>
+              </div>
             </div>
-          </div>
+          <% end %>
 
         </div>
 
@@ -151,6 +158,7 @@
       <!-- ============================================== -->
       <!-- TAB 2: MENSAJES PARA MÚSICOS & STAFF           -->
       <!-- ============================================== -->
+      <% if show_staff_tab %>
       <div id="tab-pane-staff-<%= gig.id %>" style="display: none;">
         
         <!-- Call Sheet General -->
@@ -221,6 +229,7 @@
         <% end %>
 
       </div>
+      <% end %>
 
     </div>
 

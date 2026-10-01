@@ -160,7 +160,13 @@ class Gig < ApplicationRecord
       lines << "🔗 *Accede a tu Portal Exclusivo aquí:*"
       lines << portal_url.to_s
       lines << ""
-      lines << "Desde allí podrás revisar el cronograma del día, validar tus abonos y recibos, y solicitar adicionales para tu evento."
+      features_desc = []
+      features_desc << "el cronograma del día" if company.nil? || company.module_enabled?(:gigs)
+      features_desc << "validar tus abonos y recibos" if company.nil? || company.module_enabled?(:finances)
+      features_desc << "solicitar adicionales" if company.nil? || company.module_enabled?(:clients_crm)
+      if features_desc.any?
+        lines << "Desde allí podrás revisar #{features_desc.to_sentence} para tu evento."
+      end
     end
 
     lines << ""
@@ -248,7 +254,7 @@ class Gig < ApplicationRecord
       lines << "💰 *Pago Acordado:* $#{sprintf('%.2f', assignment.agreed_amount.to_f)} #{currency || 'USD'}"
     end
 
-    if has_music_notes?
+    if (company.nil? || company.module_enabled?(:songs_repertoire)) && has_music_notes?
       lines << "─────────────────────────"
       lines << "🎵 *Protocolo / Momentos Clave:*"
       lines << music_notes.to_s.lines.first(3).map { |l| "  • #{l.strip}" }.join("\n")

@@ -76,4 +76,33 @@ class PortalsControllerTest < ActionDispatch::IntegrationTest
     json = JSON.parse(response.body)
     assert_equal false, json["success"]
   end
+
+  test "should hide payroll/staff section in portal when payroll module is disabled" do
+    @gig.company.disable_module!(:payroll)
+    get public_portal_url(token: @gig.portal_token)
+    assert_response :success
+    assert_select "h2", text: /Tu (Músicos|Equipo de Trabajo)/, count: 0
+  end
+
+  test "should hide finances breakdown when finances module is disabled" do
+    @gig.company.disable_module!(:finances)
+    get public_portal_url(token: @gig.portal_token)
+    assert_response :success
+    assert_select ".finance-grid", count: 0
+    assert_select ".progress-track", count: 0
+  end
+
+  test "should hide timeline section when gigs module is disabled" do
+    @gig.company.disable_module!(:gigs)
+    get public_portal_url(token: @gig.portal_token)
+    assert_response :success
+    assert_select "h2", text: /Cronograma y Agenda del Evento/, count: 0
+  end
+
+  test "should hide upsells section when clients_crm module is disabled" do
+    @gig.company.disable_module!(:clients_crm)
+    get public_portal_url(token: @gig.portal_token)
+    assert_response :success
+    assert_select "h2", text: /¿Quieres potenciar tu evento\?/, count: 0
+  end
 end

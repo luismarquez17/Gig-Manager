@@ -445,14 +445,14 @@
   <%# --- NORMATIVAS GENERALES DEL SERVICIO --- %>
   <section class="glass-card">
     <h2 class="section-title">
-      <span class="icon">📜</span>
-      Normativas y Políticas del Servicio
+      <span class="icon"><%= venue_mode? ? '🏛️' : '📜' %></span>
+      <%= venue_mode? ? 'Normativas y Políticas del Salón' : 'Normativas y Políticas del Servicio' %>
     </h2>
 
     <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; color: #fef08a;">
       <h4 style="margin: 0 0 6px 0; font-size: 1em; font-weight: 800; color: #fbbf24;">💳 REGLA CLAVE DE PAGO</h4>
       <p style="margin: 0; font-size: 0.9em; line-height: 1.5; color: #fef3c7;">
-        El evento debe estar <strong>pagado en su totalidad (100%) el mismo día del show</strong>, previo al inicio del montaje del equipamiento técnico.
+        <%= venue_mode? ? 'El saldo del alquiler y servicios debe estar <strong>cancelado al 100% el mismo día del evento</strong>, previo a la apertura de puertas o entrega de llaves.' : 'El evento debe estar <strong>pagado en su totalidad (100%) el mismo día del show</strong>, previo al inicio del montaje del equipamiento técnico.' %>
       </p>
     </div>
 
@@ -462,18 +462,33 @@
         <span style="font-size: 0.8em; opacity: 0.7;">▼ Desplegar</span>
       </summary>
       <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px; display: grid; gap: 14px; line-height: 1.5;">
-        <div>
-          <strong style="color: #67e8f9;">1. Horarios y Horas Extra:</strong> El tiempo contratado inicia puntualmente a la hora acordada. Las extensiones de horario tienen un costo adicional.
-        </div>
-        <div>
-          <strong style="color: #67e8f9;">2. Toma Eléctrica y Techo / Servicio Eléctrico:</strong> Se requiere toma eléctrica estable (110V/220V) a menos de 10m y espacio techado si el evento es al aire libre. <strong>Importante:</strong> No nos hacemos responsables en caso de que donde estemos se vaya la luz, no tenemos planta contratada en nuestro paquete.
-        </div>
-        <div>
-          <strong style="color: #67e8f9;">3. Cuidado del Equipamiento:</strong> Cualquier daño a los equipos o instrumentos ocasionado por invitados será facturado al cliente contratante.
-        </div>
-        <div>
-          <strong style="color: #67e8f9;">4. Políticas de Abono:</strong> Las señas de reserva no son reembolsables en caso de cancelación del evento por causas ajenas a la empresa.
-        </div>
+        <% if venue_mode? %>
+          <div>
+            <strong style="color: #67e8f9;">1. Horarios y Desalojo:</strong> El alquiler inicia y concluye puntualmente a las horas pactadas. Se otorga hasta 1 hora para el retiro ordenado de invitados y pertenencias. Horas extra sujetas a autorización previa.
+          </div>
+          <div>
+            <strong style="color: #67e8f9;">2. Cuidado de Paredes e Instalaciones:</strong> Queda prohibido clavar, perforar o usar pegamentos agresivos en paredes y espejos. Toda decoración debe ser desmontable sin dañar la pintura.
+          </div>
+          <div>
+            <strong style="color: #67e8f9;">3. Depósito en Garantía y Mobiliario:</strong> El mobiliario e inventario entregado se revisa al cierre. Cualquier rotura o avería será descontada del depósito de garantía.
+          </div>
+          <div>
+            <strong style="color: #67e8f9;">4. Políticas de Reserva:</strong> El abono inicial bloquea la fecha de forma exclusiva en la agenda del salón y no es reembolsable por cancelación unilateral.
+          </div>
+        <% else %>
+          <div>
+            <strong style="color: #67e8f9;">1. Horarios y Horas Extra:</strong> El tiempo contratado inicia puntualmente a la hora acordada. Las extensiones de horario tienen un costo adicional.
+          </div>
+          <div>
+            <strong style="color: #67e8f9;">2. Toma Eléctrica y Techo / Servicio Eléctrico:</strong> Se requiere toma eléctrica estable (110V/220V) a menos de 10m y espacio techado si el evento es al aire libre. <strong>Importante:</strong> No nos hacemos responsables en caso de que donde estemos se vaya la luz, no tenemos planta contratada en nuestro paquete.
+          </div>
+          <div>
+            <strong style="color: #67e8f9;">3. Cuidado del Equipamiento:</strong> Cualquier daño a los equipos o instrumentos ocasionado por invitados será facturado al cliente contratante.
+          </div>
+          <div>
+            <strong style="color: #67e8f9;">4. Políticas de Abono:</strong> Las señas de reserva no son reembolsables en caso de cancelación del evento por causas ajenas a la empresa.
+          </div>
+        <% end %>
       </div>
     </details>
   </section>
@@ -566,148 +581,186 @@
   <% end %>
 
   <%# --- ESTADO DE CUENTA / PAGOS --- %>
-  <section class="glass-card">
-    <h2 class="section-title">
-      <span class="icon">💳</span>
-      Estado de Cuenta y Pagos
-    </h2>
+  <% if @gig.company&.module_enabled?(:finances) %>
+    <section class="glass-card">
+      <h2 class="section-title">
+        <span class="icon">💳</span>
+        Estado de Cuenta y Pagos
+      </h2>
 
-    <div class="finance-grid">
-      <div class="finance-card val-total">
-        <div class="lbl">Total Acordado</div>
-        <div class="val"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size:0.6em; color:var(--text-muted);"><%= @gig.currency %></span></div>
+      <div class="finance-grid">
+        <div class="finance-card val-total">
+          <div class="lbl">Total Acordado</div>
+          <div class="val"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size:0.6em; color:var(--text-muted);"><%= @gig.currency %></span></div>
+        </div>
+        <div class="finance-card val-paid">
+          <div class="lbl">Total Abonado</div>
+          <div class="val"><%= number_with_precision(@gig.total_received || 0, precision: 2) %> <span style="font-size:0.6em; color:var(--text-muted);"><%= @gig.currency %></span></div>
+        </div>
+        <div class="finance-card val-remaining">
+          <div class="lbl">Saldo Pendiente</div>
+          <div class="val"><%= number_with_precision(@gig.remaining_amount || 0, precision: 2) %> <span style="font-size:0.6em; color:var(--text-muted);"><%= @gig.currency %></span></div>
+        </div>
       </div>
-      <div class="finance-card val-paid">
-        <div class="lbl">Total Abonado</div>
-        <div class="val"><%= number_with_precision(@gig.total_received || 0, precision: 2) %> <span style="font-size:0.6em; color:var(--text-muted);"><%= @gig.currency %></span></div>
-      </div>
-      <div class="finance-card val-remaining">
-        <div class="lbl">Saldo Pendiente</div>
-        <div class="val"><%= number_with_precision(@gig.remaining_amount || 0, precision: 2) %> <span style="font-size:0.6em; color:var(--text-muted);"><%= @gig.currency %></span></div>
-      </div>
-    </div>
 
-    <%# Progress bar %>
-    <% pct = (@gig.total_received.to_f / (@gig.amount.to_f.nonzero? || 1) * 100).to_f %>
-    <div class="progress-container">
-      <div class="progress-header">
-        <span style="color: var(--text-muted);">Progreso de Pago</span>
-        <span style="color: #22d3ee;"><%= pct.round(1) %>% Cobrado</span>
+      <%# Progress bar %>
+      <% pct = (@gig.total_received.to_f / (@gig.amount.to_f.nonzero? || 1) * 100).to_f %>
+      <div class="progress-container">
+        <div class="progress-header">
+          <span style="color: var(--text-muted);">Progreso de Pago</span>
+          <span style="color: #22d3ee;"><%= pct.round(1) %>% Cobrado</span>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill" style="width: <%= [pct, 100].min %>%;"></div>
+        </div>
       </div>
-      <div class="progress-track">
-        <div class="progress-fill" style="width: <%= [pct, 100].min %>%;"></div>
-      </div>
-    </div>
 
-    <%# Historial de transacciones %>
-    <h3 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Historial de Transacciones</h3>
-    <% if @gig_payments.any? %>
-      <div class="table-wrapper">
-        <table class="portal-table">
-          <thead>
-            <tr>
-              <th>Fecha</th>
-              <th>Payer / Cliente</th>
-              <th>Concepto / Referencia</th>
-              <th style="text-align: right;">Monto</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @gig_payments.each do |p| %>
+      <%# Historial de transacciones %>
+      <h3 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Historial de Transacciones</h3>
+      <% if @gig_payments.any? %>
+        <div class="table-wrapper">
+          <table class="portal-table">
+            <thead>
               <tr>
-                <td style="color: var(--text-muted); font-weight: 600;"><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
-                <td style="font-weight: 600; color: var(--text-main);"><%= p.payer_name.presence || "Cliente" %></td>
-                <td style="color: var(--text-muted); font-size: 0.9em;">
-                  <span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.8em; color: var(--text-main); margin-right: 5px;">
-                    <%= p.category.presence || "Abono" %>
-                  </span>
-                  <%= p.notes %>
-                </td>
-                <td style="text-align: right; font-weight: 800; color: var(--success);">
-                  +<%= number_with_precision(p.amount, precision: 2) %> <%= p.currency %>
-                </td>
+                <th>Fecha</th>
+                <th>Payer / Cliente</th>
+                <th>Concepto / Referencia</th>
+                <th style="text-align: right;">Monto</th>
               </tr>
-            <% end %>
-          </tbody>
-        </table>
-      </div>
-    <% else %>
-      <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.9em;">
-        ℹ️ Aún no se han registrado abonos para este evento.
-      </div>
-    <% end %>
+            </thead>
+            <tbody>
+              <% @gig_payments.each do |p| %>
+                <tr>
+                  <td style="color: var(--text-muted); font-weight: 600;"><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
+                  <td style="font-weight: 600; color: var(--text-main);"><%= p.payer_name.presence || "Cliente" %></td>
+                  <td style="color: var(--text-muted); font-size: 0.9em;">
+                    <span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.8em; color: var(--text-main); margin-right: 5px;">
+                      <%= p.category.presence || "Abono" %>
+                    </span>
+                    <%= p.notes %>
+                  </td>
+                  <td style="text-align: right; font-weight: 800; color: var(--success);">
+                    +<%= number_with_precision(p.amount, precision: 2) %> <%= p.currency %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        </div>
+      <% else %>
+        <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.9em;">
+          ℹ️ Aún no se han registrado abonos para este evento.
+        </div>
+      <% end %>
 
-    <%# Métodos de Pago Oficiales %>
-    <% if @gig.company&.any_payment_method_enabled? %>
-      <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
-        <h4 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 12px 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
-          <span>💳</span> Métodos de Pago Oficiales para Abonos o Saldos
-        </h4>
-        <%= render 'shared/payment_methods_cards', company: @gig.company, dark_theme: true %>
-      </div>
-    <% end %>
+      <%# Métodos de Pago Oficiales %>
+      <% if @gig.company&.any_payment_method_enabled? %>
+        <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
+          <h4 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 12px 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+            <span>💳</span> Métodos de Pago Oficiales para Abonos o Saldos
+          </h4>
+          <%= render 'shared/payment_methods_cards', company: @gig.company, dark_theme: true %>
+        </div>
+      <% end %>
 
-    <%# Reportar nuevo pago %>
-    <% if @gig.remaining_amount.positive? %>
-      <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
-        <p style="font-size: 0.9em; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
-          ¿Realizaste un nuevo abono o transferencia? Envíanos tu comprobante por WhatsApp para registrar tu saldo al instante.
-        </p>
-        <%
-          co_phone = @gig.company&.whatsapp_number.presence || @gig.company&.contact_phone.presence || "584140000000"
-          clean_co_phone = co_phone.gsub(/\D/, '')
-          wa_message = "¡Hola #{@gig.company&.name || 'Gero Producciones'}! Acabo de realizar un abono para el evento de #{@gig.client_display_name} (Fecha: #{@gig.date&.strftime('%d/%m/%Y')}). Adjunto mi comprobante de pago."
-          wa_url = clean_co_phone.present? ? "https://wa.me/#{clean_co_phone}?text=#{ERB::Util.url_encode(wa_message)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_message)}"
-        %>
-        <a href="<%= wa_url %>" target="_blank" class="btn-portal btn-whatsapp" style="text-decoration: none;">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-          </svg>
-          Notificar Abono por WhatsApp
-        </a>
-      </div>
-    <% end %>
+      <%# Reportar nuevo pago %>
+      <% if @gig.remaining_amount.positive? %>
+        <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
+          <p style="font-size: 0.9em; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+            ¿Realizaste un nuevo abono o transferencia? Envíanos tu comprobante por WhatsApp para registrar tu saldo al instante.
+          </p>
+          <%
+            co_phone = @gig.company&.whatsapp_number.presence || @gig.company&.contact_phone.presence || "584140000000"
+            clean_co_phone = co_phone.gsub(/\D/, '')
+            wa_message = "¡Hola #{@gig.company&.name || 'Gero Producciones'}! Acabo de realizar un abono para el evento de #{@gig.client_display_name} (Fecha: #{@gig.date&.strftime('%d/%m/%Y')}). Adjunto mi comprobante de pago."
+            wa_url = clean_co_phone.present? ? "https://wa.me/#{clean_co_phone}?text=#{ERB::Util.url_encode(wa_message)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_message)}"
+          %>
+          <a href="<%= wa_url %>" target="_blank" class="btn-portal btn-whatsapp" style="text-decoration: none;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+            Notificar Abono por WhatsApp
+          </a>
+        </div>
+      <% end %>
 
-    <%# Recordatorio de Suministro Eléctrico / Planta %>
-    <div style="margin-top: 25px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 16px; padding: 16px 20px; color: #fef08a; display: flex; align-items: flex-start; gap: 14px;">
-      <span style="font-size: 1.5em; flex-shrink: 0; line-height: 1;">⚡</span>
-      <div>
-        <h4 style="margin: 0 0 4px 0; font-size: 0.95em; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">Recordatorio Importante: Suministro Eléctrico</h4>
-        <p style="margin: 0; font-size: 0.88em; line-height: 1.5; color: #fef3c7;">
-          No nos hacemos responsables en caso de donde estemos se vaya la luz, no tenemos planta contratada en nuestro paquete.
-        </p>
+      <%# Recordatorio de Suministro Eléctrico / Planta %>
+      <div style="margin-top: 25px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 16px; padding: 16px 20px; color: #fef08a; display: flex; align-items: flex-start; gap: 14px;">
+        <span style="font-size: 1.5em; flex-shrink: 0; line-height: 1;">⚡</span>
+        <div>
+          <h4 style="margin: 0 0 4px 0; font-size: 0.95em; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">Recordatorio Importante: Suministro Eléctrico</h4>
+          <p style="margin: 0; font-size: 0.88em; line-height: 1.5; color: #fef3c7;">
+            No nos hacemos responsables en caso de donde estemos se vaya la luz, no tenemos planta contratada en nuestro paquete.
+          </p>
+        </div>
       </div>
-    </div>
-  </section>
+    </section>
+  <% elsif @gig.amount.to_f > 0 || @gig.company&.any_payment_method_enabled? %>
+    <section class="glass-card">
+      <h2 class="section-title">
+        <span class="icon">💳</span>
+        Inversión y Métodos de Pago
+      </h2>
+      <% if @gig.amount.to_f > 0 %>
+        <div style="background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.06); border-radius: 16px; padding: 20px; text-align: center; margin-bottom: 20px;">
+          <div style="font-size: 0.85em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">Monto Total Acordado del Evento</div>
+          <div style="font-family: var(--font-outfit); font-size: 2.2em; font-weight: 800; color: var(--text-main);"><%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size: 0.55em; color: var(--text-muted);"><%= @gig.currency %></span></div>
+        </div>
+      <% end %>
+
+      <%# Métodos de Pago Oficiales %>
+      <% if @gig.company&.any_payment_method_enabled? %>
+        <div style="margin-top: 15px;">
+          <h4 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 12px 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
+            <span>💳</span> Métodos de Pago Oficiales
+          </h4>
+          <%= render 'shared/payment_methods_cards', company: @gig.company, dark_theme: true %>
+        </div>
+      <% end %>
+
+      <%# Recordatorio de Suministro Eléctrico / Planta %>
+      <div style="margin-top: 20px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 16px; padding: 16px 20px; color: #fef08a; display: flex; align-items: flex-start; gap: 14px;">
+        <span style="font-size: 1.5em; flex-shrink: 0; line-height: 1;">⚡</span>
+        <div>
+          <h4 style="margin: 0 0 4px 0; font-size: 0.95em; font-weight: 800; color: #fbbf24; text-transform: uppercase; letter-spacing: 0.5px;">Recordatorio Importante: Suministro Eléctrico</h4>
+          <p style="margin: 0; font-size: 0.88em; line-height: 1.5; color: #fef3c7;">
+            No nos hacemos responsables en caso de donde estemos se vaya la luz, no tenemos planta contratada en nuestro paquete.
+          </p>
+        </div>
+      </div>
+    </section>
+  <% end %>
 
   <%# --- CRONOGRAMA / TIMELINE --- %>
-  <section class="glass-card">
-    <h2 class="section-title">
-      <span class="icon">📅</span>
-      Cronograma y Agenda del Evento
-    </h2>
+  <% if @gig.company&.module_enabled?(:gigs) %>
+    <section class="glass-card">
+      <h2 class="section-title">
+        <span class="icon">📅</span>
+        Cronograma y Agenda del Evento
+      </h2>
 
-    <% if @timeline_items.any? %>
-      <div class="timeline-container">
-        <% @timeline_items.each do |item| %>
-          <div class="timeline-item">
-            <div class="timeline-dot"></div>
-            <div class="timeline-time">⏰ <%= item.time %></div>
-            <div class="timeline-title"><%= item.title %></div>
-            <% if item.description.present? %>
-              <div class="timeline-desc"><%= item.description %></div>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
-    <% else %>
-      <div style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
-        <p style="font-size: 35px; margin: 0 0 10px 0;">⏳</p>
-        <p style="font-weight: 700; margin: 0; font-size: 1.05em; color: var(--text-main);">Cronograma en preparación</p>
-        <p style="margin: 5px 0 0 0; font-size: 0.9em; line-height: 1.5;">El equipo organizador está afinando los detalles de la agenda de tu evento. Una vez listos, verás las horas y actividades aquí en tiempo real.</p>
-      </div>
-    <% end %>
-  </section>
+      <% if @timeline_items.any? %>
+        <div class="timeline-container">
+          <% @timeline_items.each do |item| %>
+            <div class="timeline-item">
+              <div class="timeline-dot"></div>
+              <div class="timeline-time">⏰ <%= item.time %></div>
+              <div class="timeline-title"><%= item.title %></div>
+              <% if item.description.present? %>
+                <div class="timeline-desc"><%= item.description %></div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <div style="text-align: center; padding: 30px 10px; color: var(--text-muted);">
+          <p style="font-size: 35px; margin: 0 0 10px 0;">⏳</p>
+          <p style="font-weight: 700; margin: 0; font-size: 1.05em; color: var(--text-main);">Cronograma en preparación</p>
+          <p style="margin: 5px 0 0 0; font-size: 0.9em; line-height: 1.5;">El equipo organizador está afinando los detalles de la agenda de tu evento. Una vez listos, verás las horas y actividades aquí en tiempo real.</p>
+        </div>
+      <% end %>
+    </section>
+  <% end %>
 
   <%# --- SECCIÓN DE ADICIONALES RECOMENDADOS (UPSELL HORIZONTAL) --- %>
   <% available_upsells = @gig.available_upsells %>

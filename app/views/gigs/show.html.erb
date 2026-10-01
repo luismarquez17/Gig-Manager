@@ -291,7 +291,10 @@
 
         <%
           # Mensaje predefinido para WhatsApp
-          wa_msg = "¡Hola #{@gig.client&.name}! Te comparto el link de tu Portal del Cliente personalizado para tu evento del #{@gig.date&.strftime('%d/%m/%Y')}. Podrás ver los detalles contratados, el estado de tus abonos y el cronograma del día: #{portal_url}"
+          feat_items = ["los detalles contratados"]
+          feat_items << "el estado de tus abonos" if @gig.company&.module_enabled?(:finances)
+          feat_items << "el cronograma del día" if @gig.company&.module_enabled?(:gigs)
+          wa_msg = "¡Hola #{@gig.client&.name}! Te comparto el link de tu Portal del Cliente personalizado para tu evento del #{@gig.date&.strftime('%d/%m/%Y')}. Podrás ver #{feat_items.to_sentence}: #{portal_url}"
           
           # Si tenemos el teléfono formateado del cliente, generamos el link directo, de lo contrario a WhatsApp Web general
           wa_share_url = @gig.client&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@gig.client.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(wa_msg)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_msg)}"

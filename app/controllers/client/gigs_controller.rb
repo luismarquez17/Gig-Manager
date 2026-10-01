@@ -11,9 +11,9 @@ class Client::GigsController < ApplicationController
   end
 
   def show
-    @gig_payments = @gig.gig_payments.order(date_paid: :desc)
-    @timeline_items = @gig.gig_timeline_items.for_client.order(:position, :time)
-    @staff_members = @gig.staff_members.with_attached_avatar
+    @gig_payments = current_company.module_enabled?(:finances) ? @gig.gig_payments.order(date_paid: :desc) : []
+    @timeline_items = current_company.module_enabled?(:gigs) ? @gig.gig_timeline_items.for_client.order(:position, :time) : []
+    @staff_members = current_company.module_enabled?(:payroll) ? @gig.staff_members.with_attached_avatar : []
   end
 
   def request_upsell

@@ -7,9 +7,9 @@ class PortalsController < ApplicationController
 
   def show
     @client = @gig.client
-    @gig_payments = @gig.gig_payments.order(date_paid: :desc)
-    @timeline_items = @gig.gig_timeline_items.for_client.order(:position, :time)
-    @staff_members = @gig.staff_members.with_attached_avatar
+    @gig_payments = @gig.company&.module_enabled?(:finances) ? @gig.gig_payments.order(date_paid: :desc) : []
+    @timeline_items = @gig.company&.module_enabled?(:gigs) ? @gig.gig_timeline_items.for_client.order(:position, :time) : []
+    @staff_members = @gig.company&.module_enabled?(:payroll) ? @gig.staff_members.with_attached_avatar : []
   end
 
   def worker_profile
