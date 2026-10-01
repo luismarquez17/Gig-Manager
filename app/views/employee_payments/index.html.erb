@@ -195,9 +195,13 @@
             <% worker_display = begin; metric[:worker].display_name; rescue; metric[:worker].email; end %>
             <button
               type="button"
-              class="btn-main py-1 px-3 fs-7"
+              class="btn-main py-1 px-3 fs-7 btn-open-reset-modal"
               style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700; cursor: pointer;"
-              onclick="openResetModal('<%= metric[:worker].id %>', '<%= j(worker_display) %>', '<%= metric[:past_balance].round(2) %>', '<%= metric[:overpaid].round(2) %>')"
+              data-worker-id="<%= metric[:worker].id %>"
+              data-worker-name="<%= worker_display %>"
+              data-company-debt="<%= metric[:past_balance].round(2) %>"
+              data-worker-owes="<%= metric[:overpaid].round(2) %>"
+              onclick="openResetModalFromBtn(this)"
               title="<%= venue_mode? ? 'Editar la deuda o saldo de este integrante' : 'Editar la deuda o saldo de este trabajador' %>"
             >
               ✏️ Editar deuda
@@ -311,8 +315,8 @@
 
 
 <%# ===== MODAL: AJUSTE DE SALDO / DEUDA POR EL LÍDER ===== %>
-<div id="reset-balance-modal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(15,23,42,0.55); backdrop-filter:blur(4px); align-items:center; justify-content:center;">
-  <div style="background:#fff; border-radius:20px; padding:30px 26px; max-width:520px; width:92%; box-shadow:0 20px 60px rgba(0,0,0,0.18); position:relative; animation: slideUpModal 0.22s ease;">
+<div id="reset-balance-modal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; box-sizing:border-box;">
+  <div style="background:#fff; border-radius:20px; padding:30px 26px; max-width:520px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.22); position:relative; animation: slideUpModal 0.22s ease; max-height:90vh; overflow-y:auto; box-sizing:border-box;">
     
     <%# Botón cerrar %>
     <button onclick="closeResetModal()" type="button" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4em; color:#94a3b8; cursor:pointer; line-height:1;" title="Cerrar">✕</button>
@@ -339,7 +343,7 @@
     </div>
 
     <%# Formulario %>
-    <%= form_with url: reset_balance_employee_payments_path, method: :post, local: true, id: "reset-balance-form" do |f| %>
+    <%= form_with url: reset_balance_employee_payments_path, method: :post, local: true, data: { turbo: false }, id: "reset-balance-form" do |f| %>
       <%= f.hidden_field :user_id, id: "reset-user-id" %>
       <%= f.hidden_field :adjustment_mode, id: "reset-adjustment-mode", value: "company_debt" %>
 
@@ -469,7 +473,8 @@
 
 <script>
   function setResetMode(mode) {
-    document.getElementById('reset-adjustment-mode').value = mode;
+    var hiddenMode = document.getElementById('reset-adjustment-mode');
+    if (hiddenMode) hiddenMode.value = mode;
 
     var modes = ['company_debt', 'worker_owes', 'settle_all'];
     modes.forEach(function(m) {
@@ -491,25 +496,47 @@
 
     if (mode === 'company_debt') {
       var input = document.getElementById('reset-company-debt-input');
-      setTimeout(function() { input.focus(); input.select(); }, 50);
+      if (input) setTimeout(function() { input.focus(); input.select(); }, 50);
     } else if (mode === 'worker_owes') {
       var input = document.getElementById('reset-worker-owes-input');
-      setTimeout(function() { input.focus(); input.select(); }, 50);
+      if (input) setTimeout(function() { input.focus(); input.select(); }, 50);
     }
   }
+  window.setResetMode = setResetMode;
+
+  function openResetModalFromBtn(btn) {
+    if (!btn) return;
+    var workerId = btn.getAttribute('data-worker-id');
+    var workerName = btn.getAttribute('data-worker-name') || '';
+    var companyDebt = btn.getAttribute('data-company-debt') || '0';
+    var workerOwes = btn.getAttribute('data-worker-owes') || '0';
+    openResetModal(workerId, workerName, companyDebt, workerOwes);
+  }
+  window.openResetModalFromBtn = openResetModalFromBtn;
 
   function openResetModal(workerId, workerName, currentCompanyDebt, currentWorkerOwes) {
     var cDebt = parseFloat(currentCompanyDebt) || 0;
     var wOwes = parseFloat(currentWorkerOwes) || 0;
 
-    document.getElementById('reset-user-id').value = workerId;
-    document.getElementById('reset-modal-subtitle').textContent = ( <%= venue_mode? ? "'Personal: '" : "'Trabajador: '" %> ) + workerName;
+    var userIdInput = document.getElementById('reset-user-id');
+    if (userIdInput) userIdInput.value = workerId;
 
-    document.getElementById('reset-modal-company-debt-display').textContent = '$' + cDebt.toFixed(2);
-    document.getElementById('reset-modal-worker-owes-display').textContent = '$' + wOwes.toFixed(2);
+    var subtitle = document.getElementById('reset-modal-subtitle');
+    if (subtitle) {
+      subtitle.textContent = ( <%= venue_mode? ? "'Personal: '" : "'Trabajador: '" %> ) + (workerName || '');
+    }
 
-    document.getElementById('reset-company-debt-input').value = cDebt.toFixed(2);
-    document.getElementById('reset-worker-owes-input').value = wOwes.toFixed(2);
+    var cDebtDisplay = document.getElementById('reset-modal-company-debt-display');
+    if (cDebtDisplay) cDebtDisplay.textContent = '$' + cDebt.toFixed(2);
+
+    var wOwesDisplay = document.getElementById('reset-modal-worker-owes-display');
+    if (wOwesDisplay) wOwesDisplay.textContent = '$' + wOwes.toFixed(2);
+
+    var cDebtInput = document.getElementById('reset-company-debt-input');
+    if (cDebtInput) cDebtInput.value = cDebt.toFixed(2);
+
+    var wOwesInput = document.getElementById('reset-worker-owes-input');
+    if (wOwesInput) wOwesInput.value = wOwes.toFixed(2);
 
     // Seleccionar automáticamente la pestaña más relevante según la situación del trabajador
     if (wOwes > 0 && cDebt <= 0) {
@@ -519,21 +546,29 @@
     }
 
     var modal = document.getElementById('reset-balance-modal');
-    modal.style.display = 'flex';
+    if (modal) modal.style.display = 'flex';
   }
+  window.openResetModal = openResetModal;
 
   function closeResetModal() {
-    document.getElementById('reset-balance-modal').style.display = 'none';
+    var modal = document.getElementById('reset-balance-modal');
+    if (modal) modal.style.display = 'none';
   }
+  window.closeResetModal = closeResetModal;
 
   // Cerrar al hacer clic fuera del modal
-  document.getElementById('reset-balance-modal').addEventListener('click', function(e) {
-    if (e.target === this) closeResetModal();
+  document.addEventListener('click', function(e) {
+    var modal = document.getElementById('reset-balance-modal');
+    if (modal && e.target === modal) {
+      closeResetModal();
+    }
   });
 
   // Cerrar con Escape
   document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') closeResetModal();
+    if (e.key === 'Escape') {
+      closeResetModal();
+    }
   });
 </script>
 

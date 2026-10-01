@@ -189,8 +189,12 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def reset_balance
-    worker = current_company.users.find(params[:user_id])
-    mode   = params[:adjustment_mode].presence || 'company_debt'
+    worker = current_company.users.find_by(id: params[:user_id])
+    unless worker
+      redirect_back fallback_location: employee_payments_path, alert: "Trabajador no encontrado.", status: :see_other and return
+    end
+
+    mode = params[:adjustment_mode].presence || 'company_debt'
 
     # Calcular situación actual de shows pasados
     today        = Date.today
@@ -223,7 +227,8 @@ class EmployeePaymentsController < ApplicationController
 
     if delta == 0
       redirect_back fallback_location: employee_payments_path(user_id: worker.id),
-                    notice: "ℹ️ El saldo de #{worker.display_name} ya está en el valor indicado. No se requirió ningún ajuste."
+                    notice: "ℹ️ El saldo de #{worker.display_name} ya está en el valor indicado. No se requirió ningún ajuste.",
+                    status: :see_other
       return
     end
 
@@ -316,10 +321,11 @@ class EmployeePaymentsController < ApplicationController
       "✅ Saldo de #{worker.display_name} saldado completamente ($0.00). El trabajador está al día."
     end
 
-    redirect_to employee_payments_path(user_id: worker.id), notice: notice_msg
+    redirect_to employee_payments_path(user_id: worker.id), notice: notice_msg, status: :see_other
   rescue ActiveRecord::RecordInvalid => e
     redirect_back fallback_location: employee_payments_path(user_id: params[:user_id]),
-                  alert: "Error al registrar el ajuste: #{e.message}"
+                  alert: "Error al registrar el ajuste: #{e.message}",
+                  status: :see_other
   end
 
   def new
