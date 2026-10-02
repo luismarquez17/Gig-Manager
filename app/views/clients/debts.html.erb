@@ -231,12 +231,15 @@
                         $ <%= number_with_precision(gig.remaining_amount, precision: 2) %>
                       </td>
                       <td style="padding: 12px; text-align: center;">
-                        <div style="display: flex; gap: 6px; justify-content: center;">
+                        <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
                           <%= link_to new_gig_gig_payment_path(gig), class: "btn-main btn-success-custom", style: "padding: 6px 12px; border-radius: 6px; font-size: 0.8em; font-weight: 700; text-decoration: none;" do %>
                             💵 Registrar Pago
                           <% end %>
+                          <%= link_to edit_gig_path(gig), style: "background: var(--bg-card-subtle); color: var(--text-heading); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 0.8em; font-weight: 700;" do %>
+                            ✏️ <%= venue_mode? ? 'Editar Evento' : 'Editar Show' %>
+                          <% end %>
                           <%= link_to gig_path(gig), style: "background: var(--bg-card-subtle); color: var(--text-muted); border: 1px solid var(--border-color); padding: 6px 10px; border-radius: 6px; text-decoration: none; font-size: 0.8em; font-weight: 700;" do %>
-                            👁️ Ver Show
+                            👁️ Ver
                           <% end %>
                         </div>
                       </td>

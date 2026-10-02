@@ -319,7 +319,7 @@
   <div style="background:#fff; border-radius:20px; padding:30px 26px; max-width:520px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.22); position:relative; animation: slideUpModal 0.22s ease; max-height:90vh; overflow-y:auto; box-sizing:border-box;">
     
     <%# Botón cerrar %>
-    <button onclick="closeResetModal()" type="button" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4em; color:#94a3b8; cursor:pointer; line-height:1;" title="Cerrar">✕</button>
+    <button onclick="closeResetModal()" type="button" class="btn-close-reset-modal" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4em; color:#94a3b8; cursor:pointer; line-height:1;" title="Cerrar">✕</button>
 
     <%# Encabezado %>
     <div style="margin-bottom:16px;">
@@ -453,7 +453,7 @@
 
       <%# Botones %>
       <div style="display:flex; gap:10px; justify-content:flex-end;">
-        <button type="button" onclick="closeResetModal()" style="padding:9px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#64748b; font-weight:700; cursor:pointer; font-size:0.88em;">
+        <button type="button" onclick="closeResetModal()" class="btn-close-reset-modal" style="padding:9px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#64748b; font-weight:700; cursor:pointer; font-size:0.88em;">
           Cancelar
         </button>
         <button type="submit" style="padding:9px 20px; border:none; border-radius:10px; background:#2563eb; color:#fff; font-weight:800; cursor:pointer; font-size:0.88em; display:flex; align-items:center; gap:6px;">
@@ -556,8 +556,20 @@
   }
   window.closeResetModal = closeResetModal;
 
-  // Cerrar al hacer clic fuera del modal
+  // Delegación de clics: abrir modal, cerrar modal y clic fuera
   document.addEventListener('click', function(e) {
+    var openBtn = e.target.closest('.btn-open-reset-modal');
+    if (openBtn) {
+      e.preventDefault();
+      openResetModalFromBtn(openBtn);
+      return;
+    }
+    var closeBtn = e.target.closest('.btn-close-reset-modal');
+    if (closeBtn) {
+      e.preventDefault();
+      closeResetModal();
+      return;
+    }
     var modal = document.getElementById('reset-balance-modal');
     if (modal && e.target === modal) {
       closeResetModal();
