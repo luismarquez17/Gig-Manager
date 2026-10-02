@@ -201,7 +201,6 @@
               data-worker-name="<%= worker_display %>"
               data-company-debt="<%= metric[:past_balance].round(2) %>"
               data-worker-owes="<%= metric[:overpaid].round(2) %>"
-              onclick="openResetModalFromBtn(this)"
               title="<%= venue_mode? ? 'Editar la deuda o saldo de este integrante' : 'Editar la deuda o saldo de este trabajador' %>"
             >
               ✏️ Editar deuda
@@ -304,13 +303,14 @@
 
 
 <script>
-  function togglePanel(panelId, btn) {
+  // Turbo-safe: define on window so they survive navigations
+  window.togglePanel = function(panelId, btn) {
     var panel = document.getElementById(panelId);
     if (!panel) return;
     var isOpen = panel.style.display !== 'none';
     panel.style.display = isOpen ? 'none' : 'block';
     btn.style.opacity = isOpen ? '1' : '0.75';
-  }
+  };
 </script>
 
 
@@ -487,14 +487,19 @@
 </style>
 
 <script>
-  function setResetMode(mode) {
+  // ─── Turbo-safe modal functions ───────────────────────────
+  // All functions on window so they survive Turbo Drive navigations.
+
+  window.setResetMode = function(mode) {
     var hiddenMode = document.getElementById('reset-adjustment-mode');
     if (hiddenMode) hiddenMode.value = mode;
 
     var modes = ['company_debt', 'worker_owes', 'settle_all'];
     modes.forEach(function(m) {
-      var panel = document.getElementById('panel-' + m.replace('_', '-'));
-      var btn = document.getElementById('tab-btn-' + m.replace('_', '-'));
+      var panelId = 'panel-' + m.replace(/_/g, '-');
+      var btnId   = 'tab-btn-' + m.replace(/_/g, '-');
+      var panel = document.getElementById(panelId);
+      var btn   = document.getElementById(btnId);
       if (panel) panel.style.display = (m === mode) ? 'block' : 'none';
       if (btn) {
         if (m === mode) {
@@ -511,25 +516,14 @@
 
     if (mode === 'company_debt') {
       var input = document.getElementById('reset-company-debt-input');
-      if (input) setTimeout(function() { input.focus(); input.select(); }, 50);
+      if (input) setTimeout(function() { input.focus(); input.select(); }, 80);
     } else if (mode === 'worker_owes') {
       var input = document.getElementById('reset-worker-owes-input');
-      if (input) setTimeout(function() { input.focus(); input.select(); }, 50);
+      if (input) setTimeout(function() { input.focus(); input.select(); }, 80);
     }
-  }
-  window.setResetMode = setResetMode;
+  };
 
-  function openResetModalFromBtn(btn) {
-    if (!btn) return;
-    var workerId = btn.getAttribute('data-worker-id');
-    var workerName = btn.getAttribute('data-worker-name') || '';
-    var companyDebt = btn.getAttribute('data-company-debt') || '0';
-    var workerOwes = btn.getAttribute('data-worker-owes') || '0';
-    openResetModal(workerId, workerName, companyDebt, workerOwes);
-  }
-  window.openResetModalFromBtn = openResetModalFromBtn;
-
-  function openResetModal(workerId, workerName, currentCompanyDebt, currentWorkerOwes) {
+  window.openResetModal = function(workerId, workerName, currentCompanyDebt, currentWorkerOwes) {
     var cDebt = parseFloat(currentCompanyDebt) || 0;
     var wOwes = parseFloat(currentWorkerOwes) || 0;
 
@@ -538,7 +532,7 @@
 
     var subtitle = document.getElementById('reset-modal-subtitle');
     if (subtitle) {
-      subtitle.textContent = ( <%= venue_mode? ? "'Personal: '" : "'Trabajador: '" %> ) + (workerName || '');
+      subtitle.textContent = (<%= (venue_mode? ? "Personal: " : "Trabajador: ").to_json.html_safe %>) + (workerName || '');
     }
 
     var cDebtDisplay = document.getElementById('reset-modal-company-debt-display');
@@ -553,11 +547,11 @@
     var wOwesInput = document.getElementById('reset-worker-owes-input');
     if (wOwesInput) wOwesInput.value = wOwes.toFixed(2);
 
-    // Seleccionar automáticamente la pestaña más relevante según la situación del trabajador
+    // Auto-select the most relevant tab based on the worker's situation
     if (wOwes > 0 && cDebt <= 0) {
-      setResetMode('worker_owes');
+      window.setResetMode('worker_owes');
     } else {
-      setResetMode('company_debt');
+      window.setResetMode('company_debt');
     }
 
     var modal = document.getElementById('reset-balance-modal');
@@ -565,44 +559,66 @@
       modal.classList.add('is-active');
       modal.style.display = 'flex';
     }
-  }
-  window.openResetModal = openResetModal;
+  };
 
-  function closeResetModal() {
+  window.closeResetModal = function() {
     var modal = document.getElementById('reset-balance-modal');
     if (modal) {
       modal.classList.remove('is-active');
       modal.style.display = 'none';
     }
-  }
-  window.closeResetModal = closeResetModal;
+  };
 
-  // Delegación de clics: abrir modal, cerrar modal y clic fuera
-  document.addEventListener('click', function(e) {
+  // ─── Idempotent event delegation (Turbo-safe) ──────────────
+  // Use named functions + remove before add to prevent stacking
+  // on repeated Turbo Drive navigations.
+
+  function _resetModalClickHandler(e) {
+    // 1. Open modal: click on .btn-open-reset-modal
     var openBtn = e.target.closest('.btn-open-reset-modal');
     if (openBtn) {
       e.preventDefault();
-      openResetModalFromBtn(openBtn);
+      e.stopPropagation();
+      var workerId    = openBtn.getAttribute('data-worker-id');
+      var workerName  = openBtn.getAttribute('data-worker-name') || '';
+      var companyDebt = openBtn.getAttribute('data-company-debt') || '0';
+      var workerOwes  = openBtn.getAttribute('data-worker-owes') || '0';
+      window.openResetModal(workerId, workerName, companyDebt, workerOwes);
       return;
     }
+
+    // 2. Close modal: click on .btn-close-reset-modal
     var closeBtn = e.target.closest('.btn-close-reset-modal');
     if (closeBtn) {
       e.preventDefault();
-      closeResetModal();
+      window.closeResetModal();
       return;
     }
-    var modal = document.getElementById('reset-balance-modal');
-    if (modal && e.target === modal) {
-      closeResetModal();
-    }
-  });
 
-  // Cerrar con Escape
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeResetModal();
+    // 3. Close modal: click on backdrop (outside modal content)
+    var modal = document.getElementById('reset-balance-modal');
+    if (modal && modal.classList.contains('is-active') && e.target === modal) {
+      window.closeResetModal();
     }
-  });
+  }
+
+  function _resetModalKeyHandler(e) {
+    if (e.key === 'Escape') {
+      var modal = document.getElementById('reset-balance-modal');
+      if (modal && modal.classList.contains('is-active')) {
+        window.closeResetModal();
+      }
+    }
+  }
+
+  // Remove any previously attached handlers (idempotent)
+  document.removeEventListener('click', _resetModalClickHandler, true);
+  document.removeEventListener('keydown', _resetModalKeyHandler);
+
+  // Attach fresh handlers
+  // Use capture phase (true) so we intercept the click before anything else
+  document.addEventListener('click', _resetModalClickHandler, true);
+  document.addEventListener('keydown', _resetModalKeyHandler);
 </script>
 
 <%# --- TABLA DE HISTORIAL DE PAGOS --- %>
