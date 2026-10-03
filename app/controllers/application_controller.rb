@@ -1,5 +1,6 @@
 class ApplicationController < ActionController::Base
   layout :layout_by_resource
+  before_action :set_request_context
   before_action :authenticate_user!
   before_action :set_current_tenant
   before_action :check_company_subscription!
@@ -35,6 +36,10 @@ class ApplicationController < ActionController::Base
 
   def after_sign_in_path_for(resource_or_scope)
     authenticated_root_path
+  end
+
+  def set_request_context
+    Current.ip_address = request.remote_ip rescue nil
   end
 
   def set_current_tenant

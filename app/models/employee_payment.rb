@@ -1,5 +1,6 @@
 class EmployeePayment < ApplicationRecord
   include TenantScoped
+  include FinancialAuditable
 
   FUNDING_SOURCES = %w[payroll_fund external_capital].freeze
   STATUSES = %w[approved pending_approval rejected].freeze
@@ -18,8 +19,9 @@ class EmployeePayment < ApplicationRecord
   before_validation :set_default_status
   before_validation :ensure_currency
 
-  validates :amount, presence: true, numericality: { greater_than: 0 }
+  validates :amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
   validates :expected_amount, presence: true, numericality: { greater_than_or_equal_to: 0 }
+  validate :amount_or_expected_amount_positive
   validates :funding_source, inclusion: { in: FUNDING_SOURCES }, allow_nil: true
   validates :status, inclusion: { in: STATUSES }, allow_nil: true
 
@@ -84,5 +86,11 @@ class EmployeePayment < ApplicationRecord
 
   def ensure_currency
     self.currency = 'USD' if currency.blank? || currency != 'USD'
+  end
+
+  def amount_or_expected_amount_positive
+    if amount.to_f <= 0 && expected_amount.to_f <= 0
+      errors.add(:amount, "debe ser mayor a 0 o tener un monto esperado mayor a 0")
+    end
   end
 end

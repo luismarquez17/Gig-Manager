@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_09_30_010000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_02_140100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -234,6 +234,27 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_010000) do
     t.index ["company_id"], name: "index_finance_settings_on_company_id"
   end
 
+  create_table "financial_audit_logs", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.bigint "user_id"
+    t.string "auditable_type", null: false
+    t.bigint "auditable_id", null: false
+    t.string "action", default: "created", null: false
+    t.decimal "amount_before", precision: 12, scale: 2
+    t.decimal "amount_after", precision: 12, scale: 2
+    t.string "currency", default: "USD", null: false
+    t.text "reason"
+    t.jsonb "details", default: {}, null: false
+    t.string "ip_address"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["action"], name: "index_financial_audit_logs_on_action"
+    t.index ["auditable_type", "auditable_id"], name: "index_financial_audit_logs_on_auditable_type_and_auditable_id"
+    t.index ["company_id", "created_at"], name: "index_financial_audit_logs_on_company_id_and_created_at"
+    t.index ["company_id"], name: "index_financial_audit_logs_on_company_id"
+    t.index ["user_id"], name: "index_financial_audit_logs_on_user_id"
+  end
+
   create_table "fund_allocations", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
@@ -285,7 +306,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_010000) do
     t.text "notes"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "payment_method", default: "cash", null: false
+    t.string "receipt_number"
     t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
+    t.index ["receipt_number"], name: "index_gig_payments_on_receipt_number"
   end
 
   create_table "gig_reviews", force: :cascade do |t|
@@ -587,6 +611,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_09_30_010000) do
   add_foreign_key "employee_payments", "gigs"
   add_foreign_key "employee_payments", "users"
   add_foreign_key "finance_settings", "companies"
+  add_foreign_key "financial_audit_logs", "companies"
+  add_foreign_key "financial_audit_logs", "users"
   add_foreign_key "fund_allocations", "gigs"
   add_foreign_key "fund_expenses", "employee_payments"
   add_foreign_key "fund_expenses", "fund_allocations"

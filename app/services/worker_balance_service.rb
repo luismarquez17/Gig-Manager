@@ -113,25 +113,18 @@ class WorkerBalanceService
 
   def gig_debts
     @gig_debts ||= begin
-      remaining_credit = [net_adjustment_credits, 0].max
       debts = []
 
       past_assignments.each do |sa|
         paid_for_gig   = paid_by_gig[sa.gig_id].to_f
-        pending_raw    = sa.agreed_amount.to_f - paid_for_gig
+        pending_raw    = (sa.agreed_amount.to_f - paid_for_gig).round(2)
         next if pending_raw <= 0
-
-        credit_applied    = [remaining_credit, pending_raw].min
-        effective_pending = (pending_raw - credit_applied).round(2)
-        remaining_credit  -= credit_applied
-
-        next if effective_pending <= 0
 
         debts << {
           gig:            sa.gig,
           agreed_amount:  sa.agreed_amount.to_f,
-          paid_amount:    paid_for_gig + credit_applied,
-          pending_amount: effective_pending,
+          paid_amount:    paid_for_gig,
+          pending_amount: pending_raw,
           type:           :assignment
         }
       end

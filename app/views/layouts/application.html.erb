@@ -581,6 +581,10 @@
                 <%= link_to investments_path, class: "sidebar-link #{'active' if controller_name == 'investments'}" do %>
                   <span class="icon">💸</span> <span>Inversiones</span>
                 <% end %>
+
+                <%= link_to financial_audit_logs_path, class: "sidebar-link #{'active' if controller_name == 'financial_audit_logs'}" do %>
+                  <span class="icon">🛡️</span> <span>Auditoría Contable</span>
+                <% end %>
               <% end %>
 
               <%# --- NÓMINA DE PERSONAL --- %>
@@ -845,14 +849,14 @@
           <% if notice.present? %>
             <script>
               document.addEventListener('turbo:load', function() {
-                showToast(<%= notice.to_json %>, 'success');
+                showToast(<%= notice.to_json.html_safe %>, 'success');
               }, { once: true });
             </script>
           <% end %>
           <% if alert.present? %>
             <script>
               document.addEventListener('turbo:load', function() {
-                showToast(<%= alert.to_json %>, 'error');
+                showToast(<%= alert.to_json.html_safe %>, 'error');
               }, { once: true });
             </script>
           <% end %>
@@ -1240,10 +1244,10 @@
         var reportsCount = banner.getAttribute('data-reports-count');
         var upsellsCount = banner.getAttribute('data-upsells-count');
 
-        // Record in sessionStorage so it doesn't reappear when navigating sections
         if (type === 'worker-notif' && notifId) {
           sessionStorage.setItem('dismissed_worker_notif_' + notifId, '1');
-          var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+          var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+          var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
           fetch('/notifications/' + notifId + '/mark_as_read', {
             method: 'POST',
             headers: {

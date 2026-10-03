@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Recibo de Pago <%= @payment.receipt_display_number %> - <%= @company&.name || 'Gig Manager' %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .no-print-bar {
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-print {
+      background: #0f172a;
+      color: white;
+    }
+    .btn-print:hover {
+      background: #334155;
+    }
+
+    .btn-back {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-back:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    /* Recibo Card Principal */
+    .receipt-card {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 44px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    /* Header del Recibo */
+    .receipt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    .company-brand h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .company-brand p {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .receipt-badge-box {
+      text-align: right;
+    }
+
+    .receipt-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #2563eb;
+      margin-bottom: 4px;
+    }
+
+    .folio-pill {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 4px 14px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .receipt-date {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* Grid de Información */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .info-block {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .info-block-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-item {
+      font-size: 13.5px;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    .info-item strong {
+      color: #0f172a;
+    }
+
+    /* Tabla de Detalles del Pago */
+    .payment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 28px;
+    }
+
+    .payment-table th {
+      background: #0f172a;
+      color: white;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 700;
+      text-align: left;
+      padding: 12px 16px;
+    }
+
+    .payment-table th:first-child {
+      border-top-left-radius: 8px;
+    }
+    .payment-table th:last-child {
+      border-top-right-radius: 8px;
+      text-align: right;
+    }
+
+    .payment-table td {
+      padding: 16px;
+      border-bottom: 1px solid #e2e8f0;
+      font-size: 14px;
+      color: #334155;
+    }
+
+    .payment-table td:last-child {
+      text-align: right;
+      font-weight: 800;
+      font-size: 16px;
+      color: #0f172a;
+    }
+
+    .method-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: <%= @payment.payment_method_badge_bg %>;
+      color: <%= @payment.payment_method_badge_color %>;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+    }
+
+    /* Caja de Resumen Contable / Estado de Cuenta */
+    .statement-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin-bottom: 30px;
+    }
+
+    .statement-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 14px;
+      color: #475569;
+    }
+
+    .statement-row.highlight {
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 12px;
+      margin-top: 8px;
+      font-weight: 800;
+      font-size: 16px;
+      color: #0f172a;
+    }
+
+    .statement-row.current-payment {
+      background: #ecfdf5;
+      color: #065f46;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 15px;
+      margin: 4px 0;
+    }
+
+    .status-tag {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
+
+    .status-paid {
+      background: #dcfce7;
+      color: #166534;
+    }
+    .status-pending {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    /* Firmas y Validación */
+    .signatures-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #f1f5f9;
+    }
+
+    .signature-box {
+      text-align: center;
+    }
+
+    .signature-line {
+      border-top: 1px solid #94a3b8;
+      margin-top: 50px;
+      padding-top: 8px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #334155;
+    }
+
+    .signature-sub {
+      font-size: 11px;
+      color: #64748b;
+    }
+
+    .receipt-footer {
+      margin-top: 35px;
+      text-align: center;
+      font-size: 11px;
+      color: #94a3b8;
+      border-top: 1px solid #f1f5f9;
+      padding-top: 16px;
+    }
+
+    /* Print Media Queries */
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .receipt-card {
+        border: none;
+        box-shadow: none;
+        padding: 20px;
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <%# Barra superior para imprimir o volver %>
+  <div class="no-print-bar">
+    <div>
+      <% if current_user.present? && (current_user.leader? || current_user.superadmin?) %>
+        <%= link_to "← Volver al Show", gig_path(@gig), class: "btn-action btn-back" %>
+      <% else %>
+        <%= link_to "← Volver a mi Portal", public_portal_path(@gig.portal_token), class: "btn-action btn-back" %>
+      <% end %>
+    </div>
+    <div>
+      <button onclick="window.print()" class="btn-action btn-print">
+        🖨️ Imprimir / Guardar como PDF
+      </button>
+    </div>
+  </div>
+
+  <%# Tarjeta del Recibo %>
+  <div class="receipt-card">
+    
+    <%# Encabezado %>
+    <div class="receipt-header">
+      <div class="company-brand">
+        <h1><%= @company&.name || "Gig Manager" %></h1>
+        <p><%= @company&.tagline.presence || "Servicios y Producción Profesional de Eventos" %></p>
+        <% if @company&.contact_phone.present? || @company&.contact_email.present? %>
+          <p style="font-size: 11.5px; color: #64748b; margin-top: 4px;">
+            <% if @company.contact_phone.present? %>📞 <%= @company.contact_phone %><% end %>
+            <% if @company.contact_email.present? %> | ✉️ <%= @company.contact_email %><% end %>
+          </p>
+        <% end %>
+      </div>
+
+      <div class="receipt-badge-box">
+        <div class="receipt-title">Comprobante Oficial de Pago</div>
+        <div class="folio-pill"><%= @payment.receipt_display_number %></div>
+        <div class="receipt-date">Fecha de Emisión: <%= (@payment.date_paid || Date.today).strftime("%d/%m/%Y") %></div>
+      </div>
+    </div>
+
+    <%# Cuadrícula de Información Cliente / Evento %>
+    <div class="info-grid">
+      <div class="info-block">
+        <div class="info-block-title">👤 Datos del Cliente</div>
+        <div class="info-item"><strong>Nombre:</strong> <%= @payment.payer_name.presence || @client&.name || @gig.client_display_name %></div>
+        <% if @client&.phone.present? %>
+          <div class="info-item"><strong>Teléfono:</strong> <%= @client.phone %></div>
+        <% end %>
+        <% if @client&.email.present? || @gig.client_email.present? %>
+          <div class="info-item"><strong>Email:</strong> <%= @client&.email || @gig.client_email %></div>
+        <% end %>
+      </div>
+
+      <div class="info-block">
+        <div class="info-block-title">📅 Datos del Evento</div>
+        <div class="info-item"><strong>Fecha del Show:</strong> <%= @gig.date ? @gig.date.strftime("%d/%m/%Y") : "Por confirmar" %></div>
+        <div class="info-item"><strong>Locación:</strong> <%= @gig.location.presence || "Ubicación por coordinar" %></div>
+        <% if @gig.formatted_time_range.present? %>
+          <div class="info-item"><strong>Horario:</strong> <%= @gig.formatted_time_range %></div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Tabla de Detalle del Pago %>
+    <table class="payment-table">
+      <thead>
+        <tr>
+          <th>Concepto / Descripción</th>
+          <th>Método de Pago</th>
+          <th>Fecha del Abono</th>
+          <th>Monto Abonado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong><%= @payment.is_advance? ? "Seña / Anticipo de Reserva" : (@payment.category.presence || "Abono a Cuenta de Evento") %></strong>
+            <% if @payment.notes.present? %>
+              <div style="font-size: 12px; color: #64748b; margin-top: 2px;">
+                <%= @payment.notes %>
+              </div>
+            <% end %>
+          </td>
+          <td>
+            <span class="method-badge">
+              <%= @payment.payment_method_emoji %> <%= @payment.payment_method_label %>
+            </span>
+          </td>
+          <td>
+            <%= (@payment.date_paid || Date.today).strftime("%d/%m/%Y") %>
+          </td>
+          <td>
+            $ <%= number_with_precision(@payment.amount, precision: 2) %> <%= @payment.currency %>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <%# Resumen de Estado de Cuenta %>
+    <div class="statement-box">
+      <div style="font-size: 12px; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 10px; letter-spacing: 0.5px;">
+        📊 Estado de Cuenta del Evento
+      </div>
+      
+      <div class="statement-row">
+        <span>Total Acordado del Contrato:</span>
+        <strong style="color: #0f172a;">$ <%= number_with_precision(@gig.amount, precision: 2) %> <%= @gig.currency %></strong>
+      </div>
+
+      <div class="statement-row">
+        <span>Abonos Previos Acumulados:</span>
+        <span>$ <%= number_with_precision(@payment.previous_payments_sum, precision: 2) %> <%= @payment.currency %></span>
+      </div>
+
+      <div class="statement-row current-payment">
+        <span>💵 Este Abono / Pago:</span>
+        <span>+ $ <%= number_with_precision(@payment.amount, precision: 2) %> <%= @payment.currency %></span>
+      </div>
+
+      <div class="statement-row highlight">
+        <span>
+          Saldo Restante por Liquidar:
+          <% if @payment.remaining_after_this_payment.zero? %>
+            <span class="status-tag status-paid" style="margin-left: 8px;">✅ Evento Saldado</span>
+          <% else %>
+            <span class="status-tag status-pending" style="margin-left: 8px;">⏳ Pendiente</span>
+          <% end %>
+        </span>
+        <span style="font-size: 18px; color: <%= @payment.remaining_after_this_payment.zero? ? '#166534' : '#0f172a' %>;">
+          $ <%= number_with_precision(@payment.remaining_after_this_payment, precision: 2) %> <%= @payment.currency %>
+        </span>
+      </div>
+    </div>
+
+    <%# Firmas %>
+    <div class="signatures-section">
+      <div class="signature-box">
+        <div class="signature-line">
+          <%= @company&.name || "Representante Autorizado" %>
+        </div>
+        <div class="signature-sub">Emisor / Productora</div>
+      </div>
+
+      <div class="signature-box">
+        <div class="signature-line">
+          <%= @payment.payer_name.presence || @client&.name || @gig.client_display_name %>
+        </div>
+        <div class="signature-sub">Cliente / Pagador</div>
+      </div>
+    </div>
+
+    <%# Footer %>
+    <div class="receipt-footer">
+      Documento digital generado automáticamente por <%= @company&.name || "Gig Manager" %> el <%= Time.current.strftime("%d/%m/%Y a las %I:%M %p") %>.<br>
+      Folio Único: <strong><%= @payment.receipt_display_number %></strong> · Válido como comprobante contable y administrativo.
+    </div>
+
+  </div>
+
+</body>
+</html>

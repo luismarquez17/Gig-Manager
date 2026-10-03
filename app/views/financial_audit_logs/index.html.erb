@@ -1,0 +1,215 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+  <%# --- HEADER --- %>
+  <header style="margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+      <div>
+        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+          <h1 style="color: #0f172a; font-size: 2em; font-weight: 800; margin: 0; letter-spacing: -0.5px;">
+            📋 Libro de Auditoría Financiera
+          </h1>
+          <span style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-size: 0.75em; font-weight: 800; padding: 3px 10px; border-radius: 9999px; text-transform: uppercase;">
+            Inmutable · Anti-Fraude
+          </span>
+        </div>
+        <p style="color: #64748b; font-size: 1em; margin: 0;">
+          Trazabilidad completa de creaciones, modificaciones de montos, eliminaciones y aprobaciones contables.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 10px;">
+        <%= link_to "← Volver a Finanzas", financials_dashboard_path, style: "background: white; color: #475569; border: 1px solid #cbd5e1; padding: 8px 16px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;" %>
+        <%= link_to "🏦 Ver Caja General", cash_register_path, style: "background: #0f172a; color: white; padding: 8px 16px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px;" %>
+      </div>
+    </div>
+  </header>
+
+  <%# --- TARJETAS DE RESUMEN DE AUDITORÍA --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; margin-bottom: 30px;">
+    
+    <div style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Total Transacciones</span>
+      <h2 style="font-size: 1.8em; margin: 6px 0 0 0; color: #0f172a; font-weight: 800;">
+        <%= @total_logs_count %>
+      </h2>
+      <div style="font-size: 0.8em; color: #94a3b8; margin-top: 4px;">Eventos financieros registrados</div>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">✏️ Modificaciones</span>
+      <h2 style="font-size: 1.8em; margin: 6px 0 0 0; color: #d97706; font-weight: 800;">
+        <%= @updates_count %>
+      </h2>
+      <div style="font-size: 0.8em; color: #94a3b8; margin-top: 4px;">Cambios de montos o datos</div>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">🗑️ Eliminaciones</span>
+      <h2 style="font-size: 1.8em; margin: 6px 0 0 0; color: <%= @deletions_count > 0 ? '#dc2626' : '#64748b' %>; font-weight: 800;">
+        <%= @deletions_count %>
+      </h2>
+      <div style="font-size: 0.8em; color: #94a3b8; margin-top: 4px;">Registros borrados por usuarios</div>
+    </div>
+
+    <div style="background: white; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.01);">
+      <span style="color: #64748b; font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">✨ Creaciones</span>
+      <h2 style="font-size: 1.8em; margin: 6px 0 0 0; color: #16a34a; font-weight: 800;">
+        <%= @creations_count %>
+      </h2>
+      <div style="font-size: 0.8em; color: #94a3b8; margin-top: 4px;">Nuevos cobros, pagos y caja</div>
+    </div>
+
+  </div>
+
+  <%# --- FORMULARIO DE FILTROS --- %>
+  <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+    <%= form_with url: financial_audit_logs_path, method: :get, local: true, style: "display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; align-items: end;" do |f| %>
+      
+      <div>
+        <label style="display: block; font-size: 0.75em; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">Acción</label>
+        <%= select_tag :action_type, options_for_select([
+          ['Todas las acciones', ''],
+          ['✨ Creaciones', 'created'],
+          ['✏️ Modificaciones', 'updated'],
+          ['🗑️ Eliminaciones', 'deleted'],
+          ['✅ Aprobaciones', 'approved'],
+          ['❌ Rechazos', 'rejected']
+        ], params[:action_type]), class: "form-select", style: "width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; font-size: 0.9em; background: white;" %>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.75em; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">Tipo de Registro</label>
+        <%= select_tag :model_type, options_for_select([
+          ['Todos los registros', ''],
+          ['🎸 Abonos de Shows (GigPayment)', 'GigPayment'],
+          ['👥 Nóminas de Personal (EmployeePayment)', 'EmployeePayment'],
+          ['💵 Caja General (CashAdjustment)', 'CashAdjustment']
+        ], params[:model_type]), class: "form-select", style: "width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; font-size: 0.9em; background: white;" %>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.75em; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">Usuario Responsable</label>
+        <%= select_tag :user_id, options_for_select(
+          [['Todos los usuarios', '']] + @users_for_filter.map { |u| [u.display_name, u.id] },
+          params[:user_id]
+        ), class: "form-select", style: "width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; font-size: 0.9em; background: white;" %>
+      </div>
+
+      <div>
+        <label style="display: block; font-size: 0.75em; font-weight: 700; color: #475569; text-transform: uppercase; margin-bottom: 4px;">Buscar por texto / motivo</label>
+        <%= text_field_tag :query, params[:query], placeholder: "Ej. error, corrección, nombre...", style: "width: 100%; border: 1px solid #cbd5e1; border-radius: 8px; padding: 7px 10px; font-size: 0.9em;" %>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <%= submit_tag "Filtrar", class: "btn btn-primary", style: "flex: 1; background: #2563eb; color: white; border: none; border-radius: 8px; padding: 8px 14px; font-weight: 700; font-size: 0.9em; cursor: pointer;" %>
+        <% if params[:action_type].present? || params[:model_type].present? || params[:user_id].present? || params[:query].present? %>
+          <%= link_to "Limpiar", financial_audit_logs_path, style: "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 12px; font-weight: 700; text-decoration: none; font-size: 0.9em;" %>
+        <% end %>
+      </div>
+
+    <% end %>
+  </div>
+
+  <%# --- TABLA DE REGISTROS DE AUDITORÍA --- %>
+  <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.02);">
+    
+    <% if @logs.any? %>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
+          <thead>
+            <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+              <th style="padding: 12px 16px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Fecha y Hora</th>
+              <th style="padding: 12px 16px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Acción</th>
+              <th style="padding: 12px 16px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Registro / Tipo</th>
+              <th style="padding: 12px 16px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Monto / Impacto</th>
+              <th style="padding: 12px 16px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Responsable</th>
+              <th style="padding: 12px 16px; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 800;">Motivo & Detalles</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @logs.each do |log| %>
+              <tr style="border-bottom: 1px solid #f1f5f9; transition: background 0.15s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                
+                <%# 1. Fecha %>
+                <td style="padding: 14px 16px; white-space: nowrap;">
+                  <div style="font-weight: 700; color: #0f172a;"><%= log.created_at.strftime("%d/%m/%Y") %></div>
+                  <div style="font-size: 0.8em; color: #94a3b8;"><%= log.created_at.strftime("%I:%M:%S %p") %></div>
+                </td>
+
+                <%# 2. Acción %>
+                <td style="padding: 14px 16px; white-space: nowrap;">
+                  <span style="display: inline-flex; align-items: center; gap: 4px; background: <%= log.action_badge_bg %>; color: <%= log.action_badge_color %>; font-size: 0.8em; font-weight: 800; padding: 3px 10px; border-radius: 6px;">
+                    <%= log.action_emoji %> <%= log.action_label %>
+                  </span>
+                </td>
+
+                <%# 3. Tipo de Registro %>
+                <td style="padding: 14px 16px;">
+                  <div style="font-weight: 700; color: #334155;">
+                    <%= log.auditable_human_type %>
+                  </div>
+                  <% if log.details.is_a?(Hash) && log.details['_gig_info'].present? %>
+                    <div style="font-size: 0.8em; color: #64748b;">
+                      Show: <%= log.details.dig('_gig_info', 'client_name') %> (<%= log.details.dig('_gig_info', 'date') %>)
+                    </div>
+                  <% elsif log.details.is_a?(Hash) && log.details['_worker_info'].present? %>
+                    <div style="font-size: 0.8em; color: #64748b;">
+                      Personal: <%= log.details.dig('_worker_info', 'name') %>
+                    </div>
+                  <% end %>
+                </td>
+
+                <%# 4. Monto / Impacto %>
+                <td style="padding: 14px 16px; white-space: nowrap;">
+                  <span style="font-weight: 800; font-size: 0.95em; color: <%= log.action == 'deleted' ? '#dc2626' : (log.action == 'created' ? '#16a34a' : '#0f172a') %>;">
+                    <%= log.formatted_amount_change %>
+                  </span>
+                </td>
+
+                <%# 5. Responsable %>
+                <td style="padding: 14px 16px;">
+                  <div style="font-weight: 700; color: #0f172a;">
+                    <%= log.user_display_name %>
+                  </div>
+                  <% if log.ip_address.present? %>
+                    <div style="font-size: 0.75em; color: #94a3b8;">IP: <%= log.ip_address %></div>
+                  <% end %>
+                </td>
+
+                <%# 6. Motivo & Detalles %>
+                <td style="padding: 14px 16px; max-width: 320px;">
+                  <div style="font-size: 0.9em; color: #334155; font-weight: 500;">
+                    <%= log.reason.presence || "Sin motivo especificado" %>
+                  </div>
+
+                  <%# Si hubo cambios específicos de campos %>
+                  <% if log.details.is_a?(Hash) && log.details['changes'].present? %>
+                    <div style="margin-top: 6px; font-size: 0.75em; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; color: #475569;">
+                      <% log.details['changes'].each do |field, diff| %>
+                        <div>
+                          <strong><%= field.humanize %>:</strong> 
+                          <span style="color: #dc2626;"><%= diff.first.inspect %></span> → <span style="color: #16a34a;"><%= diff.last.inspect %></span>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </td>
+
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <div style="text-align: center; padding: 60px 20px;">
+        <div style="font-size: 3em; margin-bottom: 12px;">🛡️</div>
+        <h3 style="color: #0f172a; font-weight: 800; margin-bottom: 6px;">No se encontraron registros de auditoría</h3>
+        <p style="color: #64748b; font-size: 0.95em; max-width: 450px; margin: 0 auto;">
+          Los movimientos financieros que registres, modifiques o elimines aparecerán aquí con su registro inmutable de trazabilidad.
+        </p>
+      </div>
+    <% end %>
+
+  </div>
+
+</div>

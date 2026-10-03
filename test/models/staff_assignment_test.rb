@@ -21,7 +21,7 @@ class StaffAssignmentTest < ActiveSupport::TestCase
     assert_equal 10.0, worker.pending_balance
   end
 
-  test "general payments without gig_id apply to assigned gigs balance" do
+  test "general payments without gig_id apply to worker total balance without altering direct show payments" do
     worker = users(:two)
     client = clients(:one)
     gig = Gig.create!(date: Date.today, amount: 200.0, client: client, currency: 'USD')
@@ -29,6 +29,7 @@ class StaffAssignmentTest < ActiveSupport::TestCase
     assignment = StaffAssignment.create!(user: worker, gig: gig, agreed_amount: 20.0)
     assert_equal 0.0, assignment.total_paid
     assert_equal 20.0, assignment.pending_balance
+    assert_equal 20.0, worker.pending_balance
 
     # Make a general payment (gig_id: nil) of $15
     EmployeePayment.create!(
@@ -41,11 +42,14 @@ class StaffAssignmentTest < ActiveSupport::TestCase
       status: 'approved'
     )
 
-    assignment.clear_cached_breakdown!
-    assert_equal 15.0, assignment.total_paid
-    assert_equal 15.0, assignment.general_credit_applied
-    assert_equal 5.0, assignment.pending_balance
-    assert_equal 5.0, assignment.balance
+    # El show individual no debe mostrar pagos ficticios directos
+    assert_equal 0.0, assignment.total_paid
+    assert_equal 0.0, assignment.general_credit_applied
+    assert_equal 20.0, assignment.pending_balance
+    assert_equal 20.0, assignment.balance
+
+    # Pero el saldo global de la empresa con el trabajador se reduce correctamente a $5.0
+    assert_equal 5.0, worker.pending_balance
   end
 
   test "future gigs are not counted as debt until the date has passed" do

@@ -77,7 +77,14 @@ Rails.application.routes.draw do
       post :merge
     end
   end
-  resources :gig_payments, only: [:index, :edit, :update, :destroy]
+  resources :gig_payments, only: [:index, :edit, :update, :destroy] do
+    member do
+      get :receipt
+    end
+  end
+
+  resources :financial_audit_logs, only: [:index]
+  get '/auditoria', to: 'financial_audit_logs#index', as: 'financial_audit_logs_dashboard'
   
   namespace :client do
     resources :gigs, only: [:index, :show] do
@@ -89,6 +96,7 @@ Rails.application.routes.draw do
 
   # Portal Público de Clientes (Acceso mediante token seguro de WhatsApp)
   get '/portal/:token', to: 'portals#show', as: 'public_portal'
+  get '/portal/:token/receipt/:payment_id', to: 'portals#payment_receipt', as: 'public_portal_receipt'
   get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
   post '/portal/:token/request_upsell', to: 'portals#request_upsell', as: 'request_public_portal_upsell'

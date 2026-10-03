@@ -247,8 +247,8 @@ class EmployeePaymentsController < ApplicationController
         # Aumentar saldo a favor del trabajador (disminuir lo que nos debe o aumentar deuda de la empresa)
         current_company.employee_payments.create!(
           user:                 worker,
-          amount:               0.01,
-          expected_amount:      delta + 0.01,
+          amount:               0.0,
+          expected_amount:      delta,
           gig_id:               nil,
           currency:             'USD',
           date_paid:            Date.today,
@@ -260,56 +260,22 @@ class EmployeePaymentsController < ApplicationController
           reported_by_worker:   false
         )
       else
-        # delta < 0: Disminuir saldo a favor del trabajador (pagar shows pendientes o registrar exceso/anticipo)
-        remaining_adj = delta.abs
-
-        past_assignments = assignments
-          .select { |sa| sa.gig.present? && (sa.gig.date.blank? || sa.gig.date <= today) }
-          .sort_by { |sa| sa.gig.date || today }
-
-        past_assignments.each do |sa|
-          break if remaining_adj <= 0
-          paid_for_gig = worker.employee_payments.approved.where(gig_id: sa.gig_id).sum(:amount).to_f
-          pending_gig  = sa.agreed_amount.to_f - paid_for_gig
-          next if pending_gig <= 0
-
-          portion = [remaining_adj, pending_gig].min.round(2)
-          next if portion <= 0
-
-          gig_note = "#{note_text} (Show: #{sa.gig.client&.name.presence || sa.gig.date&.strftime('%d/%m/%Y')})"
-          current_company.employee_payments.create!(
-            user:                 worker,
-            amount:               portion,
-            expected_amount:      0.0,
-            gig_id:               sa.gig_id,
-            currency:             'USD',
-            date_paid:            Date.today,
-            payment_method:       'Ajuste contable',
-            funding_source:       'external_capital',
-            external_source_name: 'Ajuste por el Líder',
-            notes:                gig_note,
-            status:               'approved',
-            reported_by_worker:   false
-          )
-          remaining_adj = (remaining_adj - portion).round(2)
-        end
-
-        if remaining_adj > 0
-          current_company.employee_payments.create!(
-            user:                 worker,
-            amount:               remaining_adj,
-            expected_amount:      0.0,
-            gig_id:               nil,
-            currency:             'USD',
-            date_paid:            Date.today,
-            payment_method:       'Ajuste contable',
-            funding_source:       'external_capital',
-            external_source_name: 'Ajuste por el Líder',
-            notes:                note_text,
-            status:               'approved',
-            reported_by_worker:   false
-          )
-        end
+        # delta < 0: Disminuir saldo a favor del trabajador (disminuir deuda de la empresa o aumentar lo que nos debe)
+        # Registramos un ajuste contable limpio general sin alterar shows individuales
+        current_company.employee_payments.create!(
+          user:                 worker,
+          amount:               delta.abs,
+          expected_amount:      0.0,
+          gig_id:               nil,
+          currency:             'USD',
+          date_paid:            Date.today,
+          payment_method:       'Ajuste contable',
+          funding_source:       'external_capital',
+          external_source_name: 'Ajuste por el Líder',
+          notes:                note_text,
+          status:               'approved',
+          reported_by_worker:   false
+        )
       end
     end
 

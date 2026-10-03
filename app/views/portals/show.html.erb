@@ -622,25 +622,37 @@
           <table class="portal-table">
             <thead>
               <tr>
+                <th>Folio</th>
                 <th>Fecha</th>
                 <th>Payer / Cliente</th>
-                <th>Concepto / Referencia</th>
+                <th>Concepto / Método</th>
                 <th style="text-align: right;">Monto</th>
+                <th style="text-align: center;">Comprobante</th>
               </tr>
             </thead>
             <tbody>
               <% @gig_payments.each do |p| %>
                 <tr>
+                  <td style="color: #38bdf8; font-weight: 700; font-size: 0.85em;">
+                    <%= p.receipt_display_number %>
+                  </td>
                   <td style="color: var(--text-muted); font-weight: 600;"><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
                   <td style="font-weight: 600; color: var(--text-main);"><%= p.payer_name.presence || "Cliente" %></td>
                   <td style="color: var(--text-muted); font-size: 0.9em;">
                     <span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.8em; color: var(--text-main); margin-right: 5px;">
-                      <%= p.category.presence || "Abono" %>
+                      <%= p.payment_method_emoji %> <%= p.payment_method_label %>
                     </span>
-                    <%= p.notes %>
+                    <% if p.notes.present? %>
+                      <span style="font-size: 0.85em; opacity: 0.8;">(<%= p.notes %>)</span>
+                    <% end %>
                   </td>
                   <td style="text-align: right; font-weight: 800; color: var(--success);">
                     +<%= number_with_precision(p.amount, precision: 2) %> <%= p.currency %>
+                  </td>
+                  <td style="text-align: center;">
+                    <%= link_to public_portal_receipt_path(token: @gig.portal_token, payment_id: p.id), target: '_blank', style: 'background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 0.8em; display: inline-flex; align-items: center; gap: 4px;', title: 'Ver e Imprimir Comprobante Oficial' do %>
+                      📄 Recibo
+                    <% end %>
                   </td>
                 </tr>
               <% end %>

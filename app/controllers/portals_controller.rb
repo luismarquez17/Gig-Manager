@@ -12,6 +12,17 @@ class PortalsController < ApplicationController
     @staff_members = @gig.company&.module_enabled?(:payroll) ? @gig.staff_members.with_attached_avatar : []
   end
 
+  def payment_receipt
+    @payment = @gig.gig_payments.find_by(id: params[:payment_id])
+    if @payment.nil?
+      render file: Rails.public_path.join('404.html'), status: :not_found, layout: false
+      return
+    end
+    @company = @gig.company
+    @client = @gig.client
+    render 'gig_payments/receipt', layout: false
+  end
+
   def worker_profile
     unless @gig.company&.module_enabled?(:payroll)
       render file: Rails.public_path.join('404.html'), status: :not_found, layout: false

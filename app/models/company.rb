@@ -16,6 +16,7 @@ class Company < ApplicationRecord
   has_many :gig_upsell_requests, dependent: :destroy
   has_many :client_quotes, dependent: :destroy
   has_many :cash_adjustments, dependent: :destroy
+  has_many :financial_audit_logs, dependent: :destroy
 
   validates :name, presence: true
   validates :slug, presence: true, uniqueness: true

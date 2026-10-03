@@ -1,5 +1,6 @@
 class CashAdjustment < ApplicationRecord
   include TenantScoped
+  include FinancialAuditable
 
   belongs_to :company
   belongs_to :user, optional: true
