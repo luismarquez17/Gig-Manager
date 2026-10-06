@@ -537,7 +537,7 @@
             </div>
 
             <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 15px;">
-              <% standard_catalog_list = StandardUpsell.all_with_defaults %>
+              <% standard_catalog_list = (@gig.company || current_company).standard_upsells.all_with_defaults %>
               <% custom_upsells_map = @gig.custom_upsells || {} %>
               <% standard_catalog_list.each do |std| %>
                 <% 
@@ -592,7 +592,7 @@
         <%= form_with model: @gig, local: true do |f| %>
           <div id="upsells-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 20px;">
             <% 
-              standard_catalog = StandardUpsell.all_with_defaults
+              standard_catalog = (@gig.company || current_company).standard_upsells.all_with_defaults
               custom_map = @gig.custom_upsells || {}
             %>
             <% standard_catalog.each do |std| %>
