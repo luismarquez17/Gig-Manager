@@ -166,8 +166,9 @@
   <div class="nav-tabs-scroll" style="background: #ffffff; padding: 6px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; box-shadow: 0 2px 10px -2px rgba(15, 23, 42, 0.04); display: flex; align-items: center; gap: 6px; overflow-x: auto; -webkit-overflow-scrolling: touch;">
     
     <% 
-      is_all_active = params[:target_area].blank? && params[:filter] != 'unread'
+      is_all_active = params[:target_area].blank? && params[:filter] != 'unread' && params[:type].blank?
       is_unread_active = params[:filter] == 'unread'
+      is_payments_active = params[:type] == 'payment_alert'
       is_musicians_active = params[:target_area] == 'musicians'
       is_staffs_active = params[:target_area] == 'staffs'
       is_leaders_active = params[:target_area] == 'leaders'
@@ -175,6 +176,10 @@
 
     <%= link_to notifications_path, style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_all_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
       Todas
+    <% end %>
+
+    <%= link_to notifications_path(type: 'payment_alert'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 800; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; #{ is_payments_active ? 'background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);' : 'color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0;' }" do %>
+      <span>💰</span> Pagos & Abonos
     <% end %>
 
     <%= link_to notifications_path(filter: 'unread'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; #{ is_unread_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
@@ -186,16 +191,16 @@
       <% end %>
     <% end %>
 
+    <%= link_to notifications_path(target_area: 'leaders'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_leaders_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+      Líderes
+    <% end %>
+
     <%= link_to notifications_path(target_area: 'musicians'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_musicians_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
       Músicos
     <% end %>
 
     <%= link_to notifications_path(target_area: 'staffs'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_staffs_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
       Staffs
-    <% end %>
-
-    <%= link_to notifications_path(target_area: 'leaders'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_leaders_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
-      Líderes
     <% end %>
   </div>
 

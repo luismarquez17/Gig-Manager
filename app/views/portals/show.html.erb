@@ -615,43 +615,168 @@
         </div>
       </div>
 
+      <%# Botón de Acción para Reportar Abono y Garantía de Seguridad %>
+      <div style="margin-top: 20px; margin-bottom: 22px;">
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <button type="button" onclick="togglePublicPortalPaymentForm()" class="btn-portal" style="width: 100%; background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); color: white; border: none; padding: 14px 24px; border-radius: 14px; font-weight: 800; font-size: 0.98em; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 18px rgba(139, 92, 246, 0.4); transition: all 0.2s;">
+            <span style="font-size: 1.15em;">📸</span> Reportar Abono / Subir Comprobante
+          </button>
+        </div>
+
+        <%# Badge de Seguridad y Confianza %>
+        <div style="display: flex; align-items: center; gap: 10px; margin-top: 12px; padding: 10px 14px; background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 12px; font-size: 0.82em; color: #a7f3d0; line-height: 1.4;">
+          <span style="font-size: 1.25em; flex-shrink: 0;">🛡️</span>
+          <span><strong>Reporte 100% Seguro y Protegido:</strong> Sube tu comprobante directamente en la plataforma. Tu pago es auditado por el equipo y recibirás tu <strong>Recibo Oficial</strong> con folio certificado.</span>
+        </div>
+      </div>
+
+      <%# --- FORMULARIO DESPLEGABLE PARA SUBIR COMPROBANTE (PORTAL) --- %>
+      <div id="publicPortalPaymentFormBox" style="display: none; background: rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 16px; padding: 24px; margin-bottom: 25px; box-shadow: 0 8px 30px rgba(0,0,0,0.2);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+          <div>
+            <h3 style="margin: 0; font-family: var(--font-outfit); font-size: 1.15em; font-weight: 800; color: #c084fc; display: flex; align-items: center; gap: 8px;">
+              <span>📤</span> Enviar Comprobante de Pago al Equipo
+            </h3>
+            <p style="margin: 4px 0 0 0; color: var(--text-muted); font-size: 0.85em;">
+              Adjunta la foto o captura de tu transferencia. El equipo organizador verificará los datos y confirmará tu saldo.
+            </p>
+          </div>
+          <button type="button" onclick="togglePublicPortalPaymentForm()" style="background: rgba(255,255,255,0.06); border: none; color: var(--text-muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-weight: 800;">✕</button>
+        </div>
+
+        <%= form_with url: report_public_portal_payment_path(@gig.portal_token), method: :post, multipart: true, local: true, data: { turbo: false } do |f| %>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
+            
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                Monto del Abono ($ USD) *
+              </label>
+              <%= text_field_tag :amount, (@gig.remaining_amount.positive? ? sprintf('%.2f', @gig.remaining_amount) : ''), placeholder: "0.00", required: true, style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 1.1em; font-weight: 800; color: white; box-sizing: border-box;" %>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                Método de Pago *
+              </label>
+              <%= select_tag :payment_method, options_for_select(GigPayment::PAYMENT_METHODS.map { |k, v| ["#{v[:emoji]} #{v[:label]}", k] }, 'zelle'), style: "width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; font-weight: 700; color: white; box-sizing: border-box;" %>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                Fecha en que Pagaste *
+              </label>
+              <%= date_field_tag :date_paid, Date.today, required: true, style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; color: white; box-sizing: border-box;" %>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+                Nº de Referencia / Confirmación
+              </label>
+              <%= text_field_tag :reference_number, nil, placeholder: "Ej. Ref Zelle #94821", style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; color: white; box-sizing: border-box;" %>
+            </div>
+
+          </div>
+
+          <%# Subida de Foto con Preview %>
+          <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(139, 92, 246, 0.4); border-radius: 12px; padding: 18px; margin-bottom: 14px; text-align: center;">
+            <label style="display: block; font-size: 0.85em; font-weight: 800; color: #a78bfa; margin-bottom: 8px; cursor: pointer;">
+              📸 Foto o Captura de Pantalla del Comprobante (Voucher)
+            </label>
+            <p style="font-size: 0.78em; color: var(--text-muted); margin: 0 0 12px 0;">
+              Toma una foto desde tu teléfono o sube la captura de tu banco.
+            </p>
+            <input type="file" name="receipt_image" id="publicReceiptInput" accept="image/*" onchange="previewPublicReceipt(this)" style="display: none;">
+            <button type="button" id="publicSelectReceiptBtn" onclick="document.getElementById('publicReceiptInput').click()" style="background: rgba(139, 92, 246, 0.2); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); padding: 8px 18px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer;">
+              📁 Seleccionar Foto / Captura
+            </button>
+            <div id="publicReceiptPreviewBox" style="display: none; margin-top: 14px;">
+              <img id="publicReceiptPreviewImg" src="" alt="Vista previa" style="max-height: 180px; max-width: 100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+              <div id="publicReceiptPreviewFilename" style="font-size: 0.78em; color: #22d3ee; margin-top: 4px; font-weight: 700;"></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
+              Nombre de quien realizó el pago (Opcional)
+            </label>
+            <%= text_field_tag :payer_name, @gig.client_display_name, placeholder: "Tu nombre...", style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.9em; color: white; box-sizing: border-box;" %>
+          </div>
+
+          <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button type="button" onclick="togglePublicPortalPaymentForm()" style="background: rgba(255,255,255,0.06); color: var(--text-muted); border: 1px solid rgba(255,255,255,0.1); padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 0.9em; cursor: pointer;">
+              Cancelar
+            </button>
+            <%= submit_tag "🚀 Enviar Comprobante al Equipo", style: "background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 10px 24px; border-radius: 10px; font-weight: 800; font-size: 0.95em; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);" %>
+          </div>
+        <% end %>
+      </div>
+
       <%# Historial de transacciones %>
-      <h3 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">Historial de Transacciones</h3>
-      <% if @gig_payments.any? %>
+      <h3 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 15px 0; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-muted);">
+        Historial de Abonos y Comprobantes
+      </h3>
+      <% all_portal_payments = @gig.gig_payments.order(date_paid: :desc, created_at: :desc) %>
+      <% if all_portal_payments.any? %>
         <div class="table-wrapper">
           <table class="portal-table">
             <thead>
               <tr>
-                <th>Folio</th>
+                <th>Folio / Estado</th>
                 <th>Fecha</th>
-                <th>Payer / Cliente</th>
-                <th>Concepto / Método</th>
+                <th>Método & Concepto</th>
+                <th>Comprobante / Ref</th>
                 <th style="text-align: right;">Monto</th>
-                <th style="text-align: center;">Comprobante</th>
+                <th style="text-align: center;">Recibo Oficial</th>
               </tr>
             </thead>
             <tbody>
-              <% @gig_payments.each do |p| %>
+              <% all_portal_payments.each do |p| %>
                 <tr>
-                  <td style="color: #38bdf8; font-weight: 700; font-size: 0.85em;">
-                    <%= p.receipt_display_number %>
-                  </td>
-                  <td style="color: var(--text-muted); font-weight: 600;"><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
-                  <td style="font-weight: 600; color: var(--text-main);"><%= p.payer_name.presence || "Cliente" %></td>
-                  <td style="color: var(--text-muted); font-size: 0.9em;">
-                    <span style="background: rgba(255,255,255,0.06); padding: 2px 6px; border-radius: 4px; font-weight: 700; font-size: 0.8em; color: var(--text-main); margin-right: 5px;">
-                      <%= p.payment_method_emoji %> <%= p.payment_method_label %>
-                    </span>
-                    <% if p.notes.present? %>
-                      <span style="font-size: 0.85em; opacity: 0.8;">(<%= p.notes %>)</span>
+                  <td>
+                    <% if p.approved? %>
+                      <span style="color: #38bdf8; font-weight: 700; font-size: 0.85em;">
+                        <%= p.receipt_display_number %>
+                      </span>
+                    <% else %>
+                      <span style="display: inline-flex; align-items: center; gap: 4px; background: <%= p.status_badge_bg %>; color: <%= p.status_badge_color %>; padding: 3px 8px; border-radius: 6px; font-size: 0.78em; font-weight: 800;">
+                        <%= p.status_emoji %> <%= p.status_label %>
+                      </span>
                     <% end %>
                   </td>
-                  <td style="text-align: right; font-weight: 800; color: var(--success);">
+                  <td style="color: var(--text-muted); font-weight: 600;"><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
+                  <td>
+                    <div style="font-weight: 700; color: var(--text-main); font-size: 0.9em;">
+                      <%= p.payment_method_emoji %> <%= p.payment_method_label %>
+                    </div>
+                    <% if p.notes.present? %>
+                      <div style="font-size: 0.8em; color: var(--text-muted);"><%= p.notes %></div>
+                    <% end %>
+                  </td>
+                  <td>
+                    <% if p.reference_number.present? %>
+                      <span style="font-size: 0.82em; color: #a78bfa; font-weight: 700; display: block;">Ref: <%= p.reference_number %></span>
+                    <% end %>
+                    <% if p.voucher_attached? %>
+                      <a href="<%= p.voucher_url_or_data %>" target="_blank" style="font-size: 0.78em; color: #38bdf8; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 3px; margin-top: 2px;">
+                        🔍 Ver Foto Adjunta
+                      </a>
+                    <% end %>
+                    <% if p.rejected? && p.rejection_reason.present? %>
+                      <div style="font-size: 0.75em; color: #f87171; margin-top: 2px;">
+                        Motivo: <%= p.rejection_reason %>
+                      </div>
+                    <% end %>
+                  </td>
+                  <td style="text-align: right; font-weight: 800; color: <%= p.approved? ? 'var(--success)' : '#f59e0b' %>;">
                     +<%= number_with_precision(p.amount, precision: 2) %> <%= p.currency %>
                   </td>
                   <td style="text-align: center;">
-                    <%= link_to public_portal_receipt_path(token: @gig.portal_token, payment_id: p.id), target: '_blank', style: 'background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 0.8em; display: inline-flex; align-items: center; gap: 4px;', title: 'Ver e Imprimir Comprobante Oficial' do %>
-                      📄 Recibo
+                    <% if p.approved? %>
+                      <%= link_to public_portal_receipt_path(token: @gig.portal_token, payment_id: p.id), target: '_blank', style: 'background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 4px 10px; border-radius: 6px; font-weight: 700; text-decoration: none; font-size: 0.8em; display: inline-flex; align-items: center; gap: 4px;', title: 'Ver e Imprimir Comprobante Oficial' do %>
+                        📄 Recibo
+                      <% end %>
+                    <% else %>
+                      <span style="font-size: 0.78em; color: var(--text-muted); font-style: italic;">Pendiente</span>
                     <% end %>
                   </td>
                 </tr>
@@ -661,7 +786,7 @@
         </div>
       <% else %>
         <div style="background: rgba(255,255,255,0.02); border: 1px dashed rgba(255,255,255,0.08); border-radius: 12px; padding: 18px; text-align: center; color: var(--text-muted); font-size: 0.9em;">
-          ℹ️ Aún no se han registrado abonos para este evento.
+          ℹ️ Aún no se han registrado abonos para este evento. Presiona "Reportar Abono" para enviar tu comprobante.
         </div>
       <% end %>
 
@@ -669,32 +794,41 @@
       <% if @gig.company&.any_payment_method_enabled? %>
         <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
           <h4 style="font-family: var(--font-outfit); font-size: 1.05em; font-weight: 700; margin: 0 0 12px 0; color: #38bdf8; display: flex; align-items: center; gap: 8px;">
-            <span>💳</span> Métodos de Pago Oficiales para Abonos o Saldos
+            <span>💳</span> Cuentas y Métodos Oficiales para Transferir / Abonar
           </h4>
           <%= render 'shared/payment_methods_cards', company: @gig.company, dark_theme: true %>
         </div>
       <% end %>
 
-      <%# Reportar nuevo pago %>
-      <% if @gig.remaining_amount.positive? %>
-        <div style="margin-top: 25px; border-top: 1px dashed rgba(255, 255, 255, 0.08); padding-top: 20px;">
-          <p style="font-size: 0.9em; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
-            ¿Realizaste un nuevo abono o transferencia? Envíanos tu comprobante por WhatsApp para registrar tu saldo al instante.
-          </p>
-          <%
-            co_phone = @gig.company&.whatsapp_number.presence || @gig.company&.contact_phone.presence || "584140000000"
-            clean_co_phone = co_phone.gsub(/\D/, '')
-            wa_message = "¡Hola #{@gig.company&.name || 'Gero Producciones'}! Acabo de realizar un abono para el evento de #{@gig.client_display_name} (Fecha: #{@gig.date&.strftime('%d/%m/%Y')}). Adjunto mi comprobante de pago."
-            wa_url = clean_co_phone.present? ? "https://wa.me/#{clean_co_phone}?text=#{ERB::Util.url_encode(wa_message)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_message)}"
-          %>
-          <a href="<%= wa_url %>" target="_blank" class="btn-portal btn-whatsapp" style="text-decoration: none;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-            Notificar Abono por WhatsApp
-          </a>
-        </div>
-      <% end %>
+    <script>
+      function togglePublicPortalPaymentForm() {
+        var box = document.getElementById('publicPortalPaymentFormBox');
+        if (box) {
+          box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+          if (box.style.display === 'block') {
+            box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          }
+        }
+      }
+
+      function previewPublicReceipt(input) {
+        var previewBox = document.getElementById('publicReceiptPreviewBox');
+        var previewImg = document.getElementById('publicReceiptPreviewImg');
+        var filenameLabel = document.getElementById('publicReceiptPreviewFilename');
+
+        if (input.files && input.files[0]) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            previewImg.src = e.target.result;
+            previewBox.style.display = 'block';
+            if (filenameLabel) {
+              filenameLabel.textContent = '✓ ' + input.files[0].name;
+            }
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+    </script>
 
       <%# Recordatorio de Suministro Eléctrico / Planta %>
       <div style="margin-top: 25px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 16px; padding: 16px 20px; color: #fef08a; display: flex; align-items: flex-start; gap: 14px;">

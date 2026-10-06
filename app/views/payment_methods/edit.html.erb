@@ -268,7 +268,7 @@
       <p style="color: #64748b; font-size: 0.88rem; margin: 0 0 12px 0;">
         Este texto se mostrará como pie de página debajo de las cuentas de pago en los presupuestos y portales.
       </p>
-      <textarea name="payment_methods[general_instructions]" rows="2" placeholder="Ej. Una vez realizado tu pago, por favor envía el capture o comprobante por WhatsApp para registrar tu fecha o saldo." style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; resize: vertical; box-sizing: border-box; font-family: inherit;"><%= @payment_methods.dig('general_instructions') %></textarea>
+      <textarea name="payment_methods[general_instructions]" rows="2" placeholder="Ej. Una vez realizado tu pago o transferencia, sube tu comprobante en el botón 'Reportar Abono' para generar tu recibo oficial." style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.95rem; resize: vertical; box-sizing: border-box; font-family: inherit;"><%= @payment_methods.dig('general_instructions') %></textarea>
     </div>
 
     <%# Botón Guardar %>

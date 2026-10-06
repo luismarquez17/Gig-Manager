@@ -80,6 +80,8 @@ Rails.application.routes.draw do
   resources :gig_payments, only: [:index, :edit, :update, :destroy] do
     member do
       get :receipt
+      post :approve
+      post :reject
     end
   end
 
@@ -90,6 +92,7 @@ Rails.application.routes.draw do
     resources :gigs, only: [:index, :show] do
       member do
         post :request_upsell
+        post :report_payment
       end
     end
   end
@@ -100,6 +103,7 @@ Rails.application.routes.draw do
   get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'
   post '/portal/:token/request_upsell', to: 'portals#request_upsell', as: 'request_public_portal_upsell'
+  post '/portal/:token/report_payment', to: 'portals#report_payment', as: 'report_public_portal_payment'
 
   # Presupuestos de Clientes y Métodos de Pago
   resources :client_quotes

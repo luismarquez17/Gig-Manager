@@ -94,13 +94,19 @@ class AppNotification < ApplicationRecord
     str.dup.force_encoding('UTF-8')
   end
 
+  def payment_related?
+    payment_alert? ||
+      title.to_s.match?(/abono|pago|comprobante|transferencia|dinero|recibo|caja|nómina|\$/i) ||
+      message.to_s.match?(/abono|pago|comprobante|transferencia|dinero|recibo|caja|nómina|\$/i)
+  end
+
   def type_icon
     icon = case notification_type
     when 'general'       then '📢'
     when 'gig_alert'     then '🎸'
     when 'payment_alert' then '💰'
     when 'urgent'        then '🚨'
-    else '🔔'
+    else payment_related? ? '💰' : '🔔'
     end
     icon.dup.force_encoding('UTF-8')
   end
@@ -109,9 +115,9 @@ class AppNotification < ApplicationRecord
     str = case notification_type
     when 'general'       then 'Recordatorio Operativo'
     when 'gig_alert'     then 'Evento / Show'
-    when 'payment_alert' then 'Pago / Finanzas'
+    when 'payment_alert' then 'Abono / Finanzas VIP'
     when 'urgent'        then 'Urgente'
-    else notification_type.humanize
+    else payment_related? ? 'Abono / Finanzas VIP' : notification_type.humanize
     end
     str.dup.force_encoding('UTF-8')
   end
@@ -143,20 +149,40 @@ class AppNotification < ApplicationRecord
       # Broadcast toast pop-up and badge bump script
       clean_title = ActionController::Base.helpers.j(title.to_s)
       clean_msg = ActionController::Base.helpers.j(message.to_s.truncate(80))
-      toast_type = notification_type == 'urgent' ? 'error' : 'success'
-      sound_type = (notification_type == 'urgent' || notification_type == 'error') ? 'urgent' : (notification_type == 'payment_alert' ? 'payment' : 'default')
+      is_financial = payment_related?
+      toast_type = notification_type == 'urgent' ? 'error' : (is_financial ? 'financial' : 'success')
+      sound_type = (notification_type == 'urgent' || notification_type == 'error') ? 'urgent' : (is_financial ? 'payment' : 'default')
       url_link = action_url.presence || "/notifications"
+
+      toast_border = case toast_type
+                     when 'error'     then 'border: 1.5px solid #fca5a5; background: #fff1f2; color: #9f1239;'
+                     when 'financial' then 'border: 2px solid #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #fefce8 100%); color: #065f46; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25);'
+                     else 'border: 1px solid #86efac; background: #f0fdf4; color: #15803d;'
+                     end
+
+      bar_bg = case toast_type
+               when 'error'     then '#f87171'
+               when 'financial' then 'linear-gradient(90deg, #10b981, #f59e0b)'
+               else '#22c55e'
+               end
+
+      badge_html = if is_financial
+        "<div style='font-size:0.7em; font-weight:800; color:#047857; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; display:flex; align-items:center; gap:4px;'><span style='width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;'></span>💰 PRIORIDAD FINANCIERA</div>"
+      else
+        ""
+      end
       
       script_html = <<~HTML
-        <div data-toast="1" style="pointer-events: all; display: flex; align-items: flex-start; gap: 10px; padding: 14px 16px; border-radius: 14px; font-family: Inter, sans-serif; font-size: 0.9rem; font-weight: 600; line-height: 1.4; box-shadow: 0 8px 30px rgba(0,0,0,0.14); border: 1px solid #{toast_type == 'error' ? '#fca5a5' : '#86efac'}; background: #{toast_type == 'error' ? '#fff1f2' : '#f0fdf4'}; color: #{toast_type == 'error' ? '#9f1239' : '#15803d'}; position: relative; overflow: hidden; max-width: 100%;">
-          <span style="font-size:1.3em;flex-shrink:0;">#{type_icon}</span>
+        <div data-toast="1" style="pointer-events: all; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 14px; font-family: Inter, sans-serif; font-size: 0.9rem; font-weight: 600; line-height: 1.4; box-shadow: 0 8px 30px rgba(0,0,0,0.14); #{toast_border} position: relative; overflow: hidden; max-width: 100%;">
+          <span style="font-size:1.4em;flex-shrink:0;">#{type_icon}</span>
           <div style="flex:1;">
+            #{badge_html}
             <div style="font-weight: 800; font-size: 0.95em; color: #0f172a; margin-bottom: 2px;">#{ERB::Util.html_escape(title)}</div>
             <div style="font-size: 0.85em; color: #334155;">#{ERB::Util.html_escape(message.to_s.truncate(100))}</div>
-            <a href="#{url_link}" style="display: inline-block; margin-top: 6px; font-size: 0.82em; font-weight: 700; color: #2563eb; text-decoration: underline;">Ver detalles ➔</a>
+            <a href="#{url_link}" style="display: inline-block; margin-top: 6px; font-size: 0.82em; font-weight: 700; color: #{is_financial ? '#059669' : '#2563eb'}; text-decoration: underline;">#{is_financial ? '💳 Ver Evento y Gestionar Abono ➔' : 'Ver detalles ➔'}</a>
           </div>
           <button onclick="this.closest('[data-toast]').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1em;color:inherit;opacity:0.6;padding:0;margin:0;line-height:1;flex-shrink:0;" title="Cerrar">✕</button>
-          <div style="position:absolute;bottom:0;left:0;height:3px;background:#{toast_type == 'error' ? '#f87171' : '#22c55e'};width:100%;transform-origin:left;animation:toastProgress 6s linear forwards;border-radius:0 0 14px 14px;"></div>
+          <div style="position:absolute;bottom:0;left:0;height:4px;background:#{bar_bg};width:100%;transform-origin:left;animation:toastProgress 7s linear forwards;border-radius:0 0 14px 14px;"></div>
         </div>
         <script>
           if (typeof playNotificationSound === 'function') { playNotificationSound('#{sound_type}'); }

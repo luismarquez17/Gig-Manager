@@ -105,4 +105,27 @@ class PortalsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h2", text: /¿Quieres potenciar tu evento\?/, count: 0
   end
+
+  test "should report payment from public portal" do
+    assert_difference -> { @gig.gig_payments.count }, 1 do
+      post report_public_portal_payment_url(token: @gig.portal_token), params: {
+        amount: "200.00",
+        payment_method: "pago_movil",
+        date_paid: Date.today,
+        reference_number: "PM-12345",
+        payer_name: "Cliente Invitado",
+        notes: "Pago de apartado"
+      }
+    end
+
+    assert_redirected_to public_portal_url(token: @gig.portal_token)
+    assert_equal "✅ ¡Comprobante de abono enviado con éxito! El equipo organizador lo revisará y confirmará tu saldo a la brevedad.", flash[:notice]
+
+    payment = @gig.gig_payments.last
+    assert_equal 200.0, payment.amount
+    assert_equal "pending_approval", payment.status
+    assert_equal true, payment.reported_by_client
+    assert_equal "PM-12345", payment.reference_number
+    assert_equal "Cliente Invitado", payment.payer_name
+  end
 end

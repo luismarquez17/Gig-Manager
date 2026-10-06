@@ -1,6 +1,6 @@
 class Client::GigsController < ApplicationController
   before_action :require_client!
-  before_action :set_gig, only: [:show, :request_upsell]
+  before_action :set_gig, only: [:show, :request_upsell, :report_payment]
 
   def index
     if current_user.client_id.present?
@@ -76,6 +76,47 @@ class Client::GigsController < ApplicationController
       }
     else
       render json: { success: false, error: req.errors.full_messages.join(", ") }, status: :unprocessable_entity
+    end
+  end
+
+  def report_payment
+    amount = params[:amount].to_s.tr(',', '.').to_f
+    if amount <= 0
+      redirect_to client_gig_path(@gig), alert: "El monto del pago debe ser mayor a 0."
+      return
+    end
+
+    payment = @gig.gig_payments.build(
+      amount: amount,
+      payment_method: params[:payment_method].presence || 'cash',
+      date_paid: params[:date_paid].presence || Date.today,
+      reference_number: params[:reference_number],
+      notes: params[:notes],
+      status: 'pending_approval',
+      reported_by_client: true,
+      payer_name: current_user.display_name.presence || @gig.client_display_name,
+      currency: @gig.currency || 'USD'
+    )
+
+    if params[:receipt_image].present?
+      payment.receipt_image.attach(params[:receipt_image])
+    end
+
+    payment.audit_reason = "Reporte de abono enviado por el cliente #{current_user.display_name}"
+
+    if payment.save
+      AppNotification.create(
+        company: @gig.company,
+        target_area: 'leaders',
+        notification_type: 'payment_alert',
+        title: "💳 ¡Nuevo Comprobante de Abono de Cliente!",
+        message: "El cliente '#{@gig.client_display_name}' ha enviado un comprobante de abono de $#{view_context.number_with_precision(amount, precision: 2)} (#{payment.payment_method_label}).",
+        action_url: "/gigs/#{@gig.id}"
+      ) rescue nil
+
+      redirect_to client_gig_path(@gig), notice: "✅ ¡Comprobante de abono enviado con éxito! El equipo organizador lo revisará y confirmará tu saldo a la brevedad."
+    else
+      redirect_to client_gig_path(@gig), alert: "No se pudo enviar el comprobante: #{payment.errors.full_messages.join(', ')}"
     end
   end
 

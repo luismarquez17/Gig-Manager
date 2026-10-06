@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
 class GigPaymentsController < ApplicationController
-  before_action :require_leader!
-  before_action -> { require_module!(:gigs) }
+  before_action :require_leader!, except: [:receipt]
+  before_action -> { require_module!(:gigs) }, except: [:receipt]
   before_action :set_gig, if: -> { params[:gig_id].present? }
-  before_action :set_payment, only: [:edit, :update, :destroy, :receipt]
+  before_action :set_payment, only: [:edit, :update, :destroy, :receipt, :approve, :reject]
 
   def index
     if defined?(@gig) && @gig.present?
@@ -81,6 +81,31 @@ class GigPaymentsController < ApplicationController
     render layout: false
   end
 
+  def approve
+    @payment.audit_reason = params[:audit_reason].presence || "Aprobación de abono reportado por el cliente por el Líder #{current_user.display_name}"
+    @payment.approved_at = Time.current
+    @payment.approved_by = current_user
+    @payment.status = 'approved'
+
+    if @payment.save
+      redirect_back fallback_location: gig_path(@payment.gig), notice: "✅ Abono aprobado exitosamente. Folio asignado: #{@payment.receipt_display_number}."
+    else
+      redirect_back fallback_location: gig_path(@payment.gig), alert: "Error al aprobar: #{@payment.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def reject
+    @payment.audit_reason = "Rechazo de abono de cliente: #{params[:rejection_reason]}"
+    @payment.status = 'rejected'
+    @payment.rejection_reason = params[:rejection_reason].presence || "Comprobante no válido o no reflejado en cuenta."
+
+    if @payment.save
+      redirect_back fallback_location: gig_path(@payment.gig), notice: "❌ Abono rechazado correctamente."
+    else
+      redirect_back fallback_location: gig_path(@payment.gig), alert: "Error al rechazar: #{@payment.errors.full_messages.join(', ')}"
+    end
+  end
+
   private
 
   def set_gig
@@ -88,7 +113,11 @@ class GigPaymentsController < ApplicationController
   end
 
   def set_payment
-    @payment = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).find(params[:id])
+    if current_user&.client?
+      @payment = GigPayment.joins(:gig).where(gigs: { client_id: current_user.client_id }).find(params[:id])
+    else
+      @payment = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).find(params[:id])
+    end
   end
 
   def payment_params

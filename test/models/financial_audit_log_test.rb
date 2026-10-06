@@ -112,4 +112,38 @@ class FinancialAuditLogTest < ActiveSupport::TestCase
     assert_equal 'CashAdjustment', log.auditable_type
     assert_equal 250.0, log.amount_after.to_f
   end
+
+  test "humanized_changes formats friendly labels and values" do
+    log = FinancialAuditLog.new(
+      action: 'updated',
+      details: {
+        'changes' => {
+          'status' => ['pending_approval', 'approved'],
+          'receipt_number' => [nil, 'REC-2026-00014'],
+          'payment_method' => ['cash', 'zelle'],
+          'reported_by_client' => [false, true],
+          'updated_at' => ['2026-10-06T19:00:00Z', '2026-10-06T19:35:18Z']
+        }
+      }
+    )
+
+    changes = log.humanized_changes
+    # updated_at should be ignored
+    assert_equal 4, changes.size
+
+    status_change = changes.find { |c| c[:field] == 'Estado' }
+    assert_not_nil status_change
+    assert_equal '⏳ En Revisión', status_change[:before]
+    assert_equal '✅ Aprobado', status_change[:after]
+
+    receipt_change = changes.find { |c| c[:field] == 'Nº de Recibo / Folio' }
+    assert_not_nil receipt_change
+    assert_equal '—', receipt_change[:before]
+    assert_equal 'REC-2026-00014', receipt_change[:after]
+
+    pm_change = changes.find { |c| c[:field] == 'Método de Pago' }
+    assert_not_nil pm_change
+    assert_includes pm_change[:before], 'Efectivo'
+    assert_includes pm_change[:after], 'Zelle'
+  end
 end

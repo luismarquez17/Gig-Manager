@@ -182,13 +182,16 @@
                     <%= log.reason.presence || "Sin motivo especificado" %>
                   </div>
 
-                  <%# Si hubo cambios específicos de campos %>
-                  <% if log.details.is_a?(Hash) && log.details['changes'].present? %>
-                    <div style="margin-top: 6px; font-size: 0.75em; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; color: #475569;">
-                      <% log.details['changes'].each do |field, diff| %>
-                        <div>
-                          <strong><%= field.humanize %>:</strong> 
-                          <span style="color: #dc2626;"><%= diff.first.inspect %></span> → <span style="color: #16a34a;"><%= diff.last.inspect %></span>
+                  <%# Si hubo cambios específicos de campos (Formato claro e intuitivo) %>
+                  <% changes_list = log.humanized_changes %>
+                  <% if changes_list.any? %>
+                    <div style="margin-top: 8px; display: flex; flex-direction: column; gap: 4px;">
+                      <% changes_list.each do |c| %>
+                        <div style="font-size: 0.76em; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 4px 8px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
+                          <span style="font-weight: 700; color: #475569;"><%= c[:field] %>:</span>
+                          <span style="color: #64748b; background: #f1f5f9; padding: 1px 6px; border-radius: 4px; font-weight: 600;"><%= c[:before] %></span>
+                          <span style="color: #94a3b8; font-size: 0.9em;">➔</span>
+                          <span style="color: #15803d; background: #dcfce7; padding: 1px 6px; border-radius: 4px; font-weight: 700;"><%= c[:after] %></span>
                         </div>
                       <% end %>
                     </div>

@@ -138,12 +138,53 @@ class PortalsController < ApplicationController
           status: req.status
         }
       }
-    else
-      render json: { success: false, error: req.errors.full_messages.join(", ") }, status: :unprocessable_entity
     end
   rescue StandardError => e
     Rails.logger.error("Error en PortalsController#request_upsell: #{e.class}: #{e.message}")
     render json: { success: false, error: "Ocurrió un error al solicitar el adicional: #{e.message}" }, status: :unprocessable_entity
+  end
+
+  def report_payment
+    amount = params[:amount].to_s.tr(',', '.').to_f
+    if amount <= 0
+      redirect_to public_portal_path(@gig.portal_token), alert: "El monto del pago debe ser mayor a 0."
+      return
+    end
+
+    payer = params[:payer_name].presence || @gig.client_display_name
+
+    payment = @gig.gig_payments.build(
+      amount: amount,
+      payment_method: params[:payment_method].presence || 'cash',
+      date_paid: params[:date_paid].presence || Date.today,
+      reference_number: params[:reference_number],
+      notes: params[:notes],
+      status: 'pending_approval',
+      reported_by_client: true,
+      payer_name: payer,
+      currency: @gig.currency || 'USD'
+    )
+
+    if params[:receipt_image].present?
+      payment.receipt_image.attach(params[:receipt_image])
+    end
+
+    payment.audit_reason = "Reporte de abono enviado por el cliente (Portal Público)"
+
+    if payment.save
+      AppNotification.create(
+        company: @gig.company,
+        target_area: 'leaders',
+        notification_type: 'payment_alert',
+        title: "💳 ¡Nuevo Comprobante de Abono de Cliente!",
+        message: "El cliente '#{@gig.client_display_name}' ha enviado un comprobante de abono de $#{view_context.number_with_precision(amount, precision: 2)} (#{payment.payment_method_label}).",
+        action_url: "/gigs/#{@gig.id}"
+      ) rescue nil
+
+      redirect_to public_portal_path(@gig.portal_token), notice: "✅ ¡Comprobante de abono enviado con éxito! El equipo organizador lo revisará y confirmará tu saldo a la brevedad."
+    else
+      redirect_to public_portal_path(@gig.portal_token), alert: "No se pudo enviar el comprobante: #{payment.errors.full_messages.join(', ')}"
+    end
   end
 
   private

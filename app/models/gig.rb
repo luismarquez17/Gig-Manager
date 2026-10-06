@@ -55,10 +55,14 @@ class Gig < ApplicationRecord
 
   def total_received
     if gig_payments.loaded?
-      gig_payments.sum { |p| p.amount.to_f }
+      gig_payments.select(&:approved?).sum { |p| p.amount.to_f }
     else
-      gig_payments.sum(:amount).to_f
+      gig_payments.approved.sum(:amount).to_f
     end
+  end
+
+  def pending_client_payments
+    gig_payments.pending_approval.order(created_at: :desc)
   end
 
   def total_employee_payouts

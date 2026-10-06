@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_02_140100) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -308,8 +308,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_140100) do
     t.datetime "updated_at", null: false
     t.string "payment_method", default: "cash", null: false
     t.string "receipt_number"
+    t.string "status", default: "approved", null: false
+    t.boolean "reported_by_client", default: false, null: false
+    t.string "reference_number"
+    t.text "receipt_image_base64"
+    t.string "rejection_reason"
+    t.datetime "approved_at"
+    t.bigint "approved_by_id"
     t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
     t.index ["receipt_number"], name: "index_gig_payments_on_receipt_number"
+    t.index ["reported_by_client"], name: "index_gig_payments_on_reported_by_client"
+    t.index ["status"], name: "index_gig_payments_on_status"
   end
 
   create_table "gig_reviews", force: :cascade do |t|
@@ -620,6 +629,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_02_140100) do
   add_foreign_key "gig_items", "gigs"
   add_foreign_key "gig_items", "items"
   add_foreign_key "gig_payments", "gigs"
+  add_foreign_key "gig_payments", "users", column: "approved_by_id"
   add_foreign_key "gig_reviews", "gigs"
   add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
   add_foreign_key "gig_upsell_requests", "companies"

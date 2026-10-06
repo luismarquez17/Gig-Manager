@@ -515,7 +515,7 @@ class Company < ApplicationRecord
       "holder_name" => "",
       "notes" => ""
     },
-    "general_instructions" => "Una vez realizado tu pago o anticipo, por favor envía el capture o comprobante por WhatsApp para registrar tu fecha o saldo."
+    "general_instructions" => "Una vez realizado tu pago o transferencia, sube tu comprobante en el botón 'Reportar Abono' para generar tu recibo oficial y actualizar tu saldo de inmediato."
   }.freeze
 
   def payment_methods

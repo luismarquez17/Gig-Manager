@@ -5,40 +5,74 @@
   is_read = user ? notification.read_by?(user) : false
   title_str = notification.title.to_s.force_encoding('UTF-8')
   message_str = notification.message.to_s.force_encoding('UTF-8')
+  is_financial = notification.payment_related?
 
   action_label = "Ver detalles ➔"
   if notification.action_url.to_s.include?('/gigs')
-    action_label = "Ver evento ➔"
+    action_label = is_financial ? "💳 Gestionar Abono ➔" : "Ver evento ➔"
   elsif notification.action_url.to_s.include?('/my_payments') || notification.action_url.to_s.include?('/employee_payments')
-    action_label = "Ver pago ➔"
+    action_label = "💵 Ver pago ➔"
   end
+
+  card_bg = if is_financial
+              is_read ? '#fcfdfd' : 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)'
+            else
+              is_read ? '#ffffff' : '#f8fafc'
+            end
+
+  card_border = if is_financial
+                  is_read ? '#bbf7d0' : '#86efac'
+                else
+                  is_read ? '#e2e8f0' : '#bfdbfe'
+                end
+
+  card_left_bar = if is_financial
+                    '#10b981'
+                  else
+                    is_read ? '#cbd5e1' : '#2563eb'
+                  end
+
+  icon_bg = if is_financial
+              'linear-gradient(135deg, #10b981 0%, #059669 100%)'
+            else
+              is_read ? '#f1f5f9' : '#eff6ff'
+            end
+
+  icon_color = is_financial ? '#ffffff' : (is_read ? '#64748b' : '#2563eb')
+  icon_shadow = is_financial ? 'box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);' : 'box-shadow: 0 2px 6px rgba(0,0,0,0.02);'
 %>
 
-<div id="notification_<%= notification.id %>" class="notification-card" style="background: <%= is_read ? '#ffffff' : '#f8fafc' %>; border: 1px solid <%= is_read ? '#e2e8f0' : '#bfdbfe' %>; border-left: 4px solid <%= is_read ? '#cbd5e1' : '#2563eb' %>; border-radius: 16px; padding: 20px 24px; margin-bottom: 14px; position: relative; transition: all 0.2s ease; box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04);">
+<div id="notification_<%= notification.id %>" class="notification-card <%= 'financial-priority-card' if is_financial %>" style="background: <%= card_bg %>; border: 1.5px solid <%= card_border %>; border-left: 6px solid <%= card_left_bar %>; border-radius: 16px; padding: 20px 24px; margin-bottom: 14px; position: relative; transition: all 0.2s ease; box-shadow: <%= is_financial && !is_read ? '0 6px 20px -2px rgba(16, 185, 129, 0.18)' : '0 4px 16px -2px rgba(15, 23, 42, 0.04)' %>;">
   <div style="display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; flex-wrap: wrap;">
     
     <div style="display: flex; gap: 16px; flex: 1; min-width: 240px;">
       
-      <div style="font-size: 1.3rem; background: <%= is_read ? '#f1f5f9' : '#eff6ff' %>; color: <%= is_read ? '#64748b' : '#2563eb' %>; border: 1px solid <%= is_read ? '#e2e8f0' : '#dbeafe' %>; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <div style="font-size: 1.4rem; background: <%= icon_bg %>; color: <%= icon_color %>; border: <%= is_financial ? 'none' : "1px solid #{is_read ? '#e2e8f0' : '#dbeafe'}" %>; width: 46px; height: 46px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; <%= icon_shadow %>">
         <%= notification.type_icon %>
       </div>
 
       <div style="flex: 1;">
         <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 6px;">
-          <span style="font-size: 0.73rem; font-weight: 700; background: #f1f5f9; color: #334155; padding: 3px 10px; border-radius: 99px; border: 1px solid #e2e8f0;">
+          <% if is_financial %>
+            <span style="font-size: 0.73rem; font-weight: 800; background: linear-gradient(135deg, #dcfce7 0%, #fef3c7 100%); color: #065f46; padding: 3px 10px; border-radius: 99px; border: 1px solid #86efac; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 1px 4px rgba(16, 185, 129, 0.15);">
+              <span style="width: 7px; height: 7px; border-radius: 50%; background: #10b981; display: inline-block; box-shadow: 0 0 6px #10b981;"></span>
+              💰 ALERTA DE DINERO / ABONO
+            </span>
+          <% end %>
+          <span style="font-size: 0.73rem; font-weight: 700; background: <%= is_financial ? '#ecfdf5' : '#f1f5f9' %>; color: <%= is_financial ? '#047857' : '#334155' %>; padding: 3px 10px; border-radius: 99px; border: 1px solid <%= is_financial ? '#a7f3d0' : '#e2e8f0' %>;">
             <%= notification.target_area_label %>
           </span>
           <span style="font-size: 0.73rem; font-weight: 600; background: #f8fafc; color: #64748b; padding: 3px 10px; border-radius: 99px; border: 1px solid #e2e8f0;">
             <%= notification.type_label %>
           </span>
           <% unless is_read %>
-            <span style="font-size: 0.71rem; font-weight: 800; background: #2563eb; color: #ffffff; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.03em;">
+            <span style="font-size: 0.71rem; font-weight: 800; background: <%= is_financial ? '#059669' : '#2563eb' %>; color: #ffffff; padding: 3px 9px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.03em;">
               Sin leer
             </span>
           <% end %>
         </div>
 
-        <h4 style="margin: 4px 0 6px 0; font-size: 1.05rem; font-weight: 800; color: #0f172a; line-height: 1.35; letter-spacing: -0.01em;">
+        <h4 style="margin: 4px 0 6px 0; font-size: 1.08rem; font-weight: 800; color: <%= is_financial ? '#064e3b' : '#0f172a' %>; line-height: 1.35; letter-spacing: -0.01em;">
           <%= title_str %>
         </h4>
 
@@ -103,7 +137,7 @@
 
     <div class="btn-action-container" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; align-self: center;">
       <% if notification.action_url.present? %>
-        <%= link_to notification.action_url, class: "btn-action", style: "background: #0f172a; color: #ffffff; padding: 8px 16px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12); transition: all 0.15s;" do %>
+        <%= link_to notification.action_url, class: "btn-action", style: "#{ is_financial ? 'background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);' : 'background: #0f172a; color: #ffffff; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);' } padding: 9px 18px; border-radius: 11px; font-size: 0.84rem; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;" do %>
           <%= action_label %>
         <% end %>
       <% end %>
