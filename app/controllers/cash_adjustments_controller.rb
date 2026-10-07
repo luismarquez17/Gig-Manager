@@ -12,7 +12,7 @@ class CashAdjustmentsController < ApplicationController
     @total_inflow          = (@total_gigs_received + @total_cash_deposits).round(2)
 
     # 2. Componentes de Salida (Outflows)
-    @total_payroll_paid    = current_company.employee_payments.approved.sum(:amount).to_f
+    @total_payroll_paid    = current_company.employee_payments.approved.where.not(funding_source: 'external_capital').sum(:amount).to_f
     @total_maintenance     = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id }).sum(:cost).to_f
     @total_investments     = current_company.investments.sum(:amount).to_f
     @total_cash_withdrawals = current_company.cash_adjustments.outflows.sum(:amount).to_f

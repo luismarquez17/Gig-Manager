@@ -198,8 +198,8 @@ class EmployeePaymentsController < ApplicationController
 
     # Calcular situación actual de shows pasados
     today        = Date.today
-    assignments  = StaffAssignment.where(user_id: worker.id).includes(:gig)
-    all_payments = worker.employee_payments.approved.to_a
+    assignments  = StaffAssignment.joins(:gig).where(gigs: { company_id: current_company.id }, user_id: worker.id).includes(:gig)
+    all_payments = current_company.employee_payments.approved.where(user_id: worker.id).to_a
 
     balance_service = WorkerBalanceService.new(
       worker: worker,

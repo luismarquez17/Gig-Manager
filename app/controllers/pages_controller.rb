@@ -26,21 +26,22 @@ class PagesController < ApplicationController
       @total_clients        = current_company.clients.count
 
       # Flujo de Caja Real (Fondo de la Banda / Universal)
-      @total_received          = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
+      @total_received          = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).approved.sum(:amount).to_f
       @total_cash_deposits     = current_company.cash_adjustments.inflows.sum(:amount).to_f
       @total_inflow            = (@total_received + @total_cash_deposits).round(2)
 
       @total_payroll_paid      = current_company.employee_payments.approved.sum(:amount).to_f
+      @total_payroll_from_fund = current_company.employee_payments.approved.where.not(funding_source: 'external_capital').sum(:amount).to_f
       @total_maintenance_spent = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id }).sum(:cost).to_f
       @total_investments_spent = current_company.investments.sum(:amount).to_f
       @total_cash_withdrawals  = current_company.cash_adjustments.outflows.sum(:amount).to_f
-      @total_expenses          = (@total_payroll_paid + @total_maintenance_spent + @total_investments_spent + @total_cash_withdrawals).round(2)
+      @total_expenses          = (@total_payroll_from_fund + @total_maintenance_spent + @total_investments_spent + @total_cash_withdrawals).round(2)
 
       @universal_fund_balance  = (@total_inflow - @total_expenses).round(2)
 
       # Cuentas por cobrar a clientes
       all_gigs = current_company.gigs.includes(:gig_payments)
-      @total_client_receivables = all_gigs.sum { |g| [g.amount.to_f - g.gig_payments.sum(&:amount).to_f, 0.0].max }
+      @total_client_receivables = all_gigs.sum { |g| [g.amount.to_f - g.gig_payments.select(&:approved?).sum(&:amount).to_f, 0.0].max }
 
       # Deudas y compromisos con trabajadores
       @worker_metrics = WorkerBalanceService.build_metrics_for_company(current_company)
@@ -118,7 +119,7 @@ class PagesController < ApplicationController
 
   def financials
     company_gigs = current_company.gigs
-    company_gig_payments = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id })
+    company_gig_payments = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).approved
 
     # 1. Cobros en USD (Moneda única del sistema)
     @total_received_usd  = company_gig_payments.sum(:amount).to_f
@@ -128,7 +129,8 @@ class PagesController < ApplicationController
     @upcoming_usd        = company_gigs.where("date >= ?", Date.today).sum(:amount).to_f
 
     # 2. Nómina Pagada a Trabajadores (Músicos y Staff)
-    @total_payroll_paid = current_company.employee_payments.approved.sum(:amount).to_f
+    @total_payroll_paid      = current_company.employee_payments.approved.sum(:amount).to_f
+    @total_payroll_from_fund = current_company.employee_payments.approved.where.not(funding_source: 'external_capital').sum(:amount).to_f
 
     # 3. Gastos de Mantenimiento y Reparaciones (Taller)
     company_maintenance = MaintenanceRecord.joins(:item).where(items: { company_id: current_company.id })
@@ -143,11 +145,11 @@ class PagesController < ApplicationController
     @total_cash_withdrawals = current_company.cash_adjustments.outflows.sum(:amount).to_f
 
     # 6. Ganancia Neta Real y Rentabilidad (Flujo Real de Caja)
-    # Total Entradas - Nómina - Reparaciones - Inversiones - Retiros
-    @total_expenses_usd = (@total_payroll_paid + @total_maintenance_cost + @total_invested_usd + @total_cash_withdrawals).round(2)
+    # Total Entradas - Nómina de Caja - Reparaciones - Inversiones - Retiros
+    @total_expenses_usd = (@total_payroll_from_fund + @total_maintenance_cost + @total_invested_usd + @total_cash_withdrawals).round(2)
     @net_profit_usd     = (@total_inflow_usd - @total_expenses_usd).round(2)
     @profit_margin_pct  = @total_inflow_usd > 0 ? ((@net_profit_usd / @total_inflow_usd) * 100).round(1) : 0.0
-    @roi_usd            = @total_invested_usd > 0 ? (((@total_inflow_usd - @total_payroll_paid - @total_maintenance_cost) / @total_invested_usd) * 100).round(1) : 0.0
+    @roi_usd            = @total_invested_usd > 0 ? (((@total_inflow_usd - @total_payroll_from_fund - @total_maintenance_cost) / @total_invested_usd) * 100).round(1) : 0.0
 
     # 7. Historial Mensual Detallado
     months_hash = {}
@@ -172,7 +174,7 @@ class PagesController < ApplicationController
     end
 
     # Aportes y retiros de caja por mes
-    current_company.cash_adjustments.find_each do |adj|
+    current_company.cash_adjustments.where.not(date: nil).find_each do |adj|
       month_date = adj.date.beginning_of_month
       key = month_date.strftime("%Y-%m")
       months_hash[key] ||= {

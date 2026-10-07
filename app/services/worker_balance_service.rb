@@ -17,12 +17,16 @@ class WorkerBalanceService
     workers = company.users.workers.order(:email)
     worker_ids = workers.pluck(:id)
 
-    staff_agreed_sums = StaffAssignment.where(user_id: worker_ids).group(:user_id).sum(:agreed_amount)
+    staff_agreed_sums = StaffAssignment.joins(:gig)
+                                       .where(gigs: { company_id: company.id }, user_id: worker_ids)
+                                       .group(:user_id)
+                                       .sum(:agreed_amount)
     paid_sums         = company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).sum(:amount)
     counts            = company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).count
 
     assignments_by_worker = StaffAssignment
-      .where(user_id: worker_ids)
+      .joins(:gig)
+      .where(gigs: { company_id: company.id }, user_id: worker_ids)
       .includes(gig: :client)
       .group_by(&:user_id)
 

@@ -146,27 +146,34 @@ class User < ApplicationRecord
     url
   end
 
-  def total_agreed_amount
-    assignment_total = staff_assignments.sum(:agreed_amount).to_f
-    assigned_gig_ids = staff_assignments.pluck(:gig_id)
+  def total_agreed_amount(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    sa_scope = comp ? staff_assignments.joins(:gig).where(gigs: { company_id: comp.id }) : staff_assignments
+    assignment_total = sa_scope.sum(:agreed_amount).to_f
+    assigned_gig_ids = sa_scope.pluck(:gig_id)
 
+    ep_scope = comp ? comp.employee_payments.approved.where(user_id: id) : employee_payments.approved
     unassigned_payments_total = if assigned_gig_ids.empty?
-      employee_payments.approved.sum(:expected_amount).to_f
+      ep_scope.sum(:expected_amount).to_f
     else
-      employee_payments.approved.where("gig_id IS NULL OR gig_id NOT IN (?)", assigned_gig_ids).sum(:expected_amount).to_f
+      ep_scope.where("gig_id IS NULL OR gig_id NOT IN (?)", assigned_gig_ids).sum(:expected_amount).to_f
     end
 
     assignment_total + unassigned_payments_total
   end
 
-  def past_agreed_amount
-    assignment_total = staff_assignments.joins(:gig).where("gigs.date IS NULL OR gigs.date <= ?", Date.today).sum(:agreed_amount).to_f
-    assigned_gig_ids = staff_assignments.pluck(:gig_id)
+  def past_agreed_amount(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    sa_scope = staff_assignments.joins(:gig).where("gigs.date IS NULL OR gigs.date <= ?", Date.today)
+    sa_scope = sa_scope.where(gigs: { company_id: comp.id }) if comp
+    assignment_total = sa_scope.sum(:agreed_amount).to_f
+    assigned_gig_ids = sa_scope.pluck(:gig_id)
 
+    ep_scope = comp ? comp.employee_payments.approved.where(user_id: id) : employee_payments.approved
     unassigned_payments_total = if assigned_gig_ids.empty?
-      employee_payments.approved.sum(:expected_amount).to_f
+      ep_scope.sum(:expected_amount).to_f
     else
-      employee_payments.approved.joins("LEFT JOIN gigs ON gigs.id = employee_payments.gig_id")
+      ep_scope.joins("LEFT JOIN gigs ON gigs.id = employee_payments.gig_id")
         .where("employee_payments.gig_id IS NULL OR (employee_payments.gig_id NOT IN (?) AND (gigs.date IS NULL OR gigs.date <= ?))", assigned_gig_ids, Date.today)
         .sum(:expected_amount).to_f
     end
@@ -174,46 +181,65 @@ class User < ApplicationRecord
     assignment_total + unassigned_payments_total
   end
 
-  def total_paid_amount
-    employee_payments.approved.sum(:amount).to_f
+  def total_paid_amount(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    ep_scope = comp ? comp.employee_payments.approved.where(user_id: id) : employee_payments.approved
+    ep_scope.sum(:amount).to_f
   end
 
-  def total_pending_approval_amount
-    employee_payments.pending_approval.sum(:amount).to_f
+  def total_pending_approval_amount(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    ep_scope = comp ? comp.employee_payments.pending_approval.where(user_id: id) : employee_payments.pending_approval
+    ep_scope.sum(:amount).to_f
   end
 
-  def pending_balance
+  def pending_balance(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    w_payments = comp ? comp.employee_payments.approved.where(user_id: id).to_a : employee_payments.approved.to_a
+    w_assignments = comp ? staff_assignments.joins(:gig).where(gigs: { company_id: comp.id }).includes(gig: :client).to_a : staff_assignments.includes(:gig).to_a
+
     WorkerBalanceService.new(
       worker: self,
-      worker_payments: employee_payments.approved.to_a,
-      worker_assignments: staff_assignments.includes(:gig).to_a
+      worker_payments: w_payments,
+      worker_assignments: w_assignments
     ).past_balance
   end
 
-  def future_pending_balance
+  def future_pending_balance(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    w_payments = comp ? comp.employee_payments.approved.where(user_id: id).to_a : employee_payments.approved.to_a
+    w_assignments = comp ? staff_assignments.joins(:gig).where(gigs: { company_id: comp.id }).includes(gig: :client).to_a : staff_assignments.includes(:gig).to_a
+
     WorkerBalanceService.new(
       worker: self,
-      worker_payments: employee_payments.approved.to_a,
-      worker_assignments: staff_assignments.includes(:gig).to_a
+      worker_payments: w_payments,
+      worker_assignments: w_assignments
     ).future_balance
   end
 
-  def worker_balance_metrics
+  def worker_balance_metrics(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
+    w_payments = comp ? comp.employee_payments.approved.where(user_id: id).to_a : employee_payments.approved.to_a
+    w_assignments = comp ? staff_assignments.joins(:gig).where(gigs: { company_id: comp.id }).includes(gig: :client).to_a : staff_assignments.includes(:gig).to_a
+
     WorkerBalanceService.new(
       worker: self,
-      worker_payments: employee_payments.approved.to_a,
-      worker_assignments: staff_assignments.includes(:gig).to_a
+      worker_payments: w_payments,
+      worker_assignments: w_assignments
     ).to_h
   end
 
-  def worker_payment_items
+  def worker_payment_items(scoped_company = nil)
+    comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
     items = []
-    assignments = staff_assignments.includes(gig: :client)
+    assignments = comp ? staff_assignments.joins(:gig).where(gigs: { company_id: comp.id }).includes(gig: :client) : staff_assignments.includes(gig: :client)
     assigned_gig_ids = assignments.map(&:gig_id)
 
+    ep_scope = comp ? comp.employee_payments.where(user_id: id) : employee_payments
+
     # Pre-agregación en solo 2 queries SQL para eliminar N+1
-    paid_by_gig = employee_payments.approved.where(gig_id: assigned_gig_ids).group(:gig_id).sum(:amount)
-    pending_by_gig = employee_payments.pending_approval.where(gig_id: assigned_gig_ids).group(:gig_id).sum(:amount)
+    paid_by_gig = ep_scope.approved.where(gig_id: assigned_gig_ids).group(:gig_id).sum(:amount)
+    pending_by_gig = ep_scope.pending_approval.where(gig_id: assigned_gig_ids).group(:gig_id).sum(:amount)
 
     # 1. Shows asignados vía StaffAssignment
     assignments.each do |sa|
@@ -237,9 +263,9 @@ class User < ApplicationRecord
 
     # 2. Pagos independientes (sin gig asignado)
     standalone_payments = if assigned_gig_ids.empty?
-      employee_payments.includes(:gig)
+      ep_scope.includes(:gig)
     else
-      employee_payments.includes(:gig).where("gig_id IS NULL OR gig_id NOT IN (?)", assigned_gig_ids)
+      ep_scope.includes(:gig).where("gig_id IS NULL OR gig_id NOT IN (?)", assigned_gig_ids)
     end
 
     standalone_payments.group_by(&:gig_id).each do |_gig_id, payments|
