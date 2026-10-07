@@ -26,7 +26,7 @@ class CashAdjustmentsController < ApplicationController
 
     # Cobros de eventos/shows
     event_term = current_company.term_for(:event_singular, "Show")
-    GigPayment.joins(:gig).includes(gig: :client).where(gigs: { company_id: current_company.id }).where.not(date_paid: nil).find_each do |p|
+    GigPayment.joins(:gig).approved.includes(gig: :client).where(gigs: { company_id: current_company.id }).where.not(date_paid: nil).find_each do |p|
       client_name = p.gig.client&.name || p.gig.client_email || event_term
       show_date = p.gig.date ? "(Fecha: #{p.gig.date.strftime('%d/%m/%Y')})" : ""
       desc = "Cobro de #{event_term} - #{client_name} #{show_date}"

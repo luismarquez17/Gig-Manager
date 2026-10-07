@@ -1,0 +1,127 @@
+<%
+  show_marquez_announcement = user_signed_in? && 
+    current_company.present? && 
+    (current_company.slug == 'marquez-musica' || current_company.name.to_s.downcase.include?('marquez')) &&
+    !current_user.client? &&
+    (current_user.musician? || current_user.staff? || current_user.leader? || current_user.superadmin?)
+%>
+
+<% if show_marquez_announcement %>
+  <div id="marquez-update-announcement-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 999999; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; opacity: 0; transition: opacity 0.25s ease; font-family: 'Inter', system-ui, -apple-system, sans-serif;">
+    
+    <div style="background: var(--bg-card, #ffffff); border: 1.5px solid var(--border-color, #e2e8f0); border-radius: 26px; padding: 28px 24px; width: 100%; max-width: 540px; color: var(--text-main, #1e293b); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.45); max-height: 90vh; overflow-y: auto; position: relative; animation: slideUpModal 0.28s cubic-bezier(0.16, 1, 0.3, 1);">
+      
+      <%# Botón Cerrar %>
+      <button type="button" onclick="closeMarquezUpdateModal()" style="position: absolute; top: 16px; right: 18px; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 50%; width: 34px; height: 34px; color: #64748b; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; z-index: 10;" title="Cerrar">✕</button>
+
+      <%# Header con Badge %>
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="display: inline-flex; align-items: center; gap: 6px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 4px 12px; border-radius: 999px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
+          <span>🚀</span> Actualización de Sistema 2026 • Márquez Música
+        </div>
+
+        <div style="width: 58px; height: 58px; background: linear-gradient(135deg, #4f46e5 0%, #2563eb 100%); color: white; border-radius: 18px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.75rem; box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35); margin-bottom: 12px;">
+          🎵
+        </div>
+
+        <h2 style="margin: 0 0 6px 0; font-size: 1.35rem; font-weight: 900; color: #0f172a; letter-spacing: -0.3px; line-height: 1.25;">
+          ¡Bienvenido a la Nueva Versión de Gig Manager!
+        </h2>
+        
+        <p style="margin: 0 auto; font-size: 0.88rem; color: #64748b; line-height: 1.45; max-width: 440px;">
+          Hemos renovado y perfeccionado el sistema de nómina y cuentas para darte mayor comodidad, rapidez y máxima transparencia en cada evento.
+        </p>
+      </div>
+
+      <%# Bloque de novedades destacadas %>
+      <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 22px;">
+        
+        <div style="display: flex; align-items: flex-start; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px;">
+          <div style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+            📋
+          </div>
+          <div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a;">Cuentas 100% Claras y Transparentes</div>
+            <div style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin-top: 2px;">
+              Cada show refleja exclusivamente lo acordado y los pagos realizados para ese evento. Sin números confusos ni alteraciones automáticas.
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px;">
+          <div style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+            ⚡
+          </div>
+          <div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a;">Mayor Comodidad en Móviles y PC</div>
+            <div style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin-top: 2px;">
+              Diseño optimizado para consultar tus pagos, reportar abonos recibidos y revisar los horarios de tus próximos shows con rapidez.
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: flex-start; gap: 12px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 12px 14px;">
+          <div style="background: #fdf4ff; color: #9333ea; border: 1px solid #f0abfc; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
+            🔒
+          </div>
+          <div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a;">Tus Registros y Saldos Seguros</div>
+            <div style="font-size: 0.78rem; color: #64748b; line-height: 1.4; margin-top: 2px;">
+              Todos tus eventos pasados, tus deudas pendientes y los abonos de clientes están totalmente protegidos y guardados en la plataforma.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <%# Botones de Acción %>
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button type="button" onclick="closeMarquezUpdateModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 13px 20px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); transition: transform 0.15s ease, opacity 0.15s ease;" onmouseover="this.style.opacity='0.95'" onmouseout="this.style.opacity='1'">
+          ✨ ¡Entendido, vamos a empezar!
+        </button>
+
+        <% if current_user.musician? || current_user.staff? %>
+          <%= link_to my_payments_path, onclick: "closeMarquezUpdateModal()", style: "display: block; text-align: center; background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.85rem; text-decoration: none; transition: background 0.15s ease;" do %>
+            💳 Ver Mi Sección de Pagos
+          <% end %>
+        <% end %>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      function checkMarquezModal() {
+        var modal = document.getElementById('marquez-update-announcement-modal');
+        if (!modal) return;
+        var seen = localStorage.getItem('seen_marquez_update_modal_20261007');
+        if (!seen) {
+          modal.style.display = 'flex';
+          setTimeout(function() {
+            modal.style.opacity = '1';
+          }, 80);
+        }
+      }
+
+      window.closeMarquezUpdateModal = function() {
+        var modal = document.getElementById('marquez-update-announcement-modal');
+        if (!modal) return;
+        modal.style.opacity = '0';
+        try {
+          localStorage.setItem('seen_marquez_update_modal_20261007', 'true');
+        } catch (e) {}
+        setTimeout(function() {
+          modal.style.display = 'none';
+        }, 260);
+      };
+
+      document.addEventListener('turbo:load', checkMarquezModal);
+      if (document.readyState !== 'loading') {
+        checkMarquezModal();
+      } else {
+        document.addEventListener('DOMContentLoaded', checkMarquezModal);
+      }
+    })();
+  </script>
+<% end %>
