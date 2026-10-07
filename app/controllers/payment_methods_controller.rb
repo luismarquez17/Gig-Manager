@@ -6,9 +6,13 @@ class PaymentMethodsController < ApplicationController
 
   def edit
     @payment_methods = @company.payment_methods
+    @exchange_rate_info = @company.exchange_rate_details
   end
 
   def update
+    custom_rate_val = params.dig(:payment_methods, :exchange_rate, :custom_rate).to_s.tr(',', '.').strip
+    custom_rate_num = custom_rate_val.present? ? custom_rate_val.to_f : nil
+
     cleaned_config = {
       "zelle" => {
         "enabled" => params.dig(:payment_methods, :zelle, :enabled) == "1",
@@ -42,13 +46,19 @@ class PaymentMethodsController < ApplicationController
         "holder_name" => params.dig(:payment_methods, :bank_transfer, :holder_name).to_s.strip,
         "notes" => params.dig(:payment_methods, :bank_transfer, :notes).to_s.strip
       },
+      "exchange_rate" => {
+        "mode" => params.dig(:payment_methods, :exchange_rate, :mode).to_s.presence || "auto_bcv",
+        "custom_rate" => (custom_rate_num && custom_rate_num > 0 ? custom_rate_num : nil),
+        "show_in_portals" => params.dig(:payment_methods, :exchange_rate, :show_in_portals) != "0"
+      },
       "general_instructions" => params.dig(:payment_methods, :general_instructions).to_s.strip
     }
 
     if @company.update(payment_methods_config: cleaned_config)
-      redirect_to payment_methods_settings_path, notice: "💳 ¡Configuración de Métodos de Pago actualizada con éxito!"
+      redirect_to payment_methods_settings_path, notice: "💳 ¡Configuración de Métodos de Pago y Tasa del Día actualizada con éxito!"
     else
       @payment_methods = cleaned_config
+      @exchange_rate_info = @company.exchange_rate_details
       flash.now[:alert] = "Error al guardar la configuración: #{@company.errors.full_messages.join(', ')}"
       render :edit, status: :unprocessable_entity
     end

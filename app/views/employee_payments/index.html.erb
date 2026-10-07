@@ -658,8 +658,15 @@
           </thead>
           <tbody>
             <% @payments.each do |p| %>
-              <tr style="<%= p.pending_approval? ? 'background: #fffdf5;' : '' %>">
-                <td><%= p.date_paid&.strftime("%d/%m/%Y") || "---" %></td>
+              <tr style="<%= p.pending_approval? ? 'background: #fffdf5;' : (p.voided? ? 'background: #fef2f2; opacity: 0.75;' : '') %>">
+                <td>
+                  <%= p.date_paid&.strftime("%d/%m/%Y") || "---" %>
+                  <% if p.receipt_number.present? %>
+                    <div style="font-size: 0.75em; color: #64748b; font-weight: 700; font-family: monospace;">
+                      <%= p.receipt_display_number %>
+                    </div>
+                  <% end %>
+                </td>
                 <td style="font-weight: 700; color: #1e293b;">
                   <%= p.user.display_name rescue p.user.email %>
                   <% if p.reported_by_worker? %>
@@ -677,7 +684,7 @@
                     <span style="color: #94a3b8; font-style: italic;"><%= venue_mode? ? 'Pago general / Sin evento' : 'Pago general / Sin show' %></span>
                   <% end %>
                 </td>
-                <td style="font-weight: 800; color: #059669;">
+                <td style="font-weight: 800; color: <%= p.voided? ? '#991b1b' : '#059669' %>; <%= p.voided? ? 'text-decoration: line-through;' : '' %>">
                   +<%= number_to_currency(p.amount, unit: p.currency) %>
                 </td>
                 <td>
@@ -693,6 +700,10 @@
                     <span style="background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;">
                       ❌ Rechazado
                     </span>
+                  <% elsif p.voided? %>
+                    <span style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 4px 9px; border-radius: 99px; font-size: 0.78em; font-weight: 800; display: inline-flex; align-items: center; gap: 4px;" title="Motivo: <%= p.void_reason %>">
+                      🚫 Anulado
+                    </span>
                   <% end %>
                 </td>
                 <td>
@@ -707,15 +718,42 @@
                   <% end %>
                 </td>
                 <td><%= p.payment_method.presence || "---" %></td>
-                <td><%= p.notes %></td>
+                <td>
+                  <%= p.notes %>
+                  <% if p.voided? && p.void_reason.present? %>
+                    <div style="font-size: 0.78em; color: #991b1b; font-weight: 600; margin-top: 2px;">
+                      🚫 Anulación: "<%= p.void_reason %>"
+                    </div>
+                  <% end %>
+                </td>
                 <td class="text-center">
                   <div style="display: flex; gap: 6px; justify-content: center; align-items: center; flex-wrap: wrap;">
+                    <% if p.approved? %>
+                      <%= link_to receipt_employee_payment_path(p), target: '_blank', class: 'btn-main py-1 px-2 fs-7', style: 'background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; font-weight: 700;', title: 'Ver Comprobante Digital' do %>
+                        📄
+                      <% end %>
+
+                      <%
+                        wa_text = p.whatsapp_receipt_text(receipt_employee_payment_url(p))
+                        wa_url = p.user&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{p.user.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(wa_text)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_text)}"
+                      %>
+                      <a href="<%= wa_url %>" target="_blank" class="btn-main py-1 px-2 fs-7" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; font-weight: 700; text-decoration: none;" title="Compartir Recibo por WhatsApp">
+                        📲
+                      </a>
+                    <% end %>
+
                     <% if p.pending_approval? %>
                       <%= button_to '✅', approve_employee_payment_path(p), method: :post, data: { turbo_confirm: '¿Aprobar y confirmar este pago?' }, class: 'btn-main btn-success-custom py-1 px-2 fs-7', title: 'Aprobar pago' %>
                       <%= button_to '❌', reject_employee_payment_path(p), method: :post, data: { turbo_confirm: '¿Rechazar este reporte de pago?' }, class: 'btn-main btn-danger-custom py-1 px-2 fs-7', title: 'Rechazar pago' %>
                     <% end %>
-                    <%= link_to '✏️', edit_employee_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', title: 'Editar' %>
-                    <%= button_to '🗑️', employee_payment_path(p), method: :delete, data: { turbo_confirm: '¿Eliminar este pago? Esta acción no se puede deshacer.' }, class: 'btn-main py-1 px-2 fs-7', style: 'background:#fff1f2; color:#e11d48; border:1px solid #fecaca; cursor:pointer;', title: 'Eliminar' %>
+
+                    <% unless p.voided? %>
+                      <%= link_to '✏️', edit_employee_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', title: 'Editar' %>
+
+                      <button type="button" onclick="promptVoidEmployeePayment(<%= p.id %>, '<%= j(p.user&.display_name) %>')" class="btn-main py-1 px-2 fs-7" style="background: #fff1f2; color: #991b1b; border: 1px solid #fecaca; cursor: pointer; font-weight: 700;" title="Anular Movimiento Contable">
+                        🚫
+                      </button>
+                    <% end %>
                   </div>
                 </td>
               </tr>
@@ -735,4 +773,37 @@
     <% end %>
   </div>
 </div>
+
+<script>
+  function promptVoidEmployeePayment(paymentId, workerName) {
+    const reason = prompt("🚫 ANULACIÓN CONTABLE DE PAGO\n\nIndica el motivo obligatorio de la anulación para " + (workerName || "el trabajador") + " (ej. Error de duplicado, cheque devuelto, etc.):");
+    if (reason === null) return; // User cancelled
+    if (reason.trim() === "") {
+      alert("⚠️ Es obligatorio ingresar un motivo para registrar la anulación en la auditoría contable.");
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/employee_payments/' + paymentId + '/void';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'authenticity_token';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+    }
+
+    const reasonInput = document.createElement('input');
+    reasonInput.type = 'hidden';
+    reasonInput.name = 'void_reason';
+    reasonInput.value = reason;
+    form.appendChild(reasonInput);
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>
 

@@ -260,6 +260,148 @@
 
     </div>
 
+    <%# --- SECCIÓN: TASA DE CAMBIO DEL DÍA (VES / USD) --- %>
+    <%
+      rate_cfg = @payment_methods["exchange_rate"] || {}
+      current_mode = rate_cfg["mode"].presence || "auto_bcv"
+      custom_val = rate_cfg["custom_rate"]
+      show_portals = rate_cfg["show_in_portals"] != false && rate_cfg["show_in_portals"] != "false" && rate_cfg["show_in_portals"] != "0"
+      info = @exchange_rate_info || {}
+    %>
+    <div style="background: white; border-radius: 20px; border: 2px solid #cbd5e1; padding: 26px; margin-bottom: 28px; box-shadow: 0 10px 25px rgba(0,0,0,0.04); position: relative; overflow: hidden;">
+      <div style="position: absolute; top: 0; left: 0; right: 0; height: 5px; background: linear-gradient(90deg, #059669, #0ea5e9, #6366f1);"></div>
+
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 16px; margin-bottom: 20px;">
+        <div style="display: flex; align-items: center; gap: 14px;">
+          <div style="width: 48px; height: 48px; border-radius: 14px; background: #ecfdf5; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; border: 1px solid #a7f3d0;">
+            💱
+          </div>
+          <div>
+            <h3 style="margin: 0; font-size: 1.3rem; font-weight: 800; color: #0f172a;">
+              Tasa de Cambio Diaria & Asistente de Conversión (VES / USD)
+            </h3>
+            <p style="color: #64748b; font-size: 0.88rem; margin: 4px 0 0 0;">
+              Actualiza automáticamente la tasa del día para calcular pagos en Bolívares (Pago Móvil y Transferencias).
+            </p>
+          </div>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <button type="button" id="btn-refresh-rate" onclick="refreshDailyRate(this)" style="background: #f8fafc; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 8px 16px; border-radius: 10px; font-weight: 700; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;">
+            <span id="refresh-icon">🔄</span> Sincronizar Tasa del Día Ahora
+          </button>
+        </div>
+      </div>
+
+      <%# Panel de estado de la tasa actual %>
+      <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
+        <div>
+          <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Tasa Oficial BCV del Día</span>
+          <div style="display: flex; align-items: baseline; gap: 6px;">
+            <strong id="bcv-rate-display" style="font-size: 1.4rem; font-weight: 900; color: #059669;"><%= info[:formatted_bcv] || '873,87' %></strong>
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">Bs / USD</span>
+          </div>
+        </div>
+
+        <% if info[:formatted_paralelo].present? %>
+          <div>
+            <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Tasa Paralelo Referencial</span>
+            <div style="display: flex; align-items: baseline; gap: 6px;">
+              <strong id="paralelo-rate-display" style="font-size: 1.4rem; font-weight: 900; color: #ca8a04;"><%= info[:formatted_paralelo] %></strong>
+              <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">Bs / USD</span>
+            </div>
+          </div>
+        <% end %>
+
+        <div>
+          <span style="font-size: 0.78rem; font-weight: 700; color: #64748b; text-transform: uppercase; display: block; margin-bottom: 4px;">Tasa Efectiva en Uso</span>
+          <div style="display: flex; align-items: baseline; gap: 6px;">
+            <strong id="effective-rate-display" style="font-size: 1.4rem; font-weight: 900; color: #2563eb;"><%= info[:formatted_effective_rate] || '873,87' %></strong>
+            <span style="font-size: 0.85rem; color: #64748b; font-weight: 600;">Bs / USD</span>
+          </div>
+          <span id="rate-updated-display" style="font-size: 0.75rem; color: #059669; font-weight: 600; display: block; margin-top: 2px;">
+            🟢 Sincronizada <%= info[:updated_ago] || 'hoy' %>
+          </span>
+        </div>
+      </div>
+
+      <%# Opciones de Modo de Tasa %>
+      <div style="margin-bottom: 20px;">
+        <label style="display: block; font-size: 0.88rem; font-weight: 800; color: #1e293b; margin-bottom: 10px;">
+          ¿Qué tasa de cambio deseas que utilice el sistema para los cálculos?
+        </label>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px;">
+          <label style="border: 2px solid <%= current_mode == 'auto_bcv' ? '#059669' : '#e2e8f0' %>; background: <%= current_mode == 'auto_bcv' ? '#f0fdf4' : 'white' %>; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;" id="label-mode-bcv">
+            <input type="radio" name="payment_methods[exchange_rate][mode]" value="auto_bcv" <%= 'checked' if current_mode == 'auto_bcv' %> onchange="updateRateModeUI()" style="margin-top: 3px; accent-color: #059669;">
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">🏛️ Tasa Oficial BCV (Automática)</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Se actualiza sola todos los días con la tasa del Banco Central de Venezuela. (Recomendado)</div>
+            </div>
+          </label>
+
+          <label style="border: 2px solid <%= current_mode == 'auto_paralelo' ? '#059669' : '#e2e8f0' %>; background: <%= current_mode == 'auto_paralelo' ? '#f0fdf4' : 'white' %>; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;" id="label-mode-paralelo">
+            <input type="radio" name="payment_methods[exchange_rate][mode]" value="auto_paralelo" <%= 'checked' if current_mode == 'auto_paralelo' %> onchange="updateRateModeUI()" style="margin-top: 3px; accent-color: #059669;">
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">⚡ Tasa Paralelo (Automática)</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Sincroniza diariamente el promedio de mercado paralelo / Monitor.</div>
+            </div>
+          </label>
+
+          <label style="border: 2px solid <%= current_mode == 'custom' ? '#059669' : '#e2e8f0' %>; background: <%= current_mode == 'custom' ? '#f0fdf4' : 'white' %>; border-radius: 12px; padding: 14px; cursor: pointer; display: flex; align-items: flex-start; gap: 10px; transition: all 0.2s;" id="label-mode-custom">
+            <input type="radio" name="payment_methods[exchange_rate][mode]" value="custom" <%= 'checked' if current_mode == 'custom' %> onchange="updateRateModeUI()" style="margin-top: 3px; accent-color: #059669;">
+            <div>
+              <div style="font-weight: 800; font-size: 0.95rem; color: #0f172a;">✏️ Tasa Fija Personalizada</div>
+              <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">Establece manualmente el valor que desees aplicar en tu negocio.</div>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <%# Input de Tasa Personalizada (visible solo si está en custom) %>
+      <div id="custom-rate-container" style="display: <%= current_mode == 'custom' ? 'block' : 'none' %>; margin-bottom: 20px; background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 16px;">
+        <label style="display: block; font-size: 0.85rem; font-weight: 700; color: #92400e; margin-bottom: 6px;">
+          Valor de la Tasa Personalizada (Bs. por cada 1 USD):
+        </label>
+        <div style="display: flex; align-items: center; gap: 10px; max-width: 320px;">
+          <input type="number" step="0.01" min="1" name="payment_methods[exchange_rate][custom_rate]" id="custom_rate_input" value="<%= custom_val %>" placeholder="Ej. 880.00" style="width: 100%; padding: 10px 14px; border-radius: 8px; border: 1.5px solid #d97706; font-size: 1.1rem; font-weight: 800; color: #78350f; background: white;" oninput="testCalculateFromUsd()">
+          <span style="font-weight: 800; color: #92400e;">Bs.</span>
+        </div>
+      </div>
+
+      <%# Checkbox de visibilidad en portales %>
+      <div style="margin-bottom: 20px; padding-top: 14px; border-top: 1px solid #f1f5f9;">
+        <label style="display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 0.9rem; color: #334155; cursor: pointer;">
+          <input type="hidden" name="payment_methods[exchange_rate][show_in_portals]" value="0">
+          <input type="checkbox" name="payment_methods[exchange_rate][show_in_portals]" value="1" <%= 'checked' if show_portals %> style="width: 18px; height: 18px; accent-color: #059669;">
+          <span>Mostrar cálculo estimado en Bolívares en las tarjetas de Pago Móvil / Transferencia dentro del Portal de Cliente y Presupuestos</span>
+        </label>
+      </div>
+
+      <%# Probador rápido de conversión interactivo %>
+      <div style="background: #f1f5f9; border-radius: 12px; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 1.2rem;">💡</span>
+          <span style="font-size: 0.86rem; color: #475569; font-weight: 700;">Probador rápido de conversión:</span>
+        </div>
+
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <div style="display: flex; align-items: center; gap: 4px; background: white; padding: 4px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <span style="font-size: 0.85rem; font-weight: 700; color: #64748b;">$</span>
+            <input type="number" id="test_usd_input" value="100" style="width: 70px; border: none; font-weight: 800; font-size: 0.95rem; outline: none;" oninput="testCalculateFromUsd()">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700;">USD</span>
+          </div>
+
+          <span style="font-weight: 800; color: #64748b;">⇄</span>
+
+          <div style="display: flex; align-items: center; gap: 4px; background: white; padding: 4px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+            <input type="text" id="test_ves_display" readonly style="width: 120px; border: none; font-weight: 800; font-size: 0.95rem; color: #059669; outline: none; background: transparent;">
+            <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 700;">Bs.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <%# --- INSTRUCCIONES GENERALES --- %>
     <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 24px; margin-bottom: 28px; box-shadow: 0 4px 15px rgba(0,0,0,0.03);">
       <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0 0 8px 0; display: flex; align-items: center; gap: 8px;">
@@ -274,7 +416,7 @@
     <%# Botón Guardar %>
     <div style="display: flex; gap: 15px; align-items: center;">
       <button type="submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 16px 36px; border-radius: 14px; font-weight: 800; font-size: 1.1rem; cursor: pointer; box-shadow: 0 4px 18px rgba(16, 185, 129, 0.35); transition: transform 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='none'">
-        💾 Guardar Configuración de Métodos de Pago
+        💾 Guardar Configuración de Métodos de Pago & Tasa
       </button>
 
       <%= link_to "Cancelar", root_path, style: "color: #64748b; font-weight: 700; text-decoration: none; padding: 12px 20px;" %>
@@ -283,3 +425,121 @@
   <% end %>
 
 </div>
+
+<script>
+  let currentActiveRate = <%= (@exchange_rate_info&.dig(:effective_rate) || 873.87).to_f %>;
+  let bcvActiveRate = <%= (@exchange_rate_info&.dig(:bcv_rate) || 873.87).to_f %>;
+  let paraleloActiveRate = <%= (@exchange_rate_info&.dig(:paralelo_rate) || 0.0).to_f %>;
+
+  function updateRateModeUI() {
+    const selectedMode = document.querySelector('input[name="payment_methods[exchange_rate][mode]"]:checked')?.value || 'auto_bcv';
+    const customContainer = document.getElementById('custom-rate-container');
+    const labelBcv = document.getElementById('label-mode-bcv');
+    const labelParalelo = document.getElementById('label-mode-paralelo');
+    const labelCustom = document.getElementById('label-mode-custom');
+
+    // Reset styles
+    [labelBcv, labelParalelo, labelCustom].forEach(l => {
+      if (l) {
+        l.style.borderColor = '#e2e8f0';
+        l.style.background = 'white';
+      }
+    });
+
+    if (selectedMode === 'auto_bcv') {
+      if (labelBcv) { labelBcv.style.borderColor = '#059669'; labelBcv.style.background = '#f0fdf4'; }
+      if (customContainer) customContainer.style.display = 'none';
+      currentActiveRate = bcvActiveRate;
+    } else if (selectedMode === 'auto_paralelo') {
+      if (labelParalelo) { labelParalelo.style.borderColor = '#059669'; labelParalelo.style.background = '#f0fdf4'; }
+      if (customContainer) customContainer.style.display = 'none';
+      currentActiveRate = paraleloActiveRate > 0 ? paraleloActiveRate : bcvActiveRate;
+    } else if (selectedMode === 'custom') {
+      if (labelCustom) { labelCustom.style.borderColor = '#059669'; labelCustom.style.background = '#f0fdf4'; }
+      if (customContainer) customContainer.style.display = 'block';
+      const customInp = document.getElementById('custom_rate_input');
+      const val = parseFloat(customInp?.value) || 0;
+      currentActiveRate = val > 0 ? val : bcvActiveRate;
+    }
+
+    const effDisplay = document.getElementById('effective-rate-display');
+    if (effDisplay) effDisplay.innerText = currentActiveRate.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    testCalculateFromUsd();
+  }
+
+  function testCalculateFromUsd() {
+    const usdInput = document.getElementById('test_usd_input');
+    const vesDisplay = document.getElementById('test_ves_display');
+    const selectedMode = document.querySelector('input[name="payment_methods[exchange_rate][mode]"]:checked')?.value || 'auto_bcv';
+    
+    let rate = currentActiveRate;
+    if (selectedMode === 'custom') {
+      const customInp = document.getElementById('custom_rate_input');
+      const val = parseFloat(customInp?.value) || 0;
+      if (val > 0) rate = val;
+    }
+
+    if (usdInput && vesDisplay) {
+      const usdVal = parseFloat(usdInput.value) || 0;
+      const totalVes = usdVal * rate;
+      vesDisplay.value = totalVes.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+  }
+
+  async function refreshDailyRate(btn) {
+    const icon = document.getElementById('refresh-icon');
+    const origText = btn.innerHTML;
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    if (icon) icon.style.display = 'inline-block';
+
+    try {
+      const token = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+      const res = await fetch('/api/exchange_rate/refresh', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': token
+        }
+      });
+      const data = await res.json();
+      if (data.success && data.data) {
+        bcvActiveRate = data.data.bcv_rate;
+        if (data.data.paralelo_rate) paraleloActiveRate = data.data.paralelo_rate;
+
+        const bcvEl = document.getElementById('bcv-rate-display');
+        const parEl = document.getElementById('paralelo-rate-display');
+        const effEl = document.getElementById('effective-rate-display');
+        const updatedEl = document.getElementById('rate-updated-display');
+
+        if (bcvEl) bcvEl.innerText = data.data.formatted_bcv;
+        if (parEl && data.data.formatted_paralelo) parEl.innerText = data.data.formatted_paralelo;
+        if (effEl) effEl.innerText = data.data.formatted_effective_rate;
+        if (updatedEl) updatedEl.innerText = '🟢 Sincronizada hace un momento';
+
+        updateRateModeUI();
+        btn.innerHTML = '✅ ¡Tasa Actualizada!';
+        setTimeout(() => {
+          btn.innerHTML = origText;
+          btn.disabled = false;
+          btn.style.opacity = '1';
+        }, 2000);
+      } else {
+        alert(data.error || 'No se pudo actualizar la tasa.');
+        btn.innerHTML = origText;
+        btn.disabled = false;
+        btn.style.opacity = '1';
+      }
+    } catch (e) {
+      alert('Error de conexión al sincronizar tasa.');
+      btn.innerHTML = origText;
+      btn.disabled = false;
+      btn.style.opacity = '1';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateRateModeUI();
+    testCalculateFromUsd();
+  });
+</script>

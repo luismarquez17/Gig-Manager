@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_07_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -71,9 +71,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
     t.bigint "user_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status", default: "approved", null: false
+    t.datetime "voided_at"
+    t.string "void_reason"
+    t.bigint "voided_by_id"
     t.index ["adjustment_type"], name: "index_cash_adjustments_on_adjustment_type"
     t.index ["company_id"], name: "index_cash_adjustments_on_company_id"
     t.index ["date"], name: "index_cash_adjustments_on_date"
+    t.index ["status"], name: "index_cash_adjustments_on_status"
     t.index ["user_id"], name: "index_cash_adjustments_on_user_id"
   end
 
@@ -202,6 +207,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
     t.index ["company_id"], name: "index_company_media_items_on_company_id"
   end
 
+  create_table "daily_exchange_rates", force: :cascade do |t|
+    t.date "rate_date", null: false
+    t.string "currency_from", default: "USD", null: false
+    t.string "currency_to", default: "VES", null: false
+    t.decimal "bcv_rate", precision: 16, scale: 4, null: false
+    t.decimal "paralelo_rate", precision: 16, scale: 4
+    t.string "source", default: "dolarapi_bcv"
+    t.datetime "fetched_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["rate_date", "currency_from", "currency_to"], name: "index_daily_exchange_rates_on_date_and_currencies", unique: true
+  end
+
   create_table "employee_payments", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "gig_id"
@@ -220,8 +238,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
     t.boolean "reported_by_worker", default: false, null: false
     t.string "rejection_reason"
     t.datetime "approved_at"
+    t.datetime "voided_at"
+    t.string "void_reason"
+    t.bigint "voided_by_id"
+    t.string "receipt_number"
     t.index ["company_id"], name: "index_employee_payments_on_company_id"
     t.index ["gig_id"], name: "index_employee_payments_on_gig_id"
+    t.index ["receipt_number"], name: "index_employee_payments_on_receipt_number"
     t.index ["status"], name: "index_employee_payments_on_status"
     t.index ["user_id"], name: "index_employee_payments_on_user_id"
   end
@@ -315,6 +338,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
     t.string "rejection_reason"
     t.datetime "approved_at"
     t.bigint "approved_by_id"
+    t.datetime "voided_at"
+    t.string "void_reason"
+    t.bigint "voided_by_id"
     t.index ["gig_id"], name: "index_gig_payments_on_gig_id"
     t.index ["receipt_number"], name: "index_gig_payments_on_receipt_number"
     t.index ["reported_by_client"], name: "index_gig_payments_on_reported_by_client"
@@ -610,6 +636,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
   add_foreign_key "app_notifications", "users", column: "sender_id"
   add_foreign_key "cash_adjustments", "companies"
   add_foreign_key "cash_adjustments", "users"
+  add_foreign_key "cash_adjustments", "users", column: "voided_by_id"
   add_foreign_key "client_quotes", "clients"
   add_foreign_key "client_quotes", "companies"
   add_foreign_key "client_quotes", "gigs"
@@ -619,6 +646,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
   add_foreign_key "employee_payments", "companies"
   add_foreign_key "employee_payments", "gigs"
   add_foreign_key "employee_payments", "users"
+  add_foreign_key "employee_payments", "users", column: "voided_by_id"
   add_foreign_key "finance_settings", "companies"
   add_foreign_key "financial_audit_logs", "companies"
   add_foreign_key "financial_audit_logs", "users"
@@ -630,6 +658,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_06_150000) do
   add_foreign_key "gig_items", "items"
   add_foreign_key "gig_payments", "gigs"
   add_foreign_key "gig_payments", "users", column: "approved_by_id"
+  add_foreign_key "gig_payments", "users", column: "voided_by_id"
   add_foreign_key "gig_reviews", "gigs"
   add_foreign_key "gig_timeline_items", "gigs", on_delete: :cascade
   add_foreign_key "gig_upsell_requests", "companies"

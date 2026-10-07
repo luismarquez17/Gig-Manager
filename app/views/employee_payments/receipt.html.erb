@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Comprobante de Nómina <%= @payment.receipt_display_number %> - <%= @company&.name || 'Gig Manager' %></title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #f1f5f9;
+      color: #1e293b;
+      line-height: 1.5;
+      padding: 24px;
+    }
+
+    .no-print-bar {
+      max-width: 800px;
+      margin: 0 auto 20px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-action {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 14px;
+      text-decoration: none;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-print {
+      background: #0f172a;
+      color: white;
+    }
+    .btn-print:hover {
+      background: #334155;
+    }
+
+    .btn-whatsapp {
+      background: #25d366;
+      color: white;
+    }
+    .btn-whatsapp:hover {
+      background: #128c7e;
+    }
+
+    .btn-back {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-back:hover {
+      background: #f1f5f9;
+      color: #0f172a;
+    }
+
+    /* Recibo Card Principal */
+    .receipt-card {
+      max-width: 800px;
+      margin: 0 auto;
+      background: white;
+      border: 1px solid #e2e8f0;
+      border-radius: 16px;
+      padding: 44px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+      position: relative;
+    }
+
+    /* Header del Recibo */
+    .receipt-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #f1f5f9;
+      padding-bottom: 24px;
+      margin-bottom: 28px;
+    }
+
+    .company-brand h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: #0f172a;
+      letter-spacing: -0.5px;
+    }
+
+    .company-brand p {
+      color: #64748b;
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    .receipt-badge-box {
+      text-align: right;
+    }
+
+    .receipt-title {
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #2563eb;
+      margin-bottom: 4px;
+    }
+
+    .folio-pill {
+      display: inline-block;
+      background: #eff6ff;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+      font-size: 15px;
+      font-weight: 800;
+      padding: 4px 14px;
+      border-radius: 8px;
+      letter-spacing: 0.5px;
+    }
+
+    .receipt-date {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+
+    /* Grid de Información */
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 28px;
+    }
+
+    .info-block {
+      background: #f8fafc;
+      border: 1px solid #f1f5f9;
+      border-radius: 10px;
+      padding: 16px 20px;
+    }
+
+    .info-block-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .info-item {
+      font-size: 13.5px;
+      margin-bottom: 4px;
+      color: #334155;
+    }
+    .info-item strong {
+      color: #0f172a;
+    }
+
+    /* Tabla de Detalles del Pago */
+    .payment-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 28px;
+    }
+
+    .payment-table th {
+      background: #f8fafc;
+      color: #475569;
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 12px 16px;
+      border-top: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      text-align: left;
+    }
+
+    .payment-table td {
+      padding: 16px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 14px;
+      color: #1e293b;
+    }
+
+    /* Total Highlight Box */
+    .total-highlight {
+      background: #0f172a;
+      color: white;
+      border-radius: 12px;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    .total-label {
+      font-size: 13px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #94a3b8;
+    }
+
+    .total-amount {
+      font-size: 26px;
+      font-weight: 800;
+      color: #34d399;
+      letter-spacing: -0.5px;
+    }
+
+    /* Status Badge */
+    .status-stamp {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 800;
+      background: <%= @payment.voided? ? '#fee2e2' : '#dcfce7' %>;
+      color: <%= @payment.voided? ? '#991b1b' : '#166534' %>;
+      border: 1px solid <%= @payment.voided? ? '#fca5a5' : '#86efac' %>;
+    }
+
+    /* Footer */
+    .receipt-footer {
+      border-top: 1px dashed #cbd5e1;
+      padding-top: 20px;
+      text-align: center;
+      color: #94a3b8;
+      font-size: 12px;
+    }
+
+    @media print {
+      body {
+        background-color: white;
+        padding: 0;
+      }
+      .no-print-bar {
+        display: none !important;
+      }
+      .receipt-card {
+        border: none;
+        box-shadow: none;
+        padding: 20px 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <%# --- Barra superior de acciones (no imprimible) --- %>
+  <div class="no-print-bar">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <a href="javascript:history.back()" class="btn-action btn-back">
+        ← Volver
+      </a>
+      <span style="font-size: 13px; color: #64748b; font-weight: 600;">
+        Comprobante Oficial de Nómina
+      </span>
+    </div>
+
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <%
+        wa_text = @payment.whatsapp_receipt_text(request.original_url)
+        wa_url = @worker&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@worker.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(wa_text)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_text)}"
+      %>
+      <a href="<%= wa_url %>" target="_blank" class="btn-action btn-whatsapp">
+        <span>📲</span> Compartir por WhatsApp
+      </a>
+      <button onclick="window.print()" class="btn-action btn-print">
+        <span>🖨️</span> Imprimir / Guardar PDF
+      </button>
+    </div>
+  </div>
+
+  <%# --- Recibo Principal --- %>
+  <div class="receipt-card">
+
+    <%# Header %>
+    <div class="receipt-header">
+      <div class="company-brand">
+        <h1><%= @company&.name || 'Gig Manager' %></h1>
+        <p><%= @company&.tagline.presence || 'Comprobante Oficial de Liquidación de Personal' %></p>
+        <% if @company&.contact_phone.present? || @company&.contact_email.present? %>
+          <p style="font-size: 12px; color: #94a3b8; margin-top: 2px;">
+            <%= [@company.contact_phone, @company.contact_email].compact.join(' · ') %>
+          </p>
+        <% end %>
+      </div>
+
+      <div class="receipt-badge-box">
+        <div class="receipt-title">Comprobante de Pago</div>
+        <div class="folio-pill"><%= @payment.receipt_display_number %></div>
+        <div class="receipt-date">
+          Fecha: <%= @payment.date_paid&.strftime('%d/%m/%Y') || Date.today.strftime('%d/%m/%Y') %>
+        </div>
+      </div>
+    </div>
+
+    <%# Grid de Información Trabajador y Show %>
+    <div class="info-grid">
+      <div class="info-block">
+        <div class="info-block-title">
+          <span>👤</span> Personal / Músico
+        </div>
+        <div class="info-item"><strong><%= @worker&.display_name || @payment.user&.name || 'Trabajador' %></strong></div>
+        <div class="info-item">Rol: <%= @worker&.role&.to_s&.humanize || 'Personal' %></div>
+        <% if @worker&.specialty.present? %>
+          <div class="info-item">Especialidad: <%= @worker.specialty %></div>
+        <% end %>
+        <% if @worker&.email.present? %>
+          <div class="info-item" style="color: #64748b; font-size: 12px;"><%= @worker.email %></div>
+        <% end %>
+      </div>
+
+      <div class="info-block">
+        <div class="info-block-title">
+          <span>🎵</span> Detalle del Evento / Concepto
+        </div>
+        <% if @gig.present? %>
+          <div class="info-item"><strong><%= @gig.client_display_name %></strong></div>
+          <div class="info-item">Fecha del Evento: <%= @gig.date&.strftime('%d/%m/%Y') || 'Sin fecha' %></div>
+          <div class="info-item">Lugar: <%= @gig.location.presence || 'Por definir' %></div>
+        <% else %>
+          <div class="info-item"><strong>Pago General / Anticipo</strong></div>
+          <div class="info-item">Concepto: Liquidación contable fuera de show</div>
+        <% end %>
+      </div>
+    </div>
+
+    <%# Tabla de Desglose %>
+    <table class="payment-table">
+      <thead>
+        <tr>
+          <th>Concepto</th>
+          <th>Forma de Pago</th>
+          <th>Notas / Referencia</th>
+          <th style="text-align: right;">Monto Liquidado</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>
+            <strong>Honorarios / Salario</strong>
+            <% if @gig.present? %>
+              <div style="font-size: 12px; color: #64748b;">Show: <%= @gig.client_display_name %></div>
+            <% end %>
+          </td>
+          <td>
+            <span style="font-weight: 700; color: #1e293b;">
+              <%= @payment.payment_method.presence || 'Efectivo en Mano' %>
+            </span>
+          </td>
+          <td style="color: #64748b; font-size: 13px;">
+            <%= @payment.notes.presence || 'Liquidación conforme de honorarios' %>
+          </td>
+          <td style="text-align: right; font-weight: 800; font-size: 16px; color: #0f172a;">
+            $<%= sprintf('%.2f', @payment.amount.to_f) %> <%= @payment.currency %>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <%# Total Highlight %>
+    <div class="total-highlight">
+      <div>
+        <div class="total-label">Total Entregado</div>
+        <div style="font-size: 12px; color: #cbd5e1; margin-top: 2px;">
+          Fuente: <%= @payment.funding_source_label %>
+        </div>
+      </div>
+      <div style="text-align: right;">
+        <div class="total-amount">$<%= sprintf('%.2f', @payment.amount.to_f) %> <%= @payment.currency %></div>
+      </div>
+    </div>
+
+    <%# Estado y Saldo Restante %>
+    <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 20px; margin-bottom: 28px;">
+      <div>
+        <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Estado del Pago:</span>
+        <div style="margin-top: 4px;">
+          <span class="status-stamp">
+            <%= @payment.status_emoji %> <%= @payment.status_label %>
+          </span>
+          <% if @payment.voided? %>
+            <div style="color: #991b1b; font-size: 12px; margin-top: 4px; font-weight: 600;">
+              Motivo de Anulación: <%= @payment.void_reason %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <% if @worker.present? %>
+        <div style="text-align: right;">
+          <span style="font-size: 12px; color: #64748b; font-weight: 700; text-transform: uppercase;">Saldo Pendiente Actual:</span>
+          <% w_pending = @worker.pending_balance %>
+          <div style="font-size: 16px; font-weight: 800; color: <%= w_pending > 0 ? '#b45309' : '#059669' %>; margin-top: 2px;">
+            <%= w_pending > 0 ? "$#{sprintf('%.2f', w_pending)} USD" : '✅ Al Día ($0.00)' %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%# Footer %>
+    <div class="receipt-footer">
+      <p>Este comprobante certifica la liquidación del importe señalado de forma transparente y conforme a los acuerdos del evento.</p>
+      <p style="margin-top: 4px;">Generado automáticamente por <strong>Gig Manager</strong> el <%= Time.current.strftime('%d/%m/%Y a las %I:%M %p') %></p>
+    </div>
+
+  </div>
+
+</body>
+</html>

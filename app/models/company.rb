@@ -515,6 +515,11 @@ class Company < ApplicationRecord
       "holder_name" => "",
       "notes" => ""
     },
+    "exchange_rate" => {
+      "mode" => "auto_bcv",
+      "custom_rate" => nil,
+      "show_in_portals" => true
+    },
     "general_instructions" => "Una vez realizado tu pago o transferencia, sube tu comprobante en el botón 'Reportar Abono' para generar tu recibo oficial y actualizar tu saldo de inmediato."
   }.freeze
 
@@ -537,6 +542,18 @@ class Company < ApplicationRecord
 
   def bank_transfer_info
     payment_methods["bank_transfer"] || {}
+  end
+
+  def exchange_rate_config
+    payment_methods["exchange_rate"] || { "mode" => "auto_bcv", "custom_rate" => nil, "show_in_portals" => true }
+  end
+
+  def effective_exchange_rate
+    ExchangeRateService.current_rate(self)
+  end
+
+  def exchange_rate_details
+    ExchangeRateService.today_rate_info(self)
   end
 
   def any_payment_method_enabled?

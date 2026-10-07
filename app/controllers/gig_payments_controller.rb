@@ -4,7 +4,7 @@ class GigPaymentsController < ApplicationController
   before_action :require_leader!, except: [:receipt]
   before_action -> { require_module!(:gigs) }, except: [:receipt]
   before_action :set_gig, if: -> { params[:gig_id].present? }
-  before_action :set_payment, only: [:edit, :update, :destroy, :receipt, :approve, :reject]
+  before_action :set_payment, only: [:edit, :update, :destroy, :receipt, :approve, :reject, :void]
 
   def index
     if defined?(@gig) && @gig.present?
@@ -13,7 +13,7 @@ class GigPaymentsController < ApplicationController
       @remaining_amount = @gig.remaining_amount
     else
       @payments = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).includes(gig: :client).order(date_paid: :desc)
-      received_by_gig = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).group(:gig_id).sum(:amount)
+      received_by_gig = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).approved.group(:gig_id).sum(:amount)
       @unpaid_gigs = current_company.gigs.includes(:client, :gig_payments).select { |g| (received_by_gig[g.id] || 0).to_f < g.amount.to_f }
 
       @payment_status_counts = { paid: 0, partial: 0, unpaid: 0 }
@@ -55,6 +55,48 @@ class GigPaymentsController < ApplicationController
     redirect_to gig_payments_path, alert: "Ocurrió un error al registrar el pago."
   end
 
+  def create_split
+    @gig = current_company.gigs.find(params[:gig_id])
+    split_payments = params[:split_payments] || []
+    
+    created_count = 0
+    total_split_amount = 0.0
+
+    ActiveRecord::Base.transaction do
+      split_payments.each do |sp|
+        amt = sp[:amount].to_s.tr(',', '.').strip.to_f
+        next if amt <= 0
+
+        p_method = sp[:payment_method].presence || 'cash'
+        p_ref = sp[:reference_number].presence
+        p_notes = sp[:notes].presence || "Parte de abono dividido / mixto"
+
+        @gig.gig_payments.create!(
+          amount: amt,
+          currency: @gig.currency.presence || 'USD',
+          date_paid: params[:date_paid].presence || Date.today,
+          payment_method: p_method,
+          reference_number: p_ref,
+          notes: p_notes,
+          status: 'approved',
+          audit_reason: "Abono mixto: $#{amt} vía #{p_method}"
+        )
+        created_count += 1
+        total_split_amount += amt
+      end
+    end
+
+    if created_count > 0
+      redirect_to gig_path(@gig), notice: "✅ Se registraron #{created_count} pagos con éxito por un total de $#{sprintf('%.2f', total_split_amount)} USD."
+    else
+      redirect_to new_gig_gig_payment_path(@gig), alert: "Debes ingresar al menos un método con monto válido."
+    end
+  rescue ActiveRecord::RecordInvalid => e
+    redirect_to new_gig_gig_payment_path(@gig), alert: "Error al registrar abono dividido: #{e.message}"
+  rescue StandardError => e
+    redirect_to new_gig_gig_payment_path(@gig), alert: "Ocurrió un error inesperado: #{e.message}"
+  end
+
   def edit
   end
 
@@ -72,6 +114,14 @@ class GigPaymentsController < ApplicationController
     @payment.audit_reason = params[:audit_reason].presence || "Eliminación de pago por el usuario"
     @payment.destroy
     redirect_to gig_path(gig), notice: "🗑️ Pago eliminado correctamente del sistema y registrado en auditoría."
+  end
+
+  def void
+    reason = params[:void_reason].presence || params[:reason].presence || "Anulación contable solicitada por el usuario"
+    @payment.void!(reason, current_user)
+    redirect_back fallback_location: gig_path(@payment.gig), notice: "🚫 Abono ##{@payment.receipt_display_number} anulado exitosamente."
+  rescue StandardError => e
+    redirect_back fallback_location: gig_path(@payment.gig), alert: "Error al anular: #{e.message}"
   end
 
   def receipt

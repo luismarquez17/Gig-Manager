@@ -8,6 +8,11 @@
   pago_movil = company.pago_movil_info
   bank_transfer = company.bank_transfer_info
   general_instructions = company.payment_methods["general_instructions"]
+
+  rate_details = (company.exchange_rate_details rescue nil) || ExchangeRateService.today_rate_info(company)
+  rate_cfg = company.exchange_rate_config rescue {}
+  show_rate_in_cards = rate_cfg["show_in_portals"] != false && rate_cfg["show_in_portals"] != "false" && rate_cfg["show_in_portals"] != "0"
+  target_amount = local_assigns[:target_amount] || (@gig&.remaining_amount if defined?(@gig) && @gig.present?) || (@quote&.amount if defined?(@quote) && @quote.present?)
 %>
 
 <div class="payment-methods-showcase" style="<%= dark_theme ? 'color: #f8fafc;' : 'color: #0f172a;' %>">
@@ -174,6 +179,20 @@
               <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Titular:</strong> <%= pago_movil["holder_name"] %>
             </div>
           <% end %>
+
+          <% if show_rate_in_cards && rate_details[:effective_rate].to_f > 0 %>
+            <div style="background: <%= dark_theme ? 'rgba(34, 197, 94, 0.12)' : '#ecfdf5' %>; border: 1px solid <%= dark_theme ? 'rgba(34, 197, 94, 0.3)' : '#a7f3d0' %>; border-radius: 8px; padding: 6px 10px; margin-top: 8px;">
+              <div style="font-size: 0.72rem; color: <%= dark_theme ? '#86efac' : '#166534' %>; font-weight: 700; text-transform: uppercase;">
+                💱 Tasa Oficial del Día: <strong><%= rate_details[:formatted_effective_rate] %> Bs/USD</strong>
+              </div>
+              <% if target_amount.present? && target_amount.to_f > 0 %>
+                <% target_ves = (target_amount.to_f * rate_details[:effective_rate].to_f).round(2) %>
+                <div style="font-size: 0.82rem; font-weight: 800; color: <%= dark_theme ? '#4ade80' : '#15803d' %>; margin-top: 2px;">
+                  Monto sugerido hoy: ~<%= ExchangeRateService.format_currency_ves(target_ves) %> Bs.
+                </div>
+              <% end %>
+            </div>
+          <% end %>
         </div>
 
         <% if pago_movil["notes"].present? %>
@@ -223,6 +242,20 @@
               <% end %>
               <% if bank_transfer["holder_name"].present? %>
                 <strong style="color: <%= dark_theme ? '#cbd5e1' : '#475569' %>;">Titular:</strong> <%= bank_transfer["holder_name"] %>
+              <% end %>
+            </div>
+          <% end %>
+
+          <% if show_rate_in_cards && rate_details[:effective_rate].to_f > 0 %>
+            <div style="background: <%= dark_theme ? 'rgba(59, 130, 246, 0.12)' : '#eff6ff' %>; border: 1px solid <%= dark_theme ? 'rgba(59, 130, 246, 0.3)' : '#bfdbfe' %>; border-radius: 8px; padding: 6px 10px; margin-top: 8px;">
+              <div style="font-size: 0.72rem; color: <%= dark_theme ? '#93c5fd' : '#1e40af' %>; font-weight: 700; text-transform: uppercase;">
+                💱 Tasa Oficial del Día: <strong><%= rate_details[:formatted_effective_rate] %> Bs/USD</strong>
+              </div>
+              <% if target_amount.present? && target_amount.to_f > 0 %>
+                <% target_ves = (target_amount.to_f * rate_details[:effective_rate].to_f).round(2) %>
+                <div style="font-size: 0.82rem; font-weight: 800; color: <%= dark_theme ? '#60a5fa' : '#1d4ed8' %>; margin-top: 2px;">
+                  Monto sugerido hoy: ~<%= ExchangeRateService.format_currency_ves(target_ves) %> Bs.
+                </div>
               <% end %>
             </div>
           <% end %>

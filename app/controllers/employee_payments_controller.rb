@@ -1,7 +1,7 @@
 class EmployeePaymentsController < ApplicationController
-  before_action :require_leader!, except: [:new_worker_report, :create_worker_report]
+  before_action :require_leader!, except: [:new_worker_report, :create_worker_report, :receipt]
   before_action -> { require_module!(:payroll) }
-  before_action :set_payment, only: [:edit, :update, :destroy, :approve, :reject]
+  before_action :set_payment, only: [:edit, :update, :destroy, :approve, :reject, :void, :receipt]
 
   def index
     @payments = current_company.employee_payments.includes(:user, :gig).order(date_paid: :desc, created_at: :desc)
@@ -403,6 +403,21 @@ class EmployeePaymentsController < ApplicationController
     redirect_to employee_payments_path(user_id: user_id), notice: "Pago eliminado correctamente."
   end
 
+  def void
+    reason = params[:void_reason].presence || params[:reason].presence || "Anulación contable solicitada por el líder"
+    @payment.void!(reason, current_user)
+    redirect_back fallback_location: employee_payments_path(user_id: @payment.user_id), notice: "🚫 Pago de nómina ##{@payment.receipt_display_number} anulado exitosamente."
+  rescue StandardError => e
+    redirect_back fallback_location: employee_payments_path, alert: "Error al anular: #{e.message}"
+  end
+
+  def receipt
+    @gig = @payment.gig
+    @worker = @payment.user
+    @company = @payment.company || current_company
+    render layout: false
+  end
+
   private
 
   def build_worker_unpaid_gigs_map
@@ -432,7 +447,11 @@ class EmployeePaymentsController < ApplicationController
   end
 
   def set_payment
-    @payment = current_company.employee_payments.find(params[:id])
+    if current_user.staff? || current_user.musician?
+      @payment = current_company.employee_payments.where(user_id: current_user.id).find(params[:id])
+    else
+      @payment = current_company.employee_payments.find(params[:id])
+    end
   end
 
   def payment_params

@@ -66,7 +66,11 @@ Rails.application.routes.draw do
 
 
   # Gestión de Caja General / Fondo de la Banda
-  resources :cash_adjustments
+  resources :cash_adjustments do
+    member do
+      post :void
+    end
+  end
   get '/caja', to: 'cash_adjustments#index', as: 'cash_register'
 
   resources :clients do
@@ -82,6 +86,10 @@ Rails.application.routes.draw do
       get :receipt
       post :approve
       post :reject
+      post :void
+    end
+    collection do
+      post :create_split
     end
   end
 
@@ -116,6 +124,10 @@ Rails.application.routes.draw do
   get '/payment_methods_settings', to: 'payment_methods#edit', as: 'payment_methods_settings'
   patch '/payment_methods_settings', to: 'payment_methods#update'
 
+  # Asistente y API de Tasa de Cambio Diaria (VES / USD)
+  get '/api/exchange_rate', to: 'exchange_rates#show', as: 'api_exchange_rate'
+  post '/api/exchange_rate/refresh', to: 'exchange_rates#refresh', as: 'api_refresh_exchange_rate'
+
   resources :gig_upsell_requests, only: [] do
     member do
       post :approve
@@ -126,6 +138,8 @@ Rails.application.routes.draw do
   resources :gigs, only: [:index, :new, :create, :destroy, :show, :edit, :update] do
     member do
       get :load_in_checklist
+      get :closeout
+      post :process_closeout
       post :add_kit
       post :assign_staff
       delete :remove_staff
@@ -195,8 +209,10 @@ Rails.application.routes.draw do
       post :reset_balance
     end
     member do
+      get :receipt
       post :approve
       post :reject
+      post :void
     end
   end
   # Staff: view only their assigned gigs

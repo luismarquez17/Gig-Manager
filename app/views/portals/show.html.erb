@@ -644,21 +644,50 @@
           <button type="button" onclick="togglePublicPortalPaymentForm()" style="background: rgba(255,255,255,0.06); border: none; color: var(--text-muted); border-radius: 8px; width: 32px; height: 32px; cursor: pointer; font-weight: 800;">✕</button>
         </div>
 
+        <%
+          portal_rate_info = (@gig.company&.exchange_rate_details rescue nil) || ExchangeRateService.today_rate_info(@gig.company)
+          portal_effective_rate = portal_rate_info[:effective_rate].to_f
+          portal_formatted_rate = portal_rate_info[:formatted_effective_rate]
+        %>
+
+        <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 12px; padding: 10px 14px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 1.1em;">💱</span>
+            <span style="font-size: 0.85em; color: #a7f3d0; font-weight: 700;">
+              Tasa Oficial del Día: <strong style="color: #34d399;"><%= portal_formatted_rate %> Bs/USD</strong>
+            </span>
+          </div>
+          <span style="font-size: 0.78em; color: var(--text-muted);">
+            Pago Móvil y Transferencias se calculan al cambio oficial del día.
+          </span>
+        </div>
+
         <%= form_with url: report_public_portal_payment_path(@gig.portal_token), method: :post, multipart: true, local: true, data: { turbo: false } do |f| %>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
             
             <div>
-              <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
-                Monto del Abono ($ USD) *
-              </label>
-              <%= text_field_tag :amount, (@gig.remaining_amount.positive? ? sprintf('%.2f', @gig.remaining_amount) : ''), placeholder: "0.00", required: true, style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 1.1em; font-weight: 800; color: white; box-sizing: border-box;" %>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase;">
+                  Monto del Abono ($ USD) *
+                </label>
+              </div>
+              <%= text_field_tag :amount, (@gig.remaining_amount.positive? ? sprintf('%.2f', @gig.remaining_amount) : ''), id: "portal_payment_amount_usd", placeholder: "0.00", required: true, style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 1.1em; font-weight: 800; color: white; box-sizing: border-box;", oninput: "calcPortalUsdToVes()" %>
+            </div>
+
+            <div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <label style="font-size: 0.8em; font-weight: 700; color: #34d399; text-transform: uppercase;">
+                  O Monto en Bolívares (Bs.)
+                </label>
+              </div>
+              <input type="number" step="0.01" min="0" id="portal_payment_amount_ves" placeholder="0.00" style="width: 100%; background: rgba(16, 185, 129, 0.06); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 10px; padding: 10px 14px; font-size: 1.05em; font-weight: 800; color: #a7f3d0; box-sizing: border-box;" oninput="calcPortalVesToUsd()">
             </div>
 
             <div>
               <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
                 Método de Pago *
               </label>
-              <%= select_tag :payment_method, options_for_select(GigPayment::PAYMENT_METHODS.map { |k, v| ["#{v[:emoji]} #{v[:label]}", k] }, 'zelle'), style: "width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; font-weight: 700; color: white; box-sizing: border-box;" %>
+              <%= select_tag :payment_method, options_for_select(GigPayment::PAYMENT_METHODS.map { |k, v| ["#{v[:emoji]} #{v[:label]}", k] }, 'zelle'), id: "portal_payment_method_select", style: "width: 100%; background: #0f172a; border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; font-weight: 700; color: white; box-sizing: border-box;" %>
             </div>
 
             <div>
@@ -672,7 +701,7 @@
               <label style="display: block; font-size: 0.8em; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 6px;">
                 Nº de Referencia / Confirmación
               </label>
-              <%= text_field_tag :reference_number, nil, placeholder: "Ej. Ref Zelle #94821", style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; color: white; box-sizing: border-box;" %>
+              <%= text_field_tag :reference_number, nil, id: "portal_payment_reference", placeholder: "Ej. Ref Pago Móvil #94821", style: "width: 100%; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; padding: 10px 14px; font-size: 0.95em; color: white; box-sizing: border-box;" %>
             </div>
 
           </div>
@@ -1285,4 +1314,34 @@
       window.closeUpsellModal();
     }
   });
+
+  const portalDailyRate = <%= portal_effective_rate.to_f %>;
+  const portalFormattedDailyRate = "<%= portal_formatted_rate %>";
+
+  window.calcPortalVesToUsd = function() {
+    const vesInput = document.getElementById('portal_payment_amount_ves');
+    const usdInput = document.getElementById('portal_payment_amount_usd');
+    const refInput = document.getElementById('portal_payment_reference');
+    const methodSelect = document.getElementById('portal_payment_method_select');
+    const vesVal = parseFloat(vesInput?.value) || 0;
+
+    if (portalDailyRate > 0) {
+      const usdVal = (vesVal / portalDailyRate).toFixed(2);
+      if (usdInput) usdInput.value = usdVal > 0 ? usdVal : '';
+      if (methodSelect && (methodSelect.value === 'zelle' || methodSelect.value === 'cash')) {
+        methodSelect.value = 'mobile_pay';
+      }
+    }
+  };
+
+  window.calcPortalUsdToVes = function() {
+    const vesInput = document.getElementById('portal_payment_amount_ves');
+    const usdInput = document.getElementById('portal_payment_amount_usd');
+    const usdVal = parseFloat(usdInput?.value) || 0;
+
+    if (portalDailyRate > 0) {
+      const vesVal = (usdVal * portalDailyRate).toFixed(2);
+      if (vesInput) vesInput.value = vesVal > 0 ? vesVal : '';
+    }
+  };
 </script>

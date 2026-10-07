@@ -189,6 +189,10 @@
           </div>
 
           <div style="display: flex; flex-direction: column; gap: 8px;">
+            <%= link_to closeout_gig_path(@gig), style: 'background: #0f172a; color: white; border: none; padding: 10px 14px; border-radius: 10px; font-weight: 800; text-decoration: none; font-size: 0.85rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 2px 8px rgba(15, 23, 42, 0.25); transition: opacity 0.15s;' do %>
+              <span>🏁</span> Cierre Rápido del Evento
+            <% end %>
+
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
               <%= link_to gig_gig_payments_path(@gig), style: 'background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 9px 12px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.82rem; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px; transition: background 0.15s;' do %>
                 <span>📋</span> Ver Pagos

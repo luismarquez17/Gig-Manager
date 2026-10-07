@@ -153,10 +153,17 @@
 
                 <td style="padding: 14px; text-align: right; white-space: nowrap;">
                   <% if t[:is_adjustment] && t[:adjustment_record].present? %>
-                    <div style="display: inline-flex; gap: 6px;">
-                      <%= link_to "✏️", edit_cash_adjustment_path(t[:adjustment_record]), title: "Editar ajuste", style: "background: #f1f5f9; padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.85em;" %>
-                      <%= button_to cash_adjustment_path(t[:adjustment_record]), method: :delete, data: { turbo_confirm: "¿Eliminar este movimiento de caja?" }, title: "Eliminar", style: "background: #fee2e2; color: #dc2626; border: none; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.85em;" do %>
-                        🗑️
+                    <% adj = t[:adjustment_record] %>
+                    <div style="display: inline-flex; gap: 6px; align-items: center;">
+                      <% if adj.voided? %>
+                        <span style="background: #fee2e2; color: #991b1b; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 800;" title="Motivo: <%= adj.void_reason %>">
+                          🚫 ANULADO
+                        </span>
+                      <% else %>
+                        <%= link_to "✏️", edit_cash_adjustment_path(adj), title: "Editar ajuste", style: "background: #f1f5f9; padding: 4px 8px; border-radius: 6px; text-decoration: none; font-size: 0.85em;" %>
+                        <button type="button" onclick="promptVoidCashAdjustment(<%= adj.id %>, '<%= j(adj.description) %>')" title="Anular Movimiento" style="background: #fff1f2; color: #991b1b; border: 1px solid #fecaca; padding: 4px 8px; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 700;">
+                          🚫
+                        </button>
                       <% end %>
                     </div>
                   <% elsif t[:url].present? %>
@@ -178,3 +185,36 @@
   </div>
 
 </div>
+
+<script>
+  function promptVoidCashAdjustment(adjId, desc) {
+    const reason = prompt("🚫 ANULACIÓN CONTABLE DE MOVIMIENTO DE CAJA\n\nIndica el motivo obligatorio de la anulación para \"" + (desc || "este movimiento") + "\":");
+    if (reason === null) return; // User cancelled
+    if (reason.trim() === "") {
+      alert("⚠️ Es obligatorio ingresar un motivo para registrar la anulación en la auditoría contable.");
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/cash_adjustments/' + adjId + '/void';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'authenticity_token';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+    }
+
+    const reasonInput = document.createElement('input');
+    reasonInput.type = 'hidden';
+    reasonInput.name = 'void_reason';
+    reasonInput.value = reason;
+    form.appendChild(reasonInput);
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>

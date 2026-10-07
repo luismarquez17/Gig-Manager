@@ -1,0 +1,276 @@
+<div style="max-width: 900px; margin: 0 auto; padding: 20px 15px; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+
+  <%# --- HEADER --- %>
+  <div style="margin-bottom: 25px; display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+    <div>
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+        <%= link_to gig_path(@gig), style: "color: #64748b; text-decoration: none; font-size: 0.9em; font-weight: 600; display: inline-flex; align-items: center; gap: 4px;" do %>
+          ← Volver a la Ficha del Show
+        <% end %>
+        <span style="color: #cbd5e1;">/</span>
+        <span style="color: #0f172a; font-weight: 700; font-size: 0.9em;">Cierre & Liquidación</span>
+      </div>
+      <h1 style="color: #0f172a; font-size: 2em; font-weight: 800; margin: 0; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+        🏁 Cierre Rápido del Evento
+      </h1>
+      <p style="color: #64748b; font-size: 0.95em; margin-top: 6px;">
+        Liquida en un solo paso los cobros del cliente y los pagos en efectivo/transferencia entregados a los músicos o staff al finalizar.
+      </p>
+    </div>
+
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 18px; border-radius: 14px; text-align: right;">
+      <div style="font-size: 0.78em; color: #64748b; font-weight: 700; text-transform: uppercase;">Evento / Cliente</div>
+      <div style="font-weight: 800; color: #0f172a; font-size: 1.05em;"><%= @gig.client_display_name %></div>
+      <div style="font-size: 0.82em; color: #64748b;"><%= @gig.date ? @gig.date.strftime("%d/%m/%Y") : "Fecha por coordinar" %></div>
+    </div>
+  </div>
+
+  <%= form_with url: process_closeout_gig_path(@gig), method: :post, local: true, id: "closeout-form" do %>
+
+    <%# --- PASO 1: COBRO DEL CLIENTE --- %>
+    <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="background: #10b981; color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 0.85em;">1</span>
+          <h3 style="margin: 0; font-size: 1.2em; color: #0f172a; font-weight: 800;">¿Cuánto dinero recibiste hoy del cliente?</h3>
+        </div>
+        <span style="font-size: 0.85em; color: #64748b;">
+          Saldo restante del evento: <strong style="color: <%= @remaining_client_balance > 0 ? '#b45309' : '#10b981' %>;">$<%= sprintf('%.2f', @remaining_client_balance) %> USD</strong>
+        </span>
+      </div>
+
+      <% if @remaining_client_balance > 0 %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 18px; margin-bottom: 16px;">
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end;">
+            <div>
+              <label style="display: block; font-size: 0.85em; font-weight: 700; color: #334155; margin-bottom: 6px;">Monto Cobrado Hoy ($ USD)</label>
+              <div style="position: relative;">
+                <span style="position: absolute; left: 12px; top: 10px; color: #64748b; font-weight: 700;">$</span>
+                <input type="number" step="0.01" min="0" max="<%= @remaining_client_balance %>" name="client_collected_amount" id="client_collected_amount" value="<%= @remaining_client_balance %>" style="width: 100%; padding: 10px 12px 10px 28px; border: 1px solid #cbd5e1; border-radius: 10px; font-weight: 700; font-size: 1.1em; color: #0f172a; box-sizing: border-box;" oninput="recalculateSummary()">
+              </div>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.85em; font-weight: 700; color: #334155; margin-bottom: 6px;">Forma de Cobro</label>
+              <select name="client_payment_method" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-weight: 600; color: #0f172a; background: white;">
+                <option value="cash" selected>💵 Efectivo en Mano</option>
+                <option value="zelle">⚡ Zelle</option>
+                <option value="mobile_pay">📱 Pago Móvil</option>
+                <option value="bank_transfer">🏦 Transferencia Bancaria</option>
+                <option value="card_stripe">💳 Tarjeta / Terminal</option>
+                <option value="other">💰 Otro Método</option>
+              </select>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.85em; font-weight: 700; color: #334155; margin-bottom: 6px;">Nº Referencia / Notas (Opcional)</label>
+              <input type="text" name="client_reference_number" placeholder="Ej. Ref 9841 o Efectivo entregado" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9em; box-sizing: border-box;">
+            </div>
+          </div>
+
+          <div style="margin-top: 10px; display: flex; gap: 8px;">
+            <button type="button" onclick="setClientAmount(<%= @remaining_client_balance %>)" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 4px 10px; border-radius: 6px; font-size: 0.78em; font-weight: 700; cursor: pointer;">
+              ⚡ Cobró la totalidad restante ($<%= sprintf('%.2f', @remaining_client_balance) %>)
+            </button>
+            <button type="button" onclick="setClientAmount(0)" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 0.78em; font-weight: 700; cursor: pointer;">
+              🚫 No cobró nada hoy ($0.00)
+            </button>
+          </div>
+        </div>
+      <% else %>
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 12px; padding: 14px 18px; color: #065f46; font-size: 0.92em; display: flex; align-items: center; gap: 8px;">
+          <span>✅</span>
+          <span><strong>El cliente ya pagó la totalidad de este evento ($<%= sprintf('%.2f', @gig.amount.to_f) %> USD).</strong> No hay cobros pendientes por ingresar.</span>
+        </div>
+        <input type="hidden" name="client_collected_amount" id="client_collected_amount" value="0">
+      <% end %>
+    </div>
+
+    <%# --- PASO 2: PAGOS A TRABAJADORES EN SITIO --- %>
+    <div style="background: white; border-radius: 20px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 24px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px; flex-wrap: wrap; gap: 10px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="background: #2563eb; color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 0.85em;">2</span>
+          <h3 style="margin: 0; font-size: 1.2em; color: #0f172a; font-weight: 800;">¿Le pagaste a alguien del equipo en el sitio?</h3>
+        </div>
+        <div style="display: flex; gap: 8px;">
+          <button type="button" onclick="selectAllWorkers(true)" style="background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 6px; font-size: 0.78em; font-weight: 700; cursor: pointer;">
+            ✓ Marcar Todos
+          </button>
+          <button type="button" onclick="selectAllWorkers(false)" style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 4px 10px; border-radius: 6px; font-size: 0.78em; font-weight: 700; cursor: pointer;">
+            ✕ Desmarcar Todos
+          </button>
+        </div>
+      </div>
+
+      <% if @worker_unpaid_items.any? %>
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+          <% @worker_unpaid_items.each do |item| %>
+            <% u = item[:user] %>
+            <% is_unpaid = item[:pending] > 0 %>
+            <div class="worker-row" style="background: <%= is_unpaid ? '#f8fafc' : '#f1f5f9' %>; border: 1px solid <%= is_unpaid ? '#e2e8f0' : '#e2e8f0' %>; border-radius: 14px; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+              
+              <%# Izquierda: Datos del trabajador %>
+              <div style="display: flex; align-items: center; gap: 12px; min-width: 220px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                  <input type="checkbox" name="worker_payments[<%= u.id %>][pay]" value="1" <%= 'checked' if is_unpaid %> class="worker-checkbox" onchange="toggleWorkerInput(<%= u.id %>); recalculateSummary();" style="width: 18px; height: 18px; accent-color: #2563eb;">
+                  <div>
+                    <div style="font-weight: 800; color: #0f172a; font-size: 0.95em;"><%= u.display_name %></div>
+                    <small style="color: #64748b; font-size: 0.8em;"><%= u.role.to_s.humanize %> · Acordado: $<%= sprintf('%.2f', item[:agreed]) %></small>
+                  </div>
+                </label>
+              </div>
+
+              <%# Centro: Estado actual %>
+              <div style="text-align: right; min-width: 110px;">
+                <% if item[:pending] > 0 %>
+                  <span style="font-size: 0.82em; color: #b45309; font-weight: 700; background: #fef3c7; padding: 3px 8px; border-radius: 6px;">
+                    Pendiente: $<%= sprintf('%.2f', item[:pending]) %>
+                  </span>
+                <% else %>
+                  <span style="font-size: 0.82em; color: #065f46; font-weight: 700; background: #d1fae5; padding: 3px 8px; border-radius: 6px;">
+                    ✅ Ya Liquidado
+                  </span>
+                <% end %>
+              </div>
+
+              <%# Derecha: Inputs de pago %>
+              <div id="worker-inputs-<%= u.id %>" style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                <div style="position: relative; width: 120px;">
+                  <span style="position: absolute; left: 8px; top: 7px; color: #64748b; font-weight: 700; font-size: 0.9em;">$</span>
+                  <input type="number" step="0.01" min="0" name="worker_payments[<%= u.id %>][amount]" id="worker_amount_<%= u.id %>" value="<%= item[:pending] > 0 ? item[:pending] : item[:agreed] %>" class="worker-amount-input" style="width: 100%; padding: 6px 8px 6px 20px; border: 1px solid #cbd5e1; border-radius: 8px; font-weight: 700; font-size: 0.95em; color: #0f172a; box-sizing: border-box;" oninput="recalculateSummary()">
+                </div>
+
+                <select name="worker_payments[<%= u.id %>][payment_method]" style="padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.85em; font-weight: 600; background: white;">
+                  <option value="Efectivo" selected>💵 Efectivo</option>
+                  <option value="Zelle">⚡ Zelle</option>
+                  <option value="Pago Móvil">📱 Pago Móvil</option>
+                  <option value="Transferencia">🏦 Transf.</option>
+                </select>
+              </div>
+
+            </div>
+          <% end %>
+        </div>
+      <% else %>
+        <p style="color: #64748b; font-style: italic; text-align: center; padding: 15px;">No hay músicos ni personal asignados a este evento.</p>
+      <% end %>
+    </div>
+
+    <%# --- PASO 3: RESUMEN FINANCIERO Y ASIGNACIÓN AL FONDO --- %>
+    <div style="background: #0f172a; border-radius: 20px; padding: 26px; color: white; margin-bottom: 30px; box-shadow: 0 10px 25px -5px rgba(15,23,42,0.3);">
+      <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid #334155; padding-bottom: 14px;">
+        <span style="background: #8b5cf6; color: white; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; font-size: 0.85em;">3</span>
+        <h3 style="margin: 0; font-size: 1.25em; font-weight: 800; color: white;">Resumen del Cierre & Saldo Neto en Mano</h3>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 24px;">
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="font-size: 0.78em; color: #94a3b8; font-weight: 700; text-transform: uppercase;">1. Cobrado Hoy (Cliente)</div>
+          <div style="font-size: 1.6em; font-weight: 800; color: #34d399; margin-top: 4px;" id="summary-collected">$0.00</div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.05); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="font-size: 0.78em; color: #94a3b8; font-weight: 700; text-transform: uppercase;">2. Pagado Hoy (Equipo)</div>
+          <div style="font-size: 1.6em; font-weight: 800; color: #60a5fa; margin-top: 4px;" id="summary-paid">$0.00</div>
+        </div>
+
+        <div style="background: rgba(255,255,255,0.08); padding: 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.15);">
+          <div style="font-size: 0.78em; color: #cbd5e1; font-weight: 700; text-transform: uppercase;">3. Ganancia / Remanente</div>
+          <div style="font-size: 1.6em; font-weight: 800; color: #fbbf24; margin-top: 4px;" id="summary-surplus">$0.00</div>
+        </div>
+      </div>
+
+      <%# Opciones de Destino del Remanente %>
+      <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 18px; margin-bottom: 20px;">
+        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
+          <input type="checkbox" name="deposit_to_fund" id="deposit_to_fund" value="1" checked style="width: 20px; height: 20px; accent-color: #8b5cf6; margin-top: 2px;">
+          <div>
+            <div style="font-weight: 700; font-size: 1em; color: white;">
+              🏦 Depositar el remanente en la Caja General / Fondo de la <%= current_company.venue_mode? ? 'Empresa' : 'Banda' %>
+            </div>
+            <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #94a3b8; line-height: 1.4;">
+              Si está activado, creará un asiento de ingreso en tu libro de caja por la diferencia positiva entre lo que cobraste y lo que repartiste.
+            </p>
+          </div>
+        </label>
+        <input type="hidden" name="fund_amount" id="fund_amount" value="0">
+      </div>
+
+      <%# Botón Final %>
+      <div style="display: flex; justify-content: flex-end; gap: 14px; align-items: center; flex-wrap: wrap;">
+        <%= link_to "Cancelar", gig_path(@gig), style: "color: #94a3b8; text-decoration: none; font-weight: 700; font-size: 0.95em; padding: 10px 18px;" %>
+        <button type="submit" style="background: #10b981; color: white; border: none; padding: 14px 28px; border-radius: 12px; font-weight: 800; font-size: 1.05em; cursor: pointer; box-shadow: 0 4px 14px rgba(16,185,129,0.4); display: inline-flex; align-items: center; gap: 8px; transition: all 0.2s;" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">
+          <span>🏁 Confirmar Cierre del Evento</span>
+        </button>
+      </div>
+    </div>
+
+  <% end %>
+
+</div>
+
+<script>
+  function setClientAmount(val) {
+    const input = document.getElementById('client_collected_amount');
+    if (input) {
+      input.value = val;
+      recalculateSummary();
+    }
+  }
+
+  function selectAllWorkers(state) {
+    document.querySelectorAll('.worker-checkbox').forEach(cb => {
+      cb.checked = state;
+    });
+    recalculateSummary();
+  }
+
+  function toggleWorkerInput(userId) {
+    const inputsDiv = document.getElementById('worker-inputs-' + userId);
+    const cb = document.querySelector('input[name="worker_payments[' + userId + '][pay]"]');
+    if (inputsDiv && cb) {
+      inputsDiv.style.opacity = cb.checked ? '1' : '0.4';
+      inputsDiv.querySelectorAll('input, select').forEach(el => el.disabled = !cb.checked);
+    }
+  }
+
+  function recalculateSummary() {
+    // 1. Cobrado hoy
+    const clientInput = document.getElementById('client_collected_amount');
+    const collected = clientInput ? parseFloat(clientInput.value) || 0 : 0;
+
+    // 2. Pagado hoy a trabajadores
+    let totalPaid = 0;
+    document.querySelectorAll('.worker-row').forEach(row => {
+      const cb = row.querySelector('.worker-checkbox');
+      const amountInput = row.querySelector('.worker-amount-input');
+      if (cb && cb.checked && amountInput) {
+        totalPaid += parseFloat(amountInput.value) || 0;
+      }
+    });
+
+    // 3. Remanente
+    const surplus = collected - totalPaid;
+
+    // Actualizar DOM
+    const collectedEl = document.getElementById('summary-collected');
+    const paidEl = document.getElementById('summary-paid');
+    const surplusEl = document.getElementById('summary-surplus');
+    const fundAmountInput = document.getElementById('fund_amount');
+
+    if (collectedEl) collectedEl.innerText = '$' + collected.toFixed(2);
+    if (paidEl) paidEl.innerText = '$' + totalPaid.toFixed(2);
+    if (surplusEl) {
+      surplusEl.innerText = (surplus >= 0 ? '+' : '-') + ' $' + Math.abs(surplus).toFixed(2);
+      surplusEl.style.color = surplus >= 0 ? '#34d399' : '#f87171';
+    }
+    if (fundAmountInput) {
+      fundAmountInput.value = Math.max(surplus, 0).toFixed(2);
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    recalculateSummary();
+  });
+</script>

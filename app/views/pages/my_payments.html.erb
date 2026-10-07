@@ -227,5 +227,75 @@
     <% end %>
   </div>
 
+  <%# --- HISTORIAL DE RECIBOS DE NÓMINA OFICIALES --- %>
+  <% approved_payments = @employee_payments.select(&:approved?) %>
+  <% if approved_payments.any? %>
+    <div style="margin-top: 30px; background: white; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.03); overflow: hidden;">
+      <div style="padding: 20px 24px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h2 style="margin: 0; font-size: 1.1em; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>🧾</span> Tus Comprobantes Oficiales de Pago
+          </h2>
+          <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.85em;">
+            Recibos digitales certificados por el líder con folio y fecha de liquidación.
+          </p>
+        </div>
+        <span style="font-size: 0.8em; font-weight: 700; color: #16a34a; background: #dcfce7; padding: 4px 10px; border-radius: 99px;">
+          <%= approved_payments.count %> comprobante<%= approved_payments.count == 1 ? '' : 's' %>
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; divide-y: 1px solid #f1f5f9;">
+        <% approved_payments.each do |p| %>
+          <div style="padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1px solid #f8fafc;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span style="font-size: 1.4em; background: #eff6ff; color: #1e40af; width: 40px; height: 40px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800;">
+                📄
+              </span>
+              <div>
+                <div style="font-weight: 800; color: #0f172a; font-size: 0.95em;">
+                  <%= p.gig ? p.gig.client_display_name : "Liquidación General / Anticipo" %>
+                  <span style="color: #64748b; font-weight: 600; font-size: 0.85em; font-family: monospace; margin-left: 6px;">
+                    (<%= p.receipt_display_number %>)
+                  </span>
+                </div>
+                <div style="font-size: 0.82em; color: #64748b; margin-top: 2px;">
+                  Fecha: <%= p.date_paid&.strftime('%d/%m/%Y') || p.created_at.strftime('%d/%m/%Y') %> · Método: <%= p.payment_method || 'Efectivo' %>
+                  <% if p.notes.present? %>
+                    · <em>"<%= p.notes %>"</em>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <div style="text-align: right;">
+                <div style="font-size: 1.2em; font-weight: 900; color: #15803d;">
+                  <%= number_to_currency(p.amount, unit: '$') %>
+                </div>
+                <div style="font-size: 0.75em; color: #64748b; font-weight: 600;">Confirmado</div>
+              </div>
+
+              <div style="display: flex; gap: 8px;">
+                <%= link_to receipt_employee_payment_path(p), target: '_blank', style: "background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; padding: 7px 12px; border-radius: 8px; font-size: 0.82em; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;" do %>
+                  <span>📄</span> Ver Recibo
+                <% end %>
+
+                <%
+                  wa_text = p.whatsapp_receipt_text(receipt_employee_payment_url(p))
+                  wa_url = "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_text)}"
+                %>
+                <a href="<%= wa_url %>" target="_blank" style="background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; padding: 7px 12px; border-radius: 8px; font-size: 0.82em; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px;">
+                  <span>📲</span> WhatsApp
+                </a>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
 </div>
+
 

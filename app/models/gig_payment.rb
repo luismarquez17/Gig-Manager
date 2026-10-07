@@ -3,10 +3,11 @@
 class GigPayment < ApplicationRecord
   include FinancialAuditable
 
-  STATUSES = %w[approved pending_approval rejected].freeze
+  STATUSES = %w[approved pending_approval rejected voided].freeze
 
   belongs_to :gig
   belongs_to :approved_by, class_name: 'User', optional: true
+  belongs_to :voided_by, class_name: 'User', optional: true
   has_one_attached :receipt_image
 
   CATEGORIES = %w[reinvest waste other].freeze
@@ -37,6 +38,8 @@ class GigPayment < ApplicationRecord
   scope :approved, -> { where(status: 'approved') }
   scope :pending_approval, -> { where(status: 'pending_approval') }
   scope :rejected, -> { where(status: 'rejected') }
+  scope :voided, -> { where(status: 'voided') }
+  scope :active_records, -> { where.not(status: 'voided') }
   scope :reported_by_clients, -> { where(reported_by_client: true) }
 
   def approved?
@@ -51,11 +54,25 @@ class GigPayment < ApplicationRecord
     status == 'rejected'
   end
 
+  def voided?
+    status == 'voided'
+  end
+
+  def void!(reason, user = nil)
+    self.status = 'voided'
+    self.voided_at = Time.current
+    self.void_reason = reason.presence || 'Anulación contable por el usuario'
+    self.voided_by = user if user.present?
+    self.audit_reason = "Anulación de cobro: #{self.void_reason}"
+    save!
+  end
+
   def status_label
     case status
     when 'approved'         then 'Confirmado'
     when 'pending_approval' then 'En Revisión'
     when 'rejected'         then 'Rechazado'
+    when 'voided'           then 'Anulado'
     else status.to_s.humanize
     end
   end
@@ -65,6 +82,7 @@ class GigPayment < ApplicationRecord
     when 'approved'         then '#dcfce7'
     when 'pending_approval' then '#fef3c7'
     when 'rejected'         then '#fee2e2'
+    when 'voided'           then '#fee2e2'
     else '#f1f5f9'
     end
   end
@@ -74,6 +92,7 @@ class GigPayment < ApplicationRecord
     when 'approved'         then '#166534'
     when 'pending_approval' then '#92400e'
     when 'rejected'         then '#991b1b'
+    when 'voided'           then '#991b1b'
     else '#475569'
     end
   end
@@ -83,8 +102,43 @@ class GigPayment < ApplicationRecord
     when 'approved'         then '✅'
     when 'pending_approval' then '⏳'
     when 'rejected'         then '❌'
+    when 'voided'           then '🚫'
     else '📄'
     end
+  end
+
+  def whatsapp_receipt_text(receipt_url = nil)
+    comp_name = gig&.company&.name.presence || "Gig Manager"
+    c_name = gig&.client_display_name || "Estimado(a) Cliente"
+    dt = date_paid ? date_paid.strftime('%d/%m/%Y') : Date.today.strftime('%d/%m/%Y')
+    amt = sprintf('%.2f', amount.to_f)
+    curr = currency.presence || 'USD'
+    f_num = receipt_display_number
+    pm_label = payment_method_label
+
+    lines = [
+      "🧾 *COMPROBANTE DE PAGO - #{comp_name.upcase}*",
+      "─────────────────────────",
+      "📄 *Folio:* #{f_num}",
+      "👤 *Cliente:* #{c_name}",
+      "📅 *Fecha de Pago:* #{dt}",
+      "💵 *Monto Abonado:* $#{amt} #{curr}",
+      "💳 *Método:* #{pm_label}",
+      "─────────────────────────"
+    ]
+
+    if gig.present?
+      rem = sprintf('%.2f', remaining_after_this_payment)
+      lines << "📊 *Saldo Restante del Evento:* $#{rem} #{curr}"
+      lines << "─────────────────────────"
+    end
+
+    if receipt_url.present?
+      lines << "🔗 *Ver Recibo Digital Oficial:*"
+      lines << receipt_url.to_s
+    end
+
+    lines.join("\n")
   end
 
   def payment_method_label

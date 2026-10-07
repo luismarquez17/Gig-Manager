@@ -1,13 +1,13 @@
 class CashAdjustmentsController < ApplicationController
   before_action :require_leader!
   before_action -> { require_module!(:finances) }
-  before_action :set_cash_adjustment, only: [:edit, :update, :destroy]
+  before_action :set_cash_adjustment, only: [:edit, :update, :destroy, :void]
 
   def index
     @adjustments = current_company.cash_adjustments.recent_first
 
     # 1. Componentes de Entrada (Inflows)
-    @total_gigs_received   = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).sum(:amount).to_f
+    @total_gigs_received   = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).approved.sum(:amount).to_f
     @total_cash_deposits   = current_company.cash_adjustments.inflows.sum(:amount).to_f
     @total_inflow          = (@total_gigs_received + @total_cash_deposits).round(2)
 
@@ -183,6 +183,14 @@ class CashAdjustmentsController < ApplicationController
   def destroy
     @cash_adjustment.destroy
     redirect_to cash_adjustments_path, notice: "Movimiento de caja eliminado exitosamente."
+  end
+
+  def void
+    reason = params[:void_reason].presence || params[:reason].presence || "Anulación contable solicitada por el usuario"
+    @cash_adjustment.void!(reason, current_user)
+    redirect_to cash_adjustments_path, notice: "🚫 Movimiento de caja anulado exitosamente."
+  rescue StandardError => e
+    redirect_to cash_adjustments_path, alert: "Error al anular movimiento: #{e.message}"
   end
 
   private

@@ -4,6 +4,7 @@ class CashAdjustment < ApplicationRecord
 
   belongs_to :company
   belongs_to :user, optional: true
+  belongs_to :voided_by, class_name: 'User', optional: true
 
   enum adjustment_type: {
     deposit: 0,
@@ -12,6 +13,7 @@ class CashAdjustment < ApplicationRecord
   }
 
   before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
+  before_validation { self.status = 'approved' if status.blank? }
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :date, presence: true
@@ -19,8 +21,28 @@ class CashAdjustment < ApplicationRecord
   validates :currency, presence: true
 
   scope :recent_first, -> { order(date: :desc, created_at: :desc) }
-  scope :inflows, -> { where(adjustment_type: [:deposit, :initial_balance]) }
-  scope :outflows, -> { where(adjustment_type: :withdrawal) }
+  scope :approved, -> { where(status: 'approved') }
+  scope :voided, -> { where(status: 'voided') }
+  scope :active_records, -> { where.not(status: 'voided') }
+  scope :inflows, -> { where(adjustment_type: [:deposit, :initial_balance]).where(status: 'approved') }
+  scope :outflows, -> { where(adjustment_type: :withdrawal).where(status: 'approved') }
+
+  def approved?
+    status == 'approved'
+  end
+
+  def voided?
+    status == 'voided'
+  end
+
+  def void!(reason, current_user = nil)
+    self.status = 'voided'
+    self.voided_at = Time.current
+    self.void_reason = reason.presence || 'Anulación contable por el usuario'
+    self.voided_by = current_user if current_user.present?
+    self.audit_reason = "Anulación de movimiento de caja: #{self.void_reason}"
+    save!
+  end
 
   def inflow?
     deposit? || initial_balance?

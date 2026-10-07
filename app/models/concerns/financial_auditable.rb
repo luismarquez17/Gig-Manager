@@ -60,6 +60,7 @@ module FinancialAuditable
       new_status = changes_to_log['status'].last.to_s
       action = 'approved' if new_status == 'approved'
       action = 'rejected' if new_status == 'rejected'
+      action = 'voided'   if new_status == 'voided'
     end
 
     current_currency = respond_to?(:currency) ? (currency.presence || 'USD') : 'USD'

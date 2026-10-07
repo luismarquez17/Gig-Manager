@@ -568,7 +568,7 @@
               Si deseas realizar un anticipo para asegurar tu fecha, puedes utilizar cualquiera de nuestras cuentas oficiales:
             </p>
           </div>
-          <%= render 'shared/payment_methods_cards', company: @company, dark_theme: true %>
+          <%= render 'shared/payment_methods_cards', company: @company, dark_theme: true, target_amount: (@quote.advance_amount.to_f > 0 ? @quote.advance_amount : @quote.amount) %>
         </div>
       <% end %>
     </section>
@@ -605,7 +605,7 @@
           <p style="color: #cbd5e1; font-size: 0.85rem; margin: 0 0 14px 0;">
             Copia los datos de la cuenta que prefieras para realizar tu transferencia o abono:
           </p>
-          <%= render 'shared/payment_methods_cards', company: @company, dark_theme: true %>
+          <%= render 'shared/payment_methods_cards', company: @company, dark_theme: true, target_amount: (@quote.advance_amount.to_f > 0 ? @quote.advance_amount : @quote.amount) %>
         </div>
       <% end %>
 

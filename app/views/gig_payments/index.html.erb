@@ -55,13 +55,18 @@
           <tbody>
             <% if @payments.any? %>
               <% @payments.each do |p| %>
-                <tr style="border-bottom: 1px solid #f1f5f9;">
+                <tr style="border-bottom: 1px solid #f1f5f9; <%= p.voided? ? 'background: #fef2f2; opacity: 0.75;' : '' %>">
                   <td style="padding: 12px 16px; font-weight: 700; color: #1e40af;">
                     <span style="background: #eff6ff; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 6px; font-size: 0.85em;">
                       <%= p.receipt_display_number %>
                     </span>
+                    <% if p.voided? %>
+                      <span style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 800; margin-left: 4px;">
+                        🚫 ANULADO
+                      </span>
+                    <% end %>
                   </td>
-                  <td style="padding: 12px 16px; font-weight: 800; color: #0f172a; font-size: 1.05em;">
+                  <td style="padding: 12px 16px; font-weight: 800; color: <%= p.voided? ? '#991b1b' : '#0f172a' %>; font-size: 1.05em; <%= p.voided? ? 'text-decoration: line-through;' : '' %>">
                     $ <%= number_with_precision(p.amount, precision: 2) %> <span style="font-size: 0.75em; color: #64748b;"><%= p.currency %></span>
                   </td>
                   <td style="padding: 12px 16px;">
@@ -77,14 +82,25 @@
                   </td>
                   <td style="padding: 12px 16px; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="<%= p.notes %>">
                     <%= p.notes.presence || '---' %>
+                    <% if p.voided? && p.void_reason.present? %>
+                      <div style="font-size: 0.78em; color: #991b1b; font-weight: 600; margin-top: 2px;">
+                        🚫 "<%= p.void_reason %>"
+                      </div>
+                    <% end %>
                   </td>
                   <td class="text-center" style="padding: 12px 16px;">
                     <div style="display: flex; gap: 6px; justify-content: center; align-items: center;">
                       <%= link_to receipt_gig_payment_path(p), target: '_blank', class: 'btn-main py-1 px-2 fs-7', style: 'background: #0f172a; color: white; text-decoration: none; border-radius: 6px; font-size: 0.8em; font-weight: 700;', title: 'Ver e Imprimir Comprobante Oficial' do %>
                         📄 Recibo
                       <% end %>
-                      <%= link_to '✏️', edit_gig_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', style: 'text-decoration: none; border-radius: 6px; padding: 4px 8px;', title: 'Editar pago' %>
-                      <%= button_to '🗑️', gig_payment_path(p), method: :delete, data: { turbo_confirm: '¿Eliminar este pago? Se registrará automáticamente en el libro de auditoría contable.' }, class: 'btn-main py-1 px-2 fs-7', style: 'background:#fff1f2; color:#e11d48; border:1px solid #fecaca; cursor:pointer; border-radius: 6px; padding: 4px 8px;', title: 'Eliminar pago' %>
+
+                      <% unless p.voided? %>
+                        <%= link_to '✏️', edit_gig_payment_path(p), class: 'btn-main btn-gray-custom py-1 px-2 fs-7', style: 'text-decoration: none; border-radius: 6px; padding: 4px 8px;', title: 'Editar pago' %>
+                        
+                        <button type="button" onclick="promptVoidGigPayment(<%= p.id %>, '<%= j(p.receipt_display_number) %>')" class="btn-main py-1 px-2 fs-7" style="background:#fff1f2; color:#991b1b; border:1px solid #fecaca; cursor:pointer; border-radius: 6px; padding: 4px 8px; font-weight: 700;" title="Anular Movimiento Contable">
+                          🚫
+                        </button>
+                      <% end %>
                     </div>
                   </td>
                 </tr>
@@ -198,3 +214,36 @@
     </div>
   <% end %>
 </div>
+
+<script>
+  function promptVoidGigPayment(paymentId, receiptFolio) {
+    const reason = prompt("🚫 ANULACIÓN CONTABLE DE ABONO\n\nIndica el motivo obligatorio de la anulación para el cobro " + (receiptFolio || "") + " (ej. Comprobante rechazado, transferencia duplicada, etc.):");
+    if (reason === null) return; // Cancelled
+    if (reason.trim() === "") {
+      alert("⚠️ Es obligatorio ingresar un motivo para registrar la anulación en la auditoría contable.");
+      return;
+    }
+
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/gig_payments/' + paymentId + '/void';
+
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+    if (csrfToken) {
+      const csrfInput = document.createElement('input');
+      csrfInput.type = 'hidden';
+      csrfInput.name = 'authenticity_token';
+      csrfInput.value = csrfToken;
+      form.appendChild(csrfInput);
+    }
+
+    const reasonInput = document.createElement('input');
+    reasonInput.type = 'hidden';
+    reasonInput.name = 'void_reason';
+    reasonInput.value = reason;
+    form.appendChild(reasonInput);
+
+    document.body.appendChild(form);
+    form.submit();
+  }
+</script>

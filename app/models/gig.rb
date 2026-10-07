@@ -400,7 +400,11 @@ class Gig < ApplicationRecord
               item_names.any? { |n| n.include?('subwoofer') || n.include?('bajo') }
     has_extra_time = details_text.include?('hora extra') || details_text.include?('horas extra') || details_text.include?('tiempo extra') || details_text.include?('extra time')
 
-    standard_catalog = (company&.standard_upsells || StandardUpsell.where(company: company)).all_with_defaults.select(&:active)
+    standard_catalog = if company.present?
+      company.standard_upsells.all_with_defaults.select(&:active)
+    else
+      StandardUpsell.all_with_defaults.select(&:active)
+    end
     custom_map = custom_upsells || {}
 
     # Obtenemos las solicitudes de adicionales de este evento para saber el estado

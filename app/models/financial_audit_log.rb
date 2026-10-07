@@ -7,7 +7,7 @@ class FinancialAuditLog < ApplicationRecord
   belongs_to :user, optional: true
   belongs_to :auditable, polymorphic: true, optional: true
 
-  ACTIONS = %w[created updated deleted approved rejected].freeze
+  ACTIONS = %w[created updated deleted approved rejected voided].freeze
 
   validates :action, presence: true, inclusion: { in: ACTIONS }
   validates :auditable_type, presence: true
@@ -26,6 +26,7 @@ class FinancialAuditLog < ApplicationRecord
     when 'deleted'  then 'Eliminación'
     when 'approved' then 'Aprobación'
     when 'rejected' then 'Rechazo'
+    when 'voided'   then 'Anulación Contable'
     else action.humanize
     end
   end
@@ -37,6 +38,7 @@ class FinancialAuditLog < ApplicationRecord
     when 'deleted'  then '#fee2e2'
     when 'approved' then '#e0f2fe'
     when 'rejected' then '#f3e8ff'
+    when 'voided'   then '#fee2e2'
     else '#f1f5f9'
     end
   end
@@ -48,6 +50,7 @@ class FinancialAuditLog < ApplicationRecord
     when 'deleted'  then '#991b1b'
     when 'approved' then '#0369a1'
     when 'rejected' then '#6b21a8'
+    when 'voided'   then '#991b1b'
     else '#334155'
     end
   end
@@ -59,6 +62,7 @@ class FinancialAuditLog < ApplicationRecord
     when 'deleted'  then '🗑️'
     when 'approved' then '✅'
     when 'rejected' then '❌'
+    when 'voided'   then '🚫'
     else '📝'
     end
   end
