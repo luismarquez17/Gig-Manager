@@ -4,7 +4,7 @@ class GigsController < ApplicationController
   before_action -> { require_module!(:inventory) }, only: [:load_in_checklist, :add_kit]
   before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract, :flashcard, :stage_mode]
   before_action :check_gig_assignment, only: [:show, :load_in_checklist, :flashcard, :stage_mode]
-  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :stage_mode, :add_upsell, :edit, :update, :destroy, :closeout, :process_closeout]
+  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :stage_mode, :add_upsell, :edit, :update, :destroy, :closeout, :process_closeout, :save_profit_to_goal]
 
   def check_gig_assignment
     @gig = current_company.gigs.find_by!(id: params[:id])
@@ -80,6 +80,16 @@ class GigsController < ApplicationController
     @gig = current_company.gigs.includes(:client, :gig_payments, :gig_timeline_items, :gig_upsell_requests, :employee_payments, staff_assignments: :user).find(params[:id])
     @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
     @new_gig_item = GigItem.new
+
+    if current_user.leader? || current_user.superadmin?
+      @active_goals = current_company.reinvestment_goals.active.order(priority: :desc, created_at: :desc)
+      @primary_goal = @active_goals.first
+      if @primary_goal.present?
+        @goal_recommendation_service = GoalRecommendationService.new(company: current_company, gig: @gig, goal: @primary_goal)
+        @goal_recommendations = @goal_recommendation_service.smart_recommendations
+        @goal_breakdown = @goal_recommendation_service.items_breakdown(@gig.net_free_money_unallocated)
+      end
+    end
   end
 
   def load_in_checklist
@@ -430,6 +440,13 @@ class GigsController < ApplicationController
       }
     end
     @total_pending_payroll = @worker_unpaid_items.sum { |item| item[:pending] }
+
+    @active_goals = current_company.reinvestment_goals.active.order(priority: :desc, created_at: :desc)
+    @primary_goal = @active_goals.first
+    if @primary_goal.present?
+      @recommendation_service = GoalRecommendationService.new(company: current_company, gig: @gig, goal: @primary_goal)
+      @smart_recommendations = @recommendation_service.smart_recommendations
+    end
   end
 
   def process_closeout
@@ -441,6 +458,11 @@ class GigsController < ApplicationController
     worker_payments_data = params[:worker_payments] || {}
     fund_allocation_amount = params[:fund_amount].to_s.tr(',', '.').strip.to_f
     fund_notes = params[:fund_notes].presence || "Ingreso de remanente por cierre de evento: #{@gig.client_display_name}"
+
+    save_to_goal = params[:deposit_to_goal] == '1' || params[:deposit_to_goal] == true
+    goal_id = params[:reinvestment_goal_id].presence
+    goal_amount = params[:goal_amount].to_s.tr(',', '.').strip.to_f
+    goal_notes = params[:goal_notes].presence || "Aporte de ganancia neta por cierre de show: #{@gig.client_display_name}"
 
     ActiveRecord::Base.transaction do
       # 1. Registrar cobro del cliente si se cobró dinero hoy
@@ -481,7 +503,22 @@ class GigsController < ApplicationController
         )
       end
 
-      # 3. Asignar excedente al Fondo de la Empresa / Caja si se especificó
+      # 3. Asignar excedente a la Meta de Reinversión seleccionada
+      if save_to_goal && goal_id.present? && goal_amount > 0
+        target_goal = current_company.reinvestment_goals.find_by(id: goal_id)
+        if target_goal
+          target_goal.goal_savings_contributions.create!(
+            amount: goal_amount,
+            currency: @gig.currency.presence || 'USD',
+            date: Date.today,
+            user: current_user,
+            gig: @gig,
+            notes: goal_notes
+          )
+        end
+      end
+
+      # 4. Asignar excedente al Fondo de la Empresa / Caja si se especificó
       if fund_allocation_amount > 0 && (params[:deposit_to_fund] == '1' || params[:deposit_to_fund] == true)
         current_company.cash_adjustments.create!(
           user: current_user,
@@ -501,6 +538,39 @@ class GigsController < ApplicationController
     redirect_to closeout_gig_path(@gig), alert: "Error al procesar el cierre: #{e.message}"
   rescue StandardError => e
     redirect_to closeout_gig_path(@gig), alert: "Ocurrió un problema: #{e.message}"
+  end
+
+  def save_profit_to_goal
+    goal_id = params[:reinvestment_goal_id].presence
+    amount = params[:amount].to_s.tr(',', '.').strip.to_f
+    notes = params[:notes].presence || "Aporte de ganancia libre del evento #{@gig.client_display_name}"
+
+    if goal_id.blank?
+      redirect_to gig_path(@gig), alert: "Debes seleccionar una meta de ahorro."
+      return
+    end
+
+    if amount <= 0
+      redirect_to gig_path(@gig), alert: "El monto a ahorrar debe ser mayor a 0."
+      return
+    end
+
+    goal = current_company.reinvestment_goals.find(goal_id)
+    contribution = goal.goal_savings_contributions.create!(
+      amount: amount,
+      currency: @gig.currency.presence || 'USD',
+      date: Date.today,
+      user: current_user,
+      gig: @gig,
+      notes: notes
+    )
+
+    formatted = helpers.number_with_precision(amount, precision: 2)
+    redirect_to gig_path(@gig), notice: "🎉 ¡Se han guardado $#{formatted} USD de ganancia neta en la meta '#{goal.title}'! Tu progreso avanzó al #{goal.progress_percentage}%."
+  rescue ActiveRecord::RecordNotFound
+    redirect_to gig_path(@gig), alert: "Meta de ahorro no encontrada."
+  rescue StandardError => e
+    redirect_to gig_path(@gig), alert: "No se pudo registrar el ahorro: #{e.message}"
   end
 
   private

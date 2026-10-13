@@ -1,0 +1,286 @@
+<%# Partial: _leader_reinvestment_area.html.erb %>
+<% if current_user.leader? || current_user.superadmin? %>
+  <%
+    net_free = gig.net_free_money
+    unallocated_free = gig.net_free_money_unallocated
+    total_saved_gig = gig.total_saved_for_goals
+    primary_goal = local_assigns[:primary_goal] || @primary_goal
+    active_goals = local_assigns[:active_goals] || @active_goals || current_company.reinvestment_goals.active.order(priority: :desc)
+    recommendations = local_assigns[:recommendations] || @goal_recommendations || []
+  %>
+
+  <div style="background: white; border: 1.5px solid #c7d2fe; border-radius: 24px; padding: 26px; box-shadow: 0 10px 30px rgba(67, 56, 202, 0.06); margin-bottom: 30px; position: relative; overflow: hidden;">
+    
+    <%# Decoración de fondo sutil %>
+    <div style="position: absolute; top: 0; right: 0; width: 200px; height: 200px; background: radial-gradient(circle, rgba(99,102,241,0.08) 0%, rgba(255,255,255,0) 70%); pointer-events: none;"></div>
+
+    <%# --- ENCABEZADO DEL ÁREA DEL LÍDER --- %>
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 14px; margin-bottom: 22px; border-bottom: 1px solid #f1f5f9; padding-bottom: 16px;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 1.6rem; background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);">
+          💎
+        </span>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <h2 style="margin: 0; font-size: 1.3rem; font-weight: 900; color: #0f172a; letter-spacing: -0.3px;">
+              Área del Líder: Ganancia Neta &amp; Metas de Reinversión
+            </h2>
+            <span style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">
+              Exclusivo Líderes
+            </span>
+          </div>
+          <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.88rem;">
+            Control del dinero neto que le queda a la agrupación tras pagar la nómina y asignación a metas para mejorar el grupo.
+          </p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center;">
+        <%= link_to reinvestment_goals_path, style: "background: #f8fafc; color: #4338ca; border: 1.5px solid #c7d2fe; padding: 8px 14px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" do %>
+          <span>🎯</span> Ver Todas las Metas
+        <% end %>
+
+        <% if primary_goal.present? && unallocated_free > 0 %>
+          <button type="button" onclick="openGigSaveProfitModal()" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 9px 18px; border-radius: 10px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+            <span>💰</span> Guardar Ganancia en Ahorro
+          </button>
+        <% end %>
+      </div>
+    </div>
+
+    <%# --- 3 TARJETAS DE FLUJO NETO DE ESTE SHOW --- %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 22px;">
+      
+      <%# 1. Total Cobrado %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">1. Cobrado al Cliente</div>
+        <div style="font-size: 1.35rem; font-weight: 900; color: #0f172a; margin-top: 2px; font-family: 'Outfit', sans-serif;">
+          $<%= number_with_precision(gig.total_received, precision: 2) %>
+          <small style="font-size: 0.55em; color: #64748b;">de $<%= number_with_precision(gig.amount, precision: 2) %></small>
+        </div>
+      </div>
+
+      <%# 2. Nómina Pagada %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px 16px;">
+        <div style="font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase;">2. Nómina Pagada al Equipo</div>
+        <div style="font-size: 1.35rem; font-weight: 900; color: #dc2626; margin-top: 2px; font-family: 'Outfit', sans-serif;">
+          -$<%= number_with_precision(gig.total_payroll_paid, precision: 2) %>
+          <small style="font-size: 0.55em; color: #64748b;">(Acordada: $<%= number_with_precision(gig.total_payroll_agreed, precision: 2) %>)</small>
+        </div>
+      </div>
+
+      <%# 3. Dinero Neto Libre %>
+      <div style="background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 14px; padding: 14px 16px;">
+        <div style="font-size: 0.75rem; font-weight: 800; color: #047857; text-transform: uppercase; display: flex; justify-content: space-between;">
+          <span>3. Dinero Neto Libre en Mano</span>
+          <% if total_saved_gig > 0 %>
+            <span style="color: #059669; font-weight: 700;">(Ahorrado: $<%= number_with_precision(total_saved_gig, precision: 2) %>)</span>
+          <% end %>
+        </div>
+        <div style="font-size: 1.45rem; font-weight: 900; color: #059669; margin-top: 2px; font-family: 'Outfit', sans-serif;">
+          +$<%= number_with_precision(net_free, precision: 2) %> <span style="font-size: 0.55em;">USD</span>
+        </div>
+      </div>
+
+    </div>
+
+    <%# --- META ACTIVA Y BARRA DE PROGRESO CON FOTO --- %>
+    <% if primary_goal.present? %>
+      <%
+        pct = primary_goal.progress_percentage
+        bar_color = if pct >= 100 then '#10b981' elsif pct >= 60 then '#3b82f6' elsif pct >= 30 then '#f59e0b' else '#6366f1' end
+      %>
+      <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 18px; padding: 20px; margin-bottom: 20px;">
+        <div style="display: grid; grid-template-columns: 160px 1fr auto; gap: 20px; align-items: center;" class="gig-goal-spotlight-grid">
+          
+          <%# Foto de la Meta %>
+          <div style="width: 160px; height: 120px; border-radius: 14px; overflow: hidden; background: #0f172a; border: 1.5px solid #cbd5e1; position: relative; flex-shrink: 0;">
+            <% if primary_goal.image_attached? %>
+              <img src="<%= primary_goal.image_url_or_data %>" alt="<%= primary_goal.title %>" style="width: 100%; height: 100%; object-fit: cover;">
+            <% else %>
+              <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1e1b4b, #312e81); display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white;">
+                🎯
+              </div>
+            <% end %>
+            <div style="position: absolute; bottom: 6px; right: 6px; background: rgba(15, 23, 42, 0.85); color: white; padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800;">
+              <%= pct %>%
+            </div>
+          </div>
+
+          <%# Datos de la Meta & Barra %>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+              <span style="font-size: 0.72rem; font-weight: 800; color: #4338ca; background: #e0e7ff; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">
+                Meta Activa del Grupo
+              </span>
+              <span style="font-size: 0.75rem; color: #64748b;">
+                Prioridad: <%= primary_goal.priority.capitalize %>
+              </span>
+            </div>
+
+            <h3 style="margin: 0 0 6px 0; font-size: 1.25rem; font-weight: 900; color: #0f172a;">
+              <%= link_to primary_goal.title, reinvestment_goal_path(primary_goal), style: "color: #0f172a; text-decoration: none;" %>
+            </h3>
+
+            <% if primary_goal.objective.present? %>
+              <p style="margin: 0 0 10px 0; font-size: 0.84rem; color: #475569; line-height: 1.4;">
+                <strong>Objetivo:</strong> <%= truncate(primary_goal.objective, length: 120) %>
+              </p>
+            <% end %>
+
+            <%# Barra de progreso %>
+            <div>
+              <div style="display: flex; justify-content: space-between; font-size: 0.8rem; font-weight: 800; margin-bottom: 4px;">
+                <span style="color: #059669;">Ahorrado: $<%= number_with_precision(primary_goal.saved_amount, precision: 2) %></span>
+                <span style="color: #64748b;">Meta: $<%= number_with_precision(primary_goal.effective_target_amount, precision: 2) %> USD</span>
+              </div>
+              <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden;">
+                <div style="width: <%= pct %>%; height: 100%; background: <%= bar_color %>; border-radius: 99px; transition: width 0.4s ease;"></div>
+              </div>
+              <div style="font-size: 0.74rem; color: #64748b; margin-top: 3px;">
+                Faltan: <strong style="color: #d97706;">$<%= number_with_precision(primary_goal.pending_amount, precision: 2) %> USD</strong>
+                · <%= primary_goal.shopping_items.count %> ítems a comprar
+              </div>
+            </div>
+          </div>
+
+          <%# Botón rápido %>
+          <div style="display: flex; flex-direction: column; gap: 8px; justify-content: center; min-width: 160px;">
+            <% if unallocated_free > 0 %>
+              <button type="button" onclick="openGigSaveProfitModal()" style="background: #10b981; color: white; border: none; padding: 12px 16px; border-radius: 12px; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.25);">
+                <span>💰</span> Guardar $ <%= number_with_precision(unallocated_free, precision: 2) %>
+              </button>
+            <% else %>
+              <div style="background: #ecfdf5; border: 1px solid #a7f3d0; border-radius: 10px; padding: 10px; text-align: center; color: #065f46; font-size: 0.8rem; font-weight: 700;">
+                ✓ Ganancia ya asignada
+              </div>
+            <% end %>
+
+            <%= link_to reinvestment_goal_path(primary_goal), style: "background: white; color: #334155; border: 1px solid #cbd5e1; padding: 8px 12px; border-radius: 10px; font-weight: 700; font-size: 0.82rem; text-decoration: none; text-align: center;" do %>
+              Ver Desglose de Ítems
+            <% end %>
+          </div>
+
+        </div>
+      </div>
+    <% else %>
+      <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 16px; padding: 22px; text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 2rem; margin-bottom: 6px;">🎯</div>
+        <h4 style="margin: 0 0 4px 0; color: #0f172a; font-size: 1.05rem;">Aún no tienes metas de reinversión creadas</h4>
+        <p style="margin: 0 0 14px 0; color: #64748b; font-size: 0.85rem;">
+          Crea una meta (ej. 4 metros de estructura truss o luces) para guardar automáticamente el dinero neto de este show.
+        </p>
+        <%= link_to new_reinvestment_goal_path, style: "background: #4f46e5; color: white; padding: 9px 18px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px;" do %>
+          <span>➕</span> Crear Nueva Meta de Reinversión
+        <% end %>
+      </div>
+    <% end %>
+
+    <%# --- RECOMENDADOR INTELIGENTE EN VIVO PARA ESTE SHOW --- %>
+    <% if recommendations.any? %>
+      <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1.5px solid #4338ca; border-radius: 18px; padding: 18px 22px; color: white;">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px; font-weight: 900; font-size: 1rem;">
+          <span>🤖</span>
+          <span>Recomendador Inteligente para este Show:</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px;">
+          <% recommendations.first(2).each do |rec| %>
+            <div style="background: rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 14px; font-size: 0.86rem; line-height: 1.45; display: flex; flex-direction: column; justify-content: space-between; gap: 8px;">
+              <div>
+                <div style="font-weight: 800; color: white; display: flex; align-items: center; gap: 6px; margin-bottom: 3px;">
+                  <span><%= rec[:emoji] %></span>
+                  <span><%= rec[:title] %></span>
+                </div>
+                <div style="color: #cbd5e1;">
+                  <%= rec[:message] %>
+                </div>
+              </div>
+
+              <% if rec[:item].present? && primary_goal.present? && rec[:type] == :ready_to_buy %>
+                <div style="display: flex; justify-content: flex-end; margin-top: 4px;">
+                  <%= button_to quick_purchase_item_reinvestment_goal_path(primary_goal, item_id: rec[:item].id), method: :post, style: "background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;", data: { turbo_confirm: "¿Comprar '#{rec[:item].name}' ahora y pasarlo al inventario?" } do %>
+                    🛒 Comprar Ahora
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+
+  <%# --- MODAL RÁPIDO PARA GUARDAR LA GANANCIA DE ESTE SHOW EN UNA META --- %>
+  <% if active_goals.any? %>
+    <div id="gig-save-profit-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 15px;">
+      <div style="background: white; border-radius: 22px; max-width: 480px; width: 100%; padding: 26px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); border: 1.5px solid #cbd5e1; position: relative;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 1.2rem; font-weight: 900; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>💰</span> Guardar Ganancia Neta en Meta
+          </h3>
+          <button type="button" onclick="closeGigSaveProfitModal()" style="background: none; border: none; font-size: 1.4rem; color: #94a3b8; cursor: pointer;">✕</button>
+        </div>
+
+        <%= form_with url: save_profit_to_goal_gig_path(gig), method: :post, local: true do |f| %>
+          
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+              Seleccionar Meta de Destino *
+            </label>
+            <%= select_tag :reinvestment_goal_id, options_for_select(active_goals.map { |g| ["🎯 #{g.title} (Ahorrado: $#{sprintf('%.2f', g.saved_amount)} / Meta: $#{sprintf('%.2f', g.effective_target_amount)})", g.id] }, primary_goal&.id), style: "width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.92rem; font-weight: 700; color: #0f172a; background: white;" %>
+          </div>
+
+          <div style="margin-bottom: 16px;">
+            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+              Monto a Guardar ($ USD) *
+            </label>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 14px; top: 12px; color: #64748b; font-weight: 800;">$</span>
+              <input type="number" step="0.01" min="0.01" max="<%= [unallocated_free, 0.0].max %>" name="amount" id="gig_save_profit_amount" value="<%= sprintf('%.2f', [unallocated_free, 0.0].max) %>" required style="width: 100%; padding: 12px 14px 12px 30px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 1.15rem; font-weight: 900; color: #059669; box-sizing: border-box;">
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px;">
+              <small style="color: #64748b; font-size: 0.78rem;">Dinero neto disponible de este show: <strong>$<%= number_with_precision(unallocated_free, precision: 2) %> USD</strong></small>
+              <button type="button" onclick="document.getElementById('gig_save_profit_amount').value = '<%= sprintf('%.2f', [unallocated_free, 0.0].max) %>'" style="background: none; border: none; color: #4338ca; font-size: 0.76rem; font-weight: 800; cursor: pointer; text-decoration: underline;">
+                Poner el 100%
+              </button>
+            </div>
+          </div>
+
+          <div style="margin-bottom: 22px;">
+            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+              Notas / Referencia (Opcional)
+            </label>
+            <input type="text" name="notes" value="Ganancia neta libre del evento: <%= gig.client_display_name %>" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; box-sizing: border-box;">
+          </div>
+
+          <div style="display: flex; justify-content: flex-end; gap: 10px;">
+            <button type="button" onclick="closeGigSaveProfitModal()" style="background: #f1f5f9; color: #475569; border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;">
+              Cancelar
+            </button>
+            <button type="submit" style="background: #10b981; color: white; border: none; padding: 10px 22px; border-radius: 10px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+              Confirmar &amp; Guardar Ahorro
+            </button>
+          </div>
+
+        <% end %>
+
+      </div>
+    </div>
+
+    <script>
+      function openGigSaveProfitModal() {
+        const modal = document.getElementById('gig-save-profit-modal');
+        if (modal) modal.style.display = 'flex';
+      }
+
+      function closeGigSaveProfitModal() {
+        const modal = document.getElementById('gig-save-profit-modal');
+        if (modal) modal.style.display = 'none';
+      }
+    </script>
+  <% end %>
+
+<% end %>

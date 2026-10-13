@@ -10,6 +10,8 @@ class Company < ApplicationRecord
   has_many :preset_budgets, dependent: :destroy
   has_many :standard_upsells, dependent: :destroy
   has_many :shopping_items, dependent: :destroy
+  has_many :reinvestment_goals, dependent: :destroy
+  has_many :goal_savings_contributions, dependent: :destroy
   has_many :finance_settings, dependent: :destroy
   has_many :employee_payments, dependent: :destroy
   has_many :subscription_payments, dependent: :destroy

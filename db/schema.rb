@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_13_010000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -421,6 +421,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
     t.index ["portal_token"], name: "index_gigs_on_portal_token", unique: true
   end
 
+  create_table "goal_savings_contributions", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.bigint "reinvestment_goal_id", null: false
+    t.bigint "gig_id"
+    t.bigint "user_id"
+    t.decimal "amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD", null: false
+    t.date "date", null: false
+    t.text "notes"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_goal_savings_contributions_on_company_id"
+    t.index ["gig_id"], name: "index_goal_savings_contributions_on_gig_id"
+    t.index ["reinvestment_goal_id"], name: "index_goal_savings_contributions_on_reinvestment_goal_id"
+    t.index ["user_id"], name: "index_goal_savings_contributions_on_user_id"
+  end
+
   create_table "inventory_items", force: :cascade do |t|
     t.bigint "item_id", null: false
     t.string "status", default: "available", null: false
@@ -521,6 +538,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
     t.index ["company_id"], name: "index_preset_budgets_on_company_id"
   end
 
+  create_table "reinvestment_goals", force: :cascade do |t|
+    t.bigint "company_id", null: false
+    t.string "title", null: false
+    t.text "objective"
+    t.text "purpose"
+    t.decimal "target_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.decimal "saved_amount", precision: 12, scale: 2, default: "0.0", null: false
+    t.string "currency", default: "USD", null: false
+    t.string "status", default: "active", null: false
+    t.text "image_base64"
+    t.integer "priority", default: 1, null: false
+    t.date "target_date"
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["company_id"], name: "index_reinvestment_goals_on_company_id"
+    t.index ["status"], name: "index_reinvestment_goals_on_status"
+  end
+
   create_table "shopping_items", force: :cascade do |t|
     t.string "name", null: false
     t.string "category"
@@ -534,8 +570,13 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "company_id"
+    t.bigint "reinvestment_goal_id"
+    t.integer "quantity", default: 1, null: false
+    t.decimal "unit_price", precision: 12, scale: 2, default: "0.0", null: false
+    t.text "image_base64"
     t.index ["company_id"], name: "index_shopping_items_on_company_id"
     t.index ["priority"], name: "index_shopping_items_on_priority"
+    t.index ["reinvestment_goal_id"], name: "index_shopping_items_on_reinvestment_goal_id"
     t.index ["status"], name: "index_shopping_items_on_status"
   end
 
@@ -666,6 +707,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
   add_foreign_key "gig_upsell_requests", "gigs"
   add_foreign_key "gigs", "clients"
   add_foreign_key "gigs", "companies"
+  add_foreign_key "goal_savings_contributions", "companies"
+  add_foreign_key "goal_savings_contributions", "gigs"
+  add_foreign_key "goal_savings_contributions", "reinvestment_goals"
+  add_foreign_key "goal_savings_contributions", "users"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "investments", "companies"
   add_foreign_key "items", "companies"
@@ -678,7 +723,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
   add_foreign_key "notification_reads", "app_notifications"
   add_foreign_key "notification_reads", "users"
   add_foreign_key "preset_budgets", "companies"
+  add_foreign_key "reinvestment_goals", "companies"
   add_foreign_key "shopping_items", "companies"
+  add_foreign_key "shopping_items", "reinvestment_goals"
   add_foreign_key "songs", "companies"
   add_foreign_key "staff_assignments", "gigs"
   add_foreign_key "staff_assignments", "users"

@@ -43,6 +43,14 @@ Rails.application.routes.draw do
     end
   end
 
+  resources :reinvestment_goals do
+    member do
+      post  :deposit
+      patch :toggle_status
+      post  :quick_purchase_item
+    end
+  end
+
   get '/availability', to: 'pages#availability', as: 'availability_dashboard'
   get '/financials', to: 'pages#financials', as: 'financials_dashboard'
   get '/normativas', to: 'pages#normativas', as: 'normativas'
@@ -148,6 +156,7 @@ Rails.application.routes.draw do
       get :flashcard
       get :stage_mode
       post :add_upsell
+      post :save_profit_to_goal
     end
     resources :gig_timeline_items, only: [:create, :destroy]
     resources :gig_items, only: [:create, :destroy]

@@ -1,0 +1,170 @@
+<%= form_with(model: goal, local: true, html: { multipart: true, id: "reinvestment-goal-form" }) do |f| %>
+  <% if goal.errors.any? %>
+    <div style="background: #fef2f2; border: 1px solid #f87171; border-radius: 14px; padding: 16px 20px; color: #991b1b; margin-bottom: 24px;">
+      <div style="font-weight: 800; font-size: 0.95rem; margin-bottom: 6px;">⚠️ Por favor corrige los siguientes errores:</div>
+      <ul style="margin: 0; padding-left: 20px; font-size: 0.88rem;">
+        <% goal.errors.full_messages.each do |msg| %>
+          <li><%= msg %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div style="display: grid; grid-template-columns: 1fr 340px; gap: 24px; align-items: start;" class="goal-form-grid">
+    
+    <%# Columna Principal %>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <%# Título de la Meta %>
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <label style="display: block; font-size: 0.85rem; font-weight: 800; color: #0f172a; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+          🎯 Nombre de la Meta / Proyecto de Compra *
+        </label>
+        <%= f.text_field :title, placeholder: "Ej: Renovación de Iluminación y Estructura Truss 4m", required: true, style: "width: 100%; padding: 12px 16px; border-radius: 12px; border: 1.5px solid #cbd5e1; font-size: 1.05rem; font-weight: 700; color: #0f172a; outline: none; box-sizing: border-box;" %>
+        <small style="color: #64748b; font-size: 0.8rem; margin-top: 6px; display: block;">
+          Dale un nombre claro al objetivo grupal o equipamiento que desean adquirir.
+        </small>
+      </div>
+
+      <%# ¿Con qué Objetivo? y ¿Para Qué? %>
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 16px;">
+        <div>
+          <label style="display: block; font-size: 0.85rem; font-weight: 800; color: #b45309; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+            ❓ ¿Con qué objetivo? (Razón de Reinversión)
+          </label>
+          <%= f.text_area :objective, rows: 2, placeholder: "Ej: Mejorar la calidad visual del grupo para subir de nivel y poder cotizar paquetes premium a clientes corporativos.", style: "width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #fde68a; font-size: 0.92rem; color: #1e293b; background: #fffdf5; box-sizing: border-box;" %>
+          <small style="color: #78350f; font-size: 0.78rem; margin-top: 4px; display: block;">
+            Explica por qué es importante para la banda o productora reinvertir en esto.
+          </small>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.85rem; font-weight: 800; color: #6d28d9; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+            🎯 ¿Para qué? (Uso y Propósito Específico)
+          </label>
+          <%= f.text_area :purpose, rows: 2, placeholder: "Ej: Para montar 4 luces móviles en tarima a 3 metros de altura con seguridad y cubrir pistas de baile grandes.", style: "width: 100%; padding: 10px 14px; border-radius: 10px; border: 1.5px solid #ddd6fe; font-size: 0.92rem; color: #1e293b; background: #faf5ff; box-sizing: border-box;" %>
+          <small style="color: #5b21b6; font-size: 0.78rem; margin-top: 4px; display: block;">
+            Describe la función práctica exacta que cumplirá en los eventos.
+          </small>
+        </div>
+      </div>
+
+      <%# Presupuesto Estimado y Prioridad %>
+      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+              💰 Meta Total Estimada ($ USD)
+            </label>
+            <div style="position: relative;">
+              <span style="position: absolute; left: 12px; top: 11px; color: #64748b; font-weight: 800;">$</span>
+              <%= f.number_field :target_amount, step: "0.01", min: "0", placeholder: "0.00", style: "width: 100%; padding: 10px 12px 10px 28px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-size: 1.05rem; font-weight: 800; color: #0f172a; box-sizing: border-box;" %>
+            </div>
+            <small style="color: #64748b; font-size: 0.76rem; margin-top: 4px; display: block;">
+              (Si lo dejas en 0, se sumará automáticamente de la lista de ítems a comprar).
+            </small>
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+              ⭐ Nivel de Prioridad
+            </label>
+            <%= f.select :priority, [["🔴 Alta Prioridad", "high"], ["🟡 Media Prioridad", "medium"], ["🟢 Baja Prioridad", "low"]], {}, style: "width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-weight: 700; font-size: 0.92rem; background: white;" %>
+          </div>
+
+          <% if goal.persisted? %>
+            <div>
+              <label style="display: block; font-size: 0.82rem; font-weight: 800; color: #334155; margin-bottom: 6px; text-transform: uppercase;">
+                📊 Estado de la Meta
+              </label>
+              <%= f.select :status, [["🚀 En Progreso (Activa)", "active"], ["✅ Completada / Lograda", "completed"], ["⏸️ Pausada", "paused"]], {}, style: "width: 100%; padding: 11px 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; font-weight: 700; font-size: 0.92rem; background: white;" %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+    </div>
+
+    <%# Columna Lateral: Foto de la Meta %>
+    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 18px; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02); display: flex; flex-direction: column; gap: 14px;">
+      <label style="display: block; font-size: 0.85rem; font-weight: 800; color: #0f172a; text-transform: uppercase; letter-spacing: 0.5px;">
+        📸 Foto de lo que queremos comprar
+      </label>
+      <p style="color: #64748b; font-size: 0.82rem; margin: 0; line-height: 1.4;">
+        Sube una imagen o foto referencial (ej: catálogo, foto del equipo o captura de pantalla) para que todo el equipo vea qué estamos buscando lograr.
+      </p>
+
+      <%# Vista previa de la foto %>
+      <div id="goal-photo-preview-box" style="width: 100%; height: 210px; border-radius: 14px; border: 2px dashed #cbd5e1; background: #f8fafc; overflow: hidden; display: flex; align-items: center; justify-content: center; position: relative;">
+        <% if goal.image_attached? %>
+          <img id="goal-photo-preview-img" src="<%= goal.image_url_or_data %>" alt="Foto de la Meta" style="width: 100%; height: 100%; object-fit: cover;">
+        <% else %>
+          <img id="goal-photo-preview-img" src="" alt="Vista Previa" style="width: 100%; height: 100%; object-fit: cover; display: none;">
+          <div id="goal-photo-placeholder" style="text-align: center; color: #94a3b8; padding: 20px;">
+            <div style="font-size: 2.8rem; margin-bottom: 6px;">📷</div>
+            <div style="font-size: 0.82rem; font-weight: 700;">Haz clic abajo para subir una foto</div>
+          </div>
+        <% end %>
+      </div>
+
+      <input type="file" id="goal-photo-file-input" accept="image/*" style="display: none;" onchange="handleGoalPhotoUpload(this)">
+      <%= f.hidden_field :image_base64, id: "goal_image_base64" %>
+
+      <div style="display: flex; gap: 8px;">
+        <button type="button" onclick="document.getElementById('goal-photo-file-input').click()" style="flex: 1; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 10px 14px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+          <span>📁</span> Seleccionar Foto
+        </button>
+        <button type="button" onclick="clearGoalPhoto()" id="clear-goal-photo-btn" style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; padding: 10px 12px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; cursor: pointer; <%= 'display: none;' unless goal.image_attached? %>">
+          ✕
+        </button>
+      </div>
+
+      <div style="border-top: 1px solid #f1f5f9; padding-top: 16px; margin-top: 10px;">
+        <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #64748b; margin-bottom: 4px;">Fecha objetivo estimada (Opcional):</label>
+        <%= f.date_field :target_date, style: "width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.88rem; box-sizing: border-box;" %>
+      </div>
+    </div>
+
+  </div>
+
+  <%# Botones de Acción %>
+  <div style="display: flex; justify-content: flex-end; gap: 12px; align-items: center; margin-top: 28px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
+    <%= link_to "Cancelar", (goal.persisted? ? reinvestment_goal_path(goal) : reinvestment_goals_path), style: "color: #64748b; font-weight: 700; text-decoration: none; padding: 12px 20px; font-size: 0.92rem;" %>
+    <%= f.submit (goal.persisted? ? "💾 Guardar Cambios" : "🎯 Crear Meta de Reinversión"), style: "background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 12px 28px; border-radius: 12px; font-weight: 800; font-size: 1rem; cursor: pointer; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35); transition: transform 0.15s;" %>
+  </div>
+<% end %>
+
+<script>
+  function handleGoalPhotoUpload(input) {
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const base64Data = e.target.result;
+        document.getElementById('goal_image_base64').value = base64Data;
+        const img = document.getElementById('goal-photo-preview-img');
+        const placeholder = document.getElementById('goal-photo-placeholder');
+        const clearBtn = document.getElementById('clear-goal-photo-btn');
+        
+        img.src = base64Data;
+        img.style.display = 'block';
+        if (placeholder) placeholder.style.display = 'none';
+        if (clearBtn) clearBtn.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  function clearGoalPhoto() {
+    document.getElementById('goal_image_base64').value = '';
+    const fileInput = document.getElementById('goal-photo-file-input');
+    if (fileInput) fileInput.value = '';
+    const img = document.getElementById('goal-photo-preview-img');
+    const placeholder = document.getElementById('goal-photo-placeholder');
+    const clearBtn = document.getElementById('clear-goal-photo-btn');
+    img.src = '';
+    img.style.display = 'none';
+    if (placeholder) placeholder.style.display = 'block';
+    if (clearBtn) clearBtn.style.display = 'none';
+  }
+</script>

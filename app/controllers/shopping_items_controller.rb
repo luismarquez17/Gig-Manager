@@ -5,12 +5,13 @@ class ShoppingItemsController < ApplicationController
 
 
   def index
-    @shopping_items = current_company.shopping_items
+    @shopping_items = current_company.shopping_items.includes(:reinvestment_goal)
 
     # Filtros
     @shopping_items = @shopping_items.where(status: params[:status]) if params[:status].present?
     @shopping_items = @shopping_items.where(priority: params[:priority]) if params[:priority].present?
     @shopping_items = @shopping_items.where(category: params[:category]) if params[:category].present?
+    @shopping_items = @shopping_items.where(reinvestment_goal_id: params[:reinvestment_goal_id]) if params[:reinvestment_goal_id].present?
 
     @shopping_items = @shopping_items.pending_first
 
@@ -22,11 +23,15 @@ class ShoppingItemsController < ApplicationController
     @total_estimated_bs = 0.0
 
     @categories = ShoppingItem::CATEGORIES
+    @goals = current_company.reinvestment_goals.active.order(priority: :desc)
+    @recommendation_service = GoalRecommendationService.new(company: current_company)
+    @smart_recommendations = @recommendation_service.smart_recommendations
   end
 
   def new
-    @shopping_item = current_company.shopping_items.build(currency: 'USD')
+    @shopping_item = current_company.shopping_items.build(currency: 'USD', reinvestment_goal_id: params[:reinvestment_goal_id], quantity: 1)
     @categories = ShoppingItem::CATEGORIES
+    @goals = current_company.reinvestment_goals.active.order(priority: :desc)
   end
 
   def create
@@ -43,6 +48,7 @@ class ShoppingItemsController < ApplicationController
 
   def edit
     @categories = ShoppingItem::CATEGORIES
+    @goals = current_company.reinvestment_goals.active.order(priority: :desc)
   end
 
   def update
@@ -50,6 +56,7 @@ class ShoppingItemsController < ApplicationController
       redirect_to shopping_items_path, notice: "✏️ Ítem actualizado correctamente."
     else
       @categories = ShoppingItem::CATEGORIES
+      @goals = current_company.reinvestment_goals.active.order(priority: :desc)
       render :edit, status: :unprocessable_entity
     end
   end
@@ -82,13 +89,13 @@ class ShoppingItemsController < ApplicationController
       name:     @shopping_item.name,
       category: map_category(@shopping_item.category),
       status:   "Excelente",
-      quantity: 1
+      quantity: @shopping_item.quantity.presence || 1
     )
   end
 
   # Suma 1 unidad a un ítem de inventario existente
   def increment_inventory
-    amount = (params[:amount].presence || 1).to_i
+    amount = (params[:amount].presence || @shopping_item.quantity.presence || 1).to_i
     existing_item = current_company.items.find(params[:item_id])
     new_quantity = (existing_item.quantity || 0) + amount
     existing_item.update!(quantity: new_quantity)
@@ -106,7 +113,8 @@ class ShoppingItemsController < ApplicationController
   def shopping_item_params
     params.require(:shopping_item).permit(
       :name, :category, :reason, :purpose,
-      :estimated_price, :currency, :priority, :status, :notes
+      :estimated_price, :currency, :priority, :status, :notes,
+      :reinvestment_goal_id, :quantity, :unit_price, :image, :image_base64
     )
   end
 

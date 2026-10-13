@@ -534,8 +534,12 @@
                 <% end %>
               <% end %>
 
-              <%# --- LISTA DE COMPRAS --- %>
-              <% if module_enabled?(:shopping_list) %>
+              <%# --- METAS DE REINVERSIÓN & LISTA DE COMPRAS --- %>
+              <% if module_enabled?(:shopping_list) || current_user.leader? || current_user.superadmin? %>
+                <%= link_to reinvestment_goals_path, class: "sidebar-link #{'active' if controller_name == 'reinvestment_goals'}" do %>
+                  <span class="icon">🎯</span> <span>Metas de Reinversión</span>
+                <% end %>
+
                 <%= link_to shopping_items_path, class: "sidebar-link #{'active' if controller_name == 'shopping_items'}" do %>
                   <span class="icon">🛒</span> <span>Lista de Compras</span>
                 <% end %>

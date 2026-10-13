@@ -182,12 +182,46 @@
       </div>
 
       <%# Opciones de Destino del Remanente %>
+      <% if @active_goals.present? && @active_goals.any? %>
+        <div style="background: rgba(99, 102, 241, 0.12); border: 1.5px solid rgba(129, 140, 248, 0.4); border-radius: 16px; padding: 18px; margin-bottom: 16px;">
+          <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin-bottom: 12px;">
+            <input type="checkbox" name="deposit_to_goal" id="deposit_to_goal" value="1" checked style="width: 20px; height: 20px; accent-color: #10b981; margin-top: 2px;" onchange="toggleGoalAllocation()">
+            <div>
+              <div style="font-weight: 800; font-size: 1.05em; color: white;">
+                🎯 Asignar ganancia neta a una Meta de Reinversión
+              </div>
+              <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #c7d2fe; line-height: 1.4;">
+                Guarda este remanente directamente en la meta seleccionada para comprar equipos, estructuras o luces para el grupo.
+              </p>
+            </div>
+          </label>
+
+          <div id="goal-allocation-fields" style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; align-items: end;">
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; color: #a5b4fc; text-transform: uppercase; margin-bottom: 4px;">Meta de Destino</label>
+              <select name="reinvestment_goal_id" id="reinvestment_goal_id" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #6366f1; background: #0f172a; color: white; font-weight: 700; font-size: 0.9em;">
+                <% @active_goals.each do |g| %>
+                  <option value="<%= g.id %>">
+                    🎯 <%= g.title %> ($<%= sprintf('%.2f', g.saved_amount) %> / $<%= sprintf('%.2f', g.effective_target_amount) %> USD)
+                  </option>
+                <% end %>
+              </select>
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.78em; font-weight: 700; color: #a5b4fc; text-transform: uppercase; margin-bottom: 4px;">Monto a la Meta ($ USD)</label>
+              <input type="number" step="0.01" min="0" name="goal_amount" id="goal_amount" value="0.00" style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid #10b981; background: #0f172a; color: #34d399; font-weight: 800; font-size: 1.05em; box-sizing: border-box;">
+            </div>
+          </div>
+        </div>
+      <% end %>
+
       <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 14px; padding: 18px; margin-bottom: 20px;">
         <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer;">
-          <input type="checkbox" name="deposit_to_fund" id="deposit_to_fund" value="1" checked style="width: 20px; height: 20px; accent-color: #8b5cf6; margin-top: 2px;">
+          <input type="checkbox" name="deposit_to_fund" id="deposit_to_fund" value="1" <%= 'checked' if @active_goals.blank? %> style="width: 20px; height: 20px; accent-color: #8b5cf6; margin-top: 2px;">
           <div>
             <div style="font-weight: 700; font-size: 1em; color: white;">
-              🏦 Depositar el remanente en la Caja General / Fondo de la <%= current_company.venue_mode? ? 'Empresa' : 'Banda' %>
+              🏦 Registrar además en la Caja General / Fondo de la <%= current_company.venue_mode? ? 'Empresa' : 'Banda' %>
             </div>
             <p style="margin: 4px 0 0 0; font-size: 0.85em; color: #94a3b8; line-height: 1.4;">
               Si está activado, creará un asiento de ingreso en tu libro de caja por la diferencia positiva entre lo que cobraste y lo que repartiste.
@@ -258,6 +292,7 @@
     const paidEl = document.getElementById('summary-paid');
     const surplusEl = document.getElementById('summary-surplus');
     const fundAmountInput = document.getElementById('fund_amount');
+    const goalAmountInput = document.getElementById('goal_amount');
 
     if (collectedEl) collectedEl.innerText = '$' + collected.toFixed(2);
     if (paidEl) paidEl.innerText = '$' + totalPaid.toFixed(2);
@@ -265,12 +300,30 @@
       surplusEl.innerText = (surplus >= 0 ? '+' : '-') + ' $' + Math.abs(surplus).toFixed(2);
       surplusEl.style.color = surplus >= 0 ? '#34d399' : '#f87171';
     }
+    const positiveSurplus = Math.max(surplus, 0).toFixed(2);
     if (fundAmountInput) {
-      fundAmountInput.value = Math.max(surplus, 0).toFixed(2);
+      fundAmountInput.value = positiveSurplus;
+    }
+    if (goalAmountInput && (!goalAmountInput.dataset.manualEdited || goalAmountInput.dataset.manualEdited === 'false')) {
+      goalAmountInput.value = positiveSurplus;
+    }
+  }
+
+  function toggleGoalAllocation() {
+    const cb = document.getElementById('deposit_to_goal');
+    const fields = document.getElementById('goal-allocation-fields');
+    if (cb && fields) {
+      fields.style.display = cb.checked ? 'grid' : 'none';
     }
   }
 
   document.addEventListener('DOMContentLoaded', () => {
     recalculateSummary();
+    const goalAmountInput = document.getElementById('goal_amount');
+    if (goalAmountInput) {
+      goalAmountInput.addEventListener('input', () => {
+        goalAmountInput.dataset.manualEdited = 'true';
+      });
+    }
   });
 </script>

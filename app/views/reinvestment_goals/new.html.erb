@@ -1,0 +1,18 @@
+<div style="max-width: 1050px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; padding: 10px 15px;">
+  <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+    <%= link_to reinvestment_goals_path, style: "color: #64748b; text-decoration: none; font-size: 0.88rem; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;" do %>
+      <span>⬅</span> Volver a Metas
+    <% end %>
+  </div>
+
+  <div style="margin-bottom: 26px;">
+    <h1 style="color: #0f172a; margin: 0; font-size: 2rem; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+      <span>🎯</span> Nueva Meta de Reinversión &amp; Ahorro
+    </h1>
+    <p style="color: #64748b; margin: 6px 0 0 0; font-size: 0.95rem;">
+      Define qué equipamiento o mejora deseas adquirir con el dinero libre que queda tras pagar las nóminas de los eventos.
+    </p>
+  </div>
+
+  <%= render 'form', goal: @goal %>
+</div>

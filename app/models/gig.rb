@@ -13,6 +13,7 @@ class Gig < ApplicationRecord
   has_many :gig_upsell_requests, dependent: :destroy
   has_many :pending_upsell_requests, -> { where(status: 'pending') }, class_name: 'GigUpsellRequest'
   has_many :client_quotes, dependent: :nullify
+  has_many :goal_savings_contributions, dependent: :nullify
   
   validates :amount, presence: true
   validates :client_email, presence: true, if: -> { client_id.blank? }
@@ -308,6 +309,22 @@ class Gig < ApplicationRecord
   # Ganancia Neta Real en Mano (Cobrado a la fecha - Nómina pagada a la fecha)
   def actual_cash_profit
     (total_received - total_payroll_paid).round(2)
+  end
+
+  def net_free_money
+    actual_cash_profit
+  end
+
+  def total_saved_for_goals
+    if goal_savings_contributions.loaded?
+      goal_savings_contributions.sum { |c| c.amount.to_f }.round(2)
+    else
+      goal_savings_contributions.sum(:amount).to_f.round(2)
+    end
+  end
+
+  def net_free_money_unallocated
+    [net_free_money - total_saved_for_goals, 0.0].max.round(2)
   end
 
   def profit_health_status

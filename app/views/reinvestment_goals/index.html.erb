@@ -1,0 +1,319 @@
+<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; padding: 10px 15px;">
+
+  <%# --- HEADER --- %>
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f1f5f9; flex-wrap: wrap; gap: 16px;">
+    <div>
+      <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+        <span style="background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px;">
+          Área de Líderes · Finanzas &amp; Crecimiento
+        </span>
+      </div>
+      <h1 style="color: #0f172a; margin: 0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px;">
+        <span>🎯</span> Metas de Reinversión &amp; Fondo de Ahorro
+      </h1>
+      <p style="color: #64748b; margin: 6px 0 0 0; font-size: 1rem;">
+        Guarda la ganancia neta libre de tus shows para reinvertir en equipos, estructura, luces y sonido con objetivos claros y recomendaciones inteligentes.
+      </p>
+    </div>
+
+    <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+      <%= link_to shopping_items_path, style: "background: #f8fafc; color: #334155; border: 1.5px solid #cbd5e1; padding: 11px 18px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;" do %>
+        <span>🛒</span> Lista de Compras
+      <% end %>
+
+      <%= link_to new_reinvestment_goal_path, style: "background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35); transition: transform 0.15s;" do %>
+        <span>➕</span> Crear Nueva Meta
+      <% end %>
+    </div>
+  </div>
+
+  <%# --- FLASH NOTICES --- %>
+  <% if notice %>
+    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 14px; padding: 14px 20px; color: #166534; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <span>✅</span> <%= notice %>
+    </div>
+  <% end %>
+  <% if alert %>
+    <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 14px; padding: 14px 20px; color: #991b1b; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
+      <span>⚠️</span> <%= alert %>
+    </div>
+  <% end %>
+
+  <%# --- TOP KPIS --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px;">
+    
+    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.78rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+        💰 Ahorro Acumulado en Metas
+      </div>
+      <div style="font-size: 1.9rem; font-weight: 900; color: #10b981; font-family: 'Outfit', sans-serif;">
+        $<%= number_with_precision(@total_goals_saved, precision: 2) %>
+        <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
+      </div>
+      <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+        Dinero libre reservado para reinversión
+      </div>
+    </div>
+
+    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.78rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+        🎯 Presupuesto de Metas Activas
+      </div>
+      <div style="font-size: 1.9rem; font-weight: 900; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        $<%= number_with_precision(@total_goals_target, precision: 2) %>
+        <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
+      </div>
+      <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
+        <%= @active_goals.count %> <%= @active_goals.count == 1 ? 'meta en progreso' : 'metas en progreso' %>
+      </div>
+    </div>
+
+    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #fde68a; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.78rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+        ⏳ Faltante Global para Objetivos
+      </div>
+      <div style="font-size: 1.9rem; font-weight: 900; color: #d97706; font-family: 'Outfit', sans-serif;">
+        $<%= number_with_precision(@total_pending_deficit, precision: 2) %>
+        <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
+      </div>
+      <div style="font-size: 0.8rem; color: #92400e; margin-top: 4px;">
+        Brecha restante para comprar todo
+      </div>
+    </div>
+
+    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #c7d2fe; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.78rem; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+        🏆 Metas Logradas
+      </div>
+      <div style="font-size: 1.9rem; font-weight: 900; color: #4f46e5; font-family: 'Outfit', sans-serif;">
+        <%= @total_completed_count %>
+      </div>
+      <div style="font-size: 0.8rem; color: #4338ca; margin-top: 4px;">
+        Equipos adquiridos exitosamente
+      </div>
+    </div>
+
+  </div>
+
+  <%# --- MOTOR RECOMENDADOR INTELIGENTE (BANNER DESTACADO) --- %>
+  <% if @smart_recommendations.any? %>
+    <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1.5px solid #4338ca; border-radius: 22px; padding: 24px 28px; color: white; margin-bottom: 34px; box-shadow: 0 10px 30px rgba(30, 27, 75, 0.25);">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.5rem; background: rgba(99, 102, 241, 0.25); border: 1px solid #818cf8; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;">
+            🤖
+          </span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 900; color: white; letter-spacing: -0.3px;">
+              Recomendador Inteligente de Compras &amp; Reinversión
+            </h3>
+            <p style="margin: 2px 0 0 0; color: #c7d2fe; font-size: 0.88rem;">
+              La app analiza tus fondos de ahorro y la ganancia de tus shows para recomendarte qué comprar hoy:
+            </p>
+          </div>
+        </div>
+        <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 12px; border-radius: 99px; font-weight: 800; font-size: 0.78rem; text-transform: uppercase;">
+          Fondo Ahorrado: $<%= number_with_precision(@total_goals_saved, precision: 2) %> USD
+        </span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
+        <% @smart_recommendations.first(3).each do |rec| %>
+          <%
+            card_bg = case rec[:type]
+                      when :ready_to_buy then 'rgba(16, 185, 129, 0.12)'
+                      when :partial_units then 'rgba(59, 130, 246, 0.14)'
+                      when :close_to_goal then 'rgba(245, 158, 11, 0.14)'
+                      else 'rgba(255, 255, 255, 0.06)'
+                      end
+            card_border = case rec[:type]
+                          when :ready_to_buy then 'rgba(52, 211, 153, 0.4)'
+                          when :partial_units then 'rgba(96, 165, 250, 0.4)'
+                          when :close_to_goal then 'rgba(251, 191, 36, 0.4)'
+                          else 'rgba(255, 255, 255, 0.12)'
+                          end
+          %>
+          <div style="background: <%= card_bg %>; border: 1px solid <%= card_border %>; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
+                <span style="font-size: 1.3rem;"><%= rec[:emoji] %></span>
+                <span style="font-weight: 800; font-size: 0.95rem; color: white;"><%= rec[:title] %></span>
+              </div>
+              <p style="margin: 0; color: #e2e8f0; font-size: 0.86rem; line-height: 1.45;">
+                <%= rec[:message] %>
+              </p>
+            </div>
+
+            <% if rec[:item].present? %>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px;">
+                <span style="font-size: 0.8rem; color: #cbd5e1;">Costo: $<%= number_with_precision(rec[:cost] || rec[:item].total_price, precision: 2) %></span>
+                <% if rec[:item].reinvestment_goal_id.present? %>
+                  <%= button_to quick_purchase_item_reinvestment_goal_path(rec[:item].reinvestment_goal_id, item_id: rec[:item].id), method: :post, style: "background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;", data: { turbo_confirm: "¿Comprar '#{rec[:item].name}' ahora con los fondos ahorrados y pasarlo al inventario?" } do %>
+                    🛒 Comprar Ahora
+                  <% end %>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+  <%# --- LISTADO DE METAS ACTIVAS --- %>
+  <div style="margin-bottom: 40px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+      <h2 style="margin: 0; font-size: 1.45rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+        <span>🚀</span> Metas Activas (<%= @active_goals.count %>)
+      </h2>
+    </div>
+
+    <% if @active_goals.any? %>
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;">
+        <% @active_goals.each do |goal| %>
+          <%
+            pct = goal.progress_percentage
+            bar_color = if pct >= 100 then '#10b981' elsif pct >= 60 then '#3b82f6' elsif pct >= 30 then '#f59e0b' else '#6366f1' end
+            prio_badge = case goal.priority
+                         when 'high' then { bg: '#fee2e2', color: '#b91c1c', border: '#fca5a5', label: '🔴 Alta' }
+                         when 'medium' then { bg: '#fef3c7', color: '#b45309', border: '#fde68a', label: '🟡 Media' }
+                         else { bg: '#ecfdf5', color: '#047857', border: '#a7f3d0', label: '🟢 Baja' }
+                         end
+          %>
+          <div style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.03)';">
+            
+            <%# Foto de la Meta %>
+            <div style="height: 180px; width: 100%; background: #0f172a; position: relative; overflow: hidden;">
+              <% if goal.image_attached? %>
+                <img src="<%= goal.image_url_or_data %>" alt="<%= goal.title %>" style="width: 100%; height: 100%; object-fit: cover;">
+              <% else %>
+                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
+                  <span style="font-size: 3.2rem;">🎯</span>
+                  <span style="font-size: 0.85rem; color: #a5b4fc; font-weight: 700; margin-top: 6px;">Meta de Reinversión</span>
+                </div>
+              <% end %>
+
+              <div style="position: absolute; top: 12px; left: 12px; display: flex; gap: 6px;">
+                <span style="background: <%= prio_badge[:bg] %>; color: <%= prio_badge[:color] %>; border: 1px solid <%= prio_badge[:border] %>; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                  <%= prio_badge[:label] %>
+                </span>
+              </div>
+
+              <div style="position: absolute; bottom: 10px; right: 12px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 800;">
+                <%= pct %>% Alcanzado
+              </div>
+            </div>
+
+            <%# Contenido de la Meta %>
+            <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
+              <div>
+                <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; font-weight: 900; color: #0f172a; line-height: 1.3;">
+                  <%= link_to goal.title, reinvestment_goal_path(goal), style: "color: #0f172a; text-decoration: none;" %>
+                </h3>
+
+                <% if goal.objective.present? %>
+                  <div style="background: #fffdf5; border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-bottom: 8px;">
+                    <div style="font-size: 0.7rem; font-weight: 800; color: #b45309; text-transform: uppercase;">❓ Objetivo</div>
+                    <div style="font-size: 0.84rem; color: #475569; line-height: 1.4;"><%= truncate(goal.objective, length: 110) %></div>
+                  </div>
+                <% end %>
+
+                <% if goal.purpose.present? %>
+                  <div style="background: #faf5ff; border-left: 3px solid #8b5cf6; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-bottom: 14px;">
+                    <div style="font-size: 0.7rem; font-weight: 800; color: #6d28d9; text-transform: uppercase;">🎯 ¿Para qué?</div>
+                    <div style="font-size: 0.84rem; color: #475569; line-height: 1.4;"><%= truncate(goal.purpose, length: 110) %></div>
+                  </div>
+                <% end %>
+              </div>
+
+              <div>
+                <%# Barra de Progreso %>
+                <div style="margin-bottom: 14px;">
+                  <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800; margin-bottom: 5px;">
+                    <span style="color: #059669;">
+                      <% if goal.purchased_items_cost > 0 %>
+                        Logrado: $<%= number_with_precision(goal.total_achieved_amount, precision: 2) %>
+                      <% else %>
+                        Ahorrado: $<%= number_with_precision(goal.saved_amount, precision: 2) %>
+                      <% end %>
+                    </span>
+                    <span style="color: #64748b;">Meta: $<%= number_with_precision(goal.effective_target_amount, precision: 2) %> USD</span>
+                  </div>
+                  <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden;">
+                    <div style="width: <%= pct %>%; height: 100%; background: <%= bar_color %>; border-radius: 99px; transition: width 0.4s ease;"></div>
+                  </div>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.75rem; color: #64748b;">
+                    <span>Faltan: <strong>$<%= number_with_precision(goal.pending_amount, precision: 2) %></strong></span>
+                    <span>
+                      <%= goal.completed_items_count %>/<%= goal.shopping_items.count %> comprados
+                    </span>
+                  </div>
+                </div>
+
+                <%# Acciones %>
+                <div style="display: flex; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
+                  <%= link_to reinvestment_goal_path(goal), style: "flex: 1; background: #0f172a; color: white; padding: 9px 12px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px;" do %>
+                    <span>📋</span> Ver Ítems &amp; Aportar
+                  <% end %>
+
+                  <%= link_to edit_reinvestment_goal_path(goal), style: "background: #f1f5f9; color: #475569; padding: 9px 12px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #cbd5e1;", title: "Editar Meta" do %>
+                    ✏️
+                  <% end %>
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <div style="text-align: center; padding: 50px 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 20px;">
+        <div style="font-size: 3rem; margin-bottom: 10px;">🎯</div>
+        <h3 style="color: #0f172a; margin: 0 0 6px 0; font-size: 1.25rem;">Aún no tienes metas de ahorro activas</h3>
+        <p style="color: #64748b; font-size: 0.9rem; max-width: 500px; margin: 0 auto 20px auto;">
+          Crea tu primera meta (por ejemplo: "Estructura Truss 4m" o "Luces Cabezas Móviles") para empezar a guardar la ganancia neta libre de tus eventos.
+        </p>
+        <%= link_to new_reinvestment_goal_path, style: "background: #4f46e5; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 6px;" do %>
+          <span>➕</span> Crear Primera Meta
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <%# --- METAS COMPLETADAS (HISTORIAL) --- %>
+  <% if @completed_goals.any? %>
+    <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #f1f5f9;">
+      <h2 style="margin: 0 0 20px 0; font-size: 1.3rem; font-weight: 800; color: #059669; display: flex; align-items: center; gap: 8px;">
+        <span>🏆</span> Metas Logradas / Equipamiento Comprado (<%= @completed_goals.count %>)
+      </h2>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+        <% @completed_goals.each do |goal| %>
+          <div style="background: #f0fdf4; border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 18px; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
+            <div style="display: flex; align-items: center; gap: 14px;">
+              <% if goal.image_attached? %>
+                <img src="<%= goal.image_url_or_data %>" alt="<%= goal.title %>" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid #86efac;">
+              <% else %>
+                <div style="width: 50px; height: 50px; border-radius: 10px; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                  🎉
+                </div>
+              <% end %>
+              <div>
+                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #065f46;">
+                  <%= link_to goal.title, reinvestment_goal_path(goal), style: "color: #065f46; text-decoration: none;" %>
+                </h4>
+                <div style="font-size: 0.8rem; color: #047857; margin-top: 2px;">
+                  Inversión: <strong>$<%= number_with_precision(goal.saved_amount, precision: 2) %> USD</strong> · Lograda <%= goal.completed_at&.strftime("%d/%m/%Y") %>
+                </div>
+              </div>
+            </div>
+
+            <%= link_to "Ver", reinvestment_goal_path(goal), style: "background: white; color: #059669; border: 1px solid #a7f3d0; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none;" %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
+</div>

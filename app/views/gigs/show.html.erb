@@ -217,6 +217,9 @@
     </div>
   </div>
 
+  <%# --- ÁREA DE LÍDERES: GANANCIA NETA, AHORRO Y METAS DE REINVERSIÓN --- %>
+  <%= render 'gigs/leader_reinvestment_area', gig: @gig, primary_goal: @primary_goal, active_goals: @active_goals, recommendations: @goal_recommendations %>
+
   <%# --- BANNER DE COMPROBANTES DE PAGO REPORTADOS POR EL CLIENTE --- %>
   <% if current_user.leader? %>
     <% pending_vouchers = @gig.gig_payments.pending_approval.order(created_at: :desc) %>

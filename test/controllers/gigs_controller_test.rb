@@ -99,4 +99,50 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_includes @gig.music_notes, "Tiempo de Vals"
     assert_includes @gig.music_notes, "A Thousand Years"
   end
+
+  test "should save net profit to reinvestment goal from gig" do
+    goal = ReinvestmentGoal.create!(
+      company: @gig.company,
+      title: "Estructura Truss 4m",
+      target_amount: 500.0,
+      saved_amount: 0.0
+    )
+
+    assert_difference "GoalSavingsContribution.count", 1 do
+      post save_profit_to_goal_gig_url(@gig), params: {
+        reinvestment_goal_id: goal.id,
+        amount: 250.0,
+        notes: "Ahorro de la ganancia libre del evento"
+      }
+    end
+
+    assert_redirected_to gig_url(@gig)
+    assert_equal 250.0, goal.reload.saved_amount
+    contribution = GoalSavingsContribution.last
+    assert_equal @gig, contribution.gig
+    assert_equal 250.0, contribution.amount
+  end
+
+  test "should allocate surplus to reinvestment goal during process_closeout" do
+    @gig.update!(amount: 1000.0)
+    goal = ReinvestmentGoal.create!(
+      company: @gig.company,
+      title: "Luces Beam 7R",
+      target_amount: 800.0,
+      saved_amount: 100.0
+    )
+
+    assert_difference "GoalSavingsContribution.count", 1 do
+      post process_closeout_gig_url(@gig), params: {
+        client_collected_amount: 500.0,
+        client_payment_method: "cash",
+        deposit_to_goal: "1",
+        reinvestment_goal_id: goal.id,
+        goal_amount: 300.0
+      }
+    end
+
+    assert_redirected_to gig_url(@gig)
+    assert_equal 400.0, goal.reload.saved_amount # 100 + 300
+  end
 end
