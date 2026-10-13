@@ -298,6 +298,11 @@ $dark: #0f172a;    // Gris oscuro/azul pizarra (sidebar bg)
   div[style*="background: #ffffff"], div[style*="background:#ffffff"],
   div[style*="background: #fff"], div[style*="background:#fff"],
   div[style*="background-color: #ffffff"], div[style*="background-color:#ffffff"],
+  tr[style*="background: white"], tr[style*="background:white"],
+  tr[style*="background-color: white"], tr[style*="background-color:white"],
+  td[style*="background: white"], td[style*="background:white"],
+  td[style*="background-color: white"], td[style*="background-color:white"],
+  table[style*="background: white"], table[style*="background:white"],
   details, details[style*="background: white"], details[style*="background:white"],
   .custom-card,
   .table-custom-wrapper {
@@ -349,11 +354,13 @@ $dark: #0f172a;    // Gris oscuro/azul pizarra (sidebar bg)
     color: #4ade80 !important;
   }
 
-  // Azul / Índigo / Púrpura / Convertido
+  // Azul / Índigo / Púrpura / Convertido / Aprobado
   *[style*="background: #e0e7ff"], *[style*="background:#e0e7ff"],
   *[style*="background: #eff6ff"], *[style*="background:#eff6ff"],
   *[style*="background: #eef2ff"], *[style*="background:#eef2ff"],
   *[style*="background: #ebf8ff"], *[style*="background:#ebf8ff"],
+  *[style*="background: #e0f2fe"], *[style*="background:#e0f2fe"],
+  *[style*="background: #f3e8ff"], *[style*="background:#f3e8ff"],
   *[style*="background: #dbeafe"], *[style*="background:#dbeafe"] {
     background: rgba(99, 102, 241, 0.18) !important;
     border: 1px solid rgba(99, 102, 241, 0.35) !important;
@@ -401,8 +408,13 @@ $dark: #0f172a;    // Gris oscuro/azul pizarra (sidebar bg)
   }
 
   // 8. Tablas
-  table {
+  table, .table {
+    --bs-table-bg: transparent !important;
+    --bs-table-accent-bg: transparent !important;
+    --bs-table-striped-bg: rgba(255, 255, 255, 0.02) !important;
+    --bs-table-hover-bg: var(--bg-card-subtle) !important;
     color: var(--text-main) !important;
+    background-color: transparent !important;
   }
   thead tr {
     background-color: var(--bg-card-subtle) !important;
@@ -415,9 +427,11 @@ $dark: #0f172a;    // Gris oscuro/azul pizarra (sidebar bg)
   td {
     color: var(--text-main) !important;
     border-color: var(--border-subtle) !important;
+    background-color: transparent !important;
   }
   tbody tr {
     border-color: var(--border-subtle) !important;
+    background-color: var(--bg-card) !important;
     &:hover {
       background-color: var(--bg-card-subtle) !important;
     }
