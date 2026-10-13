@@ -39,9 +39,6 @@
     <div style="background: white; padding: 20px; border-radius: 20px; border: 1px solid #c7d2fe; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
       <div style="color: #3730a3; font-size: 0.75em; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">💰 Costo estimado (USD)</div>
       <div style="font-size: 1.6em; font-weight: 800; color: #4338ca;"><%= number_to_currency(@total_estimated, unit: '$') %></div>
-      <% if @total_estimated_bs > 0 %>
-        <div style="font-size: 0.8em; color: #6366f1; margin-top: 4px; font-weight: 600;">+ Bs. <%= number_with_precision(@total_estimated_bs, precision: 2, delimiter: ',') %></div>
-      <% end %>
     </div>
   </div>
 

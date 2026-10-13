@@ -15,10 +15,11 @@ class ShoppingItemsController < ApplicationController
     @shopping_items = @shopping_items.pending_first
 
     # Stats
-    @total_count    = current_company.shopping_items.count
-    @pending_count  = current_company.shopping_items.pending.count
-    @purchased_count = current_company.shopping_items.purchased.count
-    @total_estimated = current_company.shopping_items.pending.sum(:estimated_price).to_f
+    @total_count       = current_company.shopping_items.count
+    @pending_count     = current_company.shopping_items.pending.count
+    @purchased_count   = current_company.shopping_items.purchased.count
+    @total_estimated   = current_company.shopping_items.pending.sum(:estimated_price).to_f
+    @total_estimated_bs = 0.0
 
     @categories = ShoppingItem::CATEGORIES
   end
