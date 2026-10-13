@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_07_193000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_13_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -183,6 +183,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_07_193000) do
     t.jsonb "payment_methods_config", default: {}, null: false
     t.jsonb "enabled_modules", default: {}, null: false
     t.string "business_type", default: "music_band", null: false
+    t.date "financial_reset_date"
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["slug"], name: "index_companies_on_slug", unique: true
     t.index ["stripe_customer_id"], name: "index_companies_on_stripe_customer_id"
