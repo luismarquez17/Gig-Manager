@@ -23,6 +23,14 @@ class Company < ApplicationRecord
   validates :invitation_token, uniqueness: true, allow_nil: true
   validates :monthly_fee, numericality: { greater_than_or_equal_to: 0 }
 
+  def financial_reset_active?
+    financial_reset_date.present?
+  end
+
+  def effective_reset_date
+    financial_reset_date
+  end
+
   attribute :business_type, :string, default: 'music_band'
 
   DEFAULT_TRIAL_DAYS = 30

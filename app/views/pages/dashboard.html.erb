@@ -210,8 +210,21 @@
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
           <h3 style="color: var(--text-heading); font-size: 1.1em; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;">
             <span style="color: var(--color-primary, #2563eb);">🏦</span> Flujo de Caja Real (<%= company_term(:band_fund, 'Fondo de la Banda') %>)
+            <% if current_company.financial_reset_active? %>
+              <span style="font-size: 0.72rem; font-weight: 800; padding: 2px 8px; border-radius: 6px; background: <%= @financial_scope == 'current_cycle' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(100, 116, 139, 0.15)' %>; color: <%= @financial_scope == 'current_cycle' ? '#10b981' : 'var(--text-muted, #64748b)' %>;">
+                <%= @financial_scope == 'current_cycle' ? 'Ciclo Actual' : 'Historial' %>
+              </span>
+            <% end %>
           </h3>
-          <%= link_to 'Administrar Caja General ➔', cash_adjustments_path, style: 'font-size: 0.85em; color: var(--color-primary, #2563eb); font-weight: 700; text-decoration: none;' %>
+          <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <% if current_company.financial_reset_active? %>
+              <div style="display: inline-flex; border: 1px solid var(--border-color, #e2e8f0); border-radius: 8px; overflow: hidden; font-size: 0.76rem; font-weight: 700;">
+                <%= link_to 'Ciclo Actual', root_path(scope: 'current_cycle'), style: "padding: 3px 8px; text-decoration: none; #{ @financial_scope == 'current_cycle' ? 'background: #10b981; color: white;' : 'background: var(--bg-card-subtle, #f8fafc); color: var(--text-muted, #64748b);' }" %>
+                <%= link_to 'Historial', root_path(scope: 'all_time'), style: "padding: 3px 8px; text-decoration: none; #{ @financial_scope == 'all_time' ? 'background: #2563eb; color: white;' : 'background: var(--bg-card-subtle, #f8fafc); color: var(--text-muted, #64748b);' }" %>
+              </div>
+            <% end %>
+            <%= link_to 'Administrar Caja General ➔', cash_adjustments_path, style: 'font-size: 0.85em; color: var(--color-primary, #2563eb); font-weight: 700; text-decoration: none;' %>
+          </div>
         </div>
 
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px;">
