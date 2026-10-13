@@ -590,7 +590,7 @@
               <%# --- NÓMINA DE PERSONAL --- %>
               <% if module_enabled?(:payroll) %>
                 <%= link_to employee_payments_path, class: "sidebar-link #{'active' if controller_name == 'employee_payments'}" do %>
-                  <span class="icon">💰</span> <span><%= venue_mode? ? 'Pagos a personal' : 'Pagos a trabajadores' %></span>
+                  <span class="icon">💰</span> <span><%= venue_mode? ? 'Nómina / Pagos a personal' : 'Nómina de trabajadores' %></span>
                   <% 
                     pending_count = current_company&.employee_payments&.pending_approval&.count rescue 0 
                   %>
@@ -599,6 +599,10 @@
                       <%= pending_count %>
                     </span>
                   <% end %>
+                <% end %>
+
+                <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
+                  <span class="icon">💵</span> <span><%= venue_mode? ? 'Mis Pagos / Cuentas por Evento' : 'Mis Pagos / Cuentas por Show' %></span>
                 <% end %>
               <% end %>
 

@@ -375,16 +375,22 @@ class PagesController < ApplicationController
   end
 
   def my_payments
-    unless current_user.staff? || current_user.musician?
+    unless current_user.staff? || current_user.musician? || current_user.leader? || current_user.superadmin?
       redirect_to root_path, alert: "No tienes permiso para acceder a esta sección."
       return
     end
 
-    @employee_payments = current_user.employee_payments.includes(:gig).order(created_at: :desc)
-    @worker_payment_items = current_user.worker_payment_items
-    @total_expected = current_user.total_agreed_amount
-    @total_paid = current_user.total_paid_amount
-    @total_owed = current_user.pending_balance
+    @worker = if (current_user.leader? || current_user.superadmin?) && params[:user_id].present?
+                current_company.users.find_by(id: params[:user_id]) || current_user
+              else
+                current_user
+              end
+
+    @employee_payments = @worker.employee_payments.includes(:gig).order(created_at: :desc)
+    @worker_payment_items = @worker.worker_payment_items
+    @total_expected = @worker.total_agreed_amount
+    @total_paid = @worker.total_paid_amount
+    @total_owed = @worker.pending_balance
   end
 
   def help

@@ -9,6 +9,9 @@
   </div>
 
   <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <%= link_to my_payments_path, class: 'btn-main btn-gray-custom', style: 'display: inline-flex; align-items: center; gap: 6px;' do %>
+      <span>💵</span> Ver Mis Pagos por Show
+    <% end %>
     <%= link_to '➕ Registrar Nuevo Pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
   </div>
 </div>
@@ -189,6 +192,7 @@
             <div style="width: 1px; height: 38px; background: #e2e8f0; flex-shrink: 0;"></div>
 
             <%# ── Acciones ── %>
+            <%= link_to '📊 Cuentas por Show', my_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-success-custom py-1 px-3 fs-7', style: 'text-decoration: none;' %>
             <%= link_to '👁️ Historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
             <%= link_to '💳 Pagar', new_employee_payment_path(user_id: metric[:worker].id), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
 
