@@ -16,34 +16,20 @@
   </div>
 </div>
 
-<% if current_company.financial_reset_active? %>
+<% if current_company.slug == 'marquez-musica' || current_company.name.to_s.downcase.include?('marquez') %>
   <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);">
     <div style="display: flex; align-items: center; gap: 12px;">
       <div style="width: 38px; height: 38px; border-radius: 10px; background: #dcfce7; border: 1px solid #86efac; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
-        🔄
+        📊
       </div>
       <div>
         <div style="font-weight: 800; color: #065f46; font-size: 0.95em;">
-          <%= @financial_scope == 'current_cycle' ? 'Ciclo Contable Actual (Reinicio Operativo)' : 'Historial Acumulado Completo' %>
+          Nómina y Pagos Calculados según Shows Registrados
         </div>
         <div style="font-size: 0.82em; color: #047857; margin-top: 2px;">
-          <% if @financial_scope == 'current_cycle' %>
-            Visualizando métricas y pagos del ciclo en curso. Deudas pasadas de trabajadores y abonos de clientes continúan 100% protegidos.
-          <% else %>
-            Visualizando la totalidad de registros y pagos históricos acumulados en el sistema.
-          <% end %>
+          Las métricas reflejan exactamente los honorarios, asignaciones y pagos reales de los <%= venue_mode? ? 'eventos' : 'shows' %> registrados en Gig Manager.
         </div>
       </div>
-    </div>
-    <div style="display: flex; gap: 8px; align-items: center;">
-      <%= link_to employee_payments_path(financial_scope: 'current_cycle', user_id: params[:user_id], status: params[:status]),
-                  class: "btn-main py-1 px-3 fs-7 #{@financial_scope == 'current_cycle' ? 'btn-primary-custom' : 'btn-gray-custom'}" do %>
-        🟢 Ciclo Actual
-      <% end %>
-      <%= link_to employee_payments_path(financial_scope: 'all_time', user_id: params[:user_id], status: params[:status]),
-                  class: "btn-main py-1 px-3 fs-7 #{@financial_scope == 'all_time' ? 'btn-primary-custom' : 'btn-gray-custom'}" do %>
-        📜 Historial Completo
-      <% end %>
     </div>
   </div>
 <% end %>
@@ -131,11 +117,9 @@
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
       <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">💰 Total pagado</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@total_payroll_paid, unit: 'USD') %></div>
-      <% if current_company.financial_reset_active? %>
-        <div style="font-size: 0.72em; color: #059669; font-weight: 600; margin-top: 2px;">
-          <%= @financial_scope == 'current_cycle' ? 'Ciclo actual' : 'Historial completo' %>
-        </div>
-      <% end %>
+      <div style="font-size: 0.72em; color: #059669; font-weight: 600; margin-top: 2px;">
+        Shows registrados
+      </div>
     </div>
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px;">
       <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (<%= venue_mode? ? 'eventos asignados' : 'shows asignados' %>)</div>

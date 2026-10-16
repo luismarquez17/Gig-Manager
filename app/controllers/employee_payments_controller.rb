@@ -7,26 +7,11 @@ class EmployeePaymentsController < ApplicationController
     @financial_scope = params[:scope].presence || params[:financial_scope].presence || (current_company.financial_reset_active? ? 'current_cycle' : 'all_time')
     reset_date = current_company.effective_reset_date
 
-    @payments = current_company.employee_payments.includes(:user, :gig).order(date_paid: :desc, created_at: :desc)
+    @payments = current_company.employee_payments.includes(:user, :gig).where.not(payment_method: 'Ajuste contable').order(date_paid: :desc, created_at: :desc)
     @pending_approvals = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc)
 
-    if @financial_scope == 'current_cycle' && reset_date.present?
-      @payments = @payments.where("employee_payments.date_paid >= ? OR employee_payments.created_at >= ?", reset_date, reset_date.beginning_of_day)
-                           .where.not(payment_method: 'Ajuste contable')
-
-      payroll_scope = current_company.employee_payments.approved
-                                     .where.not(funding_source: 'external_capital')
-                                     .where.not(payment_method: 'Ajuste contable')
-                                     .joins(:gig)
-                                     .where("gigs.date >= ?", reset_date)
-      @total_payroll_paid = payroll_scope.sum(:amount).to_f
-    else
-      @payments = @payments.where.not(payment_method: 'Ajuste contable')
-      payroll_scope = current_company.employee_payments.approved
-                                     .where.not(funding_source: 'external_capital')
-                                     .where.not(payment_method: 'Ajuste contable')
-      @total_payroll_paid = payroll_scope.sum(:amount).to_f
-    end
+    @worker_metrics = WorkerBalanceService.build_metrics_for_company(current_company)
+    @total_payroll_paid = @worker_metrics.sum { |m| m[:total_paid] }.to_f
 
     if params[:user_id].present?
       @payments = @payments.where(user_id: params[:user_id])
@@ -36,8 +21,6 @@ class EmployeePaymentsController < ApplicationController
     if params[:status].present?
       @payments = @payments.where(status: params[:status])
     end
-
-    @worker_metrics = WorkerBalanceService.build_metrics_for_company(current_company)
   end
 
   def new_worker_report
