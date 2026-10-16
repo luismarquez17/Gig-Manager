@@ -13,7 +13,7 @@ class CashAdjustment < ApplicationRecord
   }
 
   before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
-  before_validation { self.status = 'approved' if status.blank? }
+  before_validation { self.status = 'approved' if respond_to?(:status) && respond_to?(:status=) && status.blank? }
 
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :date, presence: true

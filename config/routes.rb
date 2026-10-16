@@ -136,10 +136,11 @@ Rails.application.routes.draw do
   get '/api/exchange_rate', to: 'exchange_rates#show', as: 'api_exchange_rate'
   post '/api/exchange_rate/refresh', to: 'exchange_rates#refresh', as: 'api_refresh_exchange_rate'
 
-  resources :gig_upsell_requests, only: [] do
+  resources :gig_upsell_requests, only: [:destroy] do
     member do
       post :approve
       post :reject
+      post :revert
     end
   end
 
@@ -155,6 +156,7 @@ Rails.application.routes.draw do
       get :print_contract
       get :flashcard
       get :stage_mode
+      patch :adjust_price
       post :add_upsell
       post :save_profit_to_goal
     end

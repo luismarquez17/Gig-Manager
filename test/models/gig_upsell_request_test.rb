@@ -110,4 +110,46 @@ class GigUpsellRequestTest < ActiveSupport::TestCase
     assert_equal "pending", smoke[:request_status]
     assert_equal req.id, smoke[:request_id]
   end
+
+  test "revert! on extra_time rolls back gig amount, end_time, and details" do
+    req = @gig.gig_upsell_requests.create!(
+      upsell_key: "extra_time",
+      title: "1 Hora Extra de Música",
+      emoji: "⏳",
+      price: 60.0,
+      currency: "USD"
+    )
+
+    req.approve!
+    @gig.reload
+    assert_equal "00:00", @gig.end_time.strftime("%H:%M")
+    assert_equal 460.0, @gig.amount.to_f
+
+    assert req.revert!
+    req.reload
+    @gig.reload
+
+    assert_equal "rejected", req.status
+    assert_equal "23:00", @gig.end_time.strftime("%H:%M")
+    assert_equal 400.0, @gig.amount.to_f
+    assert_includes @gig.details, "cancelado/removido"
+  end
+
+  test "destroying approved request reverts financials" do
+    req = @gig.gig_upsell_requests.create!(
+      upsell_key: "smoke_machine",
+      title: "Máquina de Humo",
+      emoji: "💨",
+      price: 35.0,
+      currency: "USD"
+    )
+    req.approve!
+    @gig.reload
+    assert_equal 435.0, @gig.amount.to_f
+
+    req.destroy
+    @gig.reload
+    assert_equal 400.0, @gig.amount.to_f
+    assert_includes @gig.details, "cancelado/removido"
+  end
 end

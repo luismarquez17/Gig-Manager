@@ -45,4 +45,35 @@ class GigUpsellRequestsControllerTest < ActionDispatch::IntegrationTest
     assert_equal initial_amount, @gig.amount.to_f
     assert_equal initial_details, @gig.details
   end
+
+  test "should revert approved upsell request and deduct gig amount" do
+    @upsell_request.approve!
+    @gig.reload
+    approved_amount = @gig.amount.to_f
+
+    post revert_gig_upsell_request_url(@upsell_request)
+    assert_redirected_to gig_url(@gig)
+    assert_includes flash[:notice], "cancelado y descontado con éxito"
+
+    @upsell_request.reload
+    @gig.reload
+
+    assert_equal "rejected", @upsell_request.status
+    assert_equal approved_amount - 35.0, @gig.amount.to_f
+    assert_includes @gig.details, "cancelado/removido"
+  end
+
+  test "should destroy approved upsell request and deduct gig amount via callback" do
+    @upsell_request.approve!
+    @gig.reload
+    approved_amount = @gig.amount.to_f
+
+    assert_difference("GigUpsellRequest.count", -1) do
+      delete gig_upsell_request_url(@upsell_request)
+    end
+
+    assert_redirected_to gig_url(@gig)
+    @gig.reload
+    assert_equal approved_amount - 35.0, @gig.amount.to_f
+  end
 end

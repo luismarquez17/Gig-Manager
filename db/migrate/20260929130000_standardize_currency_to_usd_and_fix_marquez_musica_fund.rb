@@ -44,14 +44,22 @@ class StandardizeCurrencyToUsdAndFixMarquezMusicaFund < ActiveRecord::Migration[
     if company.present?
       # Inflows
       gigs_received = GigPayment.joins(:gig).where(gigs: { company_id: company.id }).sum(:amount).to_f
-      cash_deposits = company.cash_adjustments.inflows.sum(:amount).to_f
+      cash_deposits = if column_exists?(:cash_adjustments, :status)
+                        company.cash_adjustments.inflows.sum(:amount).to_f
+                      else
+                        company.cash_adjustments.where(adjustment_type: [0, 2]).sum(:amount).to_f
+                      end
       total_inflow  = (gigs_received + cash_deposits).round(2)
 
       # Outflows
       payroll_paid     = company.employee_payments.approved.sum(:amount).to_f
       maintenance_cost = MaintenanceRecord.joins(:item).where(items: { company_id: company.id }).sum(:cost).to_f
       investments_cost = company.investments.sum(:amount).to_f
-      cash_withdrawals = company.cash_adjustments.outflows.sum(:amount).to_f
+      cash_withdrawals = if column_exists?(:cash_adjustments, :status)
+                           company.cash_adjustments.outflows.sum(:amount).to_f
+                         else
+                           company.cash_adjustments.where(adjustment_type: 1).sum(:amount).to_f
+                         end
       total_outflow    = (payroll_paid + maintenance_cost + investments_cost + cash_withdrawals).round(2)
 
       current_fund_balance = (total_inflow - total_outflow).round(2)

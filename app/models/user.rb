@@ -183,8 +183,8 @@ class User < ApplicationRecord
 
   def total_paid_amount(scoped_company = nil)
     comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
-    ep_scope = comp ? comp.employee_payments.approved.where.not(payment_method: 'Ajuste contable').where(user_id: id) : employee_payments.approved.where.not(payment_method: 'Ajuste contable')
-    ep_scope.sum(:amount).to_f
+    base = comp ? comp.employee_payments.approved.where(user_id: id) : employee_payments.approved
+    base.where("payment_method IS NULL OR payment_method != 'Ajuste contable'").sum(:amount).to_f
   end
 
   def total_pending_approval_amount(scoped_company = nil)

@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 class GigUpsellRequestsController < ApplicationController
   before_action :require_leader!
   before_action -> { require_module!(:clients_crm) }
@@ -23,6 +25,34 @@ class GigUpsellRequestsController < ApplicationController
       redirect_to gig_path(@gig_upsell_request.gig), notice: "Solicitud de adicional '#{@gig_upsell_request.title}' rechazada. El precio acordado del evento no fue modificado."
     else
       redirect_to gig_path(@gig_upsell_request.gig), alert: "No se pudo rechazar la solicitud: #{@gig_upsell_request.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def revert
+    gig = @gig_upsell_request.gig
+    title = @gig_upsell_request.title
+    price_formatted = helpers.number_with_precision(@gig_upsell_request.price, precision: 2)
+    currency = @gig_upsell_request.currency
+
+    if @gig_upsell_request.revert!
+      redirect_to gig_path(gig), notice: "Adicional '#{title}' cancelado y descontado con éxito (- $#{price_formatted} #{currency})."
+    else
+      redirect_to gig_path(gig), alert: "No se pudo cancelar el adicional: #{@gig_upsell_request.errors.full_messages.join(', ')}"
+    end
+  end
+
+  def destroy
+    gig = @gig_upsell_request.gig
+    title = @gig_upsell_request.title
+    was_approved = @gig_upsell_request.approved?
+    price_formatted = helpers.number_with_precision(@gig_upsell_request.price, precision: 2)
+    currency = @gig_upsell_request.currency
+
+    if @gig_upsell_request.destroy
+      msg = was_approved ? "Adicional '#{title}' eliminado y descontado del presupuesto (- $#{price_formatted} #{currency})." : "Solicitud de adicional '#{title}' eliminada."
+      redirect_to gig_path(gig), notice: msg
+    else
+      redirect_to gig_path(gig), alert: "No se pudo eliminar el registro."
     end
   end
 

@@ -151,10 +151,17 @@
                 <p style="margin: 0; color: #64748b; font-size: 0.78rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
                   Presupuesto del <%= company_term(:event_singular, 'Evento') %>
                 </p>
-                <p style="margin: 2px 0 0 0; font-size: 1.65rem; font-weight: 900; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">
-                  $<%= number_with_precision(@gig.amount, precision: 2) %> 
-                  <span style="font-size: 0.55em; color: #64748b; font-weight: 700; vertical-align: middle;"><%= @gig.currency %></span>
-                </p>
+                <div style="display: flex; align-items: center; gap: 8px; margin-top: 2px;">
+                  <p style="margin: 0; font-size: 1.65rem; font-weight: 900; color: #0f172a; font-family: 'Outfit', 'Inter', sans-serif;">
+                    $<%= number_with_precision(@gig.amount, precision: 2) %> 
+                    <span style="font-size: 0.55em; color: #64748b; font-weight: 700; vertical-align: middle;"><%= @gig.currency %></span>
+                  </p>
+                  <% if current_user.leader? %>
+                    <button type="button" onclick="openAdjustPriceModal()" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 4px 9px; border-radius: 8px; font-weight: 800; font-size: 0.75rem; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: 0.15s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Ajustar presupuesto general acordado">
+                      <span>✏️</span> Ajustar
+                    </button>
+                  <% end %>
+                </div>
               </div>
               
               <% if @gig.paid_in_full? %>
@@ -485,7 +492,7 @@
         <% if @gig.gig_upsell_requests.any? %>
           <div style="background: white; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; margin-bottom: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.03);">
             <h4 style="margin: 0 0 12px 0; color: #1e293b; font-size: 1.02em; font-weight: 800; display: flex; align-items: center; justify-content: space-between;">
-              <span>📜 Solicitudes de Adicionales del Cliente (<%= @gig.gig_upsell_requests.count %>)</span>
+              <span>✨ Adicionales & Solicitudes del Evento (<%= @gig.gig_upsell_requests.count %>)</span>
             </h4>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <% @gig.gig_upsell_requests.ordered.each do |req| %>
@@ -506,13 +513,24 @@
                     
                     <% case req.status %>
                     <% when 'approved' %>
-                      <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.78em;">
-                        <%= venue_mode? ? '✓ Añadido al Evento' : '✓ Añadido al Show' %>
+                      <span style="background: #ecfdf5; border: 1px solid #a7f3d0; color: #065f46; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.78em; display: inline-flex; align-items: center; gap: 4px;">
+                        <%= venue_mode? ? '✓ Activo en Evento' : '✓ Activo en Show' %>
                       </span>
+                      <% if current_user.leader? %>
+                        <% is_time_item = req.is_extra_time? %>
+                        <%= button_to revert_gig_upsell_request_path(req), method: :post, style: "background: #fff1f2; color: #e11d48; border: 1px solid #fecdd3; padding: 5px 11px; border-radius: 8px; font-weight: 800; font-size: 0.78em; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; transition: 0.15s;", data: { turbo_confirm: "¿Quitar y cancelar '#{req.title}' de este evento?\n\nSe restarán $#{number_with_precision(req.price, precision: 2)} #{req.currency} del presupuesto total#{' y se restará 1 hora al horario del evento' if is_time_item}." }, title: "Cancelar y descontar este adicional" do %>
+                          <span>🗑️</span> Quitar / Cancelar
+                        <% end %>
+                      <% end %>
                     <% when 'rejected' %>
                       <span style="background: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.78em;">
-                        ✕ Rechazado
+                        ✕ Cancelado / Removido
                       </span>
+                      <% if current_user.leader? %>
+                        <%= button_to gig_upsell_request_path(req), method: :delete, style: "background: none; border: none; color: #94a3b8; font-size: 0.75rem; cursor: pointer; text-decoration: underline; padding: 0 4px;", data: { turbo_confirm: "¿Eliminar definitivamente este registro del historial?" }, title: "Eliminar registro" do %>
+                          Eliminar registro
+                        <% end %>
+                      <% end %>
                     <% else %>
                       <span style="background: #fffbeb; border: 1px solid #fde68a; color: #92400e; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.78em;">
                         ⏳ Pendiente
@@ -571,25 +589,38 @@
             </div>
 
             <%# Formulario para monto u hora extra personalizada a medida %>
-            <details style="margin-top: 10px; background: #f8fafc; padding: 12px; border-radius: 12px; border: 1px solid #e2e8f0;">
-              <summary style="font-weight: 700; font-size: 0.85em; color: #475569; cursor: pointer; user-select: none;">
-                ⚙️ Añadir adicional con monto u horas personalizadas...
+            <details style="margin-top: 10px; background: #f8fafc; padding: 14px 16px; border-radius: 12px; border: 1px solid #e2e8f0;">
+              <summary style="font-weight: 700; font-size: 0.86em; color: #475569; cursor: pointer; user-select: none;">
+                ⚙️ Añadir adicional o descuento personalizado a medida...
               </summary>
-              <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "margin-top: 12px; display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;" do |f| %>
-                <div style="flex: 2; min-width: 180px;">
-                  <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">Concepto / Título del Adicional</label>
-                  <%= text_field_tag :title, nil, placeholder: "Ej: Hora Extra Especial, Tarima Extra...", required: true, style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em;" %>
+              <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "margin-top: 12px; display: flex; flex-direction: column; gap: 12px;" do |f| %>
+                <div style="display: flex; gap: 16px; flex-wrap: wrap;">
+                  <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; font-weight: 700; color: #047857; cursor: pointer;">
+                    <%= radio_button_tag :operation, 'add', true, id: 'op-add', onchange: "document.getElementById('custom-upsell-submit').value='➕ Registrar Adicional'; document.getElementById('custom-upsell-submit').style.background='#1e293b';" %>
+                    <span>➕ Sumar al presupuesto (Adicional / Hora Extra)</span>
+                  </label>
+                  <label style="display: inline-flex; align-items: center; gap: 6px; font-size: 0.85em; font-weight: 700; color: #b91c1c; cursor: pointer;">
+                    <%= radio_button_tag :operation, 'subtract', false, id: 'op-sub', onchange: "document.getElementById('custom-upsell-submit').value='➖ Aplicar Descuento / Deducción'; document.getElementById('custom-upsell-submit').style.background='#dc2626';" %>
+                    <span>➖ Descontar del presupuesto (Deducción / Descuento)</span>
+                  </label>
                 </div>
-                <div style="flex: 1; min-width: 120px;">
-                  <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">Monto Adicional ($)</label>
-                  <%= number_field_tag :price, nil, step: :any, placeholder: "0.00", required: true, style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em;" %>
-                </div>
-                <div style="flex: 1; min-width: 120px;">
-                  <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">¿Sumar tiempo al horario?</label>
-                  <%= select_tag :hours, options_for_select([["No sumar tiempo", 0], ["+ 1 Hora de evento", 1], ["+ 2 Horas de evento", 2], ["+ 3 Horas de evento", 3]]), style: "width: 100%; box-sizing: border-box; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; background: white;" %>
-                </div>
-                <div>
-                  <%= f.submit "➕ Registrar Adicional", style: "background: #1e293b; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer;" %>
+
+                <div style="display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;">
+                  <div style="flex: 2; min-width: 180px;">
+                    <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">Concepto / Título</label>
+                    <%= text_field_tag :title, nil, placeholder: "Ej: Hora Extra Especial, Descuento especial, Tarima...", required: true, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em;" %>
+                  </div>
+                  <div style="flex: 1; min-width: 120px;">
+                    <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">Monto ($ USD)</label>
+                    <%= number_field_tag :price, nil, step: :any, min: 0, placeholder: "0.00", required: true, style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em;" %>
+                  </div>
+                  <div style="flex: 1; min-width: 130px;">
+                    <label style="display: block; font-size: 0.78em; font-weight: bold; color: #64748b; margin-bottom: 4px;">¿Ajustar Horario?</label>
+                    <%= select_tag :hours, options_for_select([["No modificar tiempo", 0], ["1 Hora de evento", 1], ["2 Horas de evento", 2], ["3 Horas de evento", 3]]), style: "width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.88em; background: white;" %>
+                  </div>
+                  <div>
+                    <%= f.submit "➕ Registrar Adicional", id: "custom-upsell-submit", style: "background: #1e293b; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer; transition: 0.2s;" %>
+                  </div>
                 </div>
               <% end %>
             </details>
@@ -2068,4 +2099,107 @@
 <%# --- MODALES PARA WHATSAPP --- %>
 <%= render 'gigs/flashcard_modal', gig: @gig %>
 <%= render 'gigs/whatsapp_share_modal', gig: @gig %>
+
+<% if current_user.leader? %>
+  <%# --- MODAL RÁPIDO PARA AJUSTAR PRECIO GENERAL DEL EVENTO --- %>
+  <div id="adjust-price-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: white; border-radius: 20px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; overflow: hidden; animation: scaleUp 0.2s ease-out;">
+      <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+            <span>✏️</span> Ajustar Presupuesto del <%= company_term(:event_singular, 'Evento') %>
+          </h3>
+          <p style="margin: 3px 0 0 0; font-size: 0.82rem; color: #94a3b8;">
+            Actualiza el monto acordado total si hubo cancelaciones, descuentos o cambios.
+          </p>
+        </div>
+        <button type="button" onclick="closeAdjustPriceModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 8px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <%= form_with url: adjust_price_gig_path(@gig), method: :patch, local: true, style: "padding: 24px; display: flex; flex-direction: column; gap: 18px;" do |f| %>
+        
+        <div style="background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Monto Actual Registrado</span>
+          <span style="font-size: 1.15rem; font-weight: 900; color: #0f172a;">$<%= number_with_precision(@gig.amount, precision: 2) %> <%= @gig.currency %></span>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 800; font-size: 0.88rem; color: #1e293b; margin-bottom: 6px;">
+            💰 Nuevo Presupuesto General Total ($ USD) <span style="color: #e11d48;">*</span>
+          </label>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 800; color: #64748b; font-size: 1.1rem;">$</span>
+            <input type="number" step="0.01" min="0" name="new_amount" id="modal-new-amount" value="<%= sprintf('%.2f', @gig.amount.to_f) %>" required style="width: 100%; box-sizing: border-box; padding: 12px 14px 12px 32px; border: 2px solid #3b82f6; border-radius: 10px; font-size: 1.25rem; font-weight: 900; color: #0f172a; outline: none;">
+          </div>
+          <small style="color: #64748b; font-size: 0.78rem; margin-top: 4px; display: block;">
+            Escribe el nuevo precio total acordado con el cliente. Las deudas y ganancias se recalcularán automáticamente.
+          </small>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 800; font-size: 0.88rem; color: #1e293b; margin-bottom: 6px;">
+            📝 Motivo del Ajuste (Opcional)
+          </label>
+          <input type="text" name="reason" id="modal-reason-input" placeholder="Ej: Cliente canceló hora extra, descuento especial acordado..." style="width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9rem; color: #1e293b;">
+          
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+            <button type="button" onclick="document.getElementById('modal-reason-input').value='Cancelación de hora extra'" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">Canceló hora extra</button>
+            <button type="button" onclick="document.getElementById('modal-reason-input').value='Descuento acordado con el cliente'" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">Descuento acordado</button>
+            <button type="button" onclick="document.getElementById('modal-reason-input').value='Ajuste por cambio de servicios'" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">Cambio de servicios</button>
+          </div>
+        </div>
+
+        <% if @gig.end_time.present? %>
+          <div>
+            <label style="display: block; font-weight: 800; font-size: 0.88rem; color: #1e293b; margin-bottom: 6px;">
+              🕐 ¿Ajustar Horario de Fin del Evento?
+            </label>
+            <%= select_tag :adjust_hours, options_for_select([
+              ["Mantener horario actual (#{@gig.formatted_time_range})", 0],
+              ["Restar 1 hora al horario final (-1 hr)", -1],
+              ["Restar 2 horas al horario final (-2 hrs)", -2],
+              ["Sumar 1 hora al horario final (+1 hr)", 1],
+              ["Sumar 2 horas al horario final (+2 hrs)", 2]
+            ], 0), style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9rem; background: white;" %>
+          </div>
+        <% end %>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          <%= f.submit "💾 Guardar Nuevo Precio", style: "flex: 1; background: #2563eb; color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" %>
+          <button type="button" onclick="closeAdjustPriceModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">Cancelar</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    function openAdjustPriceModal() {
+      const modal = document.getElementById('adjust-price-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const input = document.getElementById('modal-new-amount');
+        if (input) {
+          setTimeout(function() { input.focus(); input.select(); }, 50);
+        }
+      }
+    }
+
+    function closeAdjustPriceModal() {
+      const modal = document.getElementById('adjust-price-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Cerrar con Escape o haciendo clic fuera del modal
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeAdjustPriceModal();
+    });
+
+    var adjModal = document.getElementById('adjust-price-modal');
+    if (adjModal) {
+      adjModal.addEventListener('click', function(e) {
+        if (e.target === this) closeAdjustPriceModal();
+      });
+    }
+  </script>
+<% end %>
 

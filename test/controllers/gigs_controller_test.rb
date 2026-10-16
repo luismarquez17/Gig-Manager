@@ -145,4 +145,66 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_redirected_to gig_url(@gig)
     assert_equal 400.0, goal.reload.saved_amount # 100 + 300
   end
+
+  test "should adjust general gig price and update end time and audit note" do
+    @gig.update!(amount: 500.0, end_time: Time.zone.parse("2026-09-01 23:00:00"))
+
+    patch adjust_price_gig_url(@gig), params: {
+      new_amount: "400.00",
+      reason: "Cliente canceló 1 hora extra",
+      adjust_hours: "-1"
+    }
+
+    assert_redirected_to gig_url(@gig)
+    assert_includes flash[:notice], "Presupuesto general actualizado a $400.00 USD"
+
+    @gig.reload
+    assert_equal 400.0, @gig.amount.to_f
+    assert_equal "22:00", @gig.end_time.strftime("%H:%M")
+    assert_includes @gig.details, "Ajuste de precio general"
+    assert_includes @gig.details, "De $500.00 a $400.00 USD"
+    assert_includes @gig.details, "Cliente canceló 1 hora extra"
+  end
+
+  test "should add upsell and create approved GigUpsellRequest" do
+    @gig.update!(amount: 500.0, end_time: Time.zone.parse("2026-09-01 23:00:00"))
+
+    assert_difference("GigUpsellRequest.count", 1) do
+      post add_upsell_gig_url(@gig), params: {
+        operation: "add",
+        upsell_key: "extra_time",
+        title: "1 Hora Extra de Música",
+        price: "60.00",
+        hours: "1"
+      }
+    end
+
+    assert_redirected_to gig_url(@gig)
+    @gig.reload
+    assert_equal 560.0, @gig.amount.to_f
+    assert_equal "00:00", @gig.end_time.strftime("%H:%M")
+
+    last_req = GigUpsellRequest.last
+    assert_equal "approved", last_req.status
+    assert_equal 60.0, last_req.price.to_f
+    assert_equal 1, last_req.hours_added
+  end
+
+  test "should apply deduction/discount via add_upsell with subtract operation" do
+    @gig.update!(amount: 500.0, end_time: Time.zone.parse("2026-09-01 23:00:00"))
+
+    post add_upsell_gig_url(@gig), params: {
+      operation: "subtract",
+      upsell_key: "extra_time",
+      title: "Cancelación de 1 Hora Extra",
+      price: "60.00",
+      hours: "1"
+    }
+
+    assert_redirected_to gig_url(@gig)
+    @gig.reload
+    assert_equal 440.0, @gig.amount.to_f
+    assert_equal "22:00", @gig.end_time.strftime("%H:%M")
+    assert_includes @gig.details, "Deducción / Descuento registrado"
+  end
 end

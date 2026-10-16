@@ -9,6 +9,12 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "should get index with worker metrics" do
+    StaffAssignment.create!(
+      gig: @gig,
+      user: @worker,
+      agreed_amount: 300.0
+    )
+
     EmployeePayment.create!(
       user: @worker,
       gig: @gig,
@@ -17,14 +23,15 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
       currency: "USD",
       date_paid: Date.today,
       payment_method: "Transferencia",
-      notes: "Pago de prueba"
+      notes: "Pago de prueba",
+      status: "approved"
     )
 
     get employee_payments_url
 
     assert_response :success
     assert_select "h3", text: /Resumen general/
-    assert_match "Deuda (shows asignados)", response.body
+    assert_match "shows asignados sin pagar", response.body
     assert_match @worker.email, response.body
   end
 

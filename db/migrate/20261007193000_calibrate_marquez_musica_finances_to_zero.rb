@@ -5,6 +5,8 @@ class CalibrateMarquezMusicaFinancesToZero < ActiveRecord::Migration[7.1]
     company = Company.find_by(slug: 'marquez-musica')
     return unless company.present?
 
+    CashAdjustment.reset_column_information
+
     # Check if calibration already exists
     existing_calibration = company.cash_adjustments.where("description LIKE ?", "%REINICIO Y CALIBRACIÓN CONTABLE 07/10/2026%").exists?
     return if existing_calibration

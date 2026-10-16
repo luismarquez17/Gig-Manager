@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -122,11 +122,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
   create_table "clients", force: :cascade do |t|
     t.string "name"
     t.string "phone"
-    t.string "email"
+    t.string "notes"
     t.integer "priority"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "notes"
+    t.string "email"
     t.bigint "company_id"
     t.index ["company_id"], name: "index_clients_on_company_id"
   end
@@ -309,8 +309,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
   create_table "gig_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.bigint "item_id", null: false
-    t.integer "quantity"
-    t.boolean "checked"
+    t.integer "quantity", default: 1
+    t.boolean "checked", default: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "loaded_quantity", default: 0, null: false
@@ -389,6 +389,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
     t.datetime "processed_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "hours_added", default: 0, null: false
     t.index ["company_id"], name: "index_gig_upsell_requests_on_company_id"
     t.index ["gig_id", "upsell_key"], name: "index_gig_upsell_requests_on_gig_id_and_upsell_key"
     t.index ["gig_id"], name: "index_gig_upsell_requests_on_gig_id"
@@ -437,6 +438,17 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
     t.index ["gig_id"], name: "index_goal_savings_contributions_on_gig_id"
     t.index ["reinvestment_goal_id"], name: "index_goal_savings_contributions_on_reinvestment_goal_id"
     t.index ["user_id"], name: "index_goal_savings_contributions_on_user_id"
+  end
+
+  create_table "inquiries", force: :cascade do |t|
+    t.string "name"
+    t.string "email"
+    t.string "phone"
+    t.text "message"
+    t.bigint "preset_budget_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["preset_budget_id"], name: "index_inquiries_on_preset_budget_id"
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -712,6 +724,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
   add_foreign_key "goal_savings_contributions", "gigs"
   add_foreign_key "goal_savings_contributions", "reinvestment_goals"
   add_foreign_key "goal_savings_contributions", "users"
+  add_foreign_key "inquiries", "preset_budgets"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "investments", "companies"
   add_foreign_key "items", "companies"
