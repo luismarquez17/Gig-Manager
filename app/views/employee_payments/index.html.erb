@@ -122,7 +122,7 @@
       </div>
     </div>
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px;">
-      <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (<%= venue_mode? ? 'eventos asignados' : 'shows asignados' %>)</div>
+      <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (<%= venue_mode? ? 'eventos ya realizados' : 'shows ya realizados' %>)</div>
       <div style="font-size: 1.15em; font-weight: 800; color: #ea580c; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:past_balance] }, unit: 'USD') %></div>
     </div>
     <% settled_count = @worker_metrics.count { |m| m[:past_balance] <= 0 && m[:overpaid] <= 0 } %>
@@ -163,13 +163,13 @@
           <%# ── Apartados de estado y deuda ── %>
           <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
 
-            <%# 1. DEUDA: shows asignados sin pagar %>
+            <%# 1. DEUDA: shows pasados sin pagar %>
             <% if past_balance > 0 %>
               <div style="display: flex; align-items: center; gap: 6px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 13px;">
                 <div>
                   <div style="font-size: 0.7em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
                   <div style="font-size: 1em; font-weight: 900; color: #ea580c;"><%= number_to_currency(past_balance, unit: 'USD') %></div>
-                  <div style="font-size: 0.7em; color: #fdba74;"><%= venue_mode? ? 'Eventos asignados' : 'Shows asignados' %></div>
+                  <div style="font-size: 0.7em; color: #fdba74;"><%= venue_mode? ? 'Eventos ya realizados' : 'Shows ya realizados' %></div>
                 </div>
               </div>
             <% else %>
@@ -177,7 +177,7 @@
                 <div>
                   <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
                   <div style="font-size: 1em; font-weight: 900; color: #cbd5e1;">$0.00</div>
-                  <div style="font-size: 0.7em; color: #cbd5e1;"><%= venue_mode? ? 'Eventos asignados' : 'Shows asignados' %></div>
+                  <div style="font-size: 0.7em; color: #cbd5e1;"><%= venue_mode? ? 'Eventos ya realizados' : 'Shows ya realizados' %></div>
                 </div>
               </div>
             <% end %>
@@ -232,7 +232,7 @@
               ✏️ Editar deuda
             </button>
 
-            <% if gig_debts.any? %>
+            <% if past_balance > 0 && gig_debts.any? %>
               <button
                 type="button"
                 class="btn-main py-1 px-3 fs-7"
@@ -257,7 +257,7 @@
         </div>
 
         <%# ── Panel: desglose deuda (shows pasados) ── %>
-        <% if gig_debts.any? %>
+        <% if past_balance > 0 && gig_debts.any? %>
           <div id="debt-<%= idx %>" style="display:none; border-top: 1px solid #fed7aa; background: #fff7ed; padding: 14px 18px;">
             <div style="font-size: 0.75em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
               ⏳ Deuda — <%= venue_mode? ? 'eventos asignados sin pagar' : 'shows asignados sin pagar' %>

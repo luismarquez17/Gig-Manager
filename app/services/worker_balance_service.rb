@@ -116,6 +116,8 @@ class WorkerBalanceService
   end
 
   def gig_debts
+    return [] if past_balance <= 0
+
     @gig_debts ||= begin
       debts = []
 
