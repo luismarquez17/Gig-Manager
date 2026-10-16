@@ -25,11 +25,11 @@
         </div>
 
         <h2 style="margin: 0 0 6px 0; font-size: 1.35rem; font-weight: 900; color: var(--text-heading, #0f172a); letter-spacing: -0.3px; line-height: 1.25;">
-          ¡Bienvenido a la Nueva Versión de Gig Manager!
+          ¡Actualización del Ciclo Contable!
         </h2>
         
         <p style="margin: 0 auto; font-size: 0.88rem; color: var(--text-muted, #64748b); line-height: 1.45; max-width: 440px;">
-          Hemos iniciado un ciclo contable actualizado a partir del 13 de Octubre para brindarte mayor comodidad, rapidez y cuentas 100% transparentes.
+          Hemos reiniciado el ciclo de nómina a <strong>$0.00</strong> para brindarte mayor control, rapidez y máxima transparencia en las cuentas.
         </p>
       </div>
 
@@ -38,12 +38,12 @@
         
         <div style="display: flex; align-items: flex-start; gap: 12px; background: var(--bg-card-subtle, #f8fafc); border: 1px solid var(--border-color, #e2e8f0); border-radius: 14px; padding: 12px 14px;">
           <div style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; width: 34px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;">
-            📋
+            💰
           </div>
           <div>
-            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-heading, #0f172a);">Cuentas Claras y Precisas</div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-heading, #0f172a);">Total Pagado Reiniciado a $0.00</div>
             <div style="font-size: 0.78rem; color: var(--text-muted, #64748b); line-height: 1.4; margin-top: 2px;">
-              Cada show refleja exclusivamente lo acordado y los pagos realizados para ese evento, con finanzas limpias y ordenadas.
+              El contador general de nómina comienza en limpio desde hoy para llevar cuentas exactas sin acumulaciones erróneas pasadas.
             </div>
           </div>
         </div>
@@ -53,9 +53,9 @@
             🔒
           </div>
           <div>
-            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-heading, #0f172a);">Tus Saldos y Abonos Protegidos</div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-heading, #0f172a);">Tus Saldos, Deudas y Abonos Protegidos</div>
             <div style="font-size: 0.78rem; color: var(--text-muted, #64748b); line-height: 1.4; margin-top: 2px;">
-              Tus deudas pendientes y los pagos/abonos que ya realizaron los clientes para los próximos shows están totalmente respaldados y seguros.
+              Todas las deudas pendientes por shows y los abonos de clientes para los eventos venideros permanecen intactos y seguros.
             </div>
           </div>
         </div>
@@ -65,9 +65,9 @@
             ⚡
           </div>
           <div>
-            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-heading, #0f172a);">Mayor Comodidad en Móviles y PC</div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: var(--text-heading, #0f172a);">Mayor Comodidad y Navegación</div>
             <div style="font-size: 0.78rem; color: var(--text-muted, #64748b); line-height: 1.4; margin-top: 2px;">
-              Diseño optimizado para consultar tus pagos, reportar abonos recibidos y revisar los horarios de tus próximos shows con rapidez.
+              Accede a tu historial acumulado cuando lo necesites con el selector de Ciclo Actual / Historial Completo.
             </div>
           </div>
         </div>
@@ -77,7 +77,7 @@
       <%# Botones de Acción %>
       <div style="display: flex; flex-direction: column; gap: 8px;">
         <button type="button" onclick="closeMarquezUpdateModal()" style="width: 100%; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); color: white; border: none; padding: 13px 20px; border-radius: 14px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35); transition: transform 0.15s ease, opacity 0.15s ease;">
-          ✨ ¡Entendido, vamos a empezar!
+          ✨ ¡Entendido, todo claro!
         </button>
 
         <% if current_user.musician? || current_user.staff? %>
@@ -95,7 +95,7 @@
       function checkMarquezModal() {
         var modal = document.getElementById('marquez-update-announcement-modal');
         if (!modal) return;
-        var seen = localStorage.getItem('seen_marquez_update_modal_20261013');
+        var seen = localStorage.getItem('seen_marquez_update_modal_20261016');
         if (!seen) {
           modal.style.display = 'flex';
           setTimeout(function() {
@@ -109,7 +109,7 @@
         if (!modal) return;
         modal.style.opacity = '0';
         try {
-          localStorage.setItem('seen_marquez_update_modal_20261013', 'true');
+          localStorage.setItem('seen_marquez_update_modal_20261016', 'true');
         } catch (e) {}
         setTimeout(function() {
           modal.style.display = 'none';

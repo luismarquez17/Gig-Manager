@@ -16,6 +16,38 @@
   </div>
 </div>
 
+<% if current_company.financial_reset_active? %>
+  <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #dcfce7; border: 1px solid #86efac; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+        🔄
+      </div>
+      <div>
+        <div style="font-weight: 800; color: #065f46; font-size: 0.95em;">
+          <%= @financial_scope == 'current_cycle' ? 'Ciclo Contable Actual (Reinicio Operativo)' : 'Historial Acumulado Completo' %>
+        </div>
+        <div style="font-size: 0.82em; color: #047857; margin-top: 2px;">
+          <% if @financial_scope == 'current_cycle' %>
+            Visualizando métricas y pagos del ciclo en curso. Deudas pasadas de trabajadores y abonos de clientes continúan 100% protegidos.
+          <% else %>
+            Visualizando la totalidad de registros y pagos históricos acumulados en el sistema.
+          <% end %>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <%= link_to employee_payments_path(financial_scope: 'current_cycle', user_id: params[:user_id], status: params[:status]),
+                  class: "btn-main py-1 px-3 fs-7 #{@financial_scope == 'current_cycle' ? 'btn-primary-custom' : 'btn-gray-custom'}" do %>
+        🟢 Ciclo Actual
+      <% end %>
+      <%= link_to employee_payments_path(financial_scope: 'all_time', user_id: params[:user_id], status: params[:status]),
+                  class: "btn-main py-1 px-3 fs-7 #{@financial_scope == 'all_time' ? 'btn-primary-custom' : 'btn-gray-custom'}" do %>
+        📜 Historial Completo
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
 <%# --- SECCIÓN: NOTIFICACIÓN DE PAGOS REPORTADOS POR TRABAJADORES PENDIENTES DE APROBACIÓN --- %>
 <% if @pending_approvals.any? %>
   <div style="background: #fffbeb; border: 2px solid #fde68a; border-radius: 18px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
@@ -98,7 +130,12 @@
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
       <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">💰 Total pagado</div>
-      <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:total_paid] }, unit: 'USD') %></div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@total_payroll_paid, unit: 'USD') %></div>
+      <% if current_company.financial_reset_active? %>
+        <div style="font-size: 0.72em; color: #059669; font-weight: 600; margin-top: 2px;">
+          <%= @financial_scope == 'current_cycle' ? 'Ciclo actual' : 'Historial completo' %>
+        </div>
+      <% end %>
     </div>
     <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px;">
       <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (<%= venue_mode? ? 'eventos asignados' : 'shows asignados' %>)</div>
@@ -637,9 +674,9 @@
         </span>
       <% end %>
 
-      <%= link_to "Todos", employee_payments_path(user_id: params[:user_id]), class: "btn-main py-1 px-3 fs-7 #{params[:status].blank? ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
-      <%= link_to "⏳ Pendientes (#{@pending_approvals.count})", employee_payments_path(user_id: params[:user_id], status: 'pending_approval'), class: "btn-main py-1 px-3 fs-7 #{params[:status] == 'pending_approval' ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
-      <%= link_to "✅ Confirmados", employee_payments_path(user_id: params[:user_id], status: 'approved'), class: "btn-main py-1 px-3 fs-7 #{params[:status] == 'approved' ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
+      <%= link_to "Todos", employee_payments_path(user_id: params[:user_id], financial_scope: params[:financial_scope]), class: "btn-main py-1 px-3 fs-7 #{params[:status].blank? ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
+      <%= link_to "⏳ Pendientes (#{@pending_approvals.count})", employee_payments_path(user_id: params[:user_id], status: 'pending_approval', financial_scope: params[:financial_scope]), class: "btn-main py-1 px-3 fs-7 #{params[:status] == 'pending_approval' ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
+      <%= link_to "✅ Confirmados", employee_payments_path(user_id: params[:user_id], status: 'approved', financial_scope: params[:financial_scope]), class: "btn-main py-1 px-3 fs-7 #{params[:status] == 'approved' ? 'btn-primary-custom' : 'btn-gray-custom'}" %>
     </div>
   </div>
 

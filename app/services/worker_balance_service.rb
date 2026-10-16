@@ -21,8 +21,8 @@ class WorkerBalanceService
                                        .where(gigs: { company_id: company.id }, user_id: worker_ids)
                                        .group(:user_id)
                                        .sum(:agreed_amount)
-    paid_sums         = company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).sum(:amount)
-    counts            = company.employee_payments.approved.where(user_id: worker_ids).group(:user_id).count
+    paid_sums         = company.employee_payments.approved.where.not(payment_method: 'Ajuste contable').where(user_id: worker_ids).group(:user_id).sum(:amount)
+    counts            = company.employee_payments.approved.where.not(payment_method: 'Ajuste contable').where(user_id: worker_ids).group(:user_id).count
 
     assignments_by_worker = StaffAssignment
       .joins(:gig)
@@ -30,7 +30,7 @@ class WorkerBalanceService
       .includes(gig: :client)
       .group_by(&:user_id)
 
-    all_approved_payments = company.employee_payments.approved.where(user_id: worker_ids).includes(:gig)
+    all_approved_payments = company.employee_payments.approved.where.not(payment_method: 'Ajuste contable').where(user_id: worker_ids).includes(:gig)
     payments_by_worker    = all_approved_payments.group_by(&:user_id)
 
     today = Date.today

@@ -4,8 +4,29 @@ class EmployeePaymentsController < ApplicationController
   before_action :set_payment, only: [:edit, :update, :destroy, :approve, :reject, :void, :receipt]
 
   def index
+    @financial_scope = params[:scope].presence || params[:financial_scope].presence || (current_company.financial_reset_active? ? 'current_cycle' : 'all_time')
+    reset_date = current_company.effective_reset_date
+
     @payments = current_company.employee_payments.includes(:user, :gig).order(date_paid: :desc, created_at: :desc)
     @pending_approvals = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc)
+
+    if @financial_scope == 'current_cycle' && reset_date.present?
+      @payments = @payments.where("employee_payments.date_paid >= ? OR employee_payments.created_at >= ?", reset_date, reset_date.beginning_of_day)
+                           .where.not(payment_method: 'Ajuste contable')
+
+      payroll_scope = current_company.employee_payments.approved
+                                     .where.not(funding_source: 'external_capital')
+                                     .where.not(payment_method: 'Ajuste contable')
+                                     .joins(:gig)
+                                     .where("gigs.date >= ?", reset_date)
+      @total_payroll_paid = payroll_scope.sum(:amount).to_f
+    else
+      @payments = @payments.where.not(payment_method: 'Ajuste contable')
+      payroll_scope = current_company.employee_payments.approved
+                                     .where.not(funding_source: 'external_capital')
+                                     .where.not(payment_method: 'Ajuste contable')
+      @total_payroll_paid = payroll_scope.sum(:amount).to_f
+    end
 
     if params[:user_id].present?
       @payments = @payments.where(user_id: params[:user_id])
