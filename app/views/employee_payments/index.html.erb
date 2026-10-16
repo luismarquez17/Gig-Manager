@@ -226,6 +226,7 @@
               data-worker-name="<%= worker_display %>"
               data-company-debt="<%= metric[:past_balance].round(2) %>"
               data-worker-owes="<%= metric[:overpaid].round(2) %>"
+              onclick="window.openResetModal(this.getAttribute('data-worker-id'), this.getAttribute('data-worker-name'), this.getAttribute('data-company-debt'), this.getAttribute('data-worker-owes')); return false;"
               title="<%= venue_mode? ? 'Editar la deuda o saldo de este integrante' : 'Editar la deuda o saldo de este trabajador' %>"
             >
               ✏️ Editar deuda

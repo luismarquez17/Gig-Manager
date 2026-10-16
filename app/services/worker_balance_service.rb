@@ -30,7 +30,7 @@ class WorkerBalanceService
       .includes(gig: :client)
       .group_by(&:user_id)
 
-    all_approved_payments = company.employee_payments.approved.where.not(payment_method: 'Ajuste contable').where(user_id: worker_ids).includes(:gig)
+    all_approved_payments = company.employee_payments.approved.where(user_id: worker_ids).includes(:gig)
     payments_by_worker    = all_approved_payments.group_by(&:user_id)
 
     today = Date.today
