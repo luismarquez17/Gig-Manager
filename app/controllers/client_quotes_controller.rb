@@ -3,7 +3,7 @@ class ClientQuotesController < ApplicationController
   skip_before_action :verify_authenticity_token, only: [:public_submit]
   before_action :require_leader!, except: [:public_show, :public_submit, :access, :setup_password]
   before_action -> { require_module!(:clients_crm) }, except: [:public_show, :public_submit, :access, :setup_password]
-  before_action :set_quote, only: [:show, :destroy]
+  before_action :set_quote, only: [:show, :edit, :update, :destroy]
   before_action :set_public_quote, only: [:public_show, :public_submit, :access, :setup_password]
   layout 'portal', only: [:public_show, :public_submit, :access]
 
@@ -28,10 +28,19 @@ class ClientQuotesController < ApplicationController
     )
   end
 
+  def edit
+    @preset_budgets = current_company.preset_budgets.order(created_at: :desc)
+  end
+
   def create
     @client_quote = current_company.client_quotes.build(quote_params)
     @client_quote.currency ||= current_company.currency.presence || "USD"
     @client_quote.amount ||= 0.0
+    if quote_params.key?(:customized)
+      @client_quote.customized = quote_params[:customized]
+    else
+      @client_quote.customized = @client_quote.check_customized
+    end
 
     if @client_quote.save
       redirect_to client_quotes_path, notice: "🎯 ¡Enlace generado con éxito! Ya puedes copiarlo o enviarlo por WhatsApp."
@@ -39,6 +48,20 @@ class ClientQuotesController < ApplicationController
       @client_quotes = current_company.client_quotes.recent_first
       @preset_budgets = current_company.preset_budgets.order(created_at: :desc)
       render :new, status: :unprocessable_entity
+    end
+  end
+
+  def update
+    cleaned_params = quote_params
+    cleaned_params[:currency] ||= current_company.currency.presence || "USD"
+
+    if @client_quote.update(cleaned_params)
+      is_custom = cleaned_params.key?(:customized) ? cleaned_params[:customized] : @client_quote.check_customized
+      @client_quote.update_column(:customized, is_custom)
+      redirect_to client_quotes_path, notice: "🎯 ¡Presupuesto actualizado con éxito!"
+    else
+      @preset_budgets = current_company.preset_budgets.order(created_at: :desc)
+      render :edit, status: :unprocessable_entity
     end
   end
 
@@ -60,12 +83,32 @@ class ClientQuotesController < ApplicationController
       return
     end
 
-    preset = @quote.company.preset_budgets.find_by(id: params[:preset_budget_id]) if params[:preset_budget_id].present?
-    
     update_data = public_quote_params.merge(status: 'accepted')
-    if preset.present?
-      update_data[:preset_budget_id] = preset.id
-      update_data[:package_name] ||= preset.title
+
+    if @quote.customized?
+      # Si el presupuesto ya fue editado/personalizado por el líder, respetar el paquete y monto acordado
+      update_data[:preset_budget_id] = @quote.preset_budget_id
+      update_data[:package_name] = @quote.package_name
+      update_data[:amount] = @quote.amount
+
+      if params[:client_notes].present?
+        existing_details = @quote.details.to_s.strip
+        client_note = params[:client_notes].to_s.strip
+        if existing_details.present?
+          update_data[:details] = "#{existing_details}\n\n[Notas del Cliente]: #{client_note}"
+        else
+          update_data[:details] = client_note
+        end
+      else
+        update_data[:details] = @quote.details
+      end
+    else
+      # Si es un enlace desde cero, aplicar la selección de paquete del cliente
+      preset = @quote.company.preset_budgets.find_by(id: params[:preset_budget_id]) if params[:preset_budget_id].present?
+      if preset.present?
+        update_data[:preset_budget_id] = preset.id
+        update_data[:package_name] ||= preset.title
+      end
     end
 
     # Registrar o vincular automáticamente al cliente en la base de datos
@@ -215,14 +258,16 @@ class ClientQuotesController < ApplicationController
         :client_name, :client_email, :client_phone,
         :event_type, :event_date, :event_location,
         :start_time, :end_time, :amount, :currency,
-        :advance_amount, :details, :preset_budget_id, :package_name
+        :advance_amount, :details, :preset_budget_id, :package_name,
+        :customized
       )
     else
       params.permit(
         :client_name, :client_email, :client_phone,
         :event_type, :event_date, :event_location,
         :start_time, :end_time, :amount, :currency,
-        :advance_amount, :details, :preset_budget_id, :package_name
+        :advance_amount, :details, :preset_budget_id, :package_name,
+        :customized
       )
     end
     sanitize_quote_data(raw)
@@ -240,6 +285,20 @@ class ClientQuotesController < ApplicationController
 
   def sanitize_quote_data(raw)
     sanitized = raw.respond_to?(:to_h) ? raw.to_h.with_indifferent_access : raw.dup
+
+    if sanitized.key?(:preset_budget_id)
+      pid = sanitized[:preset_budget_id].to_s.strip
+      if pid.blank? || pid == 'custom' || pid.to_i <= 0
+        sanitized[:preset_budget_id] = nil
+      else
+        sanitized[:preset_budget_id] = pid.to_i
+      end
+    end
+
+    if sanitized.key?(:customized)
+      val = sanitized[:customized]
+      sanitized[:customized] = (val == true || val.to_s == '1' || val.to_s == 'true')
+    end
 
     if sanitized[:amount].present? && sanitized[:amount].is_a?(String)
       sanitized[:amount] = sanitized[:amount].tr(',', '.').gsub(/[^\d.]/, '')

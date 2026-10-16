@@ -79,6 +79,11 @@
                 <span style="font-size: 0.88rem; font-weight: 800; color: #22c55e; background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); padding: 3px 9px; border-radius: 8px;">
                   $<%= quote.amount %> <%= quote.currency %>
                 </span>
+                <% if quote.status != 'converted' %>
+                  <%= link_to edit_client_quote_path(quote), style: "background: none; border: none; color: var(--text-muted); text-decoration: none; font-size: 1rem; padding: 2px;", title: "Editar Presupuesto" do %>
+                    ✏️
+                  <% end %>
+                <% end %>
                 <%= button_to client_quote_path(quote), method: :delete, data: { turbo_confirm: "¿Estás seguro de eliminar este presupuesto?" }, style: "background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; padding: 2px;", title: "Eliminar Presupuesto" do %>
                   🗑️
                 <% end %>
@@ -89,9 +94,13 @@
               <%= quote.display_client_name %>
             </h3>
 
-            <% if quote.preset_budget.present? || quote.package_name.present? %>
+            <% if quote.customized? %>
               <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(37, 99, 235, 0.12); color: var(--color-primary); border: 1px solid rgba(37, 99, 235, 0.25); font-size: 0.76rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-bottom: 10px;">
-                <span>📦</span> <%= quote.package_display_title %>
+                <span>🎯 Personalizado:</span> <%= quote.package_display_title %>
+              </div>
+            <% else %>
+              <div style="display: inline-flex; align-items: center; gap: 4px; background: rgba(100, 116, 139, 0.12); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.25); font-size: 0.76rem; font-weight: 800; padding: 3px 8px; border-radius: 6px; margin-bottom: 10px;">
+                <span>🌐 Formulario General (Cliente elige)</span>
               </div>
             <% end %>
 
@@ -131,9 +140,14 @@
             </div>
 
             <% if quote.status != 'converted' %>
-              <%= link_to new_gig_path(quote_id: quote.id), class: "btn-main btn-success-custom", style: "padding: 10px; border-radius: 10px; font-size: 0.88rem; font-weight: 800; text-decoration: none; text-align: center; display: block;" do %>
-                ✨ Crear Gig desde este Presupuesto ➔
-              <% end %>
+              <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+                <%= link_to edit_client_quote_path(quote), style: "background: var(--bg-card-subtle); border: 1px solid var(--border-color); color: var(--text-heading); padding: 10px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 4px;" do %>
+                  <span>✏️</span> Editar
+                <% end %>
+                <%= link_to new_gig_path(quote_id: quote.id), class: "btn-main btn-success-custom", style: "padding: 10px; border-radius: 10px; font-size: 0.88rem; font-weight: 800; text-decoration: none; text-align: center; display: block;" do %>
+                  ✨ Crear Gig ➔
+                <% end %>
+              </div>
             <% else %>
               <% if quote.gig %>
                 <%= link_to gig_path(quote.gig), style: "background: var(--bg-card-subtle); color: var(--text-heading); padding: 9px; border-radius: 10px; font-size: 0.84rem; font-weight: 700; text-decoration: none; text-align: center; display: block; border: 1px solid var(--border-color);" do %>

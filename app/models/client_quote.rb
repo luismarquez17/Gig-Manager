@@ -17,11 +17,32 @@ class ClientQuote < ApplicationRecord
 
   before_validation :generate_public_token, on: :create
   before_validation :set_default_status, on: :create
+  before_validation :auto_assign_customized, on: :create
   before_validation { self.currency = 'USD' if currency.blank? || currency != 'USD' }
   before_save :sync_or_create_client!, if: -> { company.present? && (client_name.present? || client_phone.present?) }
 
   scope :recent_first, -> { order(created_at: :desc) }
   scope :convertible, -> { where(status: [:pending, :accepted]) }
+  scope :customized_quotes, -> { where(customized: true) }
+  scope :open_quotes, -> { where(customized: false) }
+
+  def check_customized
+    preset_budget_id.present? || 
+      (amount.present? && amount.to_f > 0) || 
+      (details.present? && !details.to_s.strip.empty?) || 
+      (package_name.present? && package_name != 'Servicio Personalizado')
+  end
+
+  def auto_assign_customized
+    self.customized = check_customized if has_attribute?(:customized) && (customized.nil? || (customized == false && check_customized))
+  end
+
+  def customized?
+    if has_attribute?(:customized) && self[:customized] != nil
+      return self[:customized]
+    end
+    check_customized
+  end
 
   def display_client_name
     client_name.presence || "Enlace Abierto ##{open_link_number}"

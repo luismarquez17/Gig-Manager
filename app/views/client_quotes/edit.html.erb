@@ -1,0 +1,23 @@
+<div style="max-width: 800px; margin: 0 auto; padding-bottom: 60px;">
+  
+  <div style="background: white; padding: 32px 28px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.05); font-family: 'Inter', sans-serif;">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 20px; flex-wrap: wrap;">
+      <div>
+        <h1 style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin: 0 0 6px 0;">
+          ✏️ Editar Presupuesto de Cliente
+        </h1>
+        <p style="color: #64748b; font-size: 0.92rem; margin: 0;">
+          Modifica el paquete, montos o requerimientos acordados. El enlace público del cliente se actualizará automáticamente.
+        </p>
+      </div>
+
+      <div style="display: flex; gap: 8px;">
+        <%= link_to "👁️ Ver Vista Cliente", public_client_quote_path(@client_quote.public_token), target: "_blank", style: "font-size: 0.85rem; font-weight: 700; color: #2563eb; text-decoration: none; padding: 6px 12px; border: 1px solid #93c5fd; border-radius: 8px; background: #eff6ff;" %>
+        <%= link_to "← Volver a Lista", client_quotes_path, style: "font-size: 0.85rem; font-weight: 700; color: #64748b; text-decoration: none; padding: 6px 12px; border: 1px solid #cbd5e1; border-radius: 8px;" %>
+      </div>
+    </div>
+
+    <%= render 'form', client_quote: @client_quote %>
+  </div>
+
+</div>

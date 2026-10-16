@@ -1,0 +1,201 @@
+<%= form_with(model: client_quote, local: true, style: "display: grid; grid-template-columns: 1fr; gap: 20px;") do |f| %>
+  
+  <%# --- SECCIÓN: TIPO DE ENLACE / PRESUPUESTO BASE --- %>
+  <% if @preset_budgets.present? && @preset_budgets.any? %>
+    <div style="background: #f0f9ff; padding: 20px; border-radius: 16px; border: 1px solid #bae6fd;">
+      <label style="display: block; font-size: 0.88rem; font-weight: 800; color: #0369a1; margin-bottom: 6px;">
+        📦 Tipo de Enlace / Presupuesto Base Asignado
+      </label>
+      <p style="margin: 0 0 12px 0; font-size: 0.84rem; color: #0284c7; line-height: 1.4;">
+        <strong>• Si seleccionas un paquete o servicio personalizado:</strong> El enlace estará <strong>personalizado</strong> y el cliente verá <em>únicamente</em> esa propuesta con el monto acordado (sin mostrar otros paquetes).<br>
+        <strong>• Si eliges "Dejar que el cliente elija":</strong> El enlace será general para que el cliente explore todos tus paquetes y cotice desde cero.
+      </p>
+      
+      <%
+        selected_val = if client_quote.preset_budget_id.present?
+                         client_quote.preset_budget_id.to_s
+                       elsif client_quote.customized? || (client_quote.amount.to_f > 0 && client_quote.preset_budget_id.blank?)
+                         "custom"
+                       else
+                         ""
+                       end
+      %>
+
+      <input type="hidden" name="client_quote[preset_budget_id]" id="real-preset-budget-id" value="<%= client_quote.preset_budget_id %>">
+      <input type="hidden" name="client_quote[customized]" id="customized-input" value="<%= (client_quote.customized? || selected_val != '') ? '1' : '0' %>">
+      <%= f.hidden_field :package_name, id: "package-name-input" %>
+
+      <select id="preset-budget-select" onchange="onPresetChange(this)" style="width: 100%; padding: 12px 14px; border: 2px solid #38bdf8; border-radius: 10px; font-size: 0.95rem; font-weight: 700; color: #0f172a; background: white;">
+        <option value="" <%= 'selected' if selected_val == "" %>>
+          🌐 Dejar que el cliente elija (Formulario General desde cero)
+        </option>
+        <option value="custom" <%= 'selected' if selected_val == "custom" %> data-title="Servicio Personalizado / A Medida" data-price="<%= client_quote.amount if selected_val == 'custom' %>" data-desc="<%= client_quote.details if selected_val == 'custom' %>">
+          ⭐ Servicio Personalizado / A Medida (Cotización directa sin paquete fijo)
+        </option>
+        <optgroup label="─── Paquetes Base Disponibles ───">
+          <% @preset_budgets.each do |p| %>
+            <option value="<%= p.id %>" <%= 'selected' if client_quote.preset_budget_id == p.id %> data-price="<%= p.price %>" data-currency="<%= p.currency %>" data-desc="<%= p.description %>" data-title="<%= p.title %>">
+              📦 <%= p.title %> - $<%= p.price %> <%= p.currency %>
+            </option>
+          <% end %>
+        </optgroup>
+      </select>
+    </div>
+  <% end %>
+
+  <%# --- SECCIÓN: DATOS BÁSICOS DEL CLIENTE --- %>
+  <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+      <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a; margin: 0;">
+        👤 Datos del Cliente <span style="font-weight: normal; color: #64748b; font-size: 0.82rem;">(Opcional - El cliente puede completarlos o confirmarlos)</span>
+      </h3>
+    </div>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+      <div>
+        <%= f.label :client_name, "Nombre y Apellido", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.text_field :client_name, placeholder: "Ej. María Fernández", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+
+      <div>
+        <%= f.label :client_phone, "Teléfono / WhatsApp", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.text_field :client_phone, placeholder: "Ej. 04141234567", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+
+      <div>
+        <%= f.label :client_email, "Correo Electrónico (Opcional)", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.email_field :client_email, placeholder: "cliente@correo.com", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+    </div>
+  </div>
+
+  <%# --- SECCIÓN: DETALLES DEL EVENTO (OPCIONALES PARA PRE-LLENAR) --- %>
+  <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+    <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">
+      📅 Datos del Evento <span style="font-weight: normal; color: #64748b; font-size: 0.82rem;">(Opcional - Si ya los tienes acordados con el cliente)</span>
+    </h3>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px;">
+      <div>
+        <%= f.label :event_type, "Tipo de Evento", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.select :event_type, 
+            options_for_select([
+              ["-- Seleccionar tipo --", ""],
+              ["💍 Boda / Matrimonio", "Boda"],
+              ["👑 XV Años", "XV Años"],
+              ["🎂 Cumpleaños / Fiesta", "Cumpleaños"],
+              ["🏢 Evento Corporativo", "Corporativo"],
+              ["🎸 Concierto / Festival", "Concierto"],
+              ["🎓 Graduación", "Graduación"],
+              ["⭐ Otro Tipo de Evento", "Otro"]
+            ], client_quote.event_type), 
+            {}, 
+            { style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box; background: white;" } 
+        %>
+      </div>
+
+      <div>
+        <%= f.label :event_date, "Fecha del Evento", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.date_field :event_date, style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+
+      <div>
+        <%= f.label :event_location, "Lugar / Salón / Ubicación", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.text_field :event_location, placeholder: "Ej. Hotel Trinitarias / Salón Real", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+      <div>
+        <%= f.label :start_time, "Hora Tentativa Inicio", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.time_field :start_time, value: client_quote.start_time&.strftime('%H:%M'), style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+
+      <div>
+        <%= f.label :end_time, "Hora Tentativa Fin", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.time_field :end_time, value: client_quote.end_time&.strftime('%H:%M'), style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.92rem; box-sizing: border-box;" %>
+      </div>
+    </div>
+  </div>
+
+  <%# --- SECCIÓN: ESTIMACIÓN Y MONTOS --- %>
+  <div style="background: #f8fafc; padding: 20px; border-radius: 16px; border: 1px solid #e2e8f0;">
+    <h3 style="font-size: 0.98rem; font-weight: 800; color: #0f172a; margin: 0 0 12px 0;">
+      💰 Monto Acordado & Anticipo
+    </h3>
+
+    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 14px; margin-bottom: 12px;">
+      <div>
+        <%= f.label :amount, "Monto Acordado o Estimado ($ USD)", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <%= f.number_field :amount, step: "0.01", id: "quote-amount-input", placeholder: "0.00", style: "width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 1.05rem; font-weight: 800; color: #16a34a; box-sizing: border-box;" %>
+      </div>
+
+      <div>
+        <%= f.label :currency, "Moneda", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+        <div style="width: 100%; padding: 11px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: 800; background: #f1f5f9; color: #1e293b; text-align: center; box-sizing: border-box;">
+          USD ($)
+        </div>
+        <%= f.hidden_field :currency, value: "USD", id: "quote-currency-select" %>
+      </div>
+    </div>
+
+    <div style="margin-bottom: 14px;">
+      <%= f.label :advance_amount, "Adelanto / Anticipo Inicial ($ USD Opcional)", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+      <%= f.number_field :advance_amount, step: "0.01", placeholder: "0.00", style: "width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.95rem; font-weight: 700; color: #0f172a; box-sizing: border-box;" %>
+    </div>
+
+    <div>
+      <%= f.label :details, "Detalles / Alcance del Servicio o Paquete", style: "display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;" %>
+      <%= f.text_area :details, rows: 4, id: "quote-details-input", placeholder: "Ej. Incluye show de 2 horas con agrupación completa, sonido e iluminación básica...", style: "width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.9rem; box-sizing: border-box; resize: vertical; line-height: 1.5;" %>
+    </div>
+  </div>
+
+  <div style="display: flex; gap: 12px; margin-top: 6px;">
+    <%= f.submit (client_quote.persisted? ? "💾 Guardar Cambios del Presupuesto" : "✨ Generar Enlace de Presupuesto"), style: "flex: 1; background: linear-gradient(135deg, #2563eb, #1d4ed8); color: white; padding: 14px; border: none; border-radius: 12px; font-weight: 800; font-size: 0.98rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);" %>
+    <%= link_to "Cancelar", client_quotes_path, style: "padding: 14px 20px; border: 1px solid #cbd5e1; border-radius: 12px; color: #475569; font-weight: 700; text-decoration: none; font-size: 0.92rem; display: flex; align-items: center;" %>
+  </div>
+<% end %>
+
+<script>
+  function onPresetChange(select) {
+    var val = select.value;
+    var selectedOption = select.options[select.selectedIndex];
+    var price = selectedOption.getAttribute('data-price');
+    var desc = selectedOption.getAttribute('data-desc');
+    var title = selectedOption.getAttribute('data-title');
+
+    var amountInput = document.getElementById('quote-amount-input');
+    var detailsInput = document.getElementById('quote-details-input');
+    var packageInput = document.getElementById('package-name-input');
+    var realPresetInput = document.getElementById('real-preset-budget-id');
+    var customizedInput = document.getElementById('customized-input');
+
+    if (val === "") {
+      // Formulario general desde cero
+      if (packageInput) packageInput.value = "";
+      if (realPresetInput) realPresetInput.value = "";
+      if (customizedInput) customizedInput.value = "0";
+    } else if (val === "custom") {
+      // Servicio a medida
+      if (packageInput) packageInput.value = "Servicio Personalizado";
+      if (realPresetInput) realPresetInput.value = "";
+      if (customizedInput) customizedInput.value = "1";
+      if (detailsInput && !detailsInput.value) {
+        detailsInput.value = "Servicio a medida adaptado a los requerimientos específicos de tu evento.";
+      }
+    } else {
+      // Paquete predefinido
+      if (realPresetInput) realPresetInput.value = val;
+      if (customizedInput) customizedInput.value = "1";
+      if (price && amountInput) {
+        amountInput.value = price;
+      }
+      if (desc && detailsInput) {
+        detailsInput.value = desc;
+      }
+      if (packageInput) {
+        packageInput.value = title || "";
+      }
+    }
+  }
+</script>

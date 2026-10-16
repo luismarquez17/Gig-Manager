@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_16_030000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -110,6 +110,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_030000) do
     t.datetime "updated_at", null: false
     t.bigint "preset_budget_id"
     t.string "package_name"
+    t.boolean "customized", default: false, null: false
     t.index ["client_id"], name: "index_client_quotes_on_client_id"
     t.index ["company_id"], name: "index_client_quotes_on_company_id"
     t.index ["gig_id"], name: "index_client_quotes_on_gig_id"

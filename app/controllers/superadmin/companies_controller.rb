@@ -48,8 +48,10 @@ module Superadmin
       ActiveRecord::Base.transaction do
         if @company.save
           if @company.venue_mode?
-            @company.seed_venue_combos! if @company.preset_budgets.empty?
-            @company.seed_venue_upsells! if @company.standard_upsells.empty?
+            ActsAsTenant.with_tenant(@company) do
+              @company.seed_venue_combos! if @company.preset_budgets.empty?
+              @company.seed_venue_upsells! if @company.standard_upsells.empty?
+            end
           end
 
           # If leader details are provided, create the leader user directly

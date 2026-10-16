@@ -296,30 +296,34 @@ class Company < ApplicationRecord
   end
 
   def seed_venue_combos!
-    DEFAULT_VENUE_COMBOS.each_with_index do |combo, idx|
-      preset_budgets.find_or_create_by!(title: combo[:title]) do |pb|
-        pb.description = combo[:description]
-        pb.price = combo[:price]
-        pb.currency = 'USD'
-        pb.badge_text = combo[:badge_text]
-        pb.featured = combo[:featured]
-        pb.position = idx + 1
-        pb.show_on_landing = true
+    ActsAsTenant.with_tenant(self) do
+      DEFAULT_VENUE_COMBOS.each_with_index do |combo, idx|
+        preset_budgets.find_or_create_by!(title: combo[:title]) do |pb|
+          pb.description = combo[:description]
+          pb.price = combo[:price]
+          pb.currency = 'USD'
+          pb.badge_text = combo[:badge_text]
+          pb.featured = combo[:featured]
+          pb.position = idx + 1
+          pb.show_on_landing = true
+        end
       end
     end
   end
 
   def seed_venue_upsells!
-    DEFAULT_VENUE_UPSELLS.each do |up|
-      target_key = "#{slug}_#{up[:key]}".parameterize(separator: '_')
-      standard_upsells.find_or_create_by!(key: target_key) do |su|
-        su.title = up[:title]
-        su.emoji = up[:emoji]
-        su.price = up[:price]
-        su.currency = 'USD'
-        su.description = up[:description]
-        su.active = true
-        su.show_on_landing = true
+    ActsAsTenant.with_tenant(self) do
+      DEFAULT_VENUE_UPSELLS.each do |up|
+        target_key = "#{slug}_#{up[:key]}".parameterize(separator: '_')
+        standard_upsells.find_or_create_by!(key: target_key) do |su|
+          su.title = up[:title]
+          su.emoji = up[:emoji]
+          su.price = up[:price]
+          su.currency = 'USD'
+          su.description = up[:description]
+          su.active = true
+          su.show_on_landing = true
+        end
       end
     end
   end

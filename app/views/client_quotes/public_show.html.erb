@@ -248,10 +248,18 @@
       <span>✨</span> <%= @company.name %>
     </div>
     <h1 class="title-gradient" style="font-size: 2.3rem; margin: 0 0 8px 0; line-height: 1.2;">
-      Formulario de Presupuesto para tu Evento
+      <%= @quote.customized? ? "Presupuesto Personalizado para tu Evento" : "Formulario de Presupuesto para tu Evento" %>
     </h1>
     <p style="margin: 0; color: #94a3b8; font-size: 1rem; max-width: 580px; margin-left: auto; margin-right: auto; line-height: 1.5;">
-      <%= @company.tagline.presence || "Selecciona una de nuestras opciones base o personaliza tu cotización al instante." %>
+      <% if @quote.customized? %>
+        <% if @quote.client_name.present? %>
+          ¡Hola <strong><%= @quote.client_name %></strong>! Hemos preparado esta propuesta exclusiva para ti. Revisa los detalles y confirma tu fecha.
+        <% else %>
+          Hemos preparado esta propuesta exclusiva para tu evento. Revisa los detalles a continuación y confirma tu fecha.
+        <% end %>
+      <% else %>
+        <%= @company.tagline.presence || "Selecciona una de nuestras opciones base o personaliza tu cotización al instante." %>
+      <% end %>
     </p>
   </header>
 
@@ -362,9 +370,99 @@
     <input type="hidden" name="preset_budget_id" id="selected-preset-id" value="<%= @quote.preset_budget_id %>">
     <input type="hidden" name="package_name" id="selected-package-name" value="<%= @quote.package_name %>">
 
-    <%# --- PASO 1: SELECCIÓN DE PRESUPUESTO BASE (SI EXISTEN Y CRM ACTIVO) --- %>
-    <% show_presets = @company.module_enabled?(:clients_crm) && @preset_budgets.present? && @preset_budgets.any? %>
-    <% if show_presets %>
+    <%# --- PASO 1: SELECCIÓN O DETALLE DE PRESUPUESTO BASE --- %>
+    <% show_presets = @quote.customized? || (@company.module_enabled?(:clients_crm) && @preset_budgets.present? && @preset_budgets.any?) %>
+    <% if @quote.customized? %>
+      <%# --- CASO A: PRESUPUESTO YA PERSONALIZADO / EDITADO POR EL LÍDER --- %>
+      <section class="glass-card glass-card-highlight">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
+          <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
+            <span style="background: rgba(139, 92, 246, 0.25); color: #c084fc; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">1</span>
+            Tu Presupuesto Asignado
+          </h2>
+          <span style="font-size: 0.78rem; color: #34d399; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.35); padding: 4px 10px; border-radius: 99px; font-weight: 800;">
+            ✨ Propuesta Exclusiva
+          </span>
+        </div>
+        <p style="color: #94a3b8; font-size: 0.88rem; margin: 0 0 16px 0;">
+          Esta propuesta y alcance han sido configurados a la medida de tu evento por <strong><%= @company.name %></strong>.
+        </p>
+
+        <div style="max-width: 560px; margin: 0 auto;">
+          <% if @quote.preset_budget.present? %>
+            <% preset = @quote.preset_budget %>
+            <div class="preset-card selected" style="cursor: default; transform: none; box-shadow: 0 8px 30px rgba(139, 92, 246, 0.25);">
+              <div class="check-indicator" style="background: #8b5cf6; border-color: #8b5cf6; color: white;">✓</div>
+              
+              <div>
+                <% if preset.image_attached? %>
+                  <% img_url = preset.image_base64.presence || (rails_blob_path(preset.image, only_path: true) rescue url_for(preset.image)) %>
+                  <div class="preset-img-wrapper">
+                    <%= image_tag preset.image_url_or_data, class: "preset-img-blur-bg", alt: "", "aria-hidden": "true" %>
+                    <%= image_tag preset.image_url_or_data, class: "preset-img", alt: preset.title, loading: "lazy" %>
+                    
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(6px); color: #c084fc; font-size: 0.7rem; font-weight: 800; padding: 3px 9px; border-radius: 99px; border: 1px solid rgba(139, 92, 246, 0.35); text-transform: uppercase; letter-spacing: 0.5px; z-index: 5;">
+                      ✨ Paquete
+                    </div>
+
+                    <button type="button" class="preset-zoom-btn" onclick="event.stopPropagation(); openImageModal('<%= img_url %>', '<%= j preset.title %>')">
+                      🔍 Ver Flyer
+                    </button>
+                  </div>
+                <% else %>
+                  <div class="preset-img-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.95) 100%); border-color: rgba(255, 255, 255, 0.06);">
+                    <div style="font-size: 2.2rem; margin-bottom: 4px;">🎛️</div>
+                    <span style="font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Paquete Asignado</span>
+                  </div>
+                <% end %>
+
+                <div style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin-bottom: 6px; font-family: var(--font-outfit); line-height: 1.25;">
+                  <%= preset.title %>
+                </div>
+
+                <p style="font-size: 0.9rem; color: #cbd5e1; margin: 0 0 14px 0; line-height: 1.5;">
+                  <%= @quote.details.presence || preset.description %>
+                </p>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 8px;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Monto Acordado</span>
+                <span style="font-size: 1.35rem; font-weight: 800; color: #34d399; font-family: var(--font-outfit);">
+                  $<%= sprintf('%.2f', @quote.amount) %> <span style="font-size: 0.75rem; color: #94a3b8;"><%= @quote.currency %></span>
+                </span>
+              </div>
+            </div>
+          <% else %>
+            <%# Opción Personalizada a Medida sin Presupuesto Base %>
+            <div class="preset-card selected" style="cursor: default; transform: none; box-shadow: 0 8px 30px rgba(139, 92, 246, 0.25);">
+              <div class="check-indicator" style="background: #8b5cf6; border-color: #8b5cf6; color: white;">✓</div>
+              <div>
+                <div class="preset-img-wrapper" style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(139, 92, 246, 0.2) 0%, rgba(6, 182, 212, 0.15) 100%); border-color: rgba(139, 92, 246, 0.3);">
+                  <div style="font-size: 2.5rem; margin-bottom: 4px;">⭐</div>
+                  <span style="font-size: 0.78rem; font-weight: 800; color: #c084fc; text-transform: uppercase; letter-spacing: 0.5px;">Propuesta Personalizada</span>
+                </div>
+
+                <div style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin-bottom: 6px; font-family: var(--font-outfit); line-height: 1.25;">
+                  <%= @quote.package_name.presence || "Servicio a Medida / Personalizado" %>
+                </div>
+
+                <p style="font-size: 0.9rem; color: #cbd5e1; margin: 0 0 14px 0; line-height: 1.5;">
+                  <%= @quote.details.presence || "Servicio a medida adaptado especialmente a los requerimientos de tu evento." %>
+                </p>
+              </div>
+
+              <div style="display: flex; justify-content: space-between; align-items: baseline; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 12px; margin-top: 8px;">
+                <span style="font-size: 0.78rem; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Monto Acordado</span>
+                <span style="font-size: 1.35rem; font-weight: 800; color: #34d399; font-family: var(--font-outfit);">
+                  $<%= sprintf('%.2f', @quote.amount) %> <span style="font-size: 0.75rem; color: #94a3b8;"><%= @quote.currency %></span>
+                </span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      </section>
+    <% elsif @company.module_enabled?(:clients_crm) && @preset_budgets.present? && @preset_budgets.any? %>
+      <%# --- CASO B: ENLACE EN BLANCO (DESDE CERO) - MOSTRAR TODOS LOS PAQUETES --- %>
       <section class="glass-card glass-card-highlight">
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 6px;">
           <h2 style="font-size: 1.25rem; font-weight: 800; color: #f8fafc; margin: 0; display: flex; align-items: center; gap: 8px; font-family: var(--font-outfit);">
@@ -461,7 +559,7 @@
         Tus Datos de Contacto
       </h2>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px;">
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px;">
         <div>
           <label class="input-label">Nombre y Apellido *</label>
           <input type="text" name="client_name" value="<%= @quote.client_name %>" required placeholder="Ej. Carlos Mendoza" class="portal-input" style="font-weight: 700;">
@@ -470,6 +568,11 @@
         <div>
           <label class="input-label">Teléfono / WhatsApp *</label>
           <input type="tel" name="client_phone" value="<%= @quote.client_phone %>" required placeholder="Ej. 04141234567" class="portal-input" style="font-weight: 700;">
+        </div>
+
+        <div>
+          <label class="input-label">Correo Electrónico (Opcional)</label>
+          <input type="email" name="client_email" value="<%= @quote.client_email %>" placeholder="cliente@correo.com" class="portal-input">
         </div>
       </div>
     </section>
@@ -527,19 +630,32 @@
         <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; width: 30px; height: 30px; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; font-size: 0.9rem;">
           <%= show_presets ? '4' : '3' %>
         </span>
-        Presupuesto Estimado & Adelanto (Anticipo)
+        <%= @quote.customized? ? "Monto Acordado & Anticipo" : "Presupuesto Estimado & Adelanto (Anticipo)" %>
       </h2>
 
       <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 16px; margin-bottom: 16px;">
         <div>
-          <label class="input-label" style="color: #6ee7b7;">Monto del Presupuesto Acordado o Estimado ($ USD)</label>
-          <div style="display: flex; gap: 8px;">
-            <input type="number" step="0.01" id="form-amount-input" name="amount" value="<%= @quote.amount %>" placeholder="0.00" class="portal-input" style="font-size: 1.15rem; font-weight: 800; color: #34d399;">
-            <div class="portal-input" style="width: 105px; font-weight: 800; background: #0f172a; color: #34d399; display: flex; align-items: center; justify-content: center;">
-              USD ($)
-            </div>
+          <label class="input-label" style="color: #6ee7b7;">
+            <%= @quote.customized? ? "Monto del Presupuesto Acordado ($ USD)" : "Monto del Presupuesto Acordado o Estimado ($ USD)" %>
+          </label>
+          <% if @quote.customized? %>
+            <input type="hidden" name="amount" id="form-amount-input" value="<%= @quote.amount %>">
             <input type="hidden" name="currency" id="form-currency-select" value="USD">
-          </div>
+            <div class="portal-input" style="font-size: 1.25rem; font-weight: 800; color: #34d399; display: flex; align-items: center; justify-content: space-between; background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.35);">
+              <span>$<%= sprintf('%.2f', @quote.amount) %> USD</span>
+              <span style="font-size: 0.74rem; font-weight: 800; color: #6ee7b7; background: rgba(16, 185, 129, 0.2); padding: 4px 10px; border-radius: 99px;">
+                🔒 Monto Fijado
+              </span>
+            </div>
+          <% else %>
+            <div style="display: flex; gap: 8px;">
+              <input type="number" step="0.01" id="form-amount-input" name="amount" value="<%= @quote.amount %>" placeholder="0.00" class="portal-input" style="font-size: 1.15rem; font-weight: 800; color: #34d399;">
+              <div class="portal-input" style="width: 105px; font-weight: 800; background: #0f172a; color: #34d399; display: flex; align-items: center; justify-content: center;">
+                USD ($)
+              </div>
+              <input type="hidden" name="currency" id="form-currency-select" value="USD">
+            </div>
+          <% end %>
         </div>
 
         <div>
@@ -548,15 +664,30 @@
         </div>
       </div>
 
-      <div>
-        <% if @company.module_enabled?(:songs_repertoire) %>
-          <label class="input-label">Requerimientos Específicos / Preferencias Musicales / Observaciones</label>
-          <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes preferencias musicales, canciones para la entrada, vals o detalles de la presentación..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
-        <% else %>
-          <label class="input-label">Requerimientos Específicos / Observaciones del Evento</label>
-          <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes requerimientos especiales de espacio, protocolo, temática o logística..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
-        <% end %>
-      </div>
+      <% if @quote.customized? && @quote.details.present? %>
+        <div style="margin-bottom: 14px;">
+          <label class="input-label" style="color: #cbd5e1;">Detalles del Servicio Asignado</label>
+          <div style="background: rgba(0, 0, 0, 0.25); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 12px 14px; color: #cbd5e1; font-size: 0.88rem; line-height: 1.5;">
+            <%= simple_format(@quote.details) %>
+          </div>
+          <input type="hidden" name="details" id="form-details-input" value="<%= @quote.details %>">
+        </div>
+
+        <div>
+          <label class="input-label">Observaciones Adicionales / Preferencias del Cliente (Opcional)</label>
+          <textarea name="client_notes" rows="3" placeholder="Indícanos si tienes alguna solicitud especial, temas musicales o requerimientos adicionales..." class="portal-input" style="resize: vertical;"></textarea>
+        </div>
+      <% else %>
+        <div>
+          <% if @company.module_enabled?(:songs_repertoire) %>
+            <label class="input-label">Requerimientos Específicos / Preferencias Musicales / Observaciones</label>
+            <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes preferencias musicales, canciones para la entrada, vals o detalles de la presentación..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
+          <% else %>
+            <label class="input-label">Requerimientos Específicos / Observaciones del Evento</label>
+            <textarea name="details" id="form-details-input" rows="3" placeholder="Indícanos si tienes requerimientos especiales de espacio, protocolo, temática o logística..." class="portal-input" style="resize: vertical;"><%= @quote.details %></textarea>
+          <% end %>
+        </div>
+      <% end %>
 
       <% if @company.any_payment_method_enabled? %>
         <div style="margin-top: 24px; border-top: 1px dashed rgba(255, 255, 255, 0.12); padding-top: 18px;">
