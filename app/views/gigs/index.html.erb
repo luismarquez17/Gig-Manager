@@ -159,14 +159,14 @@
                     <span style="font-size: 1.1em;">📸</span>
                   </button>
 
-                  <%# NUEVO Botón de Ver Evento (Panel/Checklist) %>
+                  <%# Botón de Ver Evento (Panel) %>
                   <%= link_to gig_path(gig), 
                       style: "background: #f0fdf4; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; transition: 0.2s; box-shadow: 0 2px 4px rgba(22, 101, 52, 0.05);", 
                       onmouseover: "this.style.backgroundColor='#dcfce7'",
                       onmouseout: "this.style.backgroundColor='#f0fdf4'",
-                      title: "Ver Detalles y Checklist" do %>
-                    <span style="color: #166534; font-size: 0.9em; font-weight: bold;">Checklist</span>
-                    <span style="font-size: 1.1em;">✅</span>
+                      title: "Ver Panel del #{venue_mode? ? 'Evento' : 'Show'}" do %>
+                    <span style="color: #166534; font-size: 0.9em; font-weight: bold;">Panel</span>
+                    <span style="font-size: 1.1em;">📋</span>
                   <% end %>
 
                   <%# NUEVO Botón de Eliminar estilizado %>
