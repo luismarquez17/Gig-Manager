@@ -119,8 +119,121 @@ class Client < ApplicationRecord
     gigs.to_a.select { |g| g.remaining_amount.to_f > 0 }
   end
 
+  def sorted_unpaid_gigs
+    unpaid_gigs.sort_by { |g| [g.date || Date.new(3000, 1, 1), g.id] }
+  end
+
   def has_debt?
     total_debt > 0
+  end
+
+  # Simula la distribución FIFO de un monto sobre los shows pendientes
+  def simulate_debt_distribution(amount)
+    amt_pool = [amount.to_f.round(2), 0.0].max
+    current_gigs = sorted_unpaid_gigs
+    
+    allocations = []
+    total_allocated = 0.0
+
+    current_gigs.each do |gig|
+      gig_pending = gig.remaining_amount.to_f.round(2)
+      next if gig_pending <= 0.0
+
+      allocated = [gig_pending, amt_pool].min.round(2)
+      rem_after = [gig_pending - allocated, 0.0].max.round(2)
+      
+      allocations << {
+        gig: gig,
+        pending_before: gig_pending,
+        allocated: allocated,
+        remaining_after: rem_after,
+        fully_paid: rem_after.zero?
+      }
+
+      amt_pool = [amt_pool - allocated, 0.0].max.round(2)
+      total_allocated = (total_allocated + allocated).round(2)
+    end
+
+    total_debt_val = total_debt.round(2)
+    {
+      allocations: allocations,
+      total_allocated: total_allocated,
+      remaining_unallocated: amt_pool,
+      total_debt_before: total_debt_val,
+      total_debt_after: [total_debt_val - total_allocated, 0.0].max.round(2)
+    }
+  end
+
+  # Aplica un abono agrupado/masivo a la cuenta del cliente distribuyendo en cascada (FIFO)
+  def apply_debt_payment!(amount:, payment_method:, date_paid: nil, reference_number: nil, notes: nil, receipt_image: nil, user: nil)
+    amount_to_distribute = amount.to_f.round(2)
+    raise ArgumentError, "El monto a abonar debe ser mayor a 0." if amount_to_distribute <= 0
+
+    pending_gigs = sorted_unpaid_gigs
+    raise ArgumentError, "Este cliente no tiene eventos con saldos pendientes por cobrar." if pending_gigs.empty?
+
+    current_total_debt = total_debt.round(2)
+    if amount_to_distribute > (current_total_debt + 0.01)
+      raise ArgumentError, "El monto a abonar ($#{sprintf('%.2f', amount_to_distribute)}) supera la deuda total del cliente ($#{sprintf('%.2f', current_total_debt)})."
+    end
+
+    payments_created = []
+    settled_gigs = []
+    partial_gigs = []
+    remaining_pool = amount_to_distribute
+    method_label = GigPayment::PAYMENT_METHODS.dig(payment_method.to_s, :label) || payment_method.to_s.humanize
+
+    ActiveRecord::Base.transaction do
+      pending_gigs.each do |gig|
+        break if remaining_pool <= 0.0001
+
+        gig_pending = gig.remaining_amount.to_f.round(2)
+        next if gig_pending <= 0.0001
+
+        allocation = [gig_pending, remaining_pool].min.round(2)
+        next if allocation <= 0
+
+        is_settled = (gig_pending - allocation).abs < 0.01
+        auto_note = "Abono agrupado a cuenta de cliente ($#{sprintf('%.2f', amount_to_distribute)} total vía #{method_label})."
+        full_notes = [notes.presence, auto_note].compact.join(" | ")
+
+        gig_date_str = gig.date ? gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
+        payment = gig.gig_payments.new(
+          amount: allocation,
+          currency: gig.currency.presence || 'USD',
+          date_paid: date_paid.presence || Date.today,
+          payment_method: payment_method.presence || 'cash',
+          reference_number: reference_number.presence,
+          notes: full_notes,
+          status: 'approved',
+          approved_at: Time.current,
+          approved_by: user,
+          audit_reason: "Abono agrupado a cliente #{name}: $#{sprintf('%.2f', allocation)} asignado al evento del #{gig_date_str} (#{gig.location})"
+        )
+
+        if receipt_image.present?
+          payment.receipt_image = receipt_image
+        end
+
+        payment.save!
+        payments_created << payment
+
+        if is_settled
+          settled_gigs << gig
+        else
+          partial_gigs << gig
+        end
+
+        remaining_pool = [remaining_pool - allocation, 0.0].max.round(2)
+      end
+    end
+
+    {
+      payments: payments_created,
+      total_applied: (amount_to_distribute - remaining_pool).round(2),
+      settled_gigs: settled_gigs,
+      partial_gigs: partial_gigs
+    }
   end
 
   def debt_whatsapp_url

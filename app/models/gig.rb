@@ -291,6 +291,18 @@ class Gig < ApplicationRecord
     end
   end
 
+  def future?
+    date.present? && date > Date.current
+  end
+
+  def past?
+    date.present? && date <= Date.current
+  end
+
+  def has_not_occurred?
+    date.blank? || date > Date.current
+  end
+
   def pending_payroll_amount
     [total_payroll_agreed - total_payroll_paid, 0.0].max.round(2)
   end

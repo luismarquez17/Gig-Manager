@@ -760,7 +760,11 @@
           </div>
           <div style="font-size: 0.8em; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between;">
             <span>Pagado: <strong style="color: #059669;">$<%= number_with_precision(@gig.total_payroll_paid, precision: 2) %></strong></span>
-            <span>Pendiente: <strong style="color: <%= @gig.pending_payroll_amount > 0 ? '#dc2626' : '#16a34a' %>;">$<%= number_with_precision(@gig.pending_payroll_amount, precision: 2) %></strong></span>
+            <% if @gig.future? %>
+              <span>Por pagar al celebrarse: <strong style="color: <%= @gig.pending_payroll_amount > 0 ? '#2563eb' : '#059669' %>;">$<%= number_with_precision(@gig.pending_payroll_amount, precision: 2) %></strong></span>
+            <% else %>
+              <span>Pendiente: <strong style="color: <%= @gig.pending_payroll_amount > 0 ? '#dc2626' : '#16a34a' %>;">$<%= number_with_precision(@gig.pending_payroll_amount, precision: 2) %></strong></span>
+            <% end %>
           </div>
         </div>
 
@@ -911,7 +915,7 @@
           </div>
           <div style="flex: 1; min-width: 180px;">
             <label style="display: block; font-size: 0.82em; font-weight: 700; color: #64748b; margin-bottom: 4px;"><%= company_term(:assign_worker_help, 'Pago acordado ($ USD):') %></label>
-            <%= f.text_field :agreed_amount, inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: white;" %>
+            <%= f.text_field :agreed_amount, id: "gig-staff-agreed-amount-input", inputmode: 'decimal', placeholder: '0.00', style: "width: 100%; padding: 9px 12px; border-radius: 8px; border: 1.5px solid #cbd5e1; outline: none; background: white;" %>
           </div>
           <div>
             <%= f.submit company_term(:assign_worker_btn, (venue_mode? ? "➕ Asignar al Evento" : "➕ Asignar al Show")), style: "background: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 800; cursor: pointer; font-size: 0.88rem; box-shadow: 0 2px 8px rgba(37,99,235,0.25);" %>
@@ -926,22 +930,22 @@
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; align-items: flex-end;">
             <div>
               <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Nombre / Apodo *</label>
-              <input type="text" name="new_eventual_worker_name" id="new_eventual_worker_name" placeholder="Ej: Pedro Mesonero / DJ Carlos" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+              <input type="text" name="new_eventual_worker_name" id="new_eventual_worker_name" disabled placeholder="Ej: Pedro Mesonero / DJ Carlos" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
             </div>
             <div>
               <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Rol / Función</label>
-              <select name="new_eventual_worker_role" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+              <select name="new_eventual_worker_role" id="new_eventual_worker_role" disabled style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
                 <option value="staff">Staff (Técnico / Salón)</option>
                 <option value="musician">Músico / Artista</option>
               </select>
             </div>
             <div>
               <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Teléfono WhatsApp (Opcional)</label>
-              <input type="tel" name="new_eventual_worker_phone" placeholder="Ej: 04121234567" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+              <input type="tel" name="new_eventual_worker_phone" id="new_eventual_worker_phone" disabled placeholder="Ej: 04121234567" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
             </div>
             <div>
               <label style="display: block; font-size: 0.8em; font-weight: 700; color: #78350f; margin-bottom: 3px;">Pago Acordado ($ USD) *</label>
-              <input type="text" name="agreed_amount" inputmode="decimal" placeholder="0.00" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
+              <input type="text" name="eventual_agreed_amount" id="eventual_agreed_amount" disabled inputmode="decimal" placeholder="0.00" style="width: 100%; padding: 8px 10px; border-radius: 7px; border: 1.5px solid #cbd5e1; font-size: 0.88rem; background: white;">
             </div>
             <div>
               <button type="submit" style="width: 100%; background: linear-gradient(135deg, #d97706 0%, #b45309 100%); color: white; border: none; padding: 9px 14px; border-radius: 7px; font-weight: 800; cursor: pointer; font-size: 0.88rem; box-shadow: 0 2px 8px rgba(180,83,9,0.25);">
@@ -959,7 +963,11 @@
           const eventualBox = document.getElementById('assign-new-eventual-box');
           const toggleBtn = document.getElementById('toggle-eventual-btn');
           const selectStaff = document.getElementById('gig-staff-select-input');
+          const existingAgreed = document.getElementById('gig-staff-agreed-amount-input');
           const newNameInput = document.getElementById('new_eventual_worker_name');
+          const newRoleInput = document.getElementById('new_eventual_worker_role');
+          const newPhoneInput = document.getElementById('new_eventual_worker_phone');
+          const eventualAgreed = document.getElementById('eventual_agreed_amount');
 
           if (eventualBox.style.display === 'none') {
             eventualBox.style.display = 'block';
@@ -968,8 +976,12 @@
             toggleBtn.style.background = '#e0f2fe';
             toggleBtn.style.color = '#0369a1';
             toggleBtn.style.borderColor = '#bae6fd';
-            if (selectStaff) selectStaff.value = '';
-            if (newNameInput) newNameInput.focus();
+            if (selectStaff) { selectStaff.value = ''; selectStaff.disabled = true; }
+            if (existingAgreed) { existingAgreed.disabled = true; }
+            if (newNameInput) { newNameInput.disabled = false; newNameInput.focus(); }
+            if (newRoleInput) { newRoleInput.disabled = false; }
+            if (newPhoneInput) { newPhoneInput.disabled = false; }
+            if (eventualAgreed) { eventualAgreed.disabled = false; }
           } else {
             eventualBox.style.display = 'none';
             existingBox.style.display = 'flex';
@@ -977,7 +989,12 @@
             toggleBtn.style.background = '#fef3c7';
             toggleBtn.style.color = '#92400e';
             toggleBtn.style.borderColor = '#fde68a';
-            if (newNameInput) newNameInput.value = '';
+            if (selectStaff) { selectStaff.disabled = false; }
+            if (existingAgreed) { existingAgreed.disabled = false; }
+            if (newNameInput) { newNameInput.value = ''; newNameInput.disabled = true; }
+            if (newRoleInput) { newRoleInput.disabled = true; }
+            if (newPhoneInput) { newPhoneInput.disabled = true; }
+            if (eventualAgreed) { eventualAgreed.value = ''; eventualAgreed.disabled = true; }
           }
         }
       </script>
@@ -1030,6 +1047,11 @@
               <div>
                 <span style="color: #64748b; font-weight: 600;">Acordado:</span>
                 <strong style="color: #1e293b;">$ <%= number_with_precision(agreed, precision: 2) %></strong>
+                <% if current_user.leader? %>
+                  <button type="button" onclick="openEditStaffPayModal('<%= sa.id %>', '<%= staff.display_name.to_s.gsub("'", "\\\\'") %>', '<%= number_with_precision(agreed, precision: 2) %>')" style="background: none; border: none; cursor: pointer; color: #2563eb; font-size: 0.9em; padding: 0 4px;" title="Editar pago acordado">
+                    ✏️
+                  </button>
+                <% end %>
               </div>
 
               <div>
@@ -1039,16 +1061,16 @@
 
               <div>
                 <span style="color: #64748b; font-weight: 600;">Estado:</span>
-                <% is_future_gig = @gig.date.present? && @gig.date > Date.today %>
+                <% is_future_gig = @gig.has_not_occurred? %>
                 <% if balance > 0 %>
                   <% if is_future_gig %>
                     <% if paid > 0 %>
                       <strong style="color: #1d4ed8; background: #eff6ff; padding: 4px 10px; border-radius: 8px; border: 1px solid #bfdbfe;">
-                        📅 Anticipo abonado (Resta: $ <%= number_with_precision(balance, precision: 2) %>)
+                        📅 Anticipo abonado (Próximo <%= venue_mode? ? 'Evento' : 'Show' %> • Resta: $ <%= number_with_precision(balance, precision: 2) %> al celebrarse)
                       </strong>
                     <% else %>
                       <strong style="color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
-                        📅 Programado ($ <%= number_with_precision(agreed, precision: 2) %> al realizarse)
+                        📅 Próximo <%= venue_mode? ? 'Evento' : 'Show' %> ($ <%= number_with_precision(agreed, precision: 2) %> al celebrarse)
                       </strong>
                     <% end %>
                   <% else %>
@@ -1061,20 +1083,26 @@
                     ⚠️ Le debe a la empresa: $ <%= number_with_precision(balance.abs, precision: 2) %> (Vuelto)
                   </strong>
                 <% else %>
-                  <% if is_future_gig %>
-                    <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
-                      ✅ Pagado por adelantado
-                    </strong>
+                  <% if agreed > 0 && paid >= agreed %>
+                    <% if is_future_gig %>
+                      <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
+                        ✅ Pagado por adelantado
+                      </strong>
+                    <% else %>
+                      <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
+                        ✅ Pagado completo
+                      </strong>
+                    <% end %>
                   <% else %>
-                    <strong style="color: #059669; background: #ecfdf5; padding: 4px 10px; border-radius: 8px; border: 1px solid #a7f3d0;">
-                      ✅ Pagado completo
+                    <strong style="color: #64748b; background: #f1f5f9; padding: 4px 10px; border-radius: 8px; border: 1px solid #cbd5e1;">
+                      ℹ️ Sin pago acordado ($0.00)
                     </strong>
                   <% end %>
                 <% end %>
               </div>
 
               <div style="display: flex; align-items: center; gap: 6px;">
-                <%= link_to '💳 Registrar Pago', new_employee_payment_path(gig_id: @gig.id, user_id: staff.id), style: 'background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.82em; font-weight: bold; text-decoration: none;' %>
+                <%= link_to (is_future_gig ? '💳 Registrar Anticipo' : '💳 Registrar Pago'), new_employee_payment_path(gig_id: @gig.id, user_id: staff.id), style: 'background: #2563eb; color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.82em; font-weight: bold; text-decoration: none;' %>
                 <%= button_to '❌ Desasignar', remove_staff_gig_path(@gig, staff_id: staff.id), method: :delete, data: { confirm: '¿Seguro que deseas desasignar a este personal?' }, style: 'background: #f1f5f9; color: #ef4444; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: bold; cursor: pointer;' %>
               </div>
             </div>
@@ -1123,10 +1151,10 @@
             <div style="font-size: 0.75em; color: #15803d; font-weight: 700; text-transform: uppercase;">Cobrado Confirmado</div>
             <div style="font-size: 1.4em; font-weight: 900; color: #16a34a; margin-top: 2px;">$ <%= number_with_precision(my_paid, precision: 2) %></div>
           </div>
-          <% is_future_gig = @gig.date.present? && @gig.date > Date.today %>
+          <% is_future_gig = @gig.has_not_occurred? %>
           <div style="background: <%= my_pending > 0 ? (is_future_gig ? '#f8fafc' : '#fffbeb') : '#f0fdf4' %>; border: 1px solid <%= my_pending > 0 ? (is_future_gig ? '#cbd5e1' : '#fde68a') : '#bbf7d0' %>; border-radius: 12px; padding: 14px;">
             <div style="font-size: 0.75em; color: <%= my_pending > 0 ? (is_future_gig ? '#475569' : '#b45309') : '#15803d' %>; font-weight: 700; text-transform: uppercase;">
-              <%= my_pending > 0 ? (is_future_gig ? 'Por Cobrar al celebrarse' : 'Pendiente') : 'Al Día' %>
+              <%= my_pending > 0 ? (is_future_gig ? "📅 Próximo #{venue_mode? ? 'Evento' : 'Show'} (Por cobrar al celebrarse)" : 'Pendiente') : 'Al Día' %>
             </div>
             <div style="font-size: 1.4em; font-weight: 900; color: <%= my_pending > 0 ? (is_future_gig ? '#1e293b' : '#d97706') : '#16a34a' %>; margin-top: 2px;">$ <%= number_with_precision(my_pending > 0 ? my_pending : 0, precision: 2) %></div>
           </div>
@@ -2200,6 +2228,64 @@
         if (e.target === this) closeAdjustPriceModal();
       });
     }
+
+    // Modal para editar pago acordado del integrante
+    function openEditStaffPayModal(assignmentId, staffName, currentAmount) {
+      const modal = document.getElementById('edit-staff-pay-modal');
+      const idInput = document.getElementById('modal-staff-assignment-id');
+      const nameSpan = document.getElementById('modal-staff-name-span');
+      const amountInput = document.getElementById('modal-staff-agreed-amount');
+
+      if (idInput) idInput.value = assignmentId;
+      if (nameSpan) nameSpan.textContent = staffName;
+      if (amountInput) {
+        amountInput.value = currentAmount;
+        setTimeout(function() { amountInput.focus(); amountInput.select(); }, 50);
+      }
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeEditStaffPayModal() {
+      const modal = document.getElementById('edit-staff-pay-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    var editStaffModal = document.getElementById('edit-staff-pay-modal');
+    if (editStaffModal) {
+      editStaffModal.addEventListener('click', function(e) {
+        if (e.target === this) closeEditStaffPayModal();
+      });
+    }
   </script>
+
+  <%# Modal Editar Pago Acordado %>
+  <div id="edit-staff-pay-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: white; border-radius: 20px; max-width: 440px; width: 100%; padding: 26px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; animation: slideUpModal 0.2s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>💰</span> Editar Pago Acordado
+        </h3>
+        <button type="button" onclick="closeEditStaffPayModal()" style="background: none; border: none; font-size: 1.3rem; color: #94a3b8; cursor: pointer;">✕</button>
+      </div>
+
+      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 0.88rem;">
+        Modificar honorarios acordados para: <strong id="modal-staff-name-span" style="color: #0f172a;"></strong>
+      </p>
+
+      <%= form_with url: update_staff_pay_gig_path(@gig), method: :patch, local: true do |f| %>
+        <%= hidden_field_tag :staff_assignment_id, "", id: "modal-staff-assignment-id" %>
+        
+        <div style="margin-bottom: 18px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nuevo Pago Acordado ($ USD):</label>
+          <input type="text" name="agreed_amount" id="modal-staff-agreed-amount" inputmode="decimal" placeholder="0.00" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 2px solid #3b82f6; border-radius: 10px; font-size: 1.2rem; font-weight: 800; color: #0f172a; outline: none;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <%= f.submit "💾 Guardar Pago", style: "flex: 1; background: #2563eb; color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" %>
+          <button type="button" onclick="closeEditStaffPayModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">Cancelar</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
 <% end %>
 

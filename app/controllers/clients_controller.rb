@@ -105,7 +105,67 @@ class ClientsController < ApplicationController
   def show
     @client = current_company.clients.find(params[:id])
     @ultimo_gig = @client.gigs.order(date: :desc).first
-    @preset_budgets = current_company.preset_budgets.order(title: :asc)
+  end
+
+  def debt
+    @client = current_company.clients.find(params[:id])
+    @unpaid_gigs = @client.sorted_unpaid_gigs
+    @total_debt = @client.total_debt
+    @all_gigs = @client.gigs.includes(:gig_payments).order(date: :desc, id: :desc)
+    @recent_payments = GigPayment.joins(:gig)
+                                 .where(gigs: { client_id: @client.id, company_id: current_company.id })
+                                 .approved
+                                 .order(date_paid: :desc, created_at: :desc)
+                                 .limit(10)
+    @rate_info = (current_company&.exchange_rate_details rescue nil) || (ExchangeRateService.today_rate_info rescue nil)
+  end
+
+  def record_debt_payment
+    @client = current_company.clients.find(params[:id])
+    amount = params[:amount].to_s.tr(',', '.').strip.to_f
+    payment_method = params[:payment_method].presence || 'cash'
+    date_paid = params[:date_paid].present? ? (Date.parse(params[:date_paid]) rescue Date.today) : Date.today
+    reference_number = params[:reference_number].presence
+    notes = params[:notes].presence
+    receipt_image = params[:receipt_image]
+
+    result = @client.apply_debt_payment!(
+      amount: amount,
+      payment_method: payment_method,
+      date_paid: date_paid,
+      reference_number: reference_number,
+      notes: notes,
+      receipt_image: receipt_image,
+      user: current_user
+    )
+
+    notice_parts = ["✅ ¡Abono de $#{sprintf('%.2f', result[:total_applied])} USD registrado con éxito en la cuenta de #{@client.name}!"]
+
+    if result[:settled_gigs].any?
+      settled_names = result[:settled_gigs].map { |g| g.location.presence || g.date&.strftime('%d/%m/%Y') || "##{g.id}" }
+      notice_parts << "🎯 Shows 100% saldados (#{result[:settled_gigs].size}): #{settled_names.join(', ')}."
+    end
+
+    if result[:partial_gigs].any?
+      p_gig = result[:partial_gigs].first
+      p_name = p_gig.location.presence || p_gig.date&.strftime('%d/%m/%Y') || "##{p_gig.id}"
+      notice_parts << "⏳ Show con saldo parcial: #{p_name} (restante: $#{sprintf('%.2f', p_gig.remaining_amount)} USD)."
+    end
+
+    destination = case params[:redirect_to]
+                  when 'debts' then debts_clients_path
+                  when 'client' then client_path(@client)
+                  else debt_client_path(@client)
+                  end
+
+    redirect_to destination, notice: notice_parts.join(" ")
+  rescue ArgumentError => e
+    destination = params[:redirect_to] == 'debts' ? debts_clients_path : (debt_client_path(@client) rescue clients_path)
+    redirect_to destination, alert: "⚠️ No se pudo procesar el abono: #{e.message}"
+  rescue StandardError => e
+    Rails.logger.error "[ClientsController#record_debt_payment] Error: #{e.message}\n#{e.backtrace[0..5].join("\n")}"
+    destination = params[:redirect_to] == 'debts' ? debts_clients_path : (debt_client_path(@client) rescue clients_path)
+    redirect_to destination, alert: "⚠️ Ocurrió un error inesperado al procesar el abono: #{e.message}"
   end
 
   def create
@@ -114,7 +174,6 @@ class ClientsController < ApplicationController
       @client.update_priority! if @client.respond_to?(:update_priority!)
       redirect_to clients_path, notice: "🎯 ¡Cliente registrado con éxito!"
     else
-      @preset_budgets = current_company.preset_budgets.order(title: :asc)
       render :new, status: :unprocessable_entity
     end
   end
@@ -126,40 +185,8 @@ class ClientsController < ApplicationController
       redirect_to client_path(@client), notice: "✅ Datos actualizados correctamente."
     else
       @ultimo_gig = @client.gigs.order(date: :desc).first
-      @preset_budgets = current_company.preset_budgets.order(title: :asc)
       render :show, status: :unprocessable_entity
     end
-  end
-
-  def merge
-    @target = current_company.clients.find(params[:id])
-    @source = current_company.clients.find_by(id: params[:source_client_id])
-
-    if @source.nil?
-      redirect_to client_path(@target), alert: "⚠️ No se encontró el cliente a fusionar."
-      return
-    end
-
-    if @source.id == @target.id
-      redirect_to client_path(@target), alert: "⚠️ No puedes fusionar un cliente consigo mismo."
-      return
-    end
-
-    ActiveRecord::Base.transaction do
-      @source.gigs.update_all(client_id: @target.id)
-      User.where(client_id: @source.id).update_all(client_id: @target.id)
-
-      @target.update(phone: @source.phone) if @target.phone.blank? || @target.phone == "0000000000"
-      @target.update(email: @source.email) if @target.email.blank? && @source.email.present?
-      @target.update(notes: [@target.notes, @source.notes].compact.join(" | ")) if @source.notes.present? && @target.notes != @source.notes
-
-      @source.destroy!
-      @target.update_priority!
-    end
-
-    redirect_to client_path(@target), notice: "🔗 ¡Clientes fusionados! Todos los shows fueron transferidos."
-  rescue ActiveRecord::RecordNotFound
-    redirect_to clients_path, alert: "Error: uno de los clientes no existe."
   end
 
   private

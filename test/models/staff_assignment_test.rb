@@ -108,6 +108,47 @@ class StaffAssignmentTest < ActiveSupport::TestCase
     assert_equal 0.0, worker.pending_balance
     assert_equal 20.0, worker.future_pending_balance
   end
+
+  test "gig date helper methods work correctly" do
+    past_gig = Gig.new(date: 2.days.ago.to_date)
+    today_gig = Gig.new(date: Date.current)
+    future_gig = Gig.new(date: 2.days.from_now.to_date)
+    nil_gig = Gig.new(date: nil)
+
+    assert past_gig.past?
+    assert_not past_gig.future?
+    assert_not past_gig.has_not_occurred?
+
+    assert today_gig.past?
+    assert_not today_gig.future?
+
+    assert future_gig.future?
+    assert_not future_gig.past?
+    assert future_gig.has_not_occurred?
+
+    assert nil_gig.has_not_occurred?
+    assert_not nil_gig.future?
+    assert_not nil_gig.past?
+  end
+
+  test "unscheduled gig without date is not counted as past debt in worker metrics" do
+    worker = users(:two)
+    client = clients(:one)
+    unscheduled_gig = Gig.create!(date: nil, amount: 200.0, client: client, company: worker.company, currency: 'USD')
+
+    StaffAssignment.create!(user: worker, gig: unscheduled_gig, agreed_amount: 75.0)
+
+    metrics = WorkerBalanceService.new(
+      worker: worker,
+      worker_payments: worker.employee_payments.approved.to_a,
+      worker_assignments: worker.staff_assignments.includes(:gig).to_a
+    )
+
+    assert_equal 0.0, metrics.past_balance
+    assert_equal 0, metrics.gig_debts.size
+    assert_equal 1, metrics.future_gigs.size
+    assert_equal 75.0, metrics.future_balance
+  end
 end
 
 

@@ -73,14 +73,14 @@ class WorkerBalanceService
 
   def past_assignments
     @past_assignments ||= worker_assignments
-      .select { |sa| sa.gig.present? && (sa.gig.date.blank? || sa.gig.date <= today) }
-      .sort_by { |sa| sa.gig.date || today }
+      .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date <= today }
+      .sort_by { |sa| sa.gig.date }
   end
 
   def future_assignments
     @future_assignments ||= worker_assignments
-      .select { |sa| sa.gig.present? && sa.gig.date.present? && sa.gig.date > today }
-      .sort_by { |sa| sa.gig.date }
+      .select { |sa| sa.gig.present? && (sa.gig.date.blank? || sa.gig.date > today) }
+      .sort_by { |sa| sa.gig.date || today }
   end
 
   def raw_past_balance
@@ -154,7 +154,7 @@ class WorkerBalanceService
       standalone_by_gig.each do |_gig_id, ps|
         next if _gig_id.nil?
         gig = ps.first.gig
-        next if gig.present? && gig.date.present? && gig.date > today
+        next if gig.present? && (gig.date.blank? || gig.date > today)
 
         paid_for_gig = ps.sum { |p| p.amount.to_f }
         expected     = ps.map { |p| p.expected_amount.to_f }.max || 0.0

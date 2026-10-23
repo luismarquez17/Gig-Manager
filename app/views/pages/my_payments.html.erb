@@ -140,19 +140,27 @@
 
     <% items = @worker_payment_items || [] %>
     <% paid_count = items.count { |i| i[:pending_amount] <= 0 } %>
-    <% pending_count = items.count { |i| i[:pending_amount] > 0 } %>
+    <% pending_count = items.count { |i| !i[:is_future] && i[:pending_amount] > 0 } %>
+    <% future_count = items.count { |i| i[:is_future] && i[:pending_amount] > 0 } %>
     <div style="background: var(--bg-card, white); border-radius: 16px; padding: 20px; border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card, 0 4px 6px -1px rgba(0,0,0,0.03));">
       <div style="font-size: 0.8em; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">Estado Shows</div>
-      <div style="display: flex; gap: 12px; align-items: center; margin-top: 6px;">
+      <div style="display: flex; gap: 12px; align-items: center; margin-top: 6px; flex-wrap: wrap;">
         <div style="text-align: center;">
           <div style="font-size: 1.5em; font-weight: 900; color: #16a34a;"><%= paid_count %></div>
           <div style="font-size: 0.75em; color: var(--text-muted, #94a3b8); font-weight: 600;">Pagados</div>
         </div>
         <div style="width: 1px; height: 32px; background: var(--border-color, #e2e8f0);"></div>
         <div style="text-align: center;">
-          <div style="font-size: 1.5em; font-weight: 900; color: #d97706;"><%= pending_count %></div>
-          <div style="font-size: 0.75em; color: var(--text-muted, #94a3b8); font-weight: 600;">Pendientes</div>
+          <div style="font-size: 1.5em; font-weight: 900; color: <%= pending_count > 0 ? '#ea580c' : '#16a34a' %>;"><%= pending_count %></div>
+          <div style="font-size: 0.75em; color: var(--text-muted, #94a3b8); font-weight: 600;">Deuda Pasada</div>
         </div>
+        <% if future_count > 0 %>
+          <div style="width: 1px; height: 32px; background: var(--border-color, #e2e8f0);"></div>
+          <div style="text-align: center;">
+            <div style="font-size: 1.5em; font-weight: 900; color: #2563eb;"><%= future_count %></div>
+            <div style="font-size: 0.75em; color: #60a5fa; font-weight: 600;">Programados</div>
+          </div>
+        <% end %>
       </div>
     </div>
 
@@ -187,7 +195,7 @@
                   <% if item[:gig].present? %>
                     <%= item[:gig].client_display_name %>
                     <div style="font-size: 0.8em; color: var(--text-muted, #94a3b8); margin-top: 2px; font-weight: 500;">
-                      📅 <%= item[:gig].date&.strftime('%d de %B de %Y') %> &nbsp;·&nbsp; 📍 <%= item[:gig].location.presence || 'Ubicación a coordinar' %>
+                      📅 <%= item[:gig].date&.strftime('%d de %B de %Y') || 'Sin fecha definida' %> &nbsp;·&nbsp; 📍 <%= item[:gig].location.presence || 'Ubicación a coordinar' %>
                     </div>
                   <% else %>
                     <%= item[:description] || 'Pago Directo' %>
@@ -202,8 +210,11 @@
                 <td style="padding: 16px 12px; text-align: right; font-weight: 700; color: #16a34a;">
                   <%= number_to_currency(item[:paid_amount], unit: '$') %>
                 </td>
-                <td style="padding: 16px 12px; text-align: right; font-weight: 800; color: <%= pending > 0 ? '#d97706' : '#16a34a' %>;">
+                <td style="padding: 16px 12px; text-align: right; font-weight: 800; color: <%= pending > 0 ? (item[:is_future] ? '#2563eb' : '#d97706') : '#16a34a' %>;">
                   <%= number_to_currency(pending, unit: '$') %>
+                  <% if item[:is_future] && pending > 0 %>
+                    <div style="font-size: 0.72em; color: #64748b; font-weight: 600;">(al celebrarse)</div>
+                  <% end %>
                   <% if pending_approval > 0 %>
                     <div style="font-size: 0.75em; color: #b45309; font-weight: 600;">
                       (⏳ <%= number_to_currency(pending_approval, unit: '$') %> en revisión)
@@ -219,20 +230,24 @@
                     <span style="background: #fef3c7; color: #92400e; padding: 4px 10px; border-radius: 99px; font-size: 0.8em; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
                       ⏳ Revisión
                     </span>
+                  <% elsif item[:is_future] %>
+                    <span style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 4px 10px; border-radius: 99px; font-size: 0.8em; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
+                      📅 Próximo <%= venue_mode? ? 'Evento' : 'Show' %> (Por celebrarse)
+                    </span>
                   <% else %>
                     <span style="background: #fee2e2; color: #b91c1c; padding: 4px 10px; border-radius: 99px; font-size: 0.8em; font-weight: 700; display: inline-flex; align-items: center; gap: 4px;">
-                      ⚠ Pendiente
+                      ⏳ Deuda vencida
                     </span>
                   <% end %>
                 </td>
                 <td style="padding: 16px 20px; text-align: center;">
                   <% if pending > 0 && worker_target == current_user %>
-                    <%= link_to new_worker_report_employee_payments_path(gig_id: item[:gig]&.id), class: "btn-main", style: "background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.82em; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);" do %>
-                      💵 Reportar Pago
+                    <%= link_to new_worker_report_employee_payments_path(gig_id: item[:gig]&.id), class: "btn-main", style: "background: linear-gradient(135deg, #{item[:is_future] ? '#4f46e5, #3730a3' : '#f59e0b, #d97706'}); color: white; padding: 6px 12px; border-radius: 8px; font-size: 0.82em; font-weight: 700; text-decoration: none; box-shadow: 0 2px 6px rgba(0,0,0,0.15);" do %>
+                      <%= item[:is_future] ? '💵 Reportar Anticipo' : '💵 Reportar Pago' %>
                     <% end %>
                   <% elsif pending > 0 && (current_user.leader? || current_user.superadmin?) %>
                     <%= link_to new_employee_payment_path(user_id: worker_target.id, gig_id: item[:gig]&.id), class: "btn-main btn-primary-custom", style: "padding: 6px 12px; border-radius: 8px; font-size: 0.82em; font-weight: 700; text-decoration: none;" do %>
-                      💳 Pagar
+                      <%= item[:is_future] ? '💳 Anticipo' : '💳 Pagar' %>
                     <% end %>
                   <% else %>
                     <span style="color: var(--text-muted, #94a3b8); font-size: 0.85em;">—</span>

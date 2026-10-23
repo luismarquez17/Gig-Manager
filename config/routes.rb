@@ -86,7 +86,8 @@ Rails.application.routes.draw do
       get :debts
     end
     member do
-      post :merge
+      get  :debt
+      post :record_debt_payment
     end
   end
   resources :gig_payments, only: [:index, :edit, :update, :destroy] do

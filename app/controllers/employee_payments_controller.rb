@@ -311,9 +311,11 @@ class EmployeePaymentsController < ApplicationController
         pending_val = assignment&.pending_balance.to_f
         client_name = @gig.client&.name || "Show"
         date_str = @gig.date ? @gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
+        show_or_event = current_company&.venue_mode? ? "Evento" : "Show"
+        status_label = @gig.has_not_occurred? ? "📅 Próximo #{show_or_event}: #{view_context.number_to_currency(pending_val, unit: '$')} al celebrarse" : "⏳ Pendiente: #{view_context.number_to_currency(pending_val, unit: '$')}"
         @available_gigs << {
           id: @gig.id,
-          title: "#{client_name} - #{date_str} (Pendiente: #{view_context.number_to_currency(pending_val, unit: '$')})",
+          title: "#{client_name} - #{date_str} (#{status_label})",
           pending_amount: pending_val,
           currency: "USD"
         }
@@ -439,9 +441,11 @@ class EmployeePaymentsController < ApplicationController
         client_name = sa.gig.client&.name || "Show"
         date_str = sa.gig.date ? sa.gig.date.strftime('%d/%m/%Y') : 'Sin fecha'
         pending_str = view_context.number_to_currency(sa.pending_balance, unit: '$')
+        show_or_event = current_company&.venue_mode? ? "Evento" : "Show"
+        status_label = sa.gig.has_not_occurred? ? "📅 Próximo #{show_or_event}: #{pending_str} al celebrarse" : "⏳ Pendiente: #{pending_str}"
         {
           id: sa.gig_id,
-          title: "#{client_name} - #{date_str} (Pendiente: #{pending_str})",
+          title: "#{client_name} - #{date_str} (#{status_label})",
           pending_amount: sa.pending_balance,
           currency: "USD"
         }

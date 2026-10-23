@@ -295,7 +295,7 @@
         <% if metric[:future_gigs].present? && metric[:future_gigs].any? %>
           <div id="future-<%= idx %>" style="display:none; border-top: 1px solid #cbd5e1; background: #f8fafc; padding: 14px 18px;">
             <div style="font-size: 0.75em; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
-              📅 Próximos <%= venue_mode? ? 'eventos' : 'shows' %> asignados (Aún no celebrados — No se cuentan como deuda)
+              📅 Próximos <%= venue_mode? ? 'eventos' : 'shows' %> asignados (Por celebrarse — No son deuda)
             </div>
             <div style="display: flex; flex-direction: column; gap: 8px;">
               <% metric[:future_gigs].each do |fg| %>
@@ -312,7 +312,7 @@
                     <% if fg[:paid_amount] > 0 %>
                       <span style="background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Anticipo pagado: <%= number_to_currency(fg[:paid_amount], unit: 'USD') %></span>
                     <% end %>
-                    <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Por pagar al celebrarse: <%= number_to_currency(fg[:pending_amount], unit: 'USD') %></span>
+                    <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">📅 Próximo <%= venue_mode? ? 'Evento' : 'Show' %> (<%= number_to_currency(fg[:pending_amount], unit: 'USD') %> al celebrarse)</span>
                     <%= link_to '💳 Anticipo', new_employee_payment_path(user_id: metric[:worker].id, gig_id: fg[:gig].id),
                         style: "background:#4f46e5; color:#fff; padding:4px 12px; border-radius:999px; font-size:0.8em; font-weight:800; text-decoration:none;" %>
                   </div>

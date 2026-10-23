@@ -1,0 +1,690 @@
+<%
+  rate_info = @rate_info || (current_company&.exchange_rate_details rescue nil) || ExchangeRateService.today_rate_info
+  effective_rate = rate_info[:effective_rate].to_f
+  formatted_rate = rate_info[:formatted_effective_rate]
+%>
+
+<style>
+  .debt-page-container {
+    max-width: 1100px;
+    margin: 0 auto;
+    font-family: var(--font-main, 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    color: var(--text-main);
+    padding: 0 12px;
+  }
+  @media (max-width: 640px) {
+    .debt-page-container {
+      padding: 0 6px;
+    }
+    .debt-header-title {
+      font-size: 1.5em !important;
+    }
+    .debt-header-actions {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .debt-header-actions > * {
+      width: 100% !important;
+      text-align: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .debt-card-inner {
+      padding: 16px !important;
+    }
+    .debt-form-submit-bar {
+      flex-direction: column-reverse !important;
+      width: 100%;
+    }
+    .debt-form-submit-bar > * {
+      width: 100% !important;
+      text-align: center;
+      justify-content: center;
+      box-sizing: border-box;
+    }
+    .currency-widget-grid {
+      grid-template-columns: 1fr !important;
+      gap: 8px !important;
+    }
+    .currency-widget-arrow {
+      transform: rotate(90deg);
+      text-align: center;
+      padding: 4px 0 !important;
+      display: flex;
+      justify-content: center;
+    }
+  }
+</style>
+
+<div class="debt-page-container">
+
+  <%# --- BREADCRUMBS Y CABECERA --- %>
+  <div style="margin-bottom: 24px;">
+    <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 10px; font-size: 0.88em; font-weight: 600;">
+      <%= link_to '💳 Área de Deudores', debts_clients_path, style: "color: var(--color-primary); text-decoration: none;" %>
+      <span style="color: var(--text-muted);">/</span>
+      <%= link_to @client.name, client_path(@client), style: "color: var(--text-muted); text-decoration: none;" %>
+      <span style="color: var(--text-muted);">/</span>
+      <span style="color: var(--text-heading); font-weight: 700;">Apartado de Deuda y Abono</span>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+      <div>
+        <h1 class="debt-header-title" style="color: var(--text-heading); margin: 0; font-size: 2em; font-weight: 800; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+          <span>👤</span> <%= @client.name %>
+        </h1>
+        <div style="display: flex; align-items: center; gap: 14px; margin-top: 6px; flex-wrap: wrap; font-size: 0.9em; color: var(--text-muted);">
+          <span>📞 <%= @client.phone.presence || "Sin teléfono" %></span>
+          <% if @client.email.present? %>
+            <span>📧 <%= @client.email %></span>
+          <% end %>
+          <span style="background: var(--bg-card-subtle); border: 1px solid var(--border-color); padding: 2px 8px; border-radius: 12px; font-weight: 800; font-size: 0.8em; text-transform: uppercase;">
+            Prioridad: <%= @client.priority %>
+          </span>
+        </div>
+      </div>
+
+      <div class="debt-header-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <% if @client.debt_whatsapp_url.present? %>
+          <%= link_to @client.debt_whatsapp_url, target: "_blank", style: "background: #25d366; color: white; text-decoration: none; padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);" do %>
+            <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white;" xmlns="http://www.w3.org/2000/svg">
+              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+            </svg>
+            Recordar por WhatsApp
+          <% end %>
+        <% end %>
+        <%= link_to client_path(@client), style: "background: var(--bg-card-subtle); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 16px; border-radius: 8px; font-weight: 700; font-size: 0.9em; text-decoration: none;" do %>
+          👁️ Ver Ficha de Cliente
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <%# --- TARJETAS DE RESUMEN FINANCIERO --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 24px;">
+    
+    <div class="custom-card" style="padding: 20px; margin-bottom: 0; border-left: 5px solid #ef4444 !important;">
+      <span style="color: #ef4444; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+        Deuda Total Pendiente
+      </span>
+      <h2 style="font-size: 2em; margin: 0; color: #ef4444; font-weight: 800;">
+        $ <%= number_with_precision(@total_debt, precision: 2) %>
+      </h2>
+      <div style="font-size: 0.82em; color: var(--text-muted); margin-top: 6px; font-weight: 600;">
+        Saldo acumulado por cobrar
+      </div>
+    </div>
+
+    <div class="custom-card" style="padding: 20px; margin-bottom: 0; border-left: 5px solid #f59e0b !important;">
+      <span style="color: #f59e0b; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+        Shows con Saldo Abierto
+      </span>
+      <h2 style="font-size: 2em; margin: 0; color: #f59e0b; font-weight: 800;">
+        <%= @unpaid_gigs.size %> <%= @unpaid_gigs.size == 1 ? 'evento' : 'eventos' %>
+      </h2>
+      <div style="font-size: 0.82em; color: var(--text-muted); margin-top: 6px; font-weight: 600;">
+        Requieren cuadre contable
+      </div>
+    </div>
+
+    <div class="custom-card" style="padding: 20px; margin-bottom: 0; border-left: 5px solid var(--color-primary) !important;">
+      <span style="color: var(--color-primary); font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+        Presupuesto Acordado (Impagos)
+      </span>
+      <h2 style="font-size: 2em; margin: 0; color: var(--color-primary); font-weight: 800;">
+        $ <%= number_with_precision(@unpaid_gigs.sum(&:amount), precision: 2) %>
+      </h2>
+      <div style="font-size: 0.82em; color: var(--text-muted); margin-top: 6px; font-weight: 600;">
+        Monto contractual total
+      </div>
+    </div>
+
+    <div class="custom-card" style="padding: 20px; margin-bottom: 0; border-left: 5px solid #10b981 !important;">
+      <span style="color: #10b981; font-weight: 700; font-size: 0.75em; text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px;">
+        Ya Abonado Previamente
+      </span>
+      <h2 style="font-size: 2em; margin: 0; color: #10b981; font-weight: 800;">
+        $ <%= number_with_precision(@unpaid_gigs.sum(&:total_received), precision: 2) %>
+      </h2>
+      <div style="font-size: 0.82em; color: var(--text-muted); margin-top: 6px; font-weight: 600;">
+        Pagos ya aplicados
+      </div>
+    </div>
+
+  </div>
+
+  <% if @unpaid_gigs.any? %>
+
+    <%# --- ASISTENTE DE TASA VES / USD --- %>
+    <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 14px; padding: 12px 18px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span style="font-size: 1.3em;">💱</span>
+        <div>
+          <span style="font-size: 0.8em; font-weight: 800; text-transform: uppercase; color: #15803d; letter-spacing: 0.5px;">Tasa Oficial del Día:</span>
+          <strong style="font-size: 1.05em; color: #14532d; margin-left: 4px;">
+            1 USD = <span id="global-rate-number"><%= formatted_rate %></span> Bs.
+          </strong>
+          <span style="font-size: 0.75em; background: #dcfce7; color: #166534; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-left: 6px;">
+            🟢 <%= rate_info[:source].to_s.include?('bcv') ? 'BCV' : (rate_info[:mode] == 'custom' ? 'Personalizada' : 'Actualizada') %>
+          </span>
+        </div>
+      </div>
+
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button type="button" onclick="toggleRateCalculator()" style="background: white; border: 1px solid #86efac; color: #15803d; font-weight: 700; font-size: 0.82em; padding: 6px 12px; border-radius: 8px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;">
+          <span>🧮</span> <span id="calc-toggle-text">Calculadora VES / USD</span>
+        </button>
+      </div>
+    </div>
+
+    <%# WIDGET CONVERSOR VES A USD %>
+    <div id="currency-converter-widget" style="display: none; background: #ffffff; border: 2px solid #bbf7d0; border-radius: 16px; padding: 18px 22px; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(22, 163, 74, 0.08);">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h4 style="margin: 0; color: #14532d; font-size: 0.95em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>📱</span> Conversor Rápido de Pago Móvil / Transferencia en Bolívares
+        </h4>
+        <span style="font-size: 0.78em; color: #64748b;">Convierte a USD antes de abonar</span>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: center;" class="currency-widget-grid">
+        <div>
+          <label style="display: block; font-size: 0.78em; font-weight: 800; color: #15803d; margin-bottom: 4px; text-transform: uppercase;">
+            Monto Pagado en Bs.:
+          </label>
+          <div style="display: flex; align-items: center; background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 6px 10px;">
+            <span style="font-weight: 800; color: #166534; font-size: 0.9em; margin-right: 6px;">Bs.</span>
+            <input type="number" step="0.01" min="0" id="calc_ves_input" placeholder="0.00" style="width: 100%; border: none; background: transparent; font-size: 1.05em; font-weight: 800; color: #14532d; outline: none;" oninput="calcVesToUsd()">
+          </div>
+        </div>
+
+        <div style="font-size: 1.3em; color: #16a34a; font-weight: 800; padding-top: 18px;" class="currency-widget-arrow">⇄</div>
+
+        <div>
+          <label style="display: block; font-size: 0.78em; font-weight: 800; color: #0284c7; margin-bottom: 4px; text-transform: uppercase;">
+            Equivalente en Dólares ($ USD):
+          </label>
+          <div style="display: flex; align-items: center; background: #f0f9ff; border: 1.5px solid #7dd3fc; border-radius: 8px; padding: 6px 10px;">
+            <span style="font-weight: 800; color: #0369a1; font-size: 0.9em; margin-right: 6px;">$</span>
+            <input type="number" step="0.01" min="0" id="calc_usd_input" placeholder="0.00" style="width: 100%; border: none; background: transparent; font-size: 1.05em; font-weight: 800; color: #075985; outline: none;" oninput="calcUsdToVes()">
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top: 12px; display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" onclick="applyConvertedAmountToAbono()" style="background: #16a34a; color: white; border: none; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.85em; cursor: pointer;">
+          ✅ Pegar este Monto en el Formulario de Abono
+        </button>
+      </div>
+    </div>
+
+    <%# --- FORMULARIO DE ABONO EN CASCADA CON SIMULADOR --- %>
+    <div class="custom-card debt-card-inner" style="padding: 26px; margin-bottom: 30px; border: 2px solid var(--border-color); border-radius: 16px;">
+      
+      <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 16px; margin-bottom: 20px;">
+        <h3 style="margin: 0; color: var(--text-heading); font-size: 1.3em; font-weight: 800; display: flex; align-items: center; gap: 10px;">
+          <span>💵</span> Registrar Abono a Cuenta Agrupada (Descuento en Cascada FIFO)
+        </h3>
+        <p style="margin: 6px 0 0 0; color: var(--text-muted); font-size: 0.92em; line-height: 1.4;">
+          Ingresa el monto recibido (ej. $300). El sistema irá <strong>llenando y cuadrando cronológicamente</strong> cada show pendiente (del más antiguo al más reciente) sin desajustes ni inconsistencias.
+        </p>
+      </div>
+
+      <%= form_with url: record_debt_payment_client_path(@client), method: :post, local: true, multipart: true, id: "debt-payment-form" do |f| %>
+        <%= hidden_field_tag :redirect_to, "debt" %>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          
+          <%# Monto a Abonar %>
+          <div>
+            <label style="display: block; font-size: 0.85em; font-weight: 800; margin-bottom: 6px; color: var(--text-heading); text-transform: uppercase;">
+              💰 Monto a Abonar ($ USD) <span style="color: #ef4444;">*</span>
+            </label>
+            <div style="display: flex; align-items: center; background: var(--bg-input); border: 2px solid var(--border-color); border-radius: 10px; padding: 10px 14px; transition: border-color 0.2s;" id="amount-input-container">
+              <span style="font-size: 1.3em; font-weight: 800; color: #10b981; margin-right: 8px;">$</span>
+              <input type="number" 
+                     name="amount" 
+                     id="debt_payment_amount" 
+                     step="0.01" 
+                     min="0.01" 
+                     max="<%= sprintf('%.2f', @total_debt) %>" 
+                     placeholder="0.00" 
+                     required 
+                     style="width: 100%; border: none; background: transparent; font-size: 1.4em; font-weight: 800; color: var(--text-heading); outline: none;"
+                     oninput="updateSimulator(this.value)">
+              <span style="font-size: 0.85em; font-weight: 700; color: var(--text-muted);">USD</span>
+            </div>
+
+            <%# Atajos rápidos de monto %>
+            <div style="display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; align-items: center;">
+              <span style="font-size: 0.75em; color: var(--text-muted); font-weight: 700;">Atajos:</span>
+              <button type="button" onclick="setQuickAmount(<%= @total_debt.round(2) %>)" style="background: rgba(16, 185, 129, 0.12); color: #059669; border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 8px; border-radius: 6px; font-size: 0.78em; font-weight: 800; cursor: pointer;">
+                ⚡ Total ($<%= sprintf('%.2f', @total_debt) %>)
+              </button>
+              <% [50, 100, 200, 300, 500].each do |quick_val| %>
+                <% if quick_val < @total_debt.round(2) %>
+                  <button type="button" onclick="setQuickAmount(<%= quick_val %>)" style="background: var(--bg-card-subtle); color: var(--text-main); border: 1px solid var(--border-color); padding: 4px 8px; border-radius: 6px; font-size: 0.78em; font-weight: 700; cursor: pointer;">
+                    $<%= quick_val %>
+                  </button>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+
+          <%# Método de Pago %>
+          <div>
+            <label style="display: block; font-size: 0.85em; font-weight: 800; margin-bottom: 6px; color: var(--text-heading); text-transform: uppercase;">
+              💳 Método de Pago <span style="color: #ef4444;">*</span>
+            </label>
+            <%= select_tag :payment_method, options_for_select([
+              ['💵 Efectivo en Mano', 'cash'],
+              ['⚡ Zelle', 'zelle'],
+              ['🏦 Transferencia Bancaria', 'bank_transfer'],
+              ['📱 Pago Móvil (VES)', 'mobile_pay'],
+              ['💳 Tarjeta / Stripe', 'card_stripe'],
+              ['🧾 Cheque', 'check'],
+              ['💰 Otro Método', 'other']
+            ], 'cash'), style: "width: 100%; padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--bg-input); color: var(--text-main); font-size: 1em; font-weight: 700; outline: none;" %>
+          </div>
+
+          <%# Fecha de Pago %>
+          <div>
+            <label style="display: block; font-size: 0.85em; font-weight: 800; margin-bottom: 6px; color: var(--text-heading); text-transform: uppercase;">
+              📅 Fecha del Pago <span style="color: #ef4444;">*</span>
+            </label>
+            <%= date_field_tag :date_paid, Date.today, style: "width: 100%; padding: 12px 14px; border: 2px solid var(--border-color); border-radius: 10px; background: var(--bg-input); color: var(--text-main); font-size: 1em; font-weight: 700; outline: none; box-sizing: border-box;" %>
+          </div>
+
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 22px;">
+          <%# Referencia %>
+          <div>
+            <label style="display: block; font-size: 0.85em; font-weight: 800; margin-bottom: 6px; color: var(--text-heading); text-transform: uppercase;">
+              📄 N° de Referencia / Comprobante (Opcional)
+            </label>
+            <%= text_field_tag :reference_number, nil, placeholder: "Ej: Zelle #928374 o Ref 8493...", style: "width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-input); color: var(--text-main); font-size: 0.9em; box-sizing: border-box;" %>
+          </div>
+
+          <%# Comprobante / Captura %>
+          <div>
+            <label style="display: block; font-size: 0.85em; font-weight: 800; margin-bottom: 6px; color: var(--text-heading); text-transform: uppercase;">
+              📎 Adjuntar Captura / Voucher (Opcional)
+            </label>
+            <%= file_field_tag :receipt_image, accept: "image/*,application/pdf", style: "width: 100%; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-input); color: var(--text-muted); font-size: 0.85em; box-sizing: border-box;" %>
+          </div>
+
+          <%# Notas %>
+          <div>
+            <label style="display: block; font-size: 0.85em; font-weight: 800; margin-bottom: 6px; color: var(--text-heading); text-transform: uppercase;">
+              📝 Notas del Abono (Opcional)
+            </label>
+            <%= text_field_tag :notes, nil, placeholder: "Ej: Entregado en efectivo en el local por el gerente...", style: "width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-input); color: var(--text-main); font-size: 0.9em; box-sizing: border-box;" %>
+          </div>
+        </div>
+
+        <%# --- SIMULADOR DE DESCUENTO EN VIVO --- %>
+        <div style="background: var(--bg-card-subtle); border: 1.5px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 22px;" id="simulator-box">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.2em;">🎯</span>
+              <h4 style="margin: 0; font-size: 0.95em; font-weight: 800; color: var(--text-heading); text-transform: uppercase; letter-spacing: 0.5px;">
+                Simulador de Descuento en Tiempo Real (FIFO)
+              </h4>
+            </div>
+            <div id="sim-overall-badge" style="font-size: 0.85em; font-weight: 800; color: var(--text-muted);">
+              Ingresa un monto arriba para ver la simulación
+            </div>
+          </div>
+
+          <%# Tabla de Shows del Simulador %>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.88em; text-align: left;">
+              <thead>
+                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted); font-size: 0.8em; text-transform: uppercase;">
+                  <th style="padding: 8px 10px;">Orden / Fecha</th>
+                  <th style="padding: 8px 10px;">Lugar / Evento</th>
+                  <th style="padding: 8px 10px; text-align: right;">Saldo Actual</th>
+                  <th style="padding: 8px 10px; text-align: right;">Abono Asignado</th>
+                  <th style="padding: 8px 10px; text-align: right;">Saldo Resultante</th>
+                  <th style="padding: 8px 10px; text-align: center;">Estado Previsto</th>
+                </tr>
+              </thead>
+              <tbody id="simulator-tbody">
+                <% @unpaid_gigs.each_with_index do |gig, idx| %>
+                  <% gig_rem = gig.remaining_amount.to_f.round(2) %>
+                  <tr class="sim-row" 
+                      data-gig-id="<%= gig.id %>" 
+                      data-index="<%= idx %>" 
+                      data-pending="<%= gig_rem %>" 
+                      data-location="<%= gig.location.presence || "Evento ##{gig.id}" %>" 
+                      data-date="<%= gig.date&.strftime('%d/%m/%Y') || 'Sin fecha' %>"
+                      style="border-bottom: 1px solid var(--border-subtle);">
+                    <td style="padding: 10px; font-weight: 700; color: var(--text-heading);">
+                      <span style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 4px; padding: 2px 6px; font-size: 0.78em; margin-right: 6px;">#<%= idx + 1 %></span>
+                      <%= gig.date&.strftime('%d/%m/%Y') || 'Sin fecha' %>
+                    </td>
+                    <td style="padding: 10px; font-weight: 600; color: var(--text-main);">
+                      📍 <%= gig.location.presence || "Evento sin especificar" %>
+                    </td>
+                    <td style="padding: 10px; text-align: right; font-weight: 700; color: #ef4444;">
+                      $ <%= number_with_precision(gig_rem, precision: 2) %>
+                    </td>
+                    <td style="padding: 10px; text-align: right; font-weight: 800; color: #10b981;" class="sim-allocated-cell">
+                      + $ 0.00
+                    </td>
+                    <td style="padding: 10px; text-align: right; font-weight: 800;" class="sim-remaining-cell">
+                      $ <%= number_with_precision(gig_rem, precision: 2) %>
+                    </td>
+                    <td style="padding: 10px; text-align: center;" class="sim-badge-cell">
+                      <span style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 700;">
+                        Pendiente
+                      </span>
+                    </td>
+                  </tr>
+                <% end %>
+              </tbody>
+            </table>
+          </div>
+
+          <%# Resumen final de la simulación %>
+          <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; font-size: 0.88em;">
+            <div style="color: var(--text-muted);">
+              Deuda antes del abono: <strong style="color: #ef4444;">$ <%= number_with_precision(@total_debt, precision: 2) %></strong>
+            </div>
+            <div style="font-weight: 700;">
+              Total Asignado: <span id="sim-total-allocated" style="color: #10b981; font-weight: 800;">$ 0.00</span>
+              &nbsp;|&nbsp;
+              Nueva Deuda Resultante: <span id="sim-new-total-debt" style="color: #ef4444; font-weight: 800;">$ <%= number_with_precision(@total_debt, precision: 2) %></span>
+            </div>
+          </div>
+        </div>
+
+        <%# Botón de confirmación %>
+        <div style="display: flex; justify-content: flex-end; gap: 12px; align-items: center;" class="debt-form-submit-bar">
+          <%= link_to 'Cancelar', debts_clients_path, style: "background: var(--bg-card-subtle); color: var(--text-muted); border: 1px solid var(--border-color); padding: 12px 20px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.95em;" %>
+          <%= f.submit "💵 Confirmar y Registrar Abono Agrupado", class: "btn-main btn-success-custom", id: "btn-submit-debt-payment", style: "padding: 12px 28px; border-radius: 8px; font-size: 1em; font-weight: 800; cursor: pointer; border: none; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);" %>
+        </div>
+
+      <% end %>
+
+    </div>
+
+  <% else %>
+
+    <div class="custom-card" style="padding: 50px 20px; text-align: center; border-radius: 16px; margin-bottom: 30px;">
+      <div style="font-size: 55px; margin-bottom: 12px;">🎉</div>
+      <h2 style="margin: 0 0 8px 0; color: #10b981; font-weight: 800;">¡Este cliente no tiene deudas pendientes!</h2>
+      <p style="color: var(--text-muted); margin: 0 auto 20px auto; max-width: 500px; font-size: 0.95em;">
+        Todos los eventos de <strong><%= @client.name %></strong> están completamente saldados y al día.
+      </p>
+      <%= link_to 'Volver a Cuentas por Cobrar', debts_clients_path, class: "btn-main btn-primary-custom", style: "padding: 10px 22px; border-radius: 8px; text-decoration: none; font-weight: 700; display: inline-block;" %>
+    </div>
+
+  <% end %>
+
+  <%# --- TABLA DE DESGLOSE DE TODOS LOS SHOWS PENDIENTES --- %>
+  <div class="custom-card" style="padding: 24px; margin-bottom: 30px; border-radius: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+      <h3 style="margin: 0; color: var(--text-heading); font-size: 1.15em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+        <span>🎸</span> Detalle Individual de Eventos Impagos (<%= @unpaid_gigs.size %>)
+      </h3>
+      <span style="font-size: 0.82em; color: var(--text-muted); font-weight: 600;">
+        Ordenados cronológicamente por antigüedad
+      </span>
+    </div>
+
+    <% if @unpaid_gigs.any? %>
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
+          <thead>
+            <tr style="background: var(--bg-card-subtle); color: var(--text-muted);">
+              <th style="padding: 10px 12px; border-radius: 6px 0 0 6px;">Fecha / Antigüedad</th>
+              <th style="padding: 10px 12px;">Lugar / Evento</th>
+              <th style="padding: 10px 12px; text-align: right;">Acordado</th>
+              <th style="padding: 10px 12px; text-align: right;">Abonado</th>
+              <th style="padding: 10px 12px; text-align: right;">Saldo Restante</th>
+              <th style="padding: 10px 12px; text-align: center; border-radius: 0 6px 6px 0;">Acciones Individuales</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @unpaid_gigs.each_with_index do |gig, idx| %>
+              <%
+                is_past = gig.date.present? && gig.date < Date.today
+                is_today = gig.date.present? && gig.date == Date.today
+              %>
+              <tr style="border-bottom: 1px solid var(--border-subtle); background: <%= is_past ? 'rgba(239, 68, 68, 0.03)' : 'transparent' %>;">
+                <td style="padding: 12px; font-weight: 600; color: var(--text-main);">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span>📅 <%= gig.date&.strftime('%d/%m/%Y') || 'Sin fecha' %></span>
+                    <% if is_past %>
+                      <span style="background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 800;">🚨 Vencido</span>
+                    <% elsif is_today %>
+                      <span style="background: rgba(245, 158, 11, 0.12); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); padding: 1px 6px; border-radius: 4px; font-size: 0.75em; font-weight: 800;">⚡ ¡Hoy!</span>
+                    <% end %>
+                  </div>
+                </td>
+                <td style="padding: 12px; font-weight: 600; color: var(--text-heading);">
+                  📍 <%= gig.location.presence || "Evento sin nombrar" %>
+                </td>
+                <td style="padding: 12px; text-align: right; color: var(--text-muted); font-weight: 600;">
+                  $ <%= number_with_precision(gig.amount, precision: 2) %>
+                </td>
+                <td style="padding: 12px; text-align: right; color: #10b981; font-weight: 600;">
+                  $ <%= number_with_precision(gig.total_received, precision: 2) %>
+                </td>
+                <td style="padding: 12px; text-align: right; font-weight: 800; color: #ef4444;">
+                  $ <%= number_with_precision(gig.remaining_amount, precision: 2) %>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                  <div style="display: flex; gap: 6px; justify-content: center; flex-wrap: wrap;">
+                    <%= link_to new_gig_gig_payment_path(gig), title: "Abonar específicamente solo a este show", style: "background: var(--bg-card-subtle); color: var(--color-primary); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 0.8em; font-weight: 700; text-decoration: none;" do %>
+                      💵 Solo este Show
+                    <% end %>
+                    <%= link_to gig_path(gig), style: "background: var(--bg-card-subtle); color: var(--text-muted); border: 1px solid var(--border-color); padding: 5px 8px; border-radius: 6px; font-size: 0.8em; font-weight: 700; text-decoration: none;" do %>
+                      👁️ Ver
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% else %>
+      <p style="color: var(--text-muted); font-size: 0.9em; margin: 0;">No hay shows con saldo pendiente registrados.</p>
+    <% end %>
+  </div>
+
+  <%# --- HISTORIAL RECIENTE DE PAGOS RECIBIDOS DE ESTE CLIENTE --- %>
+  <% if @recent_payments.any? %>
+    <div class="custom-card" style="padding: 24px; margin-bottom: 30px; border-radius: 16px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <h3 style="margin: 0; color: var(--text-heading); font-size: 1.15em; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>🧾</span> Últimos Pagos y Abonos Registrados (<%= @recent_payments.size %>)
+        </h3>
+        <span style="font-size: 0.82em; color: var(--text-muted); font-weight: 600;">
+          Historial de comprobantes emitidos
+        </span>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.9em;">
+          <thead>
+            <tr style="background: var(--bg-card-subtle); color: var(--text-muted);">
+              <th style="padding: 10px 12px; border-radius: 6px 0 0 6px;">Folio / Fecha</th>
+              <th style="padding: 10px 12px;">Evento Destino</th>
+              <th style="padding: 10px 12px;">Método / Referencia</th>
+              <th style="padding: 10px 12px; text-align: right;">Monto</th>
+              <th style="padding: 10px 12px;">Notas / Auditoría</th>
+              <th style="padding: 10px 12px; text-align: center; border-radius: 0 6px 6px 0;">Recibo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @recent_payments.each do |p| %>
+              <tr style="border-bottom: 1px solid var(--border-subtle);">
+                <td style="padding: 12px; font-weight: 700; color: var(--text-main);">
+                  <div><%= p.receipt_display_number %></div>
+                  <span style="font-size: 0.8em; color: var(--text-muted); font-weight: 500;">
+                    <%= p.date_paid ? p.date_paid.strftime('%d/%m/%Y') : p.created_at.strftime('%d/%m/%Y') %>
+                  </span>
+                </td>
+                <td style="padding: 12px; font-weight: 600; color: var(--text-heading);">
+                  <%= link_to gig_path(p.gig), style: "color: var(--color-primary); text-decoration: none;" do %>
+                    📍 <%= p.gig.location.presence || "Evento ##{p.gig_id}" %>
+                  <% end %>
+                </td>
+                <td style="padding: 12px;">
+                  <span style="background: <%= p.payment_method_badge_bg %>; color: <%= p.payment_method_badge_color %>; padding: 2px 8px; border-radius: 6px; font-size: 0.8em; font-weight: 700; display: inline-block;">
+                    <%= p.payment_method_emoji %> <%= p.payment_method_label %>
+                  </span>
+                  <% if p.reference_number.present? %>
+                    <div style="font-size: 0.8em; color: var(--text-muted); margin-top: 4px;">
+                      Ref: <%= p.reference_number %>
+                    </div>
+                  <% end %>
+                </td>
+                <td style="padding: 12px; text-align: right; font-weight: 800; color: #10b981; font-size: 1.05em;">
+                  $ <%= number_with_precision(p.amount, precision: 2) %>
+                </td>
+                <td style="padding: 12px; font-size: 0.82em; color: var(--text-muted); max-width: 250px;">
+                  <%= p.notes.presence || p.audit_reason.presence || "Sin notas" %>
+                </td>
+                <td style="padding: 12px; text-align: center;">
+                  <%= link_to receipt_gig_payment_path(p), target: "_blank", title: "Ver Recibo Digital Oficial", style: "background: var(--bg-card-subtle); color: var(--text-main); border: 1px solid var(--border-color); padding: 5px 10px; border-radius: 6px; font-size: 0.82em; font-weight: 700; text-decoration: none; display: inline-block;" do %>
+                    📄 Recibo
+                  <% end %>
+                </td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <div style="text-align: center; margin: 30px 0 50px 0;">
+    <%= link_to '⬅️ Volver a Cuentas por Cobrar (Área de Deudores)', debts_clients_path, style: "color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.9em;" %>
+  </div>
+
+</div>
+
+<%# --- SCRIPTS DE SIMULACIÓN Y CALCULADORA --- %>
+<script>
+  const TOTAL_DEBT = <%= @total_debt.to_f %>;
+  const EFFECTIVE_RATE = <%= effective_rate.to_f %>;
+
+  // Actualiza el simulador dinámico cuando se ingresa el monto
+  function updateSimulator(val) {
+    let pool = parseFloat(val) || 0.0;
+    if (pool < 0) pool = 0;
+
+    const rows = document.querySelectorAll('.sim-row');
+    let totalAllocated = 0.0;
+    let settledCount = 0;
+    let partialCount = 0;
+
+    rows.forEach(row => {
+      const pending = parseFloat(row.getAttribute('data-pending')) || 0.0;
+      const allocatedCell = row.querySelector('.sim-allocated-cell');
+      const remainingCell = row.querySelector('.sim-remaining-cell');
+      const badgeCell = row.querySelector('.sim-badge-cell');
+
+      let allocated = 0.0;
+      if (pool > 0 && pending > 0) {
+        allocated = Math.min(pending, pool);
+        // Redondear a 2 decimales
+        allocated = Math.round(allocated * 100) / 100;
+        pool = Math.max(0, pool - allocated);
+      }
+
+      const remAfter = Math.max(0, Math.round((pending - allocated) * 100) / 100);
+      totalAllocated += allocated;
+
+      allocatedCell.textContent = '+ $ ' + allocated.toFixed(2);
+
+      if (allocated > 0) {
+        row.style.background = remAfter === 0 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)';
+      } else {
+        row.style.background = 'transparent';
+      }
+
+      remainingCell.textContent = '$ ' + remAfter.toFixed(2);
+      if (remAfter === 0 && allocated > 0) {
+        remainingCell.style.color = '#10b981';
+      } else if (remAfter > 0 && allocated > 0) {
+        remainingCell.style.color = '#f59e0b';
+      } else {
+        remainingCell.style.color = '#ef4444';
+      }
+
+      if (allocated <= 0) {
+        badgeCell.innerHTML = '<span style="background: var(--bg-card); border: 1px solid var(--border-color); color: var(--text-muted); padding: 3px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 700;">Sin abonar</span>';
+      } else if (remAfter === 0) {
+        settledCount++;
+        badgeCell.innerHTML = '<span style="background: #dcfce7; color: #166534; border: 1px solid #86efac; padding: 3px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 800;">✅ Saldado 100%</span>';
+      } else {
+        partialCount++;
+        badgeCell.innerHTML = '<span style="background: #fef3c7; color: #92400e; border: 1px solid #fde68a; padding: 3px 8px; border-radius: 6px; font-size: 0.75em; font-weight: 800;">⏳ Abono Parcial</span>';
+      }
+    });
+
+    const newTotalDebt = Math.max(0, TOTAL_DEBT - totalAllocated);
+    document.getElementById('sim-total-allocated').textContent = '$ ' + totalAllocated.toFixed(2);
+    document.getElementById('sim-new-total-debt').textContent = '$ ' + newTotalDebt.toFixed(2);
+
+    const overallBadge = document.getElementById('sim-overall-badge');
+    if (totalAllocated > 0) {
+      overallBadge.innerHTML = `<span style="background: #10b981; color: white; padding: 3px 10px; border-radius: 12px; font-weight: 800;">🎯 ${settledCount} show(s) saldados, ${partialCount} parcial(es)</span>`;
+    } else {
+      overallBadge.textContent = 'Ingresa un monto arriba para ver la simulación';
+    }
+  }
+
+  function setQuickAmount(amt) {
+    const input = document.getElementById('debt_payment_amount');
+    input.value = amt.toFixed(2);
+    updateSimulator(amt);
+    input.focus();
+  }
+
+  // Calculadora VES <-> USD
+  function toggleRateCalculator() {
+    const widget = document.getElementById('currency-converter-widget');
+    const btnText = document.getElementById('calc-toggle-text');
+    if (widget.style.display === 'none' || widget.style.display === '') {
+      widget.style.display = 'block';
+      btnText.textContent = 'Ocultar Calculadora';
+    } else {
+      widget.style.display = 'none';
+      btnText.textContent = 'Calculadora VES / USD';
+    }
+  }
+
+  function calcVesToUsd() {
+    const ves = parseFloat(document.getElementById('calc_ves_input').value) || 0;
+    if (EFFECTIVE_RATE > 0) {
+      const usd = ves / EFFECTIVE_RATE;
+      document.getElementById('calc_usd_input').value = usd.toFixed(2);
+    }
+  }
+
+  function calcUsdToVes() {
+    const usd = parseFloat(document.getElementById('calc_usd_input').value) || 0;
+    if (EFFECTIVE_RATE > 0) {
+      const ves = usd * EFFECTIVE_RATE;
+      document.getElementById('calc_ves_input').value = ves.toFixed(2);
+    }
+  }
+
+  function applyConvertedAmountToAbono() {
+    const usd = parseFloat(document.getElementById('calc_usd_input').value) || 0;
+    if (usd > 0) {
+      setQuickAmount(usd);
+      const widget = document.getElementById('currency-converter-widget');
+      widget.style.display = 'none';
+      document.getElementById('calc-toggle-text').textContent = 'Calculadora VES / USD';
+    }
+  }
+</script>

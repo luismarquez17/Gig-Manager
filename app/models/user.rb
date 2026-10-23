@@ -164,7 +164,7 @@ class User < ApplicationRecord
 
   def past_agreed_amount(scoped_company = nil)
     comp = scoped_company || ::ActsAsTenant.current_tenant || Current.company || company
-    sa_scope = staff_assignments.joins(:gig).where("gigs.date IS NULL OR gigs.date <= ?", Date.today)
+    sa_scope = staff_assignments.joins(:gig).where("gigs.date IS NOT NULL AND gigs.date <= ?", Date.current)
     sa_scope = sa_scope.where(gigs: { company_id: comp.id }) if comp
     assignment_total = sa_scope.sum(:agreed_amount).to_f
     assigned_gig_ids = sa_scope.pluck(:gig_id)
@@ -174,7 +174,7 @@ class User < ApplicationRecord
       ep_scope.sum(:expected_amount).to_f
     else
       ep_scope.joins("LEFT JOIN gigs ON gigs.id = employee_payments.gig_id")
-        .where("employee_payments.gig_id IS NULL OR (employee_payments.gig_id NOT IN (?) AND (gigs.date IS NULL OR gigs.date <= ?))", assigned_gig_ids, Date.today)
+        .where("employee_payments.gig_id IS NULL OR (employee_payments.gig_id NOT IN (?) AND gigs.date IS NOT NULL AND gigs.date <= ?)", assigned_gig_ids, Date.current)
         .sum(:expected_amount).to_f
     end
 
@@ -246,7 +246,7 @@ class User < ApplicationRecord
        paid = sa.total_paid
        pending_approval = pending_by_gig[sa.gig_id].to_f
        expected = sa.agreed_amount.to_f
-       is_future = sa.gig.present? && sa.gig.date.present? && sa.gig.date > Date.today
+       is_future = sa.gig.present? && sa.gig.has_not_occurred?
        items << {
          gig: sa.gig,
          title: sa.gig&.client&.name || "Show del #{sa.gig&.date}",
@@ -273,7 +273,7 @@ class User < ApplicationRecord
       paid = payments.select(&:approved?).sum { |p| p.amount.to_f }
       pending_approval = payments.select(&:pending_approval?).sum { |p| p.amount.to_f }
       expected = payments.map { |p| p.expected_amount.to_f }.max || paid
-      is_future = gig.present? && gig.date.present? && gig.date > Date.today
+      is_future = gig.present? && gig.has_not_occurred?
       items << {
         gig: gig,
         title: gig ? (gig.client&.name || "Show del #{gig.date}") : "Pago Directo",

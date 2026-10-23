@@ -462,7 +462,7 @@ class EmployeePaymentsControllerTest < ActionDispatch::IntegrationTest
     # Check that unpaid_gig is included in the select options / json map and paid_gig is not
     assert_includes response.body, "Cliente Pendiente Test"
     assert_not_includes response.body, "Cliente Pagado Test"
-    assert_match /Pendiente: \$100\.00/, response.body
+    assert_match /Próximo Show: \$100\.00 al celebrarse/, response.body
   end
 end
 

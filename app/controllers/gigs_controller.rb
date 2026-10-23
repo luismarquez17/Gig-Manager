@@ -134,7 +134,12 @@ class GigsController < ApplicationController
              )
            end
 
-    agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
+    raw_agreed = if params[:new_eventual_worker_name].present?
+                   params[:eventual_agreed_amount].presence || params[:agreed_amount]
+                 else
+                   params[:agreed_amount].presence || params[:eventual_agreed_amount]
+                 end
+    agreed_amount = raw_agreed.to_s.tr(',', '.').strip.to_f
 
     if user && (user.staff? || user.leader? || user.musician?)
       assignment = @gig.staff_assignments.find_or_initialize_by(user_id: user.id)

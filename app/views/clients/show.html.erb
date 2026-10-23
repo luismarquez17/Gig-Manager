@@ -59,14 +59,20 @@
           </p>
         </div>
         
-        <% if @client.debt_whatsapp_url.present? %>
-          <%= link_to @client.debt_whatsapp_url, target: "_blank", title: "Enviar desglose y cobro por WhatsApp", style: "background: #25d366; color: white; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);" do %>
-            <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white;" xmlns="http://www.w3.org/2000/svg">
-              <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
-            </svg>
-            📲 Recordar Deuda por WhatsApp
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+          <%= link_to debt_client_path(@client), class: "btn-main btn-success-custom", style: "background: #10b981; color: white; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.2);" do %>
+            <span>💰</span> Apartado &amp; Abonar Deuda
           <% end %>
-        <% end %>
+
+          <% if @client.debt_whatsapp_url.present? %>
+            <%= link_to @client.debt_whatsapp_url, target: "_blank", title: "Enviar desglose y cobro por WhatsApp", style: "background: #25d366; color: white; text-decoration: none; padding: 10px 18px; border-radius: 8px; font-size: 0.9em; font-weight: bold; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 10px rgba(37, 211, 102, 0.2);" do %>
+              <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white;" xmlns="http://www.w3.org/2000/svg">
+                <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+              </svg>
+              📲 Recordar Deuda por WhatsApp
+            <% end %>
+          <% end %>
+        </div>
       </div>
 
       <%# Tabla de Desglose de Shows Impagos %>
@@ -116,166 +122,7 @@
     </div>
   <% end %>
 
-  <%# --- COMPARTIR PRESUPUESTO POR WHATSAPP --- %>
-  <% if @preset_budgets.any? %>
-    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
-      <h3 style="margin-top: 0; color: #2c3e50; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-        <span>💬</span> Compartir Presupuesto Base por WhatsApp
-      </h3>
-      
-      <% if @client.phone.blank? %>
-        <div style="background: #fff5f5; border: 1px solid #fca5a5; color: #c53030; padding: 15px; border-radius: 10px; font-size: 0.9em; margin-top: 15px;">
-          ⚠️ Para poder enviar un presupuesto por WhatsApp, primero debes asignarle un teléfono/WhatsApp a este cliente en el formulario de abajo.
-        </div>
-      <% else %>
-        <div style="margin-top: 15px;">
-          <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;">Selecciona un Presupuesto Base:</label>
-          <select id="preset-budget-select" onchange="onPresetBudgetChange()" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 1em; background: white; outline: none; margin-bottom: 20px;">
-            <option value="">-- Selecciona un paquete --</option>
-            <% @preset_budgets.each do |pb| %>
-              <option value="<%= pb.id %>"><%= pb.title %> - <%= number_to_currency(pb.price, unit: pb.currency == "USD" ? "$" : "Bs. ", precision: 2) %></option>
-            <% end %>
-          </select>
-        </div>
 
-        <div id="sharing-preview-area" style="display: none; grid-template-columns: 1.2fr 1fr; gap: 20px; border-top: 1px dashed #e2e8f0; padding-top: 20px; flex-wrap: wrap;">
-          <%# Preview Text / Message Box %>
-          <div>
-            <label style="display: block; font-weight: bold; margin-bottom: 8px; color: #334155; font-size: 0.9em;">📝 Mensaje a enviar (Puedes editarlo antes de mandar):</label>
-            <textarea id="whatsapp-message-text" rows="10" style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 0.95em; line-height: 1.5; outline: none; box-sizing: border-box; font-family: inherit; resize: vertical;"></textarea>
-            
-            <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-              <button onclick="sendWhatsAppMessage()" style="background: #25d366; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-size: 0.95em; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2); transition: 0.2s;" onmouseover="this.style.background='#20ba5a'" onmouseout="this.style.background='#25d366'">
-                <svg viewBox="0 0 24 24" width="16" height="16" style="fill: white; vertical-align: middle;" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
-                </svg>
-                Enviar por WhatsApp
-              </button>
-              
-              <a id="print-budget-btn" href="#" target="_blank" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 0.95em; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
-                🖨️ Imprimir / Guardar PDF
-              </a>
-            </div>
-          </div>
-
-          <%# Flyer / Image Preview %>
-          <div style="background: #0f172a; border: 1px solid #cbd5e1; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 220px; text-align: center; width: 100%; box-sizing: border-box; box-shadow: 0 4px 15px rgba(0,0,0,0.06);">
-            <div id="flyer-preview-placeholder" style="color: #94a3b8;">
-              <span style="font-size: 45px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));">🖼️</span>
-              <p style="margin: 8px 0 0 0; font-size: 0.85em; color: #cbd5e1; font-weight: 600;">El paquete seleccionado no tiene flyer de imagen adjunto.</p>
-            </div>
-            <img id="flyer-preview-image" src="" alt="Flyer del Paquete" style="display: none; max-width: 100%; max-height: 260px; border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.3); margin-bottom: 14px; object-fit: contain; border: 1px solid rgba(255,255,255,0.15);">
-            <div id="flyer-actions" style="display: none; gap: 8px; justify-content: center; flex-wrap: wrap; width: 100%;">
-              <button onclick="copyFlyerToClipboard()" style="background: #3b82f6; color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s; box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='#3b82f6'">
-                📋 Copiar Foto
-              </button>
-              <a id="download-flyer-btn" href="#" download style="background: rgba(255,255,255,0.15); color: white; border: 1px solid rgba(255,255,255,0.25); padding: 8px 16px; border-radius: 8px; font-weight: 700; text-decoration: none; font-size: 0.85em; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.25)'" onmouseout="this.style.background='rgba(255,255,255,0.15)'">
-                📥 Descargar Foto
-              </a>
-            </div>
-          </div>
-        </div>
-      <% end %>
-    </div>
-
-    <%# Script to control interactivity %>
-    <script>
-      const PRESET_BUDGETS = <%= raw @preset_budgets.map { |pb| 
-        { 
-          id: pb.id, 
-          title: pb.title, 
-          description: pb.description, 
-          price: pb.price.to_f, 
-          currency: pb.currency,
-          print_url: print_preset_budget_url(pb),
-          image_url: pb.image_attached? ? (pb.image_base64.presence || (rails_blob_path(pb.image, only_path: true) rescue url_for(pb.image))) : nil
-        } 
-      }.to_json %>;
-
-      function onPresetBudgetChange() {
-        const select = document.getElementById('preset-budget-select');
-        const previewArea = document.getElementById('sharing-preview-area');
-        const selectedId = select.value;
-
-        if (!selectedId) {
-          previewArea.style.display = 'none';
-          return;
-        }
-
-        const budget = PRESET_BUDGETS.find(b => b.id == selectedId);
-        if (!budget) return;
-
-        // Formatear mensaje
-        const clientName = "<%= j @client.name %>";
-        const currencySymbol = budget.currency === "USD" ? "$" : "Bs. ";
-        const message = `¡Hola *${clientName}*! Aquí tienes la información de nuestra propuesta para *${budget.title}*:\n\n*Detalles:*\n${budget.description}\n\n*Inversión:* ${currencySymbol}${budget.price.toFixed(2)}\n\nPuedes ver e imprimir el presupuesto completo en PDF aquí: ${budget.print_url}`;
-
-        // Asignar al textarea
-        document.getElementById('whatsapp-message-text').value = message;
-
-        // Asignar links de PDF
-        document.getElementById('print-budget-btn').href = budget.print_url;
-
-        // Configurar previsualización de imagen y acciones
-        const img = document.getElementById('flyer-preview-image');
-        const placeholder = document.getElementById('flyer-preview-placeholder');
-        const actions = document.getElementById('flyer-actions');
-        const downloadBtn = document.getElementById('download-flyer-btn');
-
-        if (budget.image_url) {
-          img.src = budget.image_url;
-          img.style.display = 'block';
-          placeholder.style.display = 'none';
-          actions.style.display = 'flex';
-          downloadBtn.href = budget.image_url;
-        } else {
-          img.src = "";
-          img.style.display = 'none';
-          placeholder.style.display = 'block';
-          actions.style.display = 'none';
-          downloadBtn.href = "#";
-        }
-
-        previewArea.style.display = 'grid';
-      }
-
-      async function copyFlyerToClipboard() {
-        const img = document.getElementById('flyer-preview-image');
-        if (!img || !img.src) return;
-
-        try {
-          const response = await fetch(img.src);
-          const blob = await response.blob();
-          
-          // Creamos el item para el portapapeles
-          const data = [new ClipboardItem({ [blob.type]: blob })];
-          await navigator.clipboard.write(data);
-          alert("📋 ¡Flyer de imagen copiado al portapapeles! Ya puedes ir a WhatsApp y pegarla directamente con Ctrl+V / Cmd+V.");
-        } catch (err) {
-          console.warn("Failed to copy image directly. Fallback to browser action...", err);
-          alert("Para compartir la foto en WhatsApp:\n1. Haz clic derecho sobre la imagen de arriba.\n2. Selecciona 'Copiar imagen'.\n3. Pégala directamente en WhatsApp.\n\n(O haz clic en 'Descargar Foto' para guardarla y enviarla).");
-        }
-      }
-
-      function sendWhatsAppMessage() {
-        const text = document.getElementById('whatsapp-message-text').value;
-        const phone = "<%= @client.formatted_phone_for_whatsapp %>";
-        
-        if (!phone) {
-          alert("El cliente no tiene un teléfono configurado.");
-          return;
-        }
-
-        const encoded = encodeURIComponent(text);
-        const url = `https://wa.me/${phone}?text=${encoded}`;
-        window.open(url, '_blank');
-      }
-    </script>
-  <% else %>
-    <div style="background: white; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px; text-align: center; color: #64748b; font-size: 0.95em;">
-      💡 Tienes la opción de compartir presupuestos base aquí. Crea tu primer presupuesto base en el menú <strong><%= link_to "Presupuestos Base", preset_budgets_path, style: "color: #2563eb; text-decoration: none; font-weight: bold;" %></strong> para activarla.
-    </div>
-  <% end %>
 
   <%# SECCIÓN DE EDICIÓN (TARJETA TIPO FORMULARIO) %>
   <div style="background: #fdfdfd; padding: 30px; border-radius: 15px; border: 1px solid #eee;">
@@ -337,35 +184,6 @@
       <div style="margin-top: 30px;">
         <%= f.submit "🚀 Actualizar y Recalcular Prioridad", 
             style: "width: 100%; background: #007bff; color: white; padding: 15px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; font-size: 1em; transition: 0.3s;" %>
-      </div>
-    <% end %>
-  </div>
-
-  <%# SECCIÓN DE FUSIÓN DE CLIENTES %>
-  <div style="background: #fefce8; padding: 25px; border-radius: 15px; border: 1px solid #fde68a; margin-top: 25px;">
-    <h3 style="margin-top: 0; border-bottom: 2px solid #fde68a; padding-bottom: 10px; color: #92400e; display: flex; align-items: center; gap: 8px;">
-      <span>🔗</span> Fusionar con otro cliente
-    </h3>
-    <p style="color: #a16207; font-size: 0.9em; margin-bottom: 15px;">
-      Si este cliente tiene un duplicado, selecciónalo abajo para absorber sus shows y datos en <strong><%= @client.name %></strong>.
-      El cliente seleccionado será eliminado y todos sus shows se transferirán aquí.
-    </p>
-
-    <%= form_with url: merge_client_path(@client), method: :post, local: true, 
-        data: { turbo_confirm: "⚠️ ¿Estás seguro? Esta acción transferirá todos los shows del cliente seleccionado a #{@client.name} y eliminará el duplicado. No se puede deshacer." } do |f| %>
-      <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
-        <div style="flex-grow: 1; min-width: 200px;">
-          <%= f.label :source_client_id, "Selecciona el cliente duplicado:", style: "display: block; font-weight: bold; margin-bottom: 8px; color: #92400e; font-size: 0.9em;" %>
-          <%= f.select :source_client_id, 
-              Client.where.not(id: @client.id).order(:name).map { |c| ["#{c.name} (#{c.phone || 'sin tel'}) #{c.email.present? ? '— ' + c.email : ''}", c.id] },
-              { prompt: "-- Selecciona un cliente --" },
-              { style: "width: 100%; padding: 12px; border: 2px solid #fbbf24; border-radius: 8px; font-size: 1em; background: white; outline: none;" } %>
-        </div>
-        <%= f.submit "🔗 Fusionar Clientes", 
-            onclick: "return confirm('⚠️ ¿Estás seguro? Esta acción no se puede deshacer.');",
-            style: "background: #f59e0b; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1em; box-shadow: 0 4px 8px rgba(245, 158, 11, 0.2); transition: 0.2s; white-space: nowrap;",
-            onmouseover: "this.style.background='#d97706'",
-            onmouseout: "this.style.background='#f59e0b'" %>
       </div>
     <% end %>
   </div>

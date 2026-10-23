@@ -150,11 +150,15 @@
                 </span>
               </div>
 
-              <div style="display: flex; gap: 8px;">
+              <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <%= link_to debt_client_path(client), class: "btn-main btn-success-custom", style: "padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: 700; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);" do %>
+                  <span>💰</span> Apartado &amp; Abonar
+                <% end %>
+
                 <% if client.debt_whatsapp_url.present? %>
                   <%= link_to client.debt_whatsapp_url, target: "_blank", title: "Enviar recordatorio de cobro por WhatsApp", style: "background: #25d366; color: white; text-decoration: none; padding: 8px 14px; border-radius: 8px; font-size: 0.85em; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(37, 211, 102, 0.2);" do %>
-                    <svg viewBox="0 0 24 24" width="14" height="14" style="fill: white;" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
+                    <svg viewBox="0 0 24 24" width="15" height="15" style="fill: white; flex-shrink: 0;" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.06 5.348 5.397.01 12.008.01c3.202.001 6.212 1.246 8.477 3.514 2.266 2.268 3.507 5.28 3.505 8.484-.004 6.657-5.34 11.997-11.953 11.997-2.005-.001-3.973-.502-5.724-1.458L0 24zm6.59-11.492c.094-.155.19-.32.281-.482l.462-.823c-.156-.312-.234-.632-.231-.962-.008-.432.17-.834.48-1.127.311-.295.733-.448 1.157-.422.385.023.743.209.98.508l1.371 1.734c.162.204.238.468.209.73-.028.261-.161.501-.368.665-.125.101-.264.185-.411.252-.163.072-.25.26-.201.432.215.76.602 1.458 1.135 2.046.579.625 1.306 1.109 2.115 1.411.168.064.358.005.462-.138.163-.23.364-.435.596-.606.195-.143.447-.193.684-.138l2.091.493c.27.065.495.244.604.492.11.248.106.531-.01.776-.115.24-.268.462-.455.658-.335.349-.808.528-1.288.487-.962-.083-1.895-.45-2.69-1.057-1.151-.884-2.083-2.036-2.709-3.348-.387-.803-.635-1.67-.732-2.559-.052-.477.106-.951.432-1.3zm12.39-4.832C17.262 5.922 14.777 4.97 12.008 4.97 8.136 4.97 4.985 8.118 4.981 11.99c0 1.302.34 2.574 1.012 3.7l.22.382-1.016 3.712 3.8-.996.37.22c1.084.643 2.324.983 3.593.985h.003c3.87 0 7.022-3.148 7.026-7.022.002-1.877-.729-3.642-2.057-4.97z"/>
                     </svg>
                     Recordar Deuda
                   <% end %>
@@ -166,6 +170,17 @@
               </div>
             </div>
           </div>
+
+          <% if client.unpaid_gigs.size > 1 %>
+            <div style="background: rgba(37, 99, 235, 0.05); border-bottom: 1px solid var(--border-color); padding: 10px 25px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+              <span style="font-size: 0.82em; color: var(--color-primary); font-weight: 600;">
+                💡 <strong>Cliente con <%= client.unpaid_gigs.size %> shows adeudados:</strong> Puedes abonar una suma global (ej. $300) y el sistema irá saldando cronológicamente show por show automáticamente.
+              </span>
+              <%= link_to debt_client_path(client), style: "font-size: 0.8em; font-weight: 800; color: var(--color-primary); text-decoration: underline;" do %>
+                Abrir apartado de abono en cascada →
+              <% end %>
+            </div>
+          <% end %>
 
           <%# Unpaid Gigs Breakdown Table %>
           <%
