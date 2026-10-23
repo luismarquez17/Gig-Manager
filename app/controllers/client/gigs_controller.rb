@@ -61,6 +61,20 @@ class Client::GigsController < ApplicationController
       # Notificar al líder por email
       UpsellMailer.new_upsell_request(req).deliver_later rescue nil
 
+      price_formatted = sprintf("%.2f", req.price.to_f)
+      client_name = @gig.client&.name || current_user.display_name || 'El cliente'
+      show_date = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "show"
+      show_term = current_company&.venue_mode? ? "evento" : "show"
+
+      AppNotification.create(
+        company: current_company,
+        target_area: 'leaders',
+        notification_type: 'gig_alert',
+        title: "🚀 Solicitud de Adicional: #{req.title}",
+        message: "#{client_name} ha solicitado #{req.emoji} #{req.title} ($#{price_formatted} #{req.currency}) para el #{show_term} del #{show_date}.",
+        action_url: "/gigs/#{@gig.id}"
+      ) rescue nil
+
       render json: {
         success: true,
         message: "¡Solicitud enviada con éxito! El equipo organizador confirmará la disponibilidad.",

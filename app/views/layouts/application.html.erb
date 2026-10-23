@@ -468,6 +468,9 @@
                 <%= link_to superadmin_companies_path, class: "sidebar-link #{'active' if controller_name == 'companies' && controller_path.start_with?('superadmin')}" do %>
                   <span class="icon">🏢</span> <span>Empresas</span>
                 <% end %>
+                <%= link_to superadmin_clients_path, class: "sidebar-link #{'active' if controller_name == 'clients' && controller_path.start_with?('superadmin')}" do %>
+                  <span class="icon">👥</span> <span>Clientes</span>
+                <% end %>
                 <%= link_to superadmin_subscription_payments_path, class: "sidebar-link #{'active' if controller_name == 'subscription_payments' && controller_path.start_with?('superadmin')}" do %>
                   <span class="icon">💳</span> <span>Pagos Manuales</span>
                   <% 
@@ -1183,10 +1186,53 @@
       }
 
       function dismissToast(toast) {
-        if (!toast || !toast.parentNode) return;
-        toast.style.transform = 'translateX(120%)';
+        dismissAppToast(toast);
+      }
+
+      function dismissAppToast(toast) {
+        if (!toast || toast.getAttribute('data-dismissing') === '1') return;
+        toast.setAttribute('data-dismissing', '1');
+        toast.style.transition = 'opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)';
         toast.style.opacity = '0';
-        setTimeout(function() { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 350);
+        toast.style.transform = 'translateX(110%)';
+        setTimeout(function() {
+          if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
+        }, 300);
+      }
+
+      function initAppToast(toast) {
+        if (!toast || toast.getAttribute('data-initialized') === '1') return;
+        toast.setAttribute('data-initialized', '1');
+
+        // Deduplicación en tiempo real en el cliente
+        var notifId = toast.getAttribute('data-notif-id');
+        if (notifId) {
+          var duplicates = document.querySelectorAll('#toast-container [data-notif-id="' + notifId + '"]');
+          if (duplicates.length > 1) {
+            for (var i = 0; i < duplicates.length - 1; i++) {
+              duplicates[i].remove();
+            }
+          }
+        }
+
+        // Auto-dismiss sincronizado (6.5s)
+        var timer = setTimeout(function() {
+          dismissAppToast(toast);
+        }, 6500);
+
+        // Pausar barra y timer al posar el ratón para lectura cómoda
+        toast.addEventListener('mouseenter', function() {
+          clearTimeout(timer);
+          var bar = toast.querySelector('.app-toast-bar');
+          if (bar) bar.style.animationPlayState = 'paused';
+        });
+        toast.addEventListener('mouseleave', function() {
+          var bar = toast.querySelector('.app-toast-bar');
+          if (bar) bar.style.animationPlayState = 'running';
+          timer = setTimeout(function() {
+            dismissAppToast(toast);
+          }, 2000);
+        });
       }
 
       function updateUnreadBadge(delta) {

@@ -20,7 +20,8 @@
             <th style="padding: 14px 20px;">Estado</th>
             <th style="padding: 14px 20px;">Cuota Mensual</th>
             <th style="padding: 14px 20px;">Jefe / Leader</th>
-            <th style="padding: 14px 20px;">Usuarios / Shows</th>
+            <th style="padding: 14px 20px;">Clientes / Usuarios Gig</th>
+            <th style="padding: 14px 20px;">Personal / Shows</th>
             <th style="padding: 14px 20px; text-align: right;">Acciones</th>
           </tr>
         </thead>
@@ -59,8 +60,29 @@
                 <% end %>
               </td>
 
+              <td style="padding: 16px 20px;">
+                <% 
+                  c_count = (@client_counts_by_company && @client_counts_by_company[company.id]) || company.clients_count
+                  u_count = (@client_users_count_by_company && @client_users_count_by_company[company.id]) || company.clients_with_user_count
+                %>
+                <div style="font-weight: 700; color: #0f172a; font-size: 0.92rem;">
+                  <%= c_count %> <%= c_count == 1 ? 'cliente' : 'clientes' %>
+                </div>
+                <div style="margin-top: 4px;">
+                  <% if u_count > 0 %>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #15803d; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 12px;">
+                      ✓ <%= u_count %> con usuario
+                    </span>
+                  <% else %>
+                    <span style="color: #94a3b8; font-size: 0.78rem;">
+                      0 con usuario
+                    </span>
+                  <% end %>
+                </div>
+              </td>
+
               <td style="padding: 16px 20px; color: #475569;">
-                <span style="font-weight: 600; color: #0f172a;"><%= company.users.count %></span> usuarios |
+                <span style="font-weight: 600; color: #0f172a;"><%= company.users.where.not(role: :client).count %></span> personal |
                 <span style="font-weight: 600; color: #0f172a;"><%= company.gigs.count %></span> shows
               </td>
 

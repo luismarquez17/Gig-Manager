@@ -3,7 +3,24 @@ class Client < ApplicationRecord
 
   has_many :gigs, dependent: :destroy
   has_many :client_quotes, dependent: :nullify
-  
+  has_one :client_user, -> { where(role: User.roles[:client]) }, class_name: 'User', foreign_key: 'client_id'
+
+  scope :with_user_account, -> {
+    joins("INNER JOIN users ON users.client_id = clients.id AND users.role = #{User.roles[:client]}")
+  }
+  scope :without_user_account, -> {
+    where.not(id: joins("INNER JOIN users ON users.client_id = clients.id AND users.role = #{User.roles[:client]}").select(:id))
+  }
+  scope :with_gigs, -> { joins(:gigs).distinct }
+
+  def gig_user
+    client_user || (email.present? && company_id.present? ? User.where(company_id: company_id, email: email, role: :client).first : nil)
+  end
+
+  def has_gig_user?
+    client_user.present? || (email.present? && company_id.present? && User.where(company_id: company_id, email: email, role: :client).exists?)
+  end
+
   # Permite editar los datos del show desde el formulario del cliente
   accepts_nested_attributes_for :gigs
 

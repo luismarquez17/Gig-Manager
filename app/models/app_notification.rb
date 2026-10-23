@@ -96,18 +96,80 @@ class AppNotification < ApplicationRecord
 
   def payment_related?
     payment_alert? ||
-      title.to_s.match?(/abono|pago|comprobante|transferencia|dinero|recibo|caja|nómina|\$/i) ||
-      message.to_s.match?(/abono|pago|comprobante|transferencia|dinero|recibo|caja|nómina|\$/i)
+      title.to_s.match?(/abono|comprobante|voucher|recibo oficial/i) ||
+      (message.to_s.match?(/comprobante de abono|comprobante de pago|voucher/i) && !title.to_s.match?(/adicional|upsell/i))
+  end
+
+  def toast_category
+    t = title.to_s.downcase
+    if notification_type == 'urgent'
+      'urgent'
+    elsif payment_related?
+      'financial'
+    elsif t.include?('adicional') || t.include?('upsell')
+      'upsell'
+    elsif t.include?('contrato')
+      'contract'
+    else
+      'general'
+    end
+  end
+
+  def action_label
+    t = title.to_s.downcase
+    m = message.to_s.downcase
+
+    if t.include?('comprobante') || t.include?('abono') || (payment_alert? && m.include?('abono'))
+      '💳 Gestionar Abono ➔'
+    elsif t.include?('adicional') || t.include?('upsell')
+      '✨ Revisar Solicitud ➔'
+    elsif t.include?('contrato')
+      '📄 Ver Contrato ➔'
+    elsif t.include?('asignad')
+      recipient_id.present? ? '🎵 Ver Mi Show ➔' : '👥 Ver Personal ➔'
+    elsif t.include?('reporte de pago') || (payment_alert? && m.include?('recibido'))
+      '📋 Confirmar Pago ➔'
+    elsif payment_alert?
+      '💵 Ver Cuentas ➔'
+    elsif action_url.to_s.include?('/gigs')
+      '🎵 Ver Evento ➔'
+    else
+      'Ver detalles ➔'
+    end
+  end
+
+  def toast_badge_html
+    case toast_category
+    when 'financial'
+      "<div class='app-toast-badge badge-financial'><span class='app-toast-dot'></span>💰 ABONO REPORTADO</div>"
+    when 'upsell'
+      "<div class='app-toast-badge badge-upsell'><span class='app-toast-dot'></span>✨ SOLICITUD DE ADICIONAL</div>"
+    when 'contract'
+      "<div class='app-toast-badge badge-contract'><span class='app-toast-dot'></span>✍️ CONTRATO FIRMADO</div>"
+    when 'urgent'
+      "<div class='app-toast-badge badge-urgent'><span class='app-toast-dot'></span>🚨 PRIORIDAD ALTA</div>"
+    else
+      ""
+    end
   end
 
   def type_icon
-    icon = case notification_type
-    when 'general'       then '📢'
-    when 'gig_alert'     then '🎸'
-    when 'payment_alert' then '💰'
-    when 'urgent'        then '🚨'
-    else payment_related? ? '💰' : '🔔'
-    end
+    t = title.to_s.downcase
+    icon = if t.include?('adicional') || t.include?('upsell')
+             '🚀'
+           elsif t.include?('contrato')
+             '✍️'
+           elsif notification_type == 'urgent'
+             '🚨'
+           elsif notification_type == 'payment_alert' || payment_related?
+             '💰'
+           elsif notification_type == 'gig_alert'
+             '🎸'
+           elsif notification_type == 'general'
+             '📢'
+           else
+             '🔔'
+           end
     icon.dup.force_encoding('UTF-8')
   end
 
@@ -130,10 +192,23 @@ class AppNotification < ApplicationRecord
     channels = if recipient_id.present?
       ["notifications_user_#{recipient_id}"]
     elsif target_area == 'all_areas'
-      ["notifications_leaders", "notifications_musicians", "notifications_staffs", "notifications_all_areas"]
+      ["notifications_all_areas"]
+    elsif target_area.present?
+      ["notifications_#{target_area}"]
     else
-      ["notifications_#{target_area}", "notifications_all_areas"]
+      ["notifications_all_areas"]
     end
+
+    category = toast_category
+    sound_type = case category
+                 when 'urgent' then 'urgent'
+                 when 'financial' then 'payment'
+                 else 'default'
+                 end
+
+    clean_title = ActionController::Base.helpers.j(title.to_s)
+    clean_msg = ActionController::Base.helpers.j(message.to_s.truncate(95))
+    url_link = action_url.presence || "/notifications"
 
     channels.uniq.each do |channel_suffix|
       stream_name = [company, channel_suffix]
@@ -146,48 +221,25 @@ class AppNotification < ApplicationRecord
         locals: { notification: self, current_user: nil }
       )
 
-      # Broadcast toast pop-up and badge bump script
-      clean_title = ActionController::Base.helpers.j(title.to_s)
-      clean_msg = ActionController::Base.helpers.j(message.to_s.truncate(80))
-      is_financial = payment_related?
-      toast_type = notification_type == 'urgent' ? 'error' : (is_financial ? 'financial' : 'success')
-      sound_type = (notification_type == 'urgent' || notification_type == 'error') ? 'urgent' : (is_financial ? 'payment' : 'default')
-      url_link = action_url.presence || "/notifications"
-
-      toast_border = case toast_type
-                     when 'error'     then 'border: 1.5px solid #fca5a5; background: #fff1f2; color: #9f1239;'
-                     when 'financial' then 'border: 2px solid #10b981; background: linear-gradient(135deg, #f0fdf4 0%, #fefce8 100%); color: #065f46; box-shadow: 0 10px 30px rgba(16, 185, 129, 0.25);'
-                     else 'border: 1px solid #86efac; background: #f0fdf4; color: #15803d;'
-                     end
-
-      bar_bg = case toast_type
-               when 'error'     then '#f87171'
-               when 'financial' then 'linear-gradient(90deg, #10b981, #f59e0b)'
-               else '#22c55e'
-               end
-
-      badge_html = if is_financial
-        "<div style='font-size:0.7em; font-weight:800; color:#047857; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:2px; display:flex; align-items:center; gap:4px;'><span style='width:6px;height:6px;border-radius:50%;background:#10b981;display:inline-block;'></span>💰 PRIORIDAD FINANCIERA</div>"
-      else
-        ""
-      end
-      
+      # Broadcast clean, theme-safe toast pop-up and badge bump script
       script_html = <<~HTML
-        <div data-toast="1" style="pointer-events: all; display: flex; align-items: flex-start; gap: 12px; padding: 14px 16px; border-radius: 14px; font-family: Inter, sans-serif; font-size: 0.9rem; font-weight: 600; line-height: 1.4; box-shadow: 0 8px 30px rgba(0,0,0,0.14); #{toast_border} position: relative; overflow: hidden; max-width: 100%;">
-          <span style="font-size:1.4em;flex-shrink:0;">#{type_icon}</span>
-          <div style="flex:1;">
-            #{badge_html}
-            <div style="font-weight: 800; font-size: 0.95em; color: #0f172a; margin-bottom: 2px;">#{ERB::Util.html_escape(title)}</div>
-            <div style="font-size: 0.85em; color: #334155;">#{ERB::Util.html_escape(message.to_s.truncate(100))}</div>
-            <a href="#{url_link}" style="display: inline-block; margin-top: 6px; font-size: 0.82em; font-weight: 700; color: #{is_financial ? '#059669' : '#2563eb'}; text-decoration: underline;">#{is_financial ? '💳 Ver Evento y Gestionar Abono ➔' : 'Ver detalles ➔'}</a>
+        <div id="toast-notif-#{id}" data-toast="1" data-notif-id="#{id}" class="app-toast toast-#{category}">
+          <span class="app-toast-icon">#{type_icon}</span>
+          <div class="app-toast-body">
+            #{toast_badge_html}
+            <div class="app-toast-title">#{ERB::Util.html_escape(title)}</div>
+            <div class="app-toast-message">#{ERB::Util.html_escape(message.to_s.truncate(110))}</div>
+            <a href="#{url_link}" class="app-toast-link">#{action_label}</a>
           </div>
-          <button onclick="this.closest('[data-toast]').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1em;color:inherit;opacity:0.6;padding:0;margin:0;line-height:1;flex-shrink:0;" title="Cerrar">✕</button>
-          <div style="position:absolute;bottom:0;left:0;height:4px;background:#{bar_bg};width:100%;transform-origin:left;animation:toastProgress 7s linear forwards;border-radius:0 0 14px 14px;"></div>
+          <button type="button" class="app-toast-close" onclick="dismissAppToast(this.closest('[data-toast]'))" title="Cerrar">✕</button>
+          <div class="app-toast-bar"></div>
         </div>
         <script>
           if (typeof playNotificationSound === 'function') { playNotificationSound('#{sound_type}'); }
           if (typeof sendDeviceNotification === 'function') { sendDeviceNotification('#{clean_title}', '#{clean_msg}', { url: '#{url_link}' }); }
           if (typeof updateUnreadBadge === 'function') { updateUnreadBadge(1); }
+          var el = document.getElementById('toast-notif-#{id}');
+          if (el && typeof initAppToast === 'function') { initAppToast(el); }
         </script>
       HTML
 

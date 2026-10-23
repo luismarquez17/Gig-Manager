@@ -144,9 +144,122 @@
     </div>
   </div>
 
+  <%# Directorio de Clientes & Adopción Digital en Gig %>
+  <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 28px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+      <div>
+        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+          <span>🎟️ Clientes & Cuentas de Usuario en Gig</span>
+        </h3>
+        <p style="margin: 4px 0 0 0; color: #64748b; font-size: 0.85rem;">
+          Clientes registrados por esta agrupación y el estado de activación de su usuario para ingresar al sistema.
+        </p>
+      </div>
+      <div style="display: flex; gap: 8px; align-items: center;">
+        <span style="background: #ecfeff; color: #0891b2; font-weight: 700; font-size: 0.82rem; padding: 4px 12px; border-radius: 20px; border: 1px solid #cffafe;">
+          <%= @company_clients_count %> Clientes Totales
+        </span>
+        <span style="background: #dcfce7; color: #15803d; font-weight: 700; font-size: 0.82rem; padding: 4px 12px; border-radius: 20px; border: 1px solid #bbf7d0;">
+          ✓ <%= @company_clients_with_user_count %> con Usuario (<%= @company_clients_adoption_percentage %>%)
+        </span>
+      </div>
+    </div>
+
+    <%# Tarjetas Rápidas de Clientes %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px;">
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+        <span style="font-size: 0.78rem; font-weight: 600; color: #64748b; text-transform: uppercase;">Total Clientes</span>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #0f172a; margin-top: 4px;"><%= @company_clients_count %></div>
+      </div>
+      <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 14px;">
+        <span style="font-size: 0.78rem; font-weight: 600; color: #166534; text-transform: uppercase;">Con Usuario en Gig</span>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #15803d; margin-top: 4px;"><%= @company_clients_with_user_count %></div>
+      </div>
+      <div style="background: #fffbeb; border: 1px solid #fef3c7; border-radius: 10px; padding: 14px;">
+        <span style="font-size: 0.78rem; font-weight: 600; color: #92400e; text-transform: uppercase;">Sin Usuario Creado</span>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #b45309; margin-top: 4px;"><%= @company_clients_without_user_count %></div>
+      </div>
+      <div style="background: #faf5ff; border: 1px solid #f3e8ff; border-radius: 10px; padding: 14px;">
+        <span style="font-size: 0.78rem; font-weight: 600; color: #6b21a8; text-transform: uppercase;">Con Shows Activos</span>
+        <div style="font-size: 1.5rem; font-weight: 800; color: #7e22ce; margin-top: 4px;"><%= @company_clients_active_count %></div>
+      </div>
+    </div>
+
+    <%# Tabla de Clientes %>
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
+        <thead>
+          <tr style="background: #f8fafc; color: #64748b; font-weight: 600; border-bottom: 1px solid #e2e8f0;">
+            <th style="padding: 12px 16px;">Cliente</th>
+            <th style="padding: 12px 16px;">Contacto</th>
+            <th style="padding: 12px 16px;">Usuario en Gig</th>
+            <th style="padding: 12px 16px;">Shows</th>
+            <th style="padding: 12px 16px;">Registro</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if @clients.empty? %>
+            <tr>
+              <td colspan="5" style="padding: 24px; text-align: center; color: #94a3b8; font-style: italic;">
+                Esta agrupación aún no tiene clientes registrados.
+              </td>
+            </tr>
+          <% else %>
+            <% @clients.each do |client| %>
+              <% c_user = client.gig_user %>
+              <tr style="border-bottom: 1px solid #f1f5f9;">
+                <td style="padding: 12px 16px;">
+                  <div style="font-weight: 700; color: #0f172a;"><%= client.name %></div>
+                  <% if client.notes.present? %>
+                    <div style="font-size: 0.75rem; color: #94a3b8; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                      <%= client.notes %>
+                    </div>
+                  <% end %>
+                </td>
+
+                <td style="padding: 12px 16px;">
+                  <% if client.email.present? %>
+                    <div style="color: #334155; font-size: 0.82rem;"><%= client.email %></div>
+                  <% end %>
+                  <% if client.phone.present? && client.phone != "0000000000" %>
+                    <div style="color: #64748b; font-size: 0.78rem;"><%= client.phone %></div>
+                  <% end %>
+                </td>
+
+                <td style="padding: 12px 16px;">
+                  <% if c_user.present? %>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; background: #dcfce7; color: #15803d; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">
+                      ✓ Usuario Creado
+                    </span>
+                    <div style="font-size: 0.75rem; color: #64748b; margin-top: 3px;">
+                      <%= c_user.email %>
+                    </div>
+                  <% else %>
+                    <span style="display: inline-flex; align-items: center; gap: 4px; background: #fef3c7; color: #b45309; font-weight: 600; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">
+                      ⚠️ Sin Usuario Gig
+                    </span>
+                    <div style="font-size: 0.72rem; color: #94a3b8; margin-top: 2px;">Solo en CRM / Shows</div>
+                  <% end %>
+                </td>
+
+                <td style="padding: 12px 16px; color: #475569;">
+                  <span style="font-weight: 700; color: #0f172a;"><%= client.gigs.size %></span> shows
+                </td>
+
+                <td style="padding: 12px 16px; color: #64748b; font-size: 0.8rem;">
+                  <%= client.created_at.strftime("%d/%m/%Y") %>
+                </td>
+              </tr>
+            <% end %>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <%# Tabla de Usuarios de la Empresa %>
   <div style="background: white; border-radius: 16px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom: 28px;">
-    <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">👥 Usuarios de esta Empresa</h3>
+    <h3 style="margin: 0 0 16px 0; font-size: 1.1rem; font-weight: 700; color: #0f172a;">👥 Personal y Usuarios de esta Empresa</h3>
 
     <div style="overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.88rem;">
@@ -173,17 +286,21 @@
                 <td style="padding: 12px 16px;">
                   <% if user.leader? %>
                     <span style="background: #ede9fe; color: #6d28d9; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">👑 Jefe / Leader</span>
+                  <% elsif user.client? %>
+                    <span style="background: #ecfeff; color: #0891b2; font-weight: 700; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;">🎟️ Cliente</span>
                   <% else %>
                     <span style="background: #f1f5f9; color: #475569; font-weight: 600; font-size: 0.75rem; padding: 4px 10px; border-radius: 20px;"><%= user.role.capitalize %></span>
                   <% end %>
                 </td>
                 <td style="padding: 12px 16px; text-align: right;">
-                  <% unless user.leader? %>
+                  <% if !user.leader? && !user.client? %>
                     <%= button_to update_role_user_path(user, role: :leader), method: :patch, style: "background: #fdf4ff; color: #c026d3; border: 1px solid #f5d0fe; padding: 4px 10px; border-radius: 6px; font-weight: 600; font-size: 0.78rem; cursor: pointer;" do %>
                       Otorgar Rol de Leader
                     <% end %>
-                  <% else %>
+                  <% elsif user.leader? %>
                     <span style="color: #10b981; font-weight: 600; font-size: 0.8rem;">✓ Jefe Principal</span>
+                  <% else %>
+                    <span style="color: #0891b2; font-weight: 600; font-size: 0.8rem;">Cuenta de Cliente</span>
                   <% end %>
                 </td>
               </tr>
@@ -195,3 +312,4 @@
   </div>
 
 </div>
+

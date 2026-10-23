@@ -27,6 +27,7 @@ Rails.application.routes.draw do
         post :reject
       end
     end
+    resources :clients, only: [:index]
     post '/switch_tenant', to: 'companies#switch_tenant', as: :switch_tenant_global
   end
 

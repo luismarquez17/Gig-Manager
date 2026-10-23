@@ -4,11 +4,19 @@ module Superadmin
 
     def index
       @companies = Company.order(created_at: :desc)
+      @client_counts_by_company = Client.group(:company_id).count
+      @client_users_count_by_company = Client.joins("INNER JOIN users ON users.client_id = clients.id AND users.role = #{User.roles[:client]}").group("clients.company_id").count
     end
 
     def show
       @users = @company.users.order(role: :asc, created_at: :desc)
       @gigs = @company.gigs.order(date: :desc).limit(10)
+      @clients = @company.clients.includes(:client_user, :gigs).order(created_at: :desc)
+      @company_clients_count = @company.clients_count
+      @company_clients_with_user_count = @company.clients_with_user_count
+      @company_clients_without_user_count = @company.clients_without_user_count
+      @company_clients_active_count = @company.clients_active_count
+      @company_clients_adoption_percentage = @company.clients_adoption_percentage
     end
 
     def new

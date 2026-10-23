@@ -7,12 +7,7 @@
   message_str = notification.message.to_s.force_encoding('UTF-8')
   is_financial = notification.payment_related?
 
-  action_label = "Ver detalles ➔"
-  if notification.action_url.to_s.include?('/gigs')
-    action_label = is_financial ? "💳 Gestionar Abono ➔" : "Ver evento ➔"
-  elsif notification.action_url.to_s.include?('/my_payments') || notification.action_url.to_s.include?('/employee_payments')
-    action_label = "💵 Ver pago ➔"
-  end
+  action_label = notification.respond_to?(:action_label) ? notification.action_label : "Ver detalles ➔"
 
   card_bg = if is_financial
               is_read ? '#fcfdfd' : 'linear-gradient(135deg, #f0fdf4 0%, #ffffff 100%)'

@@ -25,6 +25,27 @@ class Company < ApplicationRecord
   validates :invitation_token, uniqueness: true, allow_nil: true
   validates :monthly_fee, numericality: { greater_than_or_equal_to: 0 }
 
+  def clients_count
+    clients.count
+  end
+
+  def clients_with_user_count
+    clients.with_user_account.distinct.count
+  end
+
+  def clients_without_user_count
+    [clients_count - clients_with_user_count, 0].max
+  end
+
+  def clients_active_count
+    clients.with_gigs.count
+  end
+
+  def clients_adoption_percentage
+    return 0.0 if clients_count.zero?
+    ((clients_with_user_count.to_f / clients_count) * 100).round(1)
+  end
+
   def financial_reset_active?
     financial_reset_date.present?
   end
