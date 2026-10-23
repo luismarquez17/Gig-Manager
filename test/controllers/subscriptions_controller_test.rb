@@ -136,4 +136,137 @@ class SubscriptionsControllerTest < ActionDispatch::IntegrationTest
     assert @company.module_enabled?(:inventory)
     assert_not @company.module_enabled?(:payroll)
   end
+
+  test "cliente con suscripcion pagada que cambia de plan recibe notificacion y se programa para el proximo mes" do
+    # Simular empresa con suscripción activa y pagada en paquete full ($22/mes)
+    @company.update!(
+      subscription_status: "active",
+      plan_tier: "full",
+      trial_ends_at: 25.days.from_now
+    )
+    @company.update_modules!(AppModule.build_modules_hash(AppModule.modules_for_package('full')))
+    assert @company.subscription_paid_and_active?
+
+    sign_in @leader
+
+    # Cliente cambia a paquete "banda" (más barato, $15/mes)
+    post change_plan_subscriptions_path, params: {
+      plan_tier: "banda",
+      timing: "next_cycle",
+      modules: {
+        gigs: "1",
+        payroll: "1",
+        songs_repertoire: "1",
+        finances: "1",
+        inventory: "0",
+        clients_crm: "0",
+        shopping_list: "0"
+      }
+    }
+
+    assert_redirected_to subscriptions_path(anchor: 'gigmanager-modules-section')
+    follow_redirect!
+    assert_response :success
+
+    # Verificar mensaje exacto solicitado por el usuario
+    assert_match(/Su plan ha sido cambiado exitosamente los cambios se aplicaran a partir del pr.+ximo mes disfrute de gig manager/i, flash[:notice])
+
+    @company.reload
+    # El cambio está programado para el próximo mes
+    assert @company.has_scheduled_plan_change?
+    assert_equal "banda", @company.scheduled_plan_tier
+    assert_equal 15.00, @company.scheduled_monthly_fee
+
+    # Su plan y acceso actual siguen intactos para el mes en curso
+    assert_equal "full", @company.plan_tier
+    assert @company.module_enabled?(:inventory)
+    assert @company.module_enabled?(:clients_crm)
+  end
+
+  test "cliente en prueba antes de pagar puede cambiar de plan inmediatamente" do
+    # Empresa en trialing sin pagar todavía
+    @company.update!(
+      subscription_status: "trialing",
+      plan_tier: "banda"
+    )
+
+    sign_in @leader
+
+    post change_plan_subscriptions_path, params: {
+      plan_tier: "salon",
+      timing: "immediate",
+      modules: {
+        gigs: "1",
+        clients_crm: "1",
+        finances: "1",
+        payroll: "1"
+      }
+    }
+
+    assert_redirected_to subscriptions_path(anchor: 'gigmanager-modules-section')
+    follow_redirect!
+    assert_response :success
+
+    @company.reload
+    assert_equal "salon", @company.effective_plan_tier
+    assert_not @company.has_scheduled_plan_change?
+  end
+
+  test "cliente puede cancelar un cambio de plan programado" do
+    @company.update!(
+      subscription_status: "active",
+      plan_tier: "banda",
+      trial_ends_at: 20.days.from_now
+    )
+    @company.schedule_plan_change!("full", {}, @company.trial_ends_at)
+    assert @company.has_scheduled_plan_change?
+
+    sign_in @leader
+
+    post cancel_scheduled_plan_subscriptions_path
+    assert_redirected_to subscriptions_path(anchor: 'gigmanager-modules-section')
+    follow_redirect!
+    assert_response :success
+
+    @company.reload
+    assert_not @company.has_scheduled_plan_change?
+    assert_match(/cancelado/i, flash[:notice])
+  end
+
+  test "al reportar y aprobar pago con cambio programado, se activa el nuevo plan y se limpia la programacion" do
+    @company.update!(
+      subscription_status: "active",
+      plan_tier: "banda",
+      trial_ends_at: 1.day.from_now
+    )
+    # Programa cambio a salón ($15/mes)
+    @company.schedule_plan_change!("salon", {}, @company.trial_ends_at)
+    assert @company.has_scheduled_plan_change?
+
+    sign_in @leader
+
+    # Reportar pago de renovación usando los datos del plan programado
+    post report_payment_subscriptions_path, params: {
+      plan_tier: "salon",
+      payment_method: "zelle",
+      reference_number: "ZEL-RENEW-111",
+      notes: "Renovación mensual con cambio de plan a Salón"
+    }
+
+    assert_redirected_to subscriptions_path
+    payment = SubscriptionPayment.last
+    assert_equal "salon", payment.plan_tier
+    assert_equal 15.00, payment.amount
+
+    # Aprobación por Superadmin
+    payment.approve!
+    @company.reload
+
+    # Se ha aplicado el nuevo plan y se ha limpiado la programación
+    assert_equal "salon", @company.plan_tier
+    assert_not @company.has_scheduled_plan_change?
+    assert @company.module_enabled?(:clients_crm)
+    assert @company.module_enabled?(:finances)
+    assert @company.module_enabled?(:payroll)
+  end
 end

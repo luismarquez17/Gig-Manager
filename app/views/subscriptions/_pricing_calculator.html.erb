@@ -221,9 +221,27 @@
           Marca o desmarca para personalizar tu menú. En <strong>Plan Personalizado</strong> obtienes descuentos por volumen.
         </p>
 
+        <%# Banner de Alerta Dinámica al Destildar Módulos Pagados %>
+        <div id="calc-unticked-warning-bar" style="display: none; margin-bottom: 12px; padding: 10px 13px; border-radius: 11px; background: #fffbebfb; border: 1.5px solid #f59e0b; color: #92400e; font-size: 0.78rem; line-height: 1.4; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.08);">
+          <div style="font-weight: 800; font-size: 0.82rem; display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">
+            <span>⚠️</span> <span>Aviso: Módulo(s) pagado(s) desmarcado(s)</span>
+          </div>
+          <div id="calc-unticked-warning-text">
+            <!-- Rellenado dinámicamente por JS -->
+          </div>
+        </div>
+
+        <%# Banner Comparativo de Cambio de Plan (Downgrade, Upgrade o Mismo Valor) %>
+        <div id="calc-plan-comparison-banner" style="display: none; margin-bottom: 12px; padding: 11px 13px; border-radius: 12px; font-size: 0.8rem; line-height: 1.4; transition: all 0.2s ease;">
+          <div id="calc-plan-comparison-content">
+            <!-- Rellenado dinámicamente por JS -->
+          </div>
+        </div>
+
         <form id="calc-modules-form" action="<%= update_company_modules_path %>" method="POST">
           <%= hidden_field_tag :authenticity_token, form_authenticity_token %>
           <input type="hidden" name="_method" value="patch">
+          <input type="hidden" name="plan_tier" id="calc-hidden-form-plan-tier" value="<%= @simulated_plan.presence || @company.effective_plan_tier %>">
 
           <div style="display: flex; flex-direction: column; gap: 7px;" id="calc-modules-list">
             <% AppModule.all.each do |mod| %>
@@ -287,10 +305,10 @@
             <% end %>
           </div>
 
-          <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-size: 0.72rem; color: #64748b;">Aparecerán en tu menú lateral</span>
-            <button type="submit" style="padding: 8px 15px; border-radius: 9px; background: #0f172a; color: white; border: none; font-size: 0.78rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 3px 10px rgba(15,23,42,0.12);">
-              <span>💾</span> Guardar Módulos
+          <div style="margin-top: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+            <span style="font-size: 0.72rem; color: #64748b;">Módulos sincronizados con tu menú lateral</span>
+            <button type="button" id="calc-save-modules-btn" onclick="window.openPlanChangeModal()" style="padding: 9px 18px; border-radius: 10px; background: #0f172a; color: white; border: none; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 3px 10px rgba(15,23,42,0.15);">
+              <span>✨ Guardar Cambios de Plan</span>
             </button>
           </div>
         </form>
@@ -408,6 +426,11 @@
         <%# Botones de Acción %>
         <div style="display: flex; flex-direction: column; gap: 8px;">
           
+          <%# Botón Destacado: Confirmar Cambio de Plan (Visible cuando hay cambios respecto al plan actual) %>
+          <button type="button" id="calc-confirm-change-btn" onclick="window.openPlanChangeModal()" style="display: none; width: 100%; padding: 12px; border-radius: 12px; background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); color: white; border: 1.5px solid #a78bfa; font-weight: 800; font-size: 0.92rem; cursor: pointer; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 16px rgba(124, 58, 237, 0.4); margin-bottom: 2px;">
+            <span>✨ Confirmar Cambio de Plan</span>
+          </button>
+
           <%# Botón 1: Pagar Mensualidad Completa / Renovar %>
           <button type="button" id="calc-report-full-btn" onclick="window.applyCalculationToPaymentReport('full')" style="width: 100%; padding: 11px; border-radius: 11px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; font-weight: 800; font-size: 0.88rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 3px 12px rgba(16, 185, 129, 0.3);">
             <span>⚡ Reportar Mensualidad (<span id="calc-btn-full-amount">$15.00 USD</span>)</span>
@@ -429,6 +452,162 @@
 
   </div>
 
+  <%# ========================================== %>
+  <%# MODAL INTERACTIVO DE CONFIRMACIÓN DE PLAN   %>
+  <%# ========================================== %>
+  <div id="calc-confirm-change-modal" style="display: none; position: fixed; inset: 0; z-index: 99999; background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(6px); align-items: center; justify-content: center; padding: 16px; overflow-y: auto;">
+    <div style="background: white; border-radius: 22px; max-width: 620px; width: 100%; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35); border: 1px solid #e2e8f0; overflow: hidden; margin: auto;">
+      
+      <%# Encabezado del Modal %>
+      <div style="padding: 20px 24px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; background: #f8fafc;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 1.6rem;">✨</span>
+          <div>
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: #0f172a; margin: 0;">Confirmar Cambio de Plan</h3>
+            <p style="color: #64748b; font-size: 0.78rem; margin: 2px 0 0 0;">Revisa los detalles antes de aplicar la modificación en <strong><%= @company.name %></strong></p>
+          </div>
+        </div>
+        <button type="button" onclick="window.closePlanChangeModal()" style="background: #e2e8f0; border: none; width: 30px; height: 30px; border-radius: 50%; font-weight: 800; color: #475569; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.9rem;">
+          ✕
+        </button>
+      </div>
+
+      <%# Cuerpo del Modal %>
+      <div style="padding: 22px 24px;">
+        
+        <%# Tarjetas Comparativas (Plan Actual vs Nuevo Plan) %>
+        <div style="display: grid; grid-template-columns: 1fr auto 1fr; gap: 12px; align-items: center; margin-bottom: 18px;">
+          
+          <%# Plan Actual %>
+          <div style="padding: 14px; border-radius: 14px; background: #f1f5f9; border: 1.5px solid #cbd5e1; text-align: center;">
+            <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #64748b; margin-bottom: 4px;">Plan Actual</div>
+            <div style="font-size: 1.5rem; line-height: 1; margin-bottom: 4px;"><%= @company.effective_plan_tier == 'personalizado' ? '⚙️' : (AppModule.package_info(@company.effective_plan_tier)&.dig(:icon) || '🎸') %></div>
+            <div style="font-size: 0.88rem; font-weight: 800; color: #0f172a; line-height: 1.2; margin-bottom: 2px;"><%= @company.plan_tier_name %></div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #334155;">$<%= '%.2f' % @company.calculated_monthly_fee %> <span style="font-size: 0.68rem; font-weight: 600; color: #64748b;">USD/mes</span></div>
+          </div>
+
+          <%# Flecha %>
+          <div style="font-size: 1.4rem; color: #6366f1; font-weight: 900;">➡️</div>
+
+          <%# Nuevo Plan %>
+          <div style="padding: 14px; border-radius: 14px; background: #eff6ff; border: 1.5px solid #93c5fd; text-align: center;">
+            <div style="font-size: 0.68rem; font-weight: 800; text-transform: uppercase; color: #2563eb; margin-bottom: 4px;">Nuevo Plan</div>
+            <div id="modal-new-plan-icon" style="font-size: 1.5rem; line-height: 1; margin-bottom: 4px;">👑</div>
+            <div id="modal-new-plan-name" style="font-size: 0.88rem; font-weight: 800; color: #1e3a8a; line-height: 1.2; margin-bottom: 2px;">Paquete Full Suite</div>
+            <div style="font-size: 1.05rem; font-weight: 900; color: #1d4ed8;"><span id="modal-new-plan-price">$22.00</span> <span style="font-size: 0.68rem; font-weight: 600; color: #60a5fa;">USD/mes</span></div>
+          </div>
+
+        </div>
+
+        <%# Badge de Diferencia %>
+        <div id="modal-difference-badge-container" style="margin-bottom: 16px; padding: 10px 14px; border-radius: 12px; text-align: center; font-size: 0.84rem; font-weight: 700;">
+          <!-- Insertado dinámicamente por JS -->
+        </div>
+
+        <%# Detalle de Módulos (Conservados, Dejados de pagar, Nuevos) %>
+        <div style="margin-bottom: 18px; display: flex; flex-direction: column; gap: 10px;">
+          
+          <%# Módulos Conservados %>
+          <div id="modal-kept-modules-box" style="padding: 10px 12px; border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0;">
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #059669; margin-bottom: 5px;">
+              ✓ Módulos que mantendrás activos:
+            </div>
+            <div id="modal-kept-modules-list" style="display: flex; flex-wrap: wrap; gap: 5px;">
+              <!-- Insertado por JS -->
+            </div>
+          </div>
+
+          <%# Módulos que dejas de pagar (Aviso especial si destildó pagados) %>
+          <div id="modal-removed-modules-box" style="display: none; padding: 12px 14px; border-radius: 12px; background: #fffbebfb; border: 1.5px solid #fcd34d;">
+            <div style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; color: #b45309; margin-bottom: 4px; display: flex; align-items: center; gap: 5px;">
+              <span>⚠️</span> <span>Módulo(s) que dejarás de pagar a partir del próximo mes:</span>
+            </div>
+            <div id="modal-removed-modules-list" style="display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 6px;">
+              <!-- Insertado por JS -->
+            </div>
+            <div style="font-size: 0.74rem; color: #92400e; line-height: 1.35;">
+              <% if @company.subscription_paid_and_active? %>
+                Mantendrás tu acceso total a estos módulos hasta el fin de tu ciclo actual (<strong><%= l(@company.trial_ends_at.to_date, format: :long) rescue @company.trial_ends_at.strftime('%d/%m/%Y') %></strong>). A partir del próximo mes, tu cuota bajará y estos módulos se desactivarán automáticamente.
+              <% else %>
+                Estos módulos dejarán de estar habilitados en tu menú.
+              <% end %>
+            </div>
+          </div>
+
+          <%# Nuevos Módulos Agregados %>
+          <div id="modal-added-modules-box" style="display: none; padding: 10px 12px; border-radius: 10px; background: #eff6ff; border: 1px solid #bfdbfe;">
+            <div style="font-size: 0.72rem; font-weight: 800; text-transform: uppercase; color: #1d4ed8; margin-bottom: 5px;">
+              ➕ Nuevos módulos que se agregarán a tu menú:
+            </div>
+            <div id="modal-added-modules-list" style="display: flex; flex-wrap: wrap; gap: 5px;">
+              <!-- Insertado por JS -->
+            </div>
+          </div>
+
+        </div>
+
+        <%# Formulario con Opciones de Tiempo & Confirmación %>
+        <%= form_with url: change_plan_subscriptions_path, method: :post, local: true, id: "modal-change-plan-form" do %>
+          <%= hidden_field_tag :plan_tier, "", id: "modal-submit-plan-tier" %>
+          <%= hidden_field_tag :difference_amount, "0.0", id: "modal-submit-difference-amount" %>
+          <div id="modal-hidden-modules-inputs">
+            <!-- Inputs dinámicos insertados por JS -->
+          </div>
+
+          <%# Opciones de Vigencia (Solo para empresas con suscripción pagada) %>
+          <% if @company.subscription_paid_and_active? %>
+            <div style="margin-bottom: 18px; padding: 14px; border-radius: 12px; background: #f8fafc; border: 1px solid #e2e8f0;">
+              <div style="font-size: 0.74rem; font-weight: 800; text-transform: uppercase; color: #475569; margin-bottom: 8px;">
+                📅 ¿Cuándo deseas aplicar este cambio?
+              </div>
+
+              <%# Opción 1: A partir del próximo mes (Predeterminada) %>
+              <label style="display: flex; align-items: flex-start; gap: 10px; margin-bottom: 10px; cursor: pointer; font-size: 0.82rem; color: #1e293b;">
+                <input type="radio" name="timing" value="next_cycle" checked id="modal-timing-next" onchange="window.toggleModalTimingOption()" style="margin-top: 3px; accent-color: #6366f1;">
+                <div>
+                  <strong>A partir del próximo mes (<%= l(@company.trial_ends_at.to_date, format: :long) rescue @company.trial_ends_at.strftime('%d/%m/%Y') %>)</strong>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 1px;">
+                    ¡Sin ningún cobro hoy! Sigues disfrutando de tu plan actual y el cambio entrará en vigencia en tu próxima renovación.
+                  </div>
+                </div>
+              </label>
+
+              <%# Opción 2: Inmediato (Solo se muestra en upgrade de plan) %>
+              <label id="modal-timing-immediate-option" style="display: none; align-items: flex-start; gap: 10px; cursor: pointer; font-size: 0.82rem; color: #1e293b;">
+                <input type="radio" name="timing" value="immediate" id="modal-timing-immediate" onchange="window.toggleModalTimingOption()" style="margin-top: 3px; accent-color: #6366f1;">
+                <div>
+                  <input type="hidden" name="pay_difference" id="modal-hidden-pay-difference" value="0">
+                  <strong>Activar de inmediato pagando diferencia (<span id="modal-immediate-diff-text">+$3.00 USD</span>)</strong>
+                  <div style="font-size: 0.75rem; color: #64748b; margin-top: 1px;">
+                    Te llevará a reportar solo el valor extra por los módulos adicionales para activarlos hoy mismo.
+                  </div>
+                </div>
+              </label>
+            </div>
+          <% else %>
+            <input type="hidden" name="timing" value="immediate">
+            <div style="margin-bottom: 16px; padding: 12px 14px; border-radius: 11px; background: #f0fdf4; border: 1px solid #bbf7d0; font-size: 0.8rem; color: #166534; line-height: 1.4;">
+              ✓ Al confirmar, tu plan y menú lateral se actualizarán al instante y tu próxima cuota mensual a reportar se ajustará a este monto.
+            </div>
+          <% end %>
+
+          <%# Botones de Acción en el Modal %>
+          <div style="display: flex; gap: 10px; justify-content: flex-end; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 16px;">
+            <button type="button" onclick="window.closePlanChangeModal()" style="padding: 10px 18px; border-radius: 10px; background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; font-weight: 700; font-size: 0.84rem; cursor: pointer;">
+              Volver y Seguir Editando
+            </button>
+            <button type="submit" id="modal-submit-confirm-btn" style="padding: 11px 22px; border-radius: 10px; background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%); color: white; border: none; font-weight: 800; font-size: 0.88rem; cursor: pointer; box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35); display: inline-flex; align-items: center; gap: 6px;">
+              <span>✅ Confirmar Cambio de Plan</span>
+            </button>
+          </div>
+
+        <% end %>
+
+      </div>
+
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -442,7 +621,17 @@
     const EXPIRATION_DATE_STR = "<%= @company.trial_ends_at.present? ? (I18n.l(@company.trial_ends_at.to_date, format: :long) rescue @company.trial_ends_at.strftime('%d/%m/%Y')) : '' %>";
     const DAYS_LEFT = <%= @company.subscription_paid_and_active? ? @company.days_left_in_subscription : @company.days_left_in_trial %>;
 
-    let selectedPackageKey = "<%= @simulated_plan.presence || @company.effective_plan_tier.presence || 'banda' %>";
+    const CURRENT_ACTIVE_PLAN_KEY = "<%= @company.effective_plan_tier %>";
+    const CURRENT_ACTIVE_MODULES = <%= raw @company.enabled_module_keys.to_json %>;
+    const CURRENT_PAID_FEE = <%= @company.calculated_monthly_fee.to_f %>;
+    const CURRENT_PLAN_NAME = "<%= @company.plan_tier_name %>";
+    const HAS_SCHEDULED_CHANGE = <%= @company.has_scheduled_plan_change? ? 'true' : 'false' %>;
+    const SCHEDULED_PLAN_KEY = "<%= @company.scheduled_plan_tier.to_s %>";
+    const SCHEDULED_PLAN_NAME = "<%= @company.scheduled_plan_name.to_s %>";
+    const SCHEDULED_MONTHLY_FEE = <%= @company.scheduled_monthly_fee.to_f %>;
+    const SCHEDULED_DATE_STR = "<%= @company.scheduled_change_at.present? ? (I18n.l(@company.scheduled_change_at.to_date, format: :long) rescue @company.scheduled_change_at.strftime('%d/%m/%Y')) : '' %>";
+
+    let selectedPackageKey = "<%= @simulated_plan.presence || (@company.has_scheduled_plan_change? ? @company.scheduled_plan_tier : @company.effective_plan_tier.presence) || 'banda' %>";
 
     function getSelectedModuleKeys() {
       const checkboxes = document.querySelectorAll('.calc-module-checkbox:checked');
@@ -477,7 +666,6 @@
         extraCost = 0.0;
         suggestsFullSuite = (count === 7);
 
-        // Actualizar precio en la card superior de Plan Personalizado
         const pillCustomPrice = document.getElementById('calc-pill-custom-price-display');
         if (pillCustomPrice) {
           pillCustomPrice.textContent = `$${finalTotal.toFixed(0)}`;
@@ -497,7 +685,23 @@
         discountLabel = suggestsFullSuite ? "Full Suite Ahorro" : "";
       }
 
-      // Actualizar Filas y Badges de Módulos en la lista izquierda
+      // 1. Alerta en tiempo real al destildar una opción que están pagando
+      const untickedPaidKeys = CURRENT_ACTIVE_MODULES.filter(k => !selectedKeys.includes(k));
+      const hasUntickedPaid = IS_SUBSCRIPTION_PAID && (untickedPaidKeys.length > 0);
+
+      const untickedBar = document.getElementById('calc-unticked-warning-bar');
+      const untickedText = document.getElementById('calc-unticked-warning-text');
+      if (untickedBar && untickedText) {
+        if (hasUntickedPaid) {
+          const names = untickedPaidKeys.map(k => MODULES_DATA[k] ? MODULES_DATA[k].name : k);
+          untickedText.innerHTML = `Has desmarcado <strong>${names.join(', ')}</strong>, incluido(s) en tu plan pagado actual. Mantendrás tu acceso total garantizado hasta el <strong>${EXPIRATION_DATE_STR}</strong>. Al confirmar el cambio, este módulo se cancelará a partir del próximo mes y tu cuota se reducirá.`;
+          untickedBar.style.display = 'block';
+        } else {
+          untickedBar.style.display = 'none';
+        }
+      }
+
+      // 2. Actualizar Filas y Badges de Módulos en la lista izquierda
       document.querySelectorAll('.calc-module-checkbox').forEach(cb => {
         const modKey = cb.dataset.modKey;
         const rowEl = document.getElementById(`calc-row-${modKey}`);
@@ -505,12 +709,24 @@
         if (!badgeContainer) return;
 
         const isChecked = cb.checked;
+        const isPaidInCurrentPlan = IS_SUBSCRIPTION_PAID && CURRENT_ACTIVE_MODULES.includes(modKey);
 
         if (rowEl) {
           rowEl.classList.remove('is-included', 'is-extra-active');
+          rowEl.style.borderColor = '#e2e8f0';
+          rowEl.style.backgroundColor = 'white';
         }
 
-        if (isCustomMode) {
+        if (isPaidInCurrentPlan && !isChecked) {
+          // AVISO VISUAL AL DESTILDAR OPCIÓN QUE SE ESTÁ PAGANDO
+          if (rowEl) {
+            rowEl.style.borderColor = '#f59e0b';
+            rowEl.style.backgroundColor = '#fffbeb';
+          }
+          badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #fef3c7; color: #b45309; border: 1px solid #fde68a; display: inline-flex; align-items: center; gap: 3px;">
+            ⚠️ Se cancela próx. mes
+          </span>`;
+        } else if (isCustomMode) {
           if (isChecked) {
             if (rowEl) rowEl.classList.add('is-included');
             badgeContainer.innerHTML = `<span style="font-size: 0.68rem; font-weight: 800; padding: 2px 7px; border-radius: 5px; background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0; display: inline-block;">
@@ -543,7 +759,85 @@
         }
       });
 
-      // Actualizar Encabezado y Títulos del Plan en la Factura Derecha
+      // 3. Comparativa Inteligente de Planes (Downgrade / Upgrade / Igual)
+      const isDifferentTier = (selectedPackageKey !== CURRENT_ACTIVE_PLAN_KEY);
+      const isDifferentModules = (selectedKeys.slice().sort().join(',') !== CURRENT_ACTIVE_MODULES.slice().sort().join(','));
+      const isPlanChanged = isDifferentTier || isDifferentModules;
+
+      const diffFromCurrent = finalTotal - CURRENT_PAID_FEE;
+      const compBanner = document.getElementById('calc-plan-comparison-banner');
+      const compContent = document.getElementById('calc-plan-comparison-content');
+      const confirmChangeBtn = document.getElementById('calc-confirm-change-btn');
+      const saveModulesBtn = document.getElementById('calc-save-modules-btn');
+
+      if (isPlanChanged) {
+        if (confirmChangeBtn) confirmChangeBtn.style.display = 'flex';
+        if (saveModulesBtn) {
+          saveModulesBtn.style.background = 'linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)';
+          saveModulesBtn.innerHTML = '<span>✨ Guardar Cambios de Plan</span>';
+        }
+
+        if (compBanner && compContent) {
+          compBanner.style.display = 'block';
+          if (diffFromCurrent < -0.01) {
+            // Plan más barato (Downgrade)
+            const ahorro = Math.abs(diffFromCurrent);
+            compBanner.style.background = '#ecfdf5';
+            compBanner.style.border = '1.5px solid #6ee7b7';
+            compBanner.style.color = '#065f46';
+            compContent.innerHTML = `
+              <div style="font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span>🔻 Plan Más Económico Seleccionado</span>
+                <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 800;">Ahorro: -$${ahorro.toFixed(2)} USD/mes</span>
+              </div>
+              <div style="margin-top: 3px; font-size: 0.76rem; color: #047857; line-height: 1.35;">
+                Tu cuota pasará de <strong>$${CURRENT_PAID_FEE.toFixed(2)}</strong> a <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. ${IS_SUBSCRIPTION_PAID ? 'Al confirmar, el cambio se aplicará a partir de tu próximo mes (el ' + EXPIRATION_DATE_STR + ') sin perder acceso a lo que ya pagaste.' : 'Al confirmar, se actualizará tu cuota a pagar.'}
+              </div>
+            `;
+          } else if (diffFromCurrent > 0.01) {
+            // Plan más costoso (Upgrade)
+            compBanner.style.background = '#eff6ff';
+            compBanner.style.border = '1.5px solid #93c5fd';
+            compBanner.style.color = '#1e3a8a';
+            compContent.innerHTML = `
+              <div style="font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span>🔺 Mejora de Plan Seleccionada</span>
+                <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 800;">+ $${diffFromCurrent.toFixed(2)} USD/mes</span>
+              </div>
+              <div style="margin-top: 3px; font-size: 0.76rem; color: #1d4ed8; line-height: 1.35;">
+                Tu cuota pasará de <strong>$${CURRENT_PAID_FEE.toFixed(2)}</strong> a <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. ${IS_SUBSCRIPTION_PAID ? 'Puedes programarlo para el próximo mes o pagar la diferencia ahora para activarlo hoy.' : 'Al confirmar, se actualizará tu cuota a pagar.'}
+              </div>
+            `;
+          } else {
+            // Mismo precio / Lateral
+            compBanner.style.background = '#f5f3ff';
+            compBanner.style.border = '1.5px solid #c4b5fd';
+            compBanner.style.color = '#5b21b6';
+            compContent.innerHTML = `
+              <div style="font-weight: 800; display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+                <span>🔄 Cambio de Plan de Mismo Valor</span>
+                <span style="background: #7c3aed; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.72rem; font-weight: 800;">Misma Tarifa: $${finalTotal.toFixed(2)} USD/mes</span>
+              </div>
+              <div style="margin-top: 3px; font-size: 0.76rem; color: #6d28d9; line-height: 1.35;">
+                ${IS_SUBSCRIPTION_PAID ? 'Al confirmar, tus nuevos módulos se activarán a partir de tu próximo mes (el ' + EXPIRATION_DATE_STR + ').' : 'Al confirmar, se actualizarán tus herramientas.'}
+              </div>
+            `;
+          }
+        }
+      } else {
+        if (confirmChangeBtn) confirmChangeBtn.style.display = 'none';
+        if (compBanner) compBanner.style.display = 'none';
+        if (saveModulesBtn) {
+          saveModulesBtn.style.background = '#0f172a';
+          saveModulesBtn.innerHTML = '<span>✨ Guardar Cambios de Plan</span>';
+        }
+      }
+
+      // Sincronizar input oculto de plan en el formulario
+      const hiddenPlanTierInput = document.getElementById('calc-hidden-form-plan-tier');
+      if (hiddenPlanTierInput) hiddenPlanTierInput.value = selectedPackageKey;
+
+      // 4. Actualizar Encabezado y Títulos del Plan en la Factura Derecha
       const summaryPlanBadge = document.getElementById('calc-summary-plan-badge');
       const summaryPlanTitle = document.getElementById('calc-summary-plan-title');
       const summaryPlanSubtitle = document.getElementById('calc-summary-plan-subtitle');
@@ -668,7 +962,7 @@
       const reportDiffBtn = document.getElementById('calc-report-diff-btn');
 
       if (IS_SUBSCRIPTION_PAID) {
-        // ESCENARIO 1: CLIENTE CON SUSCRIPCIÓN ACTIVA Y PAGADA
+        // CLIENTE CON SUSCRIPCIÓN ACTIVA Y PAGADA
         if (hasExtras) {
           if (diffBanner) {
             diffBanner.style.display = 'block';
@@ -679,7 +973,7 @@
                 <span>✅</span> Plan base pagado hasta el ${EXPIRATION_DATE_STR} (${DAYS_LEFT} días restantes)
               </div>
               <div style="color: #bae6fd;">
-                Para activar estos <strong>${extraKeys.length} módulo(s) extra</strong>, solo debes pagar la diferencia de <strong>+$${extraCost.toFixed(2)} USD</strong>.
+                Para activar estos <strong>${extraKeys.length} módulo(s) extra</strong> de inmediato, puedes pagar la diferencia de <strong>+$${extraCost.toFixed(2)} USD</strong> o programarlo para el próximo mes.
               </div>
             `;
           }
@@ -701,7 +995,7 @@
                 <span>✓</span> Plan al día hasta el ${EXPIRATION_DATE_STR}
               </div>
               <div style="color: #a7f3d0;">
-                No tienes pagos pendientes. Tu servicio está cubierto por <strong>${DAYS_LEFT} días más</strong>.
+                No tienes pagos pendientes. Tu servicio actual está cubierto por <strong>${DAYS_LEFT} días más</strong>.
               </div>
             `;
           }
@@ -712,7 +1006,7 @@
           }
         }
       } else {
-        // ESCENARIO 2: CLIENTE EN PRUEBA GRATUITA, VENCIDO O PENDIENTE DE PAGO
+        // CLIENTE EN PRUEBA GRATUITA, VENCIDO O PENDIENTE DE PAGO
         if (diffBanner) {
           diffBanner.style.display = 'block';
           diffBanner.style.background = 'rgba(234, 179, 8, 0.12)';
@@ -722,7 +1016,7 @@
               <span>📅</span> ${EXPIRATION_DATE_STR ? ('Vencimiento: ' + EXPIRATION_DATE_STR + ' (' + DAYS_LEFT + ' días)') : 'Pago de Mensualidad'}
             </div>
             <div style="color: #fef08a;">
-              Tu cuota mensual es de <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. ${savings > 0 ? ('¡Estás ahorrando <strong>$' + savings.toFixed(2) + ' USD</strong> por descuento de volumen!') : 'Reporta tu pago para activar tu servicio.'}
+              Tu cuota mensual seleccionada es de <strong>$${finalTotal.toFixed(2)} USD/mes</strong>. ${savings > 0 ? ('¡Estás ahorrando <strong>$' + savings.toFixed(2) + ' USD</strong> por volumen!') : 'Reporta tu pago para activar tu servicio.'}
             </div>
           `;
         }
@@ -871,6 +1165,169 @@
           chevron.style.transform = 'rotate(0deg)';
           chevron.style.color = '#64748b';
         }
+      }
+    };
+
+    // ==========================================
+    // MODAL DE CONFIRMACIÓN DE CAMBIO DE PLAN
+    // ==========================================
+    window.openPlanChangeModal = function() {
+      const isCustomMode = (selectedPackageKey === 'personalizado');
+      const pkg = PACKAGES_DATA[selectedPackageKey] || PACKAGES_DATA['banda'];
+      const selectedKeys = getSelectedModuleKeys();
+      const count = selectedKeys.length;
+
+      let finalTotal = 0.0;
+      let newPlanName = '';
+      let newPlanIcon = '';
+
+      if (isCustomMode) {
+        const tier = CUSTOM_TIERS_DATA[count] || CUSTOM_TIERS_DATA[7];
+        finalTotal = tier.price;
+        newPlanName = count > 0 ? `Plan Personalizado (${count} Módulos)` : 'Plan Personalizado';
+        newPlanIcon = '⚙️';
+      } else {
+        const pkgModules = pkg.modules || [];
+        const extraKeys = selectedKeys.filter(k => !pkgModules.includes(k));
+        const extraCost = extraKeys.length * EXTRA_PRICE;
+        const basePrice = parseFloat(pkg.price) || 15.00;
+        const subtotal = basePrice + extraCost;
+        const fullSuitePrice = 22.00;
+        const suggestsFullSuite = (subtotal >= fullSuitePrice) && (selectedPackageKey !== 'full');
+        finalTotal = suggestsFullSuite ? fullSuitePrice : subtotal;
+        newPlanName = (selectedPackageKey === 'full') ? pkg.name : (extraKeys.length > 0 ? `${pkg.name} + ${extraKeys.length} Extra` : pkg.name);
+        newPlanIcon = pkg.icon || '🎸';
+      }
+
+      // Rellenar datos del nuevo plan en el modal
+      const modalIcon = document.getElementById('modal-new-plan-icon');
+      const modalName = document.getElementById('modal-new-plan-name');
+      const modalPrice = document.getElementById('modal-new-plan-price');
+      if (modalIcon) modalIcon.textContent = newPlanIcon;
+      if (modalName) modalName.textContent = newPlanName;
+      if (modalPrice) modalPrice.textContent = `$${finalTotal.toFixed(2)}`;
+
+      // Diferencia respecto a lo pagado actualmente
+      const diffAmount = finalTotal - CURRENT_PAID_FEE;
+      const badgeContainer = document.getElementById('modal-difference-badge-container');
+      const immediateOption = document.getElementById('modal-timing-immediate-option');
+      const immediateDiffText = document.getElementById('modal-immediate-diff-text');
+
+      if (badgeContainer) {
+        if (diffAmount < -0.01) {
+          const ahorro = Math.abs(diffAmount);
+          badgeContainer.style.background = '#ecfdf5';
+          badgeContainer.style.color = '#065f46';
+          badgeContainer.style.border = '1.5px solid #a7f3d0';
+          badgeContainer.innerHTML = `🎉 <strong>Ahorro Mensual:</strong> Te ahorrarás <strong>-$${ahorro.toFixed(2)} USD/mes</strong> a partir del próximo ciclo.`;
+          if (immediateOption) immediateOption.style.display = 'none';
+        } else if (diffAmount > 0.01) {
+          badgeContainer.style.background = '#eff6ff';
+          badgeContainer.style.color = '#1e3a8a';
+          badgeContainer.style.border = '1.5px solid #bfdbfe';
+          badgeContainer.innerHTML = `⚡ <strong>Mejora de Plan:</strong> Incremento de <strong>+$${diffAmount.toFixed(2)} USD/mes</strong>.`;
+          if (immediateOption) {
+            immediateOption.style.display = 'flex';
+            if (immediateDiffText) immediateDiffText.textContent = `+$${diffAmount.toFixed(2)} USD`;
+          }
+        } else {
+          badgeContainer.style.background = '#f5f3ff';
+          badgeContainer.style.color = '#5b21b6';
+          badgeContainer.style.border = '1.5px solid #ddd6fe';
+          badgeContainer.innerHTML = `✓ <strong>Tarifa Idéntica:</strong> Mantienes tu inversión de <strong>$${finalTotal.toFixed(2)} USD/mes</strong>.`;
+          if (immediateOption) immediateOption.style.display = 'none';
+        }
+      }
+
+      // Detalle de módulos
+      const keptKeys = selectedKeys.filter(k => CURRENT_ACTIVE_MODULES.includes(k));
+      const removedKeys = CURRENT_ACTIVE_MODULES.filter(k => !selectedKeys.includes(k));
+      const addedKeys = selectedKeys.filter(k => !CURRENT_ACTIVE_MODULES.includes(k));
+
+      const keptList = document.getElementById('modal-kept-modules-list');
+      if (keptList) {
+        keptList.innerHTML = keptKeys.map(k => {
+          const m = MODULES_DATA[k];
+          return m ? `<span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; background: white; border: 1px solid #cbd5e1; color: #1e293b; font-weight: 700;">✓ ${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
+        }).join('') || '<span style="font-size: 0.74rem; color: #94a3b8;">Ninguno</span>';
+      }
+
+      const removedBox = document.getElementById('modal-removed-modules-box');
+      const removedList = document.getElementById('modal-removed-modules-list');
+      if (removedBox && removedList) {
+        if (removedKeys.length > 0) {
+          removedBox.style.display = 'block';
+          removedList.innerHTML = removedKeys.map(k => {
+            const m = MODULES_DATA[k];
+            return m ? `<span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; background: #fef3c7; border: 1px solid #fde68a; color: #92400e; font-weight: 800;">✕ ${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
+          }).join('');
+        } else {
+          removedBox.style.display = 'none';
+        }
+      }
+
+      const addedBox = document.getElementById('modal-added-modules-box');
+      const addedList = document.getElementById('modal-added-modules-list');
+      if (addedBox && addedList) {
+        if (addedKeys.length > 0) {
+          addedBox.style.display = 'block';
+          addedList.innerHTML = addedKeys.map(k => {
+            const m = MODULES_DATA[k];
+            return m ? `<span style="font-size: 0.72rem; padding: 3px 8px; border-radius: 6px; background: #dbeafe; border: 1px solid #bfdbfe; color: #1d4ed8; font-weight: 800;">+ ${m.icon} ${m.name.split('(')[0].trim()}</span>` : '';
+          }).join('');
+        } else {
+          addedBox.style.display = 'none';
+        }
+      }
+
+      // Rellenar formulario oculto del modal
+      const submitPlanTier = document.getElementById('modal-submit-plan-tier');
+      if (submitPlanTier) submitPlanTier.value = selectedPackageKey;
+
+      const submitDiffAmount = document.getElementById('modal-submit-difference-amount');
+      if (submitDiffAmount) submitDiffAmount.value = Math.max(0, diffAmount).toFixed(2);
+
+      const hiddenModulesContainer = document.getElementById('modal-hidden-modules-inputs');
+      if (hiddenModulesContainer) {
+        hiddenModulesContainer.innerHTML = Object.keys(MODULES_DATA).map(k => {
+          const val = selectedKeys.includes(k) ? '1' : '0';
+          return `<input type="hidden" name="modules[${k}]" value="${val}">`;
+        }).join('');
+      }
+
+      // Resetear opciones de timing
+      const timingNext = document.getElementById('modal-timing-next');
+      if (timingNext) timingNext.checked = true;
+      const hiddenPayDiff = document.getElementById('modal-hidden-pay-difference');
+      if (hiddenPayDiff) hiddenPayDiff.value = '0';
+      const submitBtn = document.getElementById('modal-submit-confirm-btn');
+      if (submitBtn) submitBtn.innerHTML = '<span>✅ Confirmar Cambio de Plan</span>';
+
+      const modal = document.getElementById('calc-confirm-change-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+    };
+
+    window.closePlanChangeModal = function() {
+      const modal = document.getElementById('calc-confirm-change-modal');
+      if (modal) {
+        modal.style.display = 'none';
+        document.body.style.overflow = '';
+      }
+    };
+
+    window.toggleModalTimingOption = function() {
+      const immediateRadio = document.getElementById('modal-timing-immediate');
+      const hiddenPayDiff = document.getElementById('modal-hidden-pay-difference');
+      const submitBtn = document.getElementById('modal-submit-confirm-btn');
+      if (immediateRadio && immediateRadio.checked) {
+        if (hiddenPayDiff) hiddenPayDiff.value = '1';
+        if (submitBtn) submitBtn.innerHTML = '<span>⚡ Pagar Diferencia y Activar Hoy</span>';
+      } else {
+        if (hiddenPayDiff) hiddenPayDiff.value = '0';
+        if (submitBtn) submitBtn.innerHTML = '<span>✅ Confirmar Cambio para el Próximo Mes</span>';
       }
     };
 

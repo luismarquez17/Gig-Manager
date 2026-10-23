@@ -62,6 +62,8 @@ Rails.application.routes.draw do
       post :checkout
       post :portal
       post :report_payment
+      post :change_plan
+      post :cancel_scheduled_plan
       get  :modules
       patch :update_modules
       get  :calculator
@@ -116,6 +118,9 @@ Rails.application.routes.draw do
 
   # Portal Público de Clientes (Acceso mediante token seguro de WhatsApp)
   get '/portal/:token', to: 'portals#show', as: 'public_portal'
+  get '/portal/:token/access', to: 'portals#access', as: 'access_public_portal'
+  post '/portal/:token/login', to: 'portals#login', as: 'login_public_portal'
+  post '/portal/:token/setup_password', to: 'portals#setup_password', as: 'setup_password_public_portal'
   get '/portal/:token/receipt/:payment_id', to: 'portals#payment_receipt', as: 'public_portal_receipt'
   get '/portal/:token/worker/:worker_id', to: 'portals#worker_profile', as: 'public_portal_worker'
   post '/portal/:token/sign', to: 'portals#sign_contract', as: 'sign_public_portal_contract'

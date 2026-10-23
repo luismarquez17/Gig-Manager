@@ -1,6 +1,6 @@
 class SubscriptionsController < ApplicationController
   before_action :require_leader!
-  skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment, :modules, :update_modules, :calculator]
+  skip_before_action :check_company_subscription!, only: [:index, :checkout, :portal, :report_payment, :modules, :update_modules, :calculator, :change_plan, :cancel_scheduled_plan]
 
   def index
     @company = current_company
@@ -10,6 +10,8 @@ class SubscriptionsController < ApplicationController
     @active_subscription = @company.active_subscription?
     @pending_payments = @company.subscription_payments.where(status: 'pending').order(created_at: :desc)
     @pricing_breakdown = @company.pricing_breakdown
+    @has_scheduled_change = @company.has_scheduled_plan_change?
+    @scheduled_pricing = @company.scheduled_pricing_breakdown if @has_scheduled_change
   end
 
   def modules
@@ -23,25 +25,119 @@ class SubscriptionsController < ApplicationController
   def update_modules
     @company = current_company
     if params[:modules].present?
-      @company.update_modules!(params[:modules])
-      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'), notice: "✅ Módulos actualizados con éxito. Tu menú lateral y cuota se han ajustado."
+      target_tier = params[:plan_tier].presence || @company.effective_plan_tier
+      if @company.subscription_paid_and_active?
+        @company.schedule_plan_change!(target_tier, params[:modules], @company.trial_ends_at)
+        redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'),
+                    notice: "Su plan ha sido cambiado exitosamente los cambios se aplicaran a partir del próximo mes disfrute de gig manager."
+      else
+        @company.update_modules!(params[:modules])
+        redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'),
+                    notice: "✅ Módulos actualizados con éxito. Tu menú lateral y cuota se han ajustado. ¡Disfruta de Gig Manager!"
+      end
     else
       redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'), alert: "No se recibieron parámetros de módulos."
     end
   end
 
+  def change_plan
+    @company = current_company
+    target_tier = params[:plan_tier].presence || @company.effective_plan_tier
+    clean_tier = Company::VALID_PLAN_TIERS.include?(target_tier.to_s) ? target_tier.to_s : 'banda'
+
+    # Construir hash de módulos seleccionados
+    modules_hash = if params[:modules].present?
+                     params[:modules]
+                   else
+                     pkg_mods = AppModule.modules_for_package(clean_tier)
+                     AppModule.keys.each_with_object({}) { |k, h| h[k] = pkg_mods.include?(k) }
+                   end
+
+    if @company.subscription_paid_and_active?
+      timing = params[:timing].presence || 'next_cycle'
+      effective_date = @company.trial_ends_at || 30.days.from_now
+
+      if timing == 'immediate' && params[:pay_difference] == '1'
+        diff_amount = params[:difference_amount].to_f
+        redirect_to subscriptions_path(
+          anchor: 'reportar-pago',
+          plan_tier: clean_tier,
+          amount: diff_amount,
+          notes: "Pago de diferencia para activación inmediata de #{AppModule.package_info(clean_tier)&.dig(:name) || clean_tier}"
+        ), notice: "Reporta el pago de la diferencia ($#{'%.2f' % diff_amount} USD) para activar tu mejora de plan de inmediato."
+        return
+      end
+
+      # Programar cambio para el próximo ciclo
+      @company.schedule_plan_change!(clean_tier, modules_hash, effective_date)
+
+      # Notificación interna persistente en el buzón
+      plan_display = @company.scheduled_plan_name
+      date_display = (I18n.l(effective_date.to_date, format: :long) rescue effective_date.strftime('%d/%m/%Y'))
+
+      begin
+        AppNotification.create!(
+          company: @company,
+          sender: current_user,
+          target_area: 'leaders',
+          notification_type: 'general',
+          title: "📅 Cambio de Plan Programado para el Próximo Mes",
+          message: "Tu cambio al #{plan_display} ha sido programado con éxito. Se aplicará a partir del #{date_display}. Hasta esa fecha sigues disfrutando de tu plan actual.",
+          action_url: "/subscriptions"
+        )
+      rescue => _e
+        # Notificación opcional
+      end
+
+      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'),
+                  notice: "Su plan ha sido cambiado exitosamente los cambios se aplicaran a partir del próximo mes disfrute de gig manager."
+    else
+      # Antes de pagar el mes (en prueba gratuita, pago vencido o pendiente)
+      @company.update_modules!(modules_hash)
+      @company.update!(plan_tier: clean_tier)
+      @company.cancel_scheduled_plan_change! if @company.has_scheduled_plan_change?
+
+      fee = @company.calculated_monthly_fee
+      plan_display = @company.plan_tier_name
+      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'),
+                  notice: "✅ Tu plan ha sido seleccionado exitosamente como #{plan_display} ($#{'%.2f' % fee} USD/mes). Este será el monto de tu mensualidad. ¡Disfruta de Gig Manager!"
+    end
+  end
+
+  def cancel_scheduled_plan
+    @company = current_company
+    if @company.has_scheduled_plan_change?
+      current_name = @company.plan_tier_name
+      @company.cancel_scheduled_plan_change!
+      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'),
+                  notice: "✅ El cambio de plan programado ha sido cancelado. Continuarás con tu #{current_name} actual sin variaciones."
+    else
+      redirect_to subscriptions_path(anchor: 'gigmanager-modules-section'),
+                  alert: "No tienes ningún cambio de plan programado actualmente."
+    end
+  end
+
   def report_payment
-    plan_tier = params[:plan_tier].presence || current_company.effective_plan_tier
-    
+    @company = current_company
+    default_tier = if @company.has_scheduled_plan_change?
+                     @company.scheduled_plan_tier
+                   else
+                     @company.effective_plan_tier
+                   end
+
+    plan_tier = params[:plan_tier].presence || default_tier
+
     amount = if params[:amount].present? && params[:amount].to_f > 0
                params[:amount].to_f
+             elsif @company.has_scheduled_plan_change? && plan_tier == @company.scheduled_plan_tier
+               @company.scheduled_monthly_fee
              elsif plan_tier == 'personalizado'
-               AppModule.calculate_pricing('personalizado', current_company.enabled_module_keys)[:total_price]
+               AppModule.calculate_pricing('personalizado', @company.enabled_module_keys)[:total_price]
              else
                AppModule.package_info(plan_tier)&.dig(:price) || 15.00
              end
 
-    @payment = current_company.subscription_payments.build(
+    @payment = @company.subscription_payments.build(
       user: current_user,
       plan_tier: plan_tier,
       payment_method: params[:payment_method],

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
+ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -122,11 +122,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
   create_table "clients", force: :cascade do |t|
     t.string "name"
     t.string "phone"
-    t.string "notes"
+    t.string "email"
     t.integer "priority"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "email"
+    t.string "notes"
     t.bigint "company_id"
     t.index ["company_id"], name: "index_clients_on_company_id"
   end
@@ -185,7 +185,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
     t.jsonb "enabled_modules", default: {}, null: false
     t.string "business_type", default: "music_band", null: false
     t.date "financial_reset_date"
+    t.string "scheduled_plan_tier"
+    t.jsonb "scheduled_modules"
+    t.datetime "scheduled_change_at"
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
+    t.index ["scheduled_change_at"], name: "index_companies_on_scheduled_change_at"
     t.index ["slug"], name: "index_companies_on_slug", unique: true
     t.index ["stripe_customer_id"], name: "index_companies_on_stripe_customer_id"
     t.index ["stripe_subscription_id"], name: "index_companies_on_stripe_subscription_id"
@@ -309,8 +313,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
   create_table "gig_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.bigint "item_id", null: false
-    t.integer "quantity", default: 1
-    t.boolean "checked", default: false
+    t.integer "quantity"
+    t.boolean "checked"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "loaded_quantity", default: 0, null: false
@@ -438,17 +442,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
     t.index ["gig_id"], name: "index_goal_savings_contributions_on_gig_id"
     t.index ["reinvestment_goal_id"], name: "index_goal_savings_contributions_on_reinvestment_goal_id"
     t.index ["user_id"], name: "index_goal_savings_contributions_on_user_id"
-  end
-
-  create_table "inquiries", force: :cascade do |t|
-    t.string "name"
-    t.string "email"
-    t.string "phone"
-    t.text "message"
-    t.bigint "preset_budget_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["preset_budget_id"], name: "index_inquiries_on_preset_budget_id"
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -724,7 +717,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_16_150000) do
   add_foreign_key "goal_savings_contributions", "gigs"
   add_foreign_key "goal_savings_contributions", "reinvestment_goals"
   add_foreign_key "goal_savings_contributions", "users"
-  add_foreign_key "inquiries", "preset_budgets"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "investments", "companies"
   add_foreign_key "items", "companies"

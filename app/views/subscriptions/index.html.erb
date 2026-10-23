@@ -59,6 +59,41 @@
     </p>
   </div>
 
+  <%# --- BANNER DE CAMBIO DE PLAN PROGRAMADO (PRÓXIMO MES) --- %>
+  <% if @has_scheduled_change %>
+    <div class="sub-mobile-card" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); color: white; border-radius: 18px; padding: 22px 24px; margin-bottom: 25px; border: 1.5px solid #818cf8; box-shadow: 0 10px 25px rgba(49,46,129,0.3); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px;">
+      <div style="display: flex; align-items: center; gap: 16px; flex: 1; min-width: 280px;">
+        <div style="width: 50px; height: 50px; border-radius: 14px; background: rgba(129, 140, 248, 0.25); border: 1px solid rgba(165, 180, 252, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.6rem; flex-shrink: 0;">
+          📅
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+            <span style="padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: rgba(56, 189, 248, 0.25); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.4); text-transform: uppercase;">
+              ✓ Cambio Programado para el Próximo Mes
+            </span>
+            <span style="font-size: 0.78rem; color: #cbd5e1;">
+              Entrará en vigor el: <strong><%= l(@company.scheduled_change_at.to_date, format: :long) rescue @company.scheduled_change_at.strftime('%d/%m/%Y') %></strong>
+            </span>
+          </div>
+          <h3 style="font-size: 1.2rem; font-weight: 800; color: #ffffff; margin: 0;">
+            Próximo Plan: <span style="color: #fde047;"><%= @company.scheduled_plan_name %></span> • $<%= '%.2f' % @company.scheduled_monthly_fee %> USD/mes
+          </h3>
+          <p style="color: #cbd5e1; font-size: 0.85rem; margin: 4px 0 0 0; line-height: 1.4;">
+            Tu plan actual (<strong><%= @company.plan_tier_name %></strong>) sigue 100% activo hasta la fecha de renovación. A partir de esa fecha, tu cuota y módulos se ajustarán automáticamente.
+          </p>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+        <a href="#gigmanager-modules-section" class="sub-mobile-btn" style="text-decoration: none; padding: 10px 16px; border-radius: 11px; background: rgba(255,255,255,0.12); color: white; border: 1px solid rgba(255,255,255,0.25); font-weight: 700; font-size: 0.84rem; display: inline-flex; align-items: center; gap: 5px;">
+          <span>🔍</span> Ver Nuevos Módulos
+        </a>
+        <%= button_to cancel_scheduled_plan_subscriptions_path, method: :post, data: { turbo_confirm: "¿Estás seguro de cancelar este cambio y mantener tu #{@company.plan_tier_name} actual?" }, class: "sub-mobile-btn", style: "padding: 10px 16px; border-radius: 11px; background: #ef4444; color: white; border: none; font-weight: 800; font-size: 0.84rem; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);" do %>
+          <span>✖️</span> Cancelar Cambio Programado
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+
   <!-- 1. Banner de Estado de la Prueba / Suscripción -->
   <div style="margin-bottom: 25px;">
     <% if @company.subscription_paid_and_active? %>
@@ -212,12 +247,12 @@
                 pkg[:key] == 'personalizado' ? "#{pkg[:icon]} #{pkg[:name]} (A Tu Medida - Con Descuentos)" : "#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD)",
                 pkg[:key]
               ] },
-              @company.effective_plan_tier
+              (@has_scheduled_change ? @company.scheduled_plan_tier : @company.effective_plan_tier)
             ), id: "subscription_plan_tier_select", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Monto a Pagar ($ USD)</label>
-            <%= number_field_tag :amount, @pricing_breakdown[:total_price], step: "0.01", id: "subscription_amount_input", placeholder: "15.00", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+            <%= number_field_tag :amount, (@has_scheduled_change ? @company.scheduled_monthly_fee : @pricing_breakdown[:total_price]), step: "0.01", id: "subscription_amount_input", placeholder: "15.00", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Método de Pago</label>

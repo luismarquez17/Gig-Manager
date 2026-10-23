@@ -337,6 +337,7 @@ class Company < ApplicationRecord
   end
 
   def effective_plan_tier
+    check_scheduled_plan_transition! if persisted?
     VALID_PLAN_TIERS.include?(plan_tier.to_s) ? plan_tier.to_s : 'banda'
   end
 
@@ -399,6 +400,105 @@ class Company < ApplicationRecord
 
   def has_extra_modules?
     pricing_breakdown[:extra_keys].any?
+  end
+
+  # ==========================================
+  # CAMBIOS DE PLAN PROGRAMADOS (PRÓXIMO MES)
+  # ==========================================
+
+  def has_scheduled_plan_change?
+    scheduled_plan_tier.present? && scheduled_change_at.present?
+  end
+
+  def effective_scheduled_plan_tier
+    VALID_PLAN_TIERS.include?(scheduled_plan_tier.to_s) ? scheduled_plan_tier.to_s : 'banda'
+  end
+
+  def scheduled_module_keys
+    return [] unless has_scheduled_plan_change?
+    if scheduled_modules.is_a?(Hash)
+      scheduled_modules.select { |_, v| v == true || v == "1" || v == 1 || v == "true" }.keys.map(&:to_s)
+    elsif scheduled_plan_tier.present?
+      AppModule.modules_for_package(scheduled_plan_tier)
+    else
+      []
+    end
+  end
+
+  def scheduled_pricing_breakdown
+    return nil unless has_scheduled_plan_change?
+    AppModule.calculate_pricing(effective_scheduled_plan_tier, scheduled_module_keys)
+  end
+
+  def scheduled_monthly_fee
+    scheduled_pricing_breakdown&.dig(:total_price) || 0.0
+  end
+
+  def scheduled_plan_name
+    return nil unless has_scheduled_plan_change?
+    if effective_scheduled_plan_tier == 'personalizado'
+      count = scheduled_module_keys.count
+      "Plan Personalizado (#{count} #{count == 1 ? 'Módulo' : 'Módulos'})"
+    else
+      AppModule.package_info(effective_scheduled_plan_tier)&.dig(:name) || 'Plan Programado'
+    end
+  end
+
+  def schedule_plan_change!(new_tier, new_modules_hash = {}, effective_date = nil)
+    clean_tier = VALID_PLAN_TIERS.include?(new_tier.to_s) ? new_tier.to_s : 'banda'
+    effective_date ||= trial_ends_at.presence || 30.days.from_now
+
+    formatted = {}
+    if clean_tier == 'personalizado' || new_modules_hash.present?
+      AppModule.keys.each do |key|
+        val = new_modules_hash[key] || new_modules_hash[key.to_sym]
+        formatted[key] = (val == true || val == "1" || val == "true" || val == 1)
+      end
+    else
+      pkg_mods = AppModule.modules_for_package(clean_tier)
+      AppModule.keys.each do |key|
+        formatted[key] = pkg_mods.include?(key)
+      end
+    end
+
+    update!(
+      scheduled_plan_tier: clean_tier,
+      scheduled_modules: formatted,
+      scheduled_change_at: effective_date
+    )
+  end
+
+  def cancel_scheduled_plan_change!
+    update!(
+      scheduled_plan_tier: nil,
+      scheduled_modules: nil,
+      scheduled_change_at: nil
+    )
+  end
+
+  def apply_scheduled_plan_change!
+    return unless has_scheduled_plan_change?
+
+    target_tier = effective_scheduled_plan_tier
+    target_modules = if scheduled_modules.present?
+                       scheduled_modules
+                     else
+                       AppModule.build_modules_hash(AppModule.modules_for_package(target_tier))
+                     end
+
+    update!(
+      plan_tier: target_tier,
+      enabled_modules: target_modules,
+      scheduled_plan_tier: nil,
+      scheduled_modules: nil,
+      scheduled_change_at: nil
+    )
+  end
+
+  def check_scheduled_plan_transition!
+    if has_scheduled_plan_change? && scheduled_change_at.present? && scheduled_change_at <= Time.current
+      apply_scheduled_plan_change!
+    end
   end
 
   # ==========================================

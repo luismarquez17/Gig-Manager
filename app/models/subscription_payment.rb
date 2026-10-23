@@ -47,9 +47,22 @@ class SubscriptionPayment < ApplicationRecord
         trial_ends_at: base_date + 30.days
       }
 
-      package_modules = AppModule.modules_for_package(plan_tier)
-      if package_modules.present?
-        updates[:enabled_modules] = AppModule.build_modules_hash(package_modules)
+      if company&.has_scheduled_plan_change?
+        updates[:plan_tier] = company.scheduled_plan_tier
+        if company.scheduled_modules.present?
+          updates[:enabled_modules] = company.scheduled_modules
+        else
+          package_modules = AppModule.modules_for_package(company.scheduled_plan_tier)
+          updates[:enabled_modules] = AppModule.build_modules_hash(package_modules) if package_modules.present?
+        end
+        updates[:scheduled_plan_tier] = nil
+        updates[:scheduled_modules] = nil
+        updates[:scheduled_change_at] = nil
+      else
+        package_modules = AppModule.modules_for_package(plan_tier)
+        if package_modules.present?
+          updates[:enabled_modules] = AppModule.build_modules_hash(package_modules)
+        end
       end
 
       company&.update!(updates)

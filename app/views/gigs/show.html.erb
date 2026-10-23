@@ -378,7 +378,7 @@
           🔗 Portal Público del Cliente
         </h3>
         <p style="margin: 0 0 15px 0; color: #64748b; font-size: 0.9em; line-height: 1.4;">
-          Comparte este enlace seguro con tu cliente para que vea su cuenta regresiva, estado de pagos y cronograma sin necesidad de registrarse.
+          Comparte este enlace con tu cliente para que consulte su cuenta regresiva, estado de pagos y cronograma, o inicie sesión directamente para tener el control total de su evento.
         </p>
         
         <%
@@ -396,7 +396,7 @@
           feat_items = ["los detalles contratados"]
           feat_items << "el estado de tus abonos" if @gig.company&.module_enabled?(:finances)
           feat_items << "el cronograma del día" if @gig.company&.module_enabled?(:gigs)
-          wa_msg = "¡Hola #{@gig.client&.name}! Te comparto el link de tu Portal del Cliente personalizado para tu evento del #{@gig.date&.strftime('%d/%m/%Y')}. Podrás ver #{feat_items.to_sentence}: #{portal_url}"
+          wa_msg = "¡Hola #{@gig.client&.name}! Te comparto el link de tu Portal de Cliente para tu evento del #{@gig.date&.strftime('%d/%m/%Y')}. Podrás ver #{feat_items.to_sentence} e iniciar sesión directamente para controlar todas las opciones de tu evento: #{portal_url}"
           
           # Si tenemos el teléfono formateado del cliente, generamos el link directo, de lo contrario a WhatsApp Web general
           wa_share_url = @gig.client&.formatted_phone_for_whatsapp.present? ? "https://wa.me/#{@gig.client.formatted_phone_for_whatsapp}?text=#{ERB::Util.url_encode(wa_msg)}" : "https://web.whatsapp.com/send?text=#{ERB::Util.url_encode(wa_msg)}"
@@ -407,6 +407,9 @@
           </svg>
           Enviar por WhatsApp
         </a>
+        <%= link_to portal_url, target: "_blank", style: "background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; padding: 10px 18px; border-radius: 12px; font-weight: bold; text-decoration: none; font-size: 0.9em; box-shadow: 0 4px 6px rgba(22, 101, 52, 0.08); display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: 0.2s;" do %>
+          🌐 Ver Portal
+        <% end %>
         <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 10px 18px; border-radius: 12px; font-weight: bold; font-size: 0.9em; box-shadow: 0 4px 6px rgba(67, 56, 202, 0.08); display: inline-flex; align-items: center; justify-content: center; gap: 6px; cursor: pointer; transition: 0.2s;">
           <%= company_term(:event_sheet, (venue_mode? ? '📸 Ficha del Evento' : '📸 Ficha de Show')) %>
         </button>

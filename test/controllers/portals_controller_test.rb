@@ -128,4 +128,66 @@ class PortalsControllerTest < ActionDispatch::IntegrationTest
     assert_equal "PM-12345", payment.reference_number
     assert_equal "Cliente Invitado", payment.payer_name
   end
+
+  test "should render portal with login and control call to action" do
+    get public_portal_url(token: @gig.portal_token)
+    assert_response :success
+    assert_includes response.body, "Toma el Control Total de tu Evento"
+    assert_includes response.body, "Iniciar Sesión / Controlar Evento"
+  end
+
+  test "should render portal access page" do
+    get access_public_portal_url(token: @gig.portal_token)
+    assert_response :success
+    assert_select "h2", text: /Control Total de tu Evento/
+  end
+
+  test "should login existing client user from portal" do
+    client_user = users(:client_user)
+    post login_public_portal_url(token: @gig.portal_token), params: {
+      email: client_user.email,
+      password: "password123"
+    }
+    assert_redirected_to client_gig_path(@gig)
+  end
+
+  test "should reject invalid credentials from portal" do
+    client_user = users(:client_user)
+    post login_public_portal_url(token: @gig.portal_token), params: {
+      email: client_user.email,
+      password: "wrongpassword"
+    }
+    assert_redirected_to access_public_portal_url(token: @gig.portal_token)
+    assert_equal "❌ Correo o contraseña incorrectos. Si aún no tienes contraseña, activa tu cuenta abajo.", flash[:alert]
+  end
+
+  test "should setup password and activate account for new client user" do
+    new_email = "cliente_nuevo_portal@test.com"
+    post setup_password_public_portal_url(token: @gig.portal_token), params: {
+      email: new_email,
+      password: "passwordSegura123",
+      password_confirmation: "passwordSegura123"
+    }
+    assert_redirected_to client_gig_path(@gig)
+    created_user = User.find_by(email: new_email)
+    assert_not_nil created_user
+    assert_equal "client", created_user.role
+  end
+
+  test "should reject setup password if passwords do not match" do
+    post setup_password_public_portal_url(token: @gig.portal_token), params: {
+      email: "cliente_fail@test.com",
+      password: "password123",
+      password_confirmation: "mismatched123"
+    }
+    assert_redirected_to access_public_portal_url(token: @gig.portal_token)
+    assert_equal "❌ Las contraseñas no coinciden.", flash[:alert]
+  end
+
+  test "should redirect to client gig when client is already logged in and visits access" do
+    sign_in users(:client_user)
+    get access_public_portal_url(token: @gig.portal_token)
+    assert_redirected_to client_gig_path(@gig)
+  end
 end
+

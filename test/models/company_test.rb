@@ -163,4 +163,48 @@ class CompanyTest < ActiveSupport::TestCase
     assert_equal "Plan Personalizado (3 Módulos)", company.plan_tier_name
     assert_equal 13.0, company.calculated_monthly_fee
   end
+
+  test "permite programar un cambio de plan para el proximo mes, calcular su cuota y cancelarlo" do
+    company = Company.create!(name: "Grupo Musical Sol", plan_tier: "full", monthly_fee: 22.0)
+    company.update!(
+      subscription_status: "active",
+      trial_ends_at: 20.days.from_now
+    )
+
+    assert_not company.has_scheduled_plan_change?
+
+    # Cliente decide bajar de plan a "banda" ($15 USD) a partir del próximo mes
+    company.schedule_plan_change!("banda", {}, company.trial_ends_at)
+
+    assert company.has_scheduled_plan_change?
+    assert_equal "banda", company.scheduled_plan_tier
+    assert_equal "Paquete Bandas & Orquestas", company.scheduled_plan_name
+    assert_equal 15.00, company.scheduled_monthly_fee
+    assert_equal 4, company.scheduled_module_keys.count
+
+    # Su plan actual activo sigue siendo Full Suite ($22)
+    assert_equal "full", company.plan_tier
+    assert_equal "full", company.effective_plan_tier
+
+    # Cancelar el cambio programado
+    company.cancel_scheduled_plan_change!
+    assert_not company.has_scheduled_plan_change?
+    assert_nil company.scheduled_plan_tier
+  end
+
+  test "aplica automaticamente el cambio programado cuando llega la fecha efectiva" do
+    company = Company.create!(name: "Sonido Pro", plan_tier: "productora", monthly_fee: 18.0)
+    
+    # Programar cambio para fecha pasada
+    past_date = 1.hour.ago
+    company.schedule_plan_change!("negocio", {}, past_date)
+    assert company.has_scheduled_plan_change?
+
+    # Al consultar effective_plan_tier, detecta la fecha cumplida y aplica la transición
+    assert_equal "negocio", company.effective_plan_tier
+    assert_not company.has_scheduled_plan_change?
+    assert company.module_enabled?(:clients_crm)
+    assert company.module_enabled?(:finances)
+    assert company.module_enabled?(:payroll)
+  end
 end
