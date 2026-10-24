@@ -1,0 +1,22 @@
+<%# --- CUENTA REGRESIVA --- %>
+<section class="glass-card">
+  <h2 class="countdown-title" id="countdown-label">Tiempo Restante para el <%= @gig.company&.term_for(:event_singular, 'Evento') %></h2>
+  <div class="countdown-container">
+    <div class="countdown-box">
+      <div class="val" id="cd-days">--</div>
+      <div class="lbl">Días</div>
+    </div>
+    <div class="countdown-box">
+      <div class="val" id="cd-hours">--</div>
+      <div class="lbl">Horas</div>
+    </div>
+    <div class="countdown-box">
+      <div class="val" id="cd-minutes">--</div>
+      <div class="lbl">Minutos</div>
+    </div>
+    <div class="countdown-box">
+      <div class="val" id="cd-seconds">--</div>
+      <div class="lbl">Segundos</div>
+    </div>
+  </div>
+</section>

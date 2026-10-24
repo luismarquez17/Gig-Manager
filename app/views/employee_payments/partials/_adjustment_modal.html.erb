@@ -1,0 +1,306 @@
+<%# ===== MODAL: AJUSTE DE SALDO / DEUDA POR EL LÍDER ===== %>
+<div id="reset-balance-modal" style="display:none; position:fixed; inset:0; z-index:99999; background:rgba(15,23,42,0.65); backdrop-filter:blur(4px); align-items:center; justify-content:center; padding:16px; box-sizing:border-box;">
+  <div style="background:#fff; border-radius:20px; padding:30px 26px; max-width:520px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.22); position:relative; animation: slideUpModal 0.22s ease; max-height:90vh; overflow-y:auto; box-sizing:border-box;">
+    
+    <%# Botón cerrar %>
+    <button onclick="closeResetModal()" type="button" class="btn-close-reset-modal" style="position:absolute; top:16px; right:18px; background:none; border:none; font-size:1.4em; color:#94a3b8; cursor:pointer; line-height:1;" title="Cerrar">✕</button>
+
+    <%# Encabezado %>
+    <div style="margin-bottom:16px;">
+      <div style="font-size:1.8em; margin-bottom:4px;">✏️</div>
+      <h2 style="margin:0 0 4px 0; font-size:1.25em; font-weight:900; color:#0f172a;"><%= venue_mode? ? 'Editar deudas y saldos del personal' : 'Editar deudas y saldos del trabajador' %></h2>
+      <p id="reset-modal-subtitle" style="margin:0; font-size:0.88em; color:#64748b;"></p>
+    </div>
+
+    <%# Resumen de saldos actuales %>
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:16px;">
+      <div style="background:#fff7ed; border:1px solid #fed7aa; border-radius:12px; padding:10px 12px;">
+        <div style="font-size:0.72em; font-weight:800; color:#c2410c; text-transform:uppercase; letter-spacing:0.4px;">⏳ Le debemos (<%= venue_mode? ? 'eventos' : 'shows' %>)</div>
+        <div id="reset-modal-company-debt-display" style="font-size:1.2em; font-weight:900; color:#ea580c; margin-top:2px;">$0.00</div>
+        <div style="font-size:0.72em; color:#9a3412;">Deuda de la empresa</div>
+      </div>
+      <div style="background:#fef2f2; border:1px solid #fecaca; border-radius:12px; padding:10px 12px;">
+        <div style="font-size:0.72em; font-weight:800; color:#b91c1c; text-transform:uppercase; letter-spacing:0.4px;">⚠️ Nos debe</div>
+        <div id="reset-modal-worker-owes-display" style="font-size:1.2em; font-weight:900; color:#dc2626; margin-top:2px;">$0.00</div>
+        <div style="font-size:0.72em; color:#991b1b;">Pagado de más / anticipo</div>
+      </div>
+    </div>
+
+    <%# Formulario %>
+    <%= form_with url: reset_balance_employee_payments_path, method: :post, local: true, data: { turbo: false }, id: "reset-balance-form" do |f| %>
+      <%= f.hidden_field :user_id, id: "reset-user-id" %>
+      <%= f.hidden_field :adjustment_mode, id: "reset-adjustment-mode", value: "company_debt" %>
+
+      <%# Selector de pestaña / modo de ajuste %>
+      <div style="margin-bottom:14px;">
+        <label style="display:block; font-size:0.82em; font-weight:800; color:#334155; margin-bottom:6px;">
+          ¿Qué apartado deseas ajustar?
+        </label>
+        <div style="display:grid; grid-template-columns: repeat(3, 1fr); gap:6px; background:#f1f5f9; padding:4px; border-radius:12px;">
+          <button
+            type="button"
+            id="tab-btn-company-debt"
+            onclick="setResetMode('company_debt')"
+            style="padding:8px 4px; border:none; border-radius:8px; font-weight:700; font-size:0.78em; cursor:pointer; background:#fff; color:#1e293b; box-shadow:0 1px 3px rgba(0,0,0,0.08); transition:all 0.15s;"
+          >
+            ⏳ Le debemos
+          </button>
+          <button
+            type="button"
+            id="tab-btn-worker-owes"
+            onclick="setResetMode('worker_owes')"
+            style="padding:8px 4px; border:none; border-radius:8px; font-weight:700; font-size:0.78em; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s;"
+          >
+            ⚠️ Nos debe
+          </button>
+          <button
+            type="button"
+            id="tab-btn-settle-all"
+            onclick="setResetMode('settle_all')"
+            style="padding:8px 4px; border:none; border-radius:8px; font-weight:700; font-size:0.78em; cursor:pointer; background:transparent; color:#64748b; transition:all 0.15s;"
+          >
+            ✅ Dejar al día
+          </button>
+        </div>
+      </div>
+
+      <%# Panel 1: Ajustar lo que la empresa le debe %>
+      <div id="panel-company-debt" style="margin-bottom:14px;">
+        <label for="reset-company-debt-input" style="display:block; font-size:0.84em; font-weight:700; color:#1e293b; margin-bottom:6px;">
+          Nueva deuda de la empresa (lo que le quedaremos debiendo):
+        </label>
+        <div style="position:relative; margin-bottom:6px;">
+          <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; font-weight:700; font-size:1em;">$</span>
+          <input
+            type="number"
+            name="company_debt"
+            id="reset-company-debt-input"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            style="width:100%; padding:10px 14px 10px 30px; border:2px solid #e2e8f0; border-radius:10px; font-size:1.05em; font-weight:700; color:#0f172a; outline:none; box-sizing:border-box; transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='#3b82f6'"
+            onblur="this.style.borderColor='#e2e8f0'"
+          >
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <p style="margin:0; font-size:0.76em; color:#64748b;">
+            Ingresa <strong>$0</strong> para saldar toda la deuda de <%= venue_mode? ? 'eventos pasados' : 'shows pasados' %>.
+          </p>
+          <button type="button" onclick="document.getElementById('reset-company-debt-input').value='0.00'" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 8px; border-radius:6px; font-size:0.74em; font-weight:700; cursor:pointer;">
+            ✨ Poner $0.00
+          </button>
+        </div>
+      </div>
+
+      <%# Panel 2: Ajustar lo que el trabajador nos debe %>
+      <div id="panel-worker-owes" style="display:none; margin-bottom:14px;">
+        <label for="reset-worker-owes-input" style="display:block; font-size:0.84em; font-weight:700; color:#1e293b; margin-bottom:6px;">
+          <%= venue_mode? ? 'Nuevo monto que el personal nos debe (pagado de más o anticipo):' : 'Nuevo monto que el trabajador nos debe (pagado de más o anticipo):' %>
+        </label>
+        <div style="position:relative; margin-bottom:6px;">
+          <span style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:#64748b; font-weight:700; font-size:1em;">$</span>
+          <input
+            type="number"
+            name="worker_owes"
+            id="reset-worker-owes-input"
+            step="0.01"
+            min="0"
+            placeholder="0.00"
+            style="width:100%; padding:10px 14px 10px 30px; border:2px solid #e2e8f0; border-radius:10px; font-size:1.05em; font-weight:700; color:#0f172a; outline:none; box-sizing:border-box; transition:border-color 0.15s;"
+            onfocus="this.style.borderColor='#ef4444'"
+            onblur="this.style.borderColor='#e2e8f0'"
+          >
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px;">
+          <p style="margin:0; font-size:0.76em; color:#64748b;">
+            Ingresa <strong>$0</strong> para saldar/perdonar lo que nos debe.
+          </p>
+          <button type="button" onclick="document.getElementById('reset-worker-owes-input').value='0.00'" style="background:#f8fafc; border:1px solid #cbd5e1; color:#334155; padding:2px 8px; border-radius:6px; font-size:0.74em; font-weight:700; cursor:pointer;">
+            ✨ Poner $0.00
+          </button>
+        </div>
+      </div>
+
+      <%# Panel 3: Dejar al día %>
+      <div id="panel-settle-all" style="display:none; margin-bottom:14px;">
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-radius:10px; padding:12px 14px; color:#15803d; font-size:0.85em; line-height:1.4;">
+          <strong>✅ Cuenta completamente saldada ($0.00)</strong><br>
+          Se cancelarán todas las deudas mutuas de <%= venue_mode? ? 'eventos pasados' : 'shows pasados' %> y anticipos. El <%= venue_mode? ? 'integrante' : 'trabajador' %> quedará en estado <strong>Al día</strong>.
+        </div>
+      </div>
+
+      <%# Aviso %>
+      <div style="background:#eff6ff; border:1px solid #bfdbfe; border-radius:10px; padding:10px 12px; margin-bottom:16px; font-size:0.78em; color:#1d4ed8; line-height:1.4;">
+        📋 <strong>Historial contable:</strong> Se registrará un ajuste con auditoría etiquetado como "Ajuste por el Líder". <%= venue_mode? ? 'El personal' : 'El trabajador' %> no necesita aprobar este cambio.
+      </div>
+
+      <%# Botones %>
+      <div style="display:flex; gap:10px; justify-content:flex-end;">
+        <button type="button" onclick="closeResetModal()" class="btn-close-reset-modal" style="padding:9px 16px; border:1px solid #e2e8f0; border-radius:10px; background:#fff; color:#64748b; font-weight:700; cursor:pointer; font-size:0.88em;">
+          Cancelar
+        </button>
+        <button type="submit" style="padding:9px 20px; border:none; border-radius:10px; background:#2563eb; color:#fff; font-weight:800; cursor:pointer; font-size:0.88em; display:flex; align-items:center; gap:6px;">
+          ✅ Guardar ajuste
+        </button>
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<style>
+  #reset-balance-modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 999999;
+    background: rgba(15, 23, 42, 0.65);
+    backdrop-filter: blur(4px);
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+  #reset-balance-modal.is-active {
+    display: flex !important;
+  }
+  @keyframes slideUpModal {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+
+<script>
+  // ─── Turbo-safe modal functions ───────────────────────────
+  // All functions on window so they survive Turbo Drive navigations.
+
+  window.setResetMode = function(mode) {
+    var hiddenMode = document.getElementById('reset-adjustment-mode');
+    if (hiddenMode) hiddenMode.value = mode;
+
+    var modes = ['company_debt', 'worker_owes', 'settle_all'];
+    modes.forEach(function(m) {
+      var panelId = 'panel-' + m.replace(/_/g, '-');
+      var btnId   = 'tab-btn-' + m.replace(/_/g, '-');
+      var panel = document.getElementById(panelId);
+      var btn   = document.getElementById(btnId);
+      if (panel) panel.style.display = (m === mode) ? 'block' : 'none';
+      if (btn) {
+        if (m === mode) {
+          btn.style.background = '#fff';
+          btn.style.color = '#1e293b';
+          btn.style.boxShadow = '0 1px 3px rgba(0,0,0,0.08)';
+        } else {
+          btn.style.background = 'transparent';
+          btn.style.color = '#64748b';
+          btn.style.boxShadow = 'none';
+        }
+      }
+    });
+
+    if (mode === 'company_debt') {
+      var input = document.getElementById('reset-company-debt-input');
+      if (input) setTimeout(function() { input.focus(); input.select(); }, 80);
+    } else if (mode === 'worker_owes') {
+      var input = document.getElementById('reset-worker-owes-input');
+      if (input) setTimeout(function() { input.focus(); input.select(); }, 80);
+    }
+  };
+
+  window.openResetModal = function(workerId, workerName, currentCompanyDebt, currentWorkerOwes) {
+    var cDebt = parseFloat(currentCompanyDebt) || 0;
+    var wOwes = parseFloat(currentWorkerOwes) || 0;
+
+    var userIdInput = document.getElementById('reset-user-id');
+    if (userIdInput) userIdInput.value = workerId;
+
+    var subtitle = document.getElementById('reset-modal-subtitle');
+    if (subtitle) {
+      subtitle.textContent = (<%= (venue_mode? ? "Personal: " : "Trabajador: ").to_json.html_safe %>) + (workerName || '');
+    }
+
+    var cDebtDisplay = document.getElementById('reset-modal-company-debt-display');
+    if (cDebtDisplay) cDebtDisplay.textContent = '$' + cDebt.toFixed(2);
+
+    var wOwesDisplay = document.getElementById('reset-modal-worker-owes-display');
+    if (wOwesDisplay) wOwesDisplay.textContent = '$' + wOwes.toFixed(2);
+
+    var cDebtInput = document.getElementById('reset-company-debt-input');
+    if (cDebtInput) cDebtInput.value = cDebt.toFixed(2);
+
+    var wOwesInput = document.getElementById('reset-worker-owes-input');
+    if (wOwesInput) wOwesInput.value = wOwes.toFixed(2);
+
+    // Auto-select the most relevant tab based on the worker's situation
+    if (wOwes > 0 && cDebt <= 0) {
+      window.setResetMode('worker_owes');
+    } else {
+      window.setResetMode('company_debt');
+    }
+
+    var modal = document.getElementById('reset-balance-modal');
+    if (modal) {
+      modal.classList.add('is-active');
+      modal.style.display = 'flex';
+    }
+  };
+
+  window.closeResetModal = function() {
+    var modal = document.getElementById('reset-balance-modal');
+    if (modal) {
+      modal.classList.remove('is-active');
+      modal.style.display = 'none';
+    }
+  };
+
+  // ─── Idempotent event delegation (Turbo-safe) ──────────────
+  // Use named functions + remove before add to prevent stacking
+  // on repeated Turbo Drive navigations.
+
+  function _resetModalClickHandler(e) {
+    // 1. Open modal: click on .btn-open-reset-modal
+    var openBtn = e.target.closest('.btn-open-reset-modal');
+    if (openBtn) {
+      e.preventDefault();
+      e.stopPropagation();
+      var workerId    = openBtn.getAttribute('data-worker-id');
+      var workerName  = openBtn.getAttribute('data-worker-name') || '';
+      var companyDebt = openBtn.getAttribute('data-company-debt') || '0';
+      var workerOwes  = openBtn.getAttribute('data-worker-owes') || '0';
+      window.openResetModal(workerId, workerName, companyDebt, workerOwes);
+      return;
+    }
+
+    // 2. Close modal: click on .btn-close-reset-modal
+    var closeBtn = e.target.closest('.btn-close-reset-modal');
+    if (closeBtn) {
+      e.preventDefault();
+      window.closeResetModal();
+      return;
+    }
+
+    // 3. Close modal: click on backdrop (outside modal content)
+    var modal = document.getElementById('reset-balance-modal');
+    if (modal && modal.classList.contains('is-active') && e.target === modal) {
+      window.closeResetModal();
+    }
+  }
+
+  function _resetModalKeyHandler(e) {
+    if (e.key === 'Escape') {
+      var modal = document.getElementById('reset-balance-modal');
+      if (modal && modal.classList.contains('is-active')) {
+        window.closeResetModal();
+      }
+    }
+  }
+
+  // Remove any previously attached handlers (idempotent)
+  document.removeEventListener('click', _resetModalClickHandler, true);
+  document.removeEventListener('keydown', _resetModalKeyHandler);
+
+  // Attach fresh handlers
+  // Use capture phase (true) so we intercept the click before anything else
+  document.addEventListener('click', _resetModalClickHandler, true);
+  document.addEventListener('keydown', _resetModalKeyHandler);
+</script>

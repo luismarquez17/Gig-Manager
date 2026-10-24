@@ -1,0 +1,164 @@
+<%# --- MODALES PARA WHATSAPP --- %>
+<%= render 'gigs/flashcard_modal', gig: @gig %>
+<%= render 'gigs/whatsapp_share_modal', gig: @gig %>
+
+<% if current_user.leader? %>
+  <%# --- MODAL RÁPIDO PARA AJUSTAR PRECIO GENERAL DEL EVENTO --- %>
+  <div id="adjust-price-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 99999; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: white; border-radius: 20px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.25); border: 1px solid #e2e8f0; overflow: hidden; animation: scaleUp 0.2s ease-out;">
+      <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); color: white; padding: 20px 24px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 900; display: flex; align-items: center; gap: 8px;">
+            <span>✏️</span> Ajustar Presupuesto del <%= company_term(:event_singular, 'Evento') %>
+          </h3>
+          <p style="margin: 3px 0 0 0; font-size: 0.82rem; color: #94a3b8;">
+            Actualiza el monto acordado total si hubo cancelaciones, descuentos o cambios.
+          </p>
+        </div>
+        <button type="button" onclick="closeAdjustPriceModal()" style="background: rgba(255,255,255,0.1); border: none; color: #94a3b8; width: 32px; height: 32px; border-radius: 8px; font-size: 1.1rem; cursor: display; display: flex; align-items: center; justify-content: center;">✕</button>
+      </div>
+
+      <%= form_with url: adjust_price_gig_path(@gig), method: :patch, local: true, style: "padding: 24px; display: flex; flex-direction: column; gap: 18px;" do |f| %>
+        
+        <div style="background: #f8fafc; padding: 12px 16px; border-radius: 12px; border: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 0.82rem; font-weight: 700; color: #64748b; text-transform: uppercase;">Monto Actual Registrado</span>
+          <span style="font-size: 1.15rem; font-weight: 900; color: #0f172a;">$<%= number_with_precision(@gig.amount, precision: 2) %> <%= @gig.currency %></span>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 800; font-size: 0.88rem; color: #1e293b; margin-bottom: 6px;">
+            💰 Nuevo Presupuesto General Total ($ USD) <span style="color: #e11d48;">*</span>
+          </label>
+          <div style="position: relative;">
+            <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-weight: 800; color: #64748b; font-size: 1.1rem;">$</span>
+            <input type="number" step="0.01" min="0" name="new_amount" id="modal-new-amount" value="<%= sprintf('%.2f', @gig.amount.to_f) %>" required style="width: 100%; box-sizing: border-box; padding: 12px 14px 12px 32px; border: 2px solid #3b82f6; border-radius: 10px; font-size: 1.25rem; font-weight: 900; color: #0f172a; outline: none;">
+          </div>
+          <small style="color: #64748b; font-size: 0.78rem; margin-top: 4px; display: block;">
+            Escribe el nuevo precio total acordado con el cliente. Las deudas y ganancias se recalcularán automáticamente.
+          </small>
+        </div>
+
+        <div>
+          <label style="display: block; font-weight: 800; font-size: 0.88rem; color: #1e293b; margin-bottom: 6px;">
+            📝 Motivo del Ajuste (Opcional)
+          </label>
+          <input type="text" name="reason" id="modal-reason-input" placeholder="Ej: Cliente canceló hora extra, descuento especial acordado..." style="width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9rem; color: #1e293b;">
+          
+          <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px;">
+            <button type="button" onclick="document.getElementById('modal-reason-input').value='Cancelación de hora extra'" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">Canceló hora extra</button>
+            <button type="button" onclick="document.getElementById('modal-reason-input').value='Descuento acordado con el cliente'" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">Descuento acordado</button>
+            <button type="button" onclick="document.getElementById('modal-reason-input').value='Ajuste por cambio de servicios'" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; font-size: 0.74rem; padding: 3px 8px; border-radius: 6px; cursor: pointer;">Cambio de servicios</button>
+          </div>
+        </div>
+
+        <% if @gig.end_time.present? %>
+          <div>
+            <label style="display: block; font-weight: 800; font-size: 0.88rem; color: #1e293b; margin-bottom: 6px;">
+              🕐 ¿Ajustar Horario de Fin del Evento?
+            </label>
+            <%= select_tag :adjust_hours, options_for_select([
+              ["Mantener horario actual (#{@gig.formatted_time_range})", 0],
+              ["Restar 1 hora al horario final (-1 hr)", -1],
+              ["Restar 2 horas al horario final (-2 hrs)", -2],
+              ["Sumar 1 hora al horario final (+1 hr)", 1],
+              ["Sumar 2 horas al horario final (+2 hrs)", 2]
+            ], 0), style: "width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.9rem; background: white;" %>
+          </div>
+        <% end %>
+
+        <div style="display: flex; gap: 10px; margin-top: 6px;">
+          <%= f.submit "💾 Guardar Nuevo Precio", style: "flex: 1; background: #2563eb; color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" %>
+          <button type="button" onclick="closeAdjustPriceModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">Cancelar</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <script>
+    function openAdjustPriceModal() {
+      const modal = document.getElementById('adjust-price-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        const input = document.getElementById('modal-new-amount');
+        if (input) {
+          setTimeout(function() { input.focus(); input.select(); }, 50);
+        }
+      }
+    }
+
+    function closeAdjustPriceModal() {
+      const modal = document.getElementById('adjust-price-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    // Cerrar con Escape o haciendo clic fuera del modal
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') closeAdjustPriceModal();
+    });
+
+    var adjModal = document.getElementById('adjust-price-modal');
+    if (adjModal) {
+      adjModal.addEventListener('click', function(e) {
+        if (e.target === this) closeAdjustPriceModal();
+      });
+    }
+
+    // Modal para editar pago acordado del integrante
+    function openEditStaffPayModal(assignmentId, staffName, currentAmount) {
+      const modal = document.getElementById('edit-staff-pay-modal');
+      const idInput = document.getElementById('modal-staff-assignment-id');
+      const nameSpan = document.getElementById('modal-staff-name-span');
+      const amountInput = document.getElementById('modal-staff-agreed-amount');
+
+      if (idInput) idInput.value = assignmentId;
+      if (nameSpan) nameSpan.textContent = staffName;
+      if (amountInput) {
+        amountInput.value = currentAmount;
+        setTimeout(function() { amountInput.focus(); amountInput.select(); }, 50);
+      }
+      if (modal) modal.style.display = 'flex';
+    }
+
+    function closeEditStaffPayModal() {
+      const modal = document.getElementById('edit-staff-pay-modal');
+      if (modal) modal.style.display = 'none';
+    }
+
+    var editStaffModal = document.getElementById('edit-staff-pay-modal');
+    if (editStaffModal) {
+      editStaffModal.addEventListener('click', function(e) {
+        if (e.target === this) closeEditStaffPayModal();
+      });
+    }
+  </script>
+
+  <%# Modal Editar Pago Acordado %>
+  <div id="edit-staff-pay-modal" style="display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(4px); z-index: 9999; align-items: center; justify-content: center; padding: 16px;">
+    <div style="background: white; border-radius: 20px; max-width: 440px; width: 100%; padding: 26px; box-shadow: 0 20px 50px rgba(0,0,0,0.25); border: 1px solid #cbd5e1; animation: slideUpModal 0.2s ease;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h3 style="margin: 0; color: #0f172a; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+          <span>💰</span> Editar Pago Acordado
+        </h3>
+        <button type="button" onclick="closeEditStaffPayModal()" style="background: none; border: none; font-size: 1.3rem; color: #94a3b8; cursor: pointer;">✕</button>
+      </div>
+
+      <p style="margin: 0 0 16px 0; color: #64748b; font-size: 0.88rem;">
+        Modificar honorarios acordados para: <strong id="modal-staff-name-span" style="color: #0f172a;"></strong>
+      </p>
+
+      <%= form_with url: update_staff_pay_gig_path(@gig), method: :patch, local: true do |f| %>
+        <%= hidden_field_tag :staff_assignment_id, "", id: "modal-staff-assignment-id" %>
+        
+        <div style="margin-bottom: 18px;">
+          <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #334155; margin-bottom: 6px;">Nuevo Pago Acordado ($ USD):</label>
+          <input type="text" name="agreed_amount" id="modal-staff-agreed-amount" inputmode="decimal" placeholder="0.00" style="width: 100%; box-sizing: border-box; padding: 12px 14px; border: 2px solid #3b82f6; border-radius: 10px; font-size: 1.2rem; font-weight: 800; color: #0f172a; outline: none;">
+        </div>
+
+        <div style="display: flex; gap: 10px;">
+          <%= f.submit "💾 Guardar Pago", style: "flex: 1; background: #2563eb; color: white; border: none; padding: 12px 18px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" %>
+          <button type="button" onclick="closeEditStaffPayModal()" style="background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px 18px; border-radius: 12px; font-weight: 700; font-size: 0.95rem; cursor: pointer;">Cancelar</button>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

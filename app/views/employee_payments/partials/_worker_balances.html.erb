@@ -1,0 +1,196 @@
+<%# --- ESTADO POR TRABAJADOR --- %>
+<div class="custom-card" style="margin-bottom: 20px;">
+  <h3 style="margin-top: 0;"><%= venue_mode? ? 'Estado por personal / staff' : 'Estado por trabajador' %></h3>
+  <div style="display: grid; gap: 10px;">
+    <% @worker_metrics.each_with_index do |metric, idx| %>
+      <% past_balance   = metric[:past_balance] %>
+      <% worker_owes    = metric[:overpaid] %>
+      <% gig_debts      = metric[:gig_debts] %>
+      <% is_settled     = past_balance <= 0 && worker_owes <= 0 %>
+
+      <div style="border: 1px solid #e2e8f0; border-radius: 14px; background: #fff; overflow: hidden;">
+
+        <%# ── Fila principal del trabajador ── %>
+        <div style="padding: 14px 18px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div>
+            <div style="font-weight: 800; color: #1e293b; font-size: 1.05em;"><%= metric[:worker].display_name rescue metric[:worker].email %></div>
+            <div style="font-size: 0.82em; color: #94a3b8; margin-top: 2px;"><%= metric[:worker].email %></div>
+          </div>
+
+          <%# ── Apartados de estado y deuda ── %>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+
+            <%# 1. DEUDA: shows pasados sin pagar %>
+            <% if past_balance > 0 %>
+              <div style="display: flex; align-items: center; gap: 6px; background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 7px 13px;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #ea580c;"><%= number_to_currency(past_balance, unit: 'USD') %></div>
+                  <div style="font-size: 0.7em; color: #fdba74;"><%= venue_mode? ? 'Eventos ya realizados' : 'Shows ya realizados' %></div>
+                </div>
+              </div>
+            <% else %>
+              <div style="display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 13px; opacity: 0.6;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">⏳ Deuda</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #cbd5e1;">$0.00</div>
+                  <div style="font-size: 0.7em; color: #cbd5e1;"><%= venue_mode? ? 'Eventos ya realizados' : 'Shows ya realizados' %></div>
+                </div>
+              </div>
+            <% end %>
+
+            <%# 1b. NOS DEBE: trabajador fue pagado más de lo acordado en shows pasados %>
+            <% if worker_owes > 0 %>
+              <div style="display: flex; align-items: center; gap: 6px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 7px 13px;">
+                <div>
+                  <div style="font-size: 0.7em; font-weight: 800; color: #b91c1c; text-transform: uppercase; letter-spacing: 0.4px;">⚠️ Nos debe</div>
+                  <div style="font-size: 1em; font-weight: 900; color: #dc2626;"><%= number_to_currency(worker_owes, unit: 'USD') %></div>
+                  <div style="font-size: 0.7em; color: #fca5a5;">Pagado de más</div>
+                </div>
+              </div>
+            <% end %>
+
+            <%# Separador %>
+            <div style="width: 1px; height: 38px; background: #e2e8f0; flex-shrink: 0;"></div>
+
+            <%# 2. AL DÍA %>
+            <% if is_settled %>
+              <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; padding: 7px 13px;">
+                <div style="font-size: 0.7em; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.4px;">✅ Al día</div>
+                <div style="font-size: 0.82em; font-weight: 700; color: #16a34a; margin-top: 2px;">Sin deudas</div>
+              </div>
+            <% else %>
+              <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 7px 13px; opacity: 0.5;">
+                <div style="font-size: 0.7em; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px;">✅ Al día</div>
+                <div style="font-size: 0.82em; font-weight: 700; color: #cbd5e1; margin-top: 2px;">Con deuda</div>
+              </div>
+            <% end %>
+
+            <%# Separador %>
+            <div style="width: 1px; height: 38px; background: #e2e8f0; flex-shrink: 0;"></div>
+
+            <%# ── Acciones ── %>
+            <%= link_to '📊 Cuentas por Show', my_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-success-custom py-1 px-3 fs-7', style: 'text-decoration: none;' %>
+            <%= link_to '👁️ Historial', employee_payments_path(user_id: metric[:worker].id), class: 'btn-main btn-gray-custom py-1 px-3 fs-7' %>
+            <%= link_to '💳 Pagar', new_employee_payment_path(user_id: metric[:worker].id), class: 'btn-main btn-primary-custom py-1 px-3 fs-7' %>
+
+            <% worker_display = begin; metric[:worker].display_name; rescue; metric[:worker].email; end %>
+            <button
+              type="button"
+              class="btn-main py-1 px-3 fs-7 btn-open-reset-modal"
+              style="background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 700; cursor: pointer;"
+              data-worker-id="<%= metric[:worker].id %>"
+              data-worker-name="<%= worker_display %>"
+              data-company-debt="<%= metric[:past_balance].round(2) %>"
+              data-worker-owes="<%= metric[:overpaid].round(2) %>"
+              onclick="window.openResetModal(this.getAttribute('data-worker-id'), this.getAttribute('data-worker-name'), this.getAttribute('data-company-debt'), this.getAttribute('data-worker-owes')); return false;"
+              title="<%= venue_mode? ? 'Editar la deuda o saldo de este integrante' : 'Editar la deuda o saldo de este trabajador' %>"
+            >
+              ✏️ Editar deuda
+            </button>
+
+            <% if past_balance > 0 && gig_debts.any? %>
+              <button
+                type="button"
+                class="btn-main py-1 px-3 fs-7"
+                style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; font-weight: 700; cursor: pointer;"
+                onclick="togglePanel('debt-<%= idx %>', this)"
+              >
+                📋 Deuda por <%= venue_mode? ? 'evento' : 'show' %> (<%= gig_debts.size %>)
+              </button>
+            <% end %>
+
+            <% if metric[:future_gigs].present? && metric[:future_gigs].any? %>
+              <button
+                type="button"
+                class="btn-main py-1 px-3 fs-7"
+                style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-weight: 700; cursor: pointer;"
+                onclick="togglePanel('future-<%= idx %>', this)"
+              >
+                📅 Próximos <%= venue_mode? ? 'eventos' : 'shows' %> (<%= metric[:future_gigs].size %>)
+              </button>
+            <% end %>
+          </div>
+        </div>
+
+        <%# ── Panel: desglose deuda (shows pasados) ── %>
+        <% if past_balance > 0 && gig_debts.any? %>
+          <div id="debt-<%= idx %>" style="display:none; border-top: 1px solid #fed7aa; background: #fff7ed; padding: 14px 18px;">
+            <div style="font-size: 0.75em; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+              ⏳ Deuda — <%= venue_mode? ? 'eventos asignados sin pagar' : 'shows asignados sin pagar' %>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <% gig_debts.each do |debt| %>
+                <div style="background: #fff; border: 1px solid #fed7aa; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 160px;">
+                    <% if debt[:gig].present? %>
+                      <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;"><%= venue_mode? ? '🏛️' : '🎵' %> <%= debt[:gig].client&.name.presence || (venue_mode? ? "Evento sin cliente" : "Show sin cliente") %></div>
+                      <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">
+                        <%= debt[:gig].date&.strftime("%d/%m/%Y") %> &nbsp;•&nbsp;
+                        <%= link_to (venue_mode? ? "Ver evento →" : "Ver evento →"), gig_path(debt[:gig]), style: "color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.95em;" %>
+                      </div>
+                    <% else %>
+                      <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;">📦 Ajuste / <%= venue_mode? ? 'Sin evento' : 'Sin show' %></div>
+                    <% end %>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Acordado: <%= number_to_currency(debt[:agreed_amount], unit: 'USD') %></span>
+                    <span style="background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Pagado: <%= number_to_currency(debt[:paid_amount], unit: 'USD') %></span>
+                    <span style="background: #fff7ed; color: #c2410c; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 800; border: 1px solid #fed7aa;">Debe: <%= number_to_currency(debt[:pending_amount], unit: 'USD') %></span>
+                    <% if debt[:gig].present? %>
+                      <%= link_to '💳 Pagar', new_employee_payment_path(user_id: metric[:worker].id, gig_id: debt[:gig].id),
+                          style: "background:#ea580c; color:#fff; padding:4px 12px; border-radius:999px; font-size:0.8em; font-weight:800; text-decoration:none;" %>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+        <%# ── Panel: desglose próximos shows (futuros - no son deuda) ── %>
+        <% if metric[:future_gigs].present? && metric[:future_gigs].any? %>
+          <div id="future-<%= idx %>" style="display:none; border-top: 1px solid #cbd5e1; background: #f8fafc; padding: 14px 18px;">
+            <div style="font-size: 0.75em; font-weight: 800; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px;">
+              📅 Próximos <%= venue_mode? ? 'eventos' : 'shows' %> asignados (Por celebrarse — No son deuda)
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 8px;">
+              <% metric[:future_gigs].each do |fg| %>
+                <div style="background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap;">
+                  <div style="flex: 1; min-width: 160px;">
+                    <div style="font-weight: 700; color: #1e293b; font-size: 0.92em;"><%= venue_mode? ? '🏛️' : '🎵' %> <%= fg[:gig].client&.name.presence || (venue_mode? ? "Evento sin cliente" : "Show sin cliente") %></div>
+                    <div style="font-size: 0.8em; color: #64748b; margin-top: 2px;">
+                      <%= fg[:gig].date&.strftime("%d/%m/%Y") %> &nbsp;•&nbsp;
+                      <%= link_to (venue_mode? ? "Ver evento →" : "Ver evento →"), gig_path(fg[:gig]), style: "color: #2563eb; text-decoration: none; font-weight: 600; font-size: 0.95em;" %>
+                    </div>
+                  </div>
+                  <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span style="background: #eff6ff; color: #1d4ed8; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Acordado: <%= number_to_currency(fg[:agreed_amount], unit: 'USD') %></span>
+                    <% if fg[:paid_amount] > 0 %>
+                      <span style="background: #ecfdf5; color: #065f46; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">Anticipo pagado: <%= number_to_currency(fg[:paid_amount], unit: 'USD') %></span>
+                    <% end %>
+                    <span style="background: #f1f5f9; color: #475569; padding: 4px 10px; border-radius: 999px; font-size: 0.8em; font-weight: 700;">📅 Próximo <%= venue_mode? ? 'Evento' : 'Show' %> (<%= number_to_currency(fg[:pending_amount], unit: 'USD') %> al celebrarse)</span>
+                    <%= link_to '💳 Anticipo', new_employee_payment_path(user_id: metric[:worker].id, gig_id: fg[:gig].id),
+                        style: "background:#4f46e5; color:#fff; padding:4px 12px; border-radius:999px; font-size:0.8em; font-weight:800; text-decoration:none;" %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+      </div>
+    <% end %>
+  </div>
+</div>
+
+<script>
+  // Turbo-safe: define on window so they survive navigations
+  window.togglePanel = function(panelId, btn) {
+    var panel = document.getElementById(panelId);
+    if (!panel) return;
+    var isOpen = panel.style.display !== 'none';
+    panel.style.display = isOpen ? 'none' : 'block';
+    btn.style.opacity = isOpen ? '1' : '0.75';
+  };
+</script>

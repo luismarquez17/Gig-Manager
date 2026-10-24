@@ -1,10 +1,22 @@
+# frozen_string_literal: true
+
 class GigsController < ApplicationController
+  include Gigs::StaffManagement
+  include Gigs::CloseoutActions
+  include Gigs::FinancialActions
+  include Gigs::ViewFormats
+
   before_action :require_leader!, except: [:show, :load_in_checklist, :my, :flashcard, :stage_mode]
   before_action -> { require_module!(:gigs) }
   before_action -> { require_module!(:inventory) }, only: [:load_in_checklist, :add_kit]
   before_action :require_staff_or_leader!, only: [:show, :load_in_checklist, :print_contract, :flashcard, :stage_mode]
   before_action :check_gig_assignment, only: [:show, :load_in_checklist, :flashcard, :stage_mode]
-  before_action :set_gig, only: [:add_kit, :assign_staff, :remove_staff, :update_staff_pay, :print_contract, :flashcard, :stage_mode, :add_upsell, :adjust_price, :edit, :update, :destroy, :closeout, :process_closeout, :save_profit_to_goal]
+  before_action :set_gig, only: [
+    :add_kit, :assign_staff, :remove_staff, :update_staff_pay,
+    :print_contract, :flashcard, :stage_mode, :add_upsell,
+    :adjust_price, :edit, :update, :destroy, :closeout,
+    :process_closeout, :save_profit_to_goal
+  ]
 
   def check_gig_assignment
     @gig = current_company.gigs.find_by!(id: params[:id])
@@ -92,154 +104,6 @@ class GigsController < ApplicationController
     end
   end
 
-  def load_in_checklist
-    @gig ||= current_company.gigs.find(params[:id])
-    @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
-    # Use a layout specifically without navbar, or render false and build full html
-    render layout: false
-  end
-
-  def add_kit
-    kit = current_company.kits.find(params[:kit_id])
-
-    if kit.kit_items.empty?
-      redirect_to gig_path(@gig), alert: "La plantilla seleccionada está vacía."
-      return
-    end
-
-    ActiveRecord::Base.transaction do
-      kit.kit_items.each do |kit_item|
-        gig_item = @gig.gig_items.find_or_initialize_by(item_id: kit_item.item_id)
-        gig_item.quantity ||= 0
-        gig_item.quantity += kit_item.quantity
-        gig_item.save!
-      end
-    end
-
-    redirect_to gig_path(@gig), notice: "Plantilla '#{kit.name}' aplicada con éxito al evento."
-  rescue ActiveRecord::RecordNotFound
-    redirect_to gig_path(@gig), alert: "Plantilla no encontrada."
-  end
-
-  def assign_staff
-    user = if params[:staff_id].present?
-             current_company.users.find_by(id: params[:staff_id])
-           elsif params[:new_eventual_worker_name].present?
-             User.create_eventual_worker!(
-               company: current_company,
-               name: params[:new_eventual_worker_name],
-               role: params[:new_eventual_worker_role].presence || 'staff',
-               phone: params[:new_eventual_worker_phone].presence,
-               specialty: params[:new_eventual_worker_specialty].presence
-             )
-           end
-
-    raw_agreed = if params[:new_eventual_worker_name].present?
-                   params[:eventual_agreed_amount].presence || params[:agreed_amount]
-                 else
-                   params[:agreed_amount].presence || params[:eventual_agreed_amount]
-                 end
-    agreed_amount = raw_agreed.to_s.tr(',', '.').strip.to_f
-
-    if user && (user.staff? || user.leader? || user.musician?)
-      assignment = @gig.staff_assignments.find_or_initialize_by(user_id: user.id)
-      is_new = assignment.new_record?
-      previous_amount = assignment.agreed_amount.to_f
-      assignment.agreed_amount = agreed_amount
-      assignment.save!
-
-      target_area = user.musician? ? 'musicians' : 'staffs'
-      date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
-      client_name = @gig.client&.name || "Cliente"
-
-      if is_new && !user.eventual?
-        # Notificar al músico / staff asignado (únicamente a este usuario)
-        AppNotification.create(
-          company: @gig.company,
-          sender: current_user,
-          recipient: user,
-          target_area: target_area,
-          notification_type: 'gig_alert',
-          title: "🎸 Has sido asignado a un evento",
-          message: "Fuiste asignado al show de '#{client_name}' para la fecha #{date_formatted} en #{@gig.location.presence || 'Ubicación por confirmar'}.",
-          action_url: "/my_gigs"
-        ) rescue nil
-      end
-
-      if is_new
-        # Notificar al área de líderes
-        eventual_tag = user.eventual? ? " (Trabajador Eventual)" : ""
-        AppNotification.create(
-          company: @gig.company,
-          sender: current_user,
-          target_area: 'leaders',
-          notification_type: 'gig_alert',
-          title: "👤 Nueva Asignación de Personal",
-          message: "#{user.display_name}#{eventual_tag} ha sido asignado(a) al show '#{client_name}' (#{date_formatted}).",
-          action_url: "/gigs/#{@gig.id}"
-        ) rescue nil
-      elsif (agreed_amount - previous_amount).abs > 0.01 && !user.eventual?
-        # Notificar al trabajador si se actualizó el pago acordado
-        AppNotification.create(
-          company: @gig.company,
-          sender: current_user,
-          recipient: user,
-          target_area: target_area,
-          notification_type: 'payment_alert',
-          title: "💰 Actualización de Pago Acordado",
-          message: "Se actualizó tu pago acordado a $#{view_context.number_with_precision(agreed_amount, precision: 2)} en el show de '#{client_name}' (#{date_formatted}).",
-          action_url: "/my_payments"
-        ) rescue nil
-      end
-
-      prefix = user.eventual? ? "⚡ Trabajador eventual " : "Trabajador "
-      notice_msg = is_new ? "#{prefix}'#{user.display_name}' asignado con éxito con pago acordado de $#{view_context.number_with_precision(agreed_amount, precision: 2)}." : "Pago acordado para #{user.display_name} actualizado."
-      redirect_to gig_path(@gig), notice: notice_msg
-    else
-      redirect_to gig_path(@gig), alert: "Debes seleccionar o ingresar un trabajador válido."
-    end
-  end
-
-  def remove_staff
-    user = current_company.users.find_by(id: params[:staff_id])
-    assignment = @gig.staff_assignments.find_by(user_id: user&.id)
-
-    if assignment
-      assignment.destroy
-      redirect_to gig_path(@gig), notice: "Trabajador desasignado del show."
-    else
-      redirect_to gig_path(@gig), alert: "Asignación no encontrada."
-    end
-  end
-
-  def update_staff_pay
-    assignment = @gig.staff_assignments.find_by(id: params[:staff_assignment_id])
-    agreed_amount = params[:agreed_amount].to_s.tr(',', '.').to_f
-
-    if assignment
-      assignment.update!(agreed_amount: agreed_amount)
-
-      date_formatted = @gig.date ? @gig.date.strftime("%d/%m/%Y") : "próximamente"
-      client_name = @gig.client&.name || "Cliente"
-      target_area = assignment.user.musician? ? 'musicians' : 'staffs'
-
-      AppNotification.create(
-        company: @gig.company,
-        sender: current_user,
-        recipient: assignment.user,
-        target_area: target_area,
-        notification_type: 'payment_alert',
-        title: "💰 Actualización de Pago Acordado",
-        message: "Se actualizó tu pago acordado a $#{view_context.number_with_precision(agreed_amount, precision: 2)} en el show de '#{client_name}' (#{date_formatted}).",
-        action_url: "/my_payments"
-      ) rescue nil
-
-      redirect_to gig_path(@gig), notice: "Pago acordado para #{assignment.user.display_name} actualizado a $#{view_context.number_with_precision(agreed_amount, precision: 2)}."
-    else
-      redirect_to gig_path(@gig), alert: "Asignación no encontrada."
-    end
-  end
-
   # Show gigs assigned to current staff member
   def my
     @gigs = current_user.assigned_gigs.order(date: :asc)
@@ -247,142 +111,6 @@ class GigsController < ApplicationController
     gig_ids = @gigs.pluck(:id)
     @pending_gig_items = GigItem.where(gig_id: gig_ids).where(loaded_quantity: 0)
     @items_to_load_count = @pending_gig_items.sum(:quantity)
-  end
-
-  def print_contract
-    render layout: false
-  end
-
-  def flashcard
-    render layout: false
-  end
-
-  def stage_mode
-    @gig = current_company.gigs.includes(:client, :gig_timeline_items, staff_assignments: :user, gig_items: :item).find(params[:id])
-    @timeline_items = @gig.gig_timeline_items.order(position: :asc, time: :asc)
-    @staff_assignments = @gig.staff_assignments.includes(:user)
-    @gig_items = @gig.gig_items.includes(:item).order('items.name ASC')
-    @songs = current_company.songs.where(active: true).order(genre: :asc, title: :asc) rescue []
-    render layout: false
-  end
-
-  def add_upsell
-    operation = params[:operation].presence || 'add'
-    upsell_key = params[:upsell_key].to_s
-
-    custom_map = @gig.custom_upsells || {}
-    custom_data = custom_map[upsell_key] || {}
-    std_upsell = current_company.standard_upsells.find_by(key: upsell_key)
-
-    title = params[:title].presence || custom_data['title'].presence || std_upsell&.title || upsell_key.humanize
-    
-    if params[:price].present?
-      price = params[:price].to_s.tr(',', '.').to_f.abs
-    elsif custom_data['price'].present?
-      price = custom_data['price'].to_f.abs
-    else
-      price = std_upsell&.price.to_f.abs
-    end
-
-    hours_input = params[:hours].presence
-    hours_count = hours_input ? hours_input.to_i : (upsell_key == 'extra_time' ? 1 : 0)
-
-    extended_time_msg = ""
-    is_extra_time = upsell_key == 'extra_time' || upsell_key.include?('time') || upsell_key.include?('hora') || title.downcase.include?('hora')
-
-    timestamp = Time.current.strftime("%d/%m/%Y %I:%M %p")
-    price_formatted = helpers.number_with_precision(price, precision: 2)
-
-    if operation == 'subtract'
-      if is_extra_time && @gig.end_time.present? && hours_count > 0
-        @gig.end_time = @gig.end_time - hours_count.hours
-        extended_time_msg = " y se restó #{hours_count} hora(s) al horario del evento"
-      end
-
-      @gig.amount = [@gig.amount.to_f - price, 0.0].max
-      note = "Deducción / Descuento registrado (#{timestamp}): #{title} (-$#{price_formatted} #{@gig.currency || 'USD'})"
-      @gig.details = @gig.details.present? ? "#{@gig.details}\n• #{note}" : "• #{note}"
-
-      if @gig.save
-        redirect_to gig_path(@gig), notice: "Deducción de $#{price_formatted} #{@gig.currency || 'USD'} aplicada al presupuesto#{extended_time_msg}."
-      else
-        redirect_to gig_path(@gig), alert: "No se pudo aplicar la deducción: #{@gig.errors.full_messages.join(', ')}"
-      end
-    else
-      if is_extra_time && @gig.end_time.present? && hours_count > 0
-        @gig.end_time = @gig.end_time + hours_count.hours
-        extended_time_msg = " y se sumó #{hours_count} hora(s) al horario del evento"
-      end
-
-      @gig.amount = @gig.amount.to_f + price
-      note = "Adicional añadido (#{timestamp}): #{title} (+$#{price_formatted} #{@gig.currency || 'USD'})"
-      @gig.details = @gig.details.present? ? "#{@gig.details}\n• #{note}" : "• #{note}"
-
-      # Creamos el registro de GigUpsellRequest para que pueda ser cancelado/eliminado en 1 clic
-      emoji = custom_data['emoji'].presence || std_upsell&.emoji || (is_extra_time ? '⏰' : '✨')
-      key = upsell_key.presence || "manual_#{Time.current.to_i}"
-
-      @gig.gig_upsell_requests.build(
-        company: current_company,
-        upsell_key: key,
-        title: title,
-        emoji: emoji,
-        price: price,
-        currency: @gig.currency.presence || 'USD',
-        status: 'approved',
-        hours_added: (is_extra_time ? hours_count : 0),
-        notes: (hours_count > 0 ? "+#{hours_count} hora(s)" : nil),
-        requested_at: Time.current,
-        processed_at: Time.current
-      )
-
-      if @gig.save
-        redirect_to gig_path(@gig), notice: "Adicional '#{title}' añadido con éxito (+ $#{price_formatted} #{@gig.currency || 'USD'})#{extended_time_msg}."
-      else
-        redirect_to gig_path(@gig), alert: "No se pudo añadir el adicional: #{@gig.errors.full_messages.join(', ')}"
-      end
-    end
-  end
-
-  def adjust_price
-    new_amount_raw = params[:new_amount].to_s.tr(',', '.').strip
-    if new_amount_raw.blank?
-      redirect_to gig_path(@gig), alert: "Debes ingresar un monto válido."
-      return
-    end
-
-    new_amount = new_amount_raw.to_f
-    if new_amount < 0
-      redirect_to gig_path(@gig), alert: "El monto no puede ser negativo."
-      return
-    end
-
-    reason = params[:reason].to_s.strip
-    adjust_hours = params[:adjust_hours].to_i
-    old_amount = @gig.amount.to_f
-
-    @gig.amount = new_amount
-
-    time_msg = ""
-    if adjust_hours != 0 && @gig.end_time.present?
-      @gig.end_time = @gig.end_time + adjust_hours.hours
-      time_msg = " y se #{adjust_hours > 0 ? 'sumó' : 'restó'} #{adjust_hours.abs} hora(s) al horario final"
-    end
-
-    timestamp = Time.current.strftime("%d/%m/%Y %I:%M %p")
-    diff = new_amount - old_amount
-    diff_sign = diff >= 0 ? "+$" : "-$"
-    diff_str = "#{diff_sign}#{helpers.number_with_precision(diff.abs, precision: 2)}"
-    reason_str = reason.present? ? " (Motivo: #{reason})" : ""
-
-    note = "Ajuste de precio general (#{timestamp}): De $#{helpers.number_with_precision(old_amount, precision: 2)} a $#{helpers.number_with_precision(new_amount, precision: 2)} #{@gig.currency || 'USD'} [#{diff_str}]#{reason_str}"
-    @gig.details = @gig.details.present? ? "#{@gig.details}\n• #{note}" : "• #{note}"
-
-    if @gig.save
-      redirect_to gig_path(@gig), notice: "✅ Presupuesto general actualizado a $#{helpers.number_with_precision(new_amount, precision: 2)} #{@gig.currency || 'USD'}#{time_msg}."
-    else
-      redirect_to gig_path(@gig), alert: "No se pudo actualizar el precio: #{@gig.errors.full_messages.join(', ')}"
-    end
   end
 
   def new
@@ -510,151 +238,6 @@ class GigsController < ApplicationController
       redirect_to gigs_path, alert: "No se pudo eliminar el registro."
     end
   end
-  def closeout
-    @remaining_client_balance = @gig.remaining_amount
-    @staff_assignments = @gig.staff_assignments.includes(:user)
-    @worker_unpaid_items = @staff_assignments.map do |sa|
-      {
-        assignment: sa,
-        user: sa.user,
-        agreed: sa.agreed_amount.to_f,
-        paid: sa.total_paid.to_f,
-        pending: sa.pending_balance.to_f
-      }
-    end
-    @total_pending_payroll = @worker_unpaid_items.sum { |item| item[:pending] }
-
-    @active_goals = current_company.reinvestment_goals.active.order(priority: :desc, created_at: :desc)
-    @primary_goal = @active_goals.first
-    if @primary_goal.present?
-      @recommendation_service = GoalRecommendationService.new(company: current_company, gig: @gig, goal: @primary_goal)
-      @smart_recommendations = @recommendation_service.smart_recommendations
-    end
-  end
-
-  def process_closeout
-    client_amount = params[:client_collected_amount].to_s.tr(',', '.').strip.to_f
-    client_payment_method = params[:client_payment_method].presence || 'cash'
-    client_reference = params[:client_reference_number].presence
-    client_notes = params[:client_payment_notes].presence || "Liquidación de cierre de evento"
-
-    worker_payments_data = params[:worker_payments] || {}
-    fund_allocation_amount = params[:fund_amount].to_s.tr(',', '.').strip.to_f
-    fund_notes = params[:fund_notes].presence || "Ingreso de remanente por cierre de evento: #{@gig.client_display_name}"
-
-    save_to_goal = params[:deposit_to_goal] == '1' || params[:deposit_to_goal] == true
-    goal_id = params[:reinvestment_goal_id].presence
-    goal_amount = params[:goal_amount].to_s.tr(',', '.').strip.to_f
-    goal_notes = params[:goal_notes].presence || "Aporte de ganancia neta por cierre de show: #{@gig.client_display_name}"
-
-    ActiveRecord::Base.transaction do
-      # 1. Registrar cobro del cliente si se cobró dinero hoy
-      if client_amount > 0
-        @gig.gig_payments.create!(
-          amount: client_amount,
-          currency: @gig.currency.presence || 'USD',
-          date_paid: Date.today,
-          payment_method: client_payment_method,
-          reference_number: client_reference,
-          notes: client_notes,
-          status: 'approved',
-          audit_reason: "Cierre de Show: Cobro de $#{client_amount} (#{client_payment_method})"
-        )
-      end
-
-      # 2. Registrar pagos a trabajadores seleccionados
-      worker_payments_data.each do |user_id, w_data|
-        next unless w_data[:pay] == '1' || w_data[:pay] == true
-        w_amt = w_data[:amount].to_s.tr(',', '.').strip.to_f
-        next if w_amt <= 0
-
-        user = current_company.users.find(user_id)
-        w_method = w_data[:payment_method].presence || 'Efectivo'
-        w_notes = w_data[:notes].presence || "Pago liquidado en tarima / cierre de show"
-
-        current_company.employee_payments.create!(
-          user: user,
-          gig: @gig,
-          amount: w_amt,
-          currency: @gig.currency.presence || 'USD',
-          date_paid: Date.today,
-          payment_method: w_method,
-          notes: w_notes,
-          funding_source: 'payroll_fund',
-          status: 'approved',
-          audit_reason: "Cierre de Show: Pago a #{user.display_name} de $#{w_amt} (#{w_method})"
-        )
-      end
-
-      # 3. Asignar excedente a la Meta de Reinversión seleccionada
-      if save_to_goal && goal_id.present? && goal_amount > 0
-        target_goal = current_company.reinvestment_goals.find_by(id: goal_id)
-        if target_goal
-          target_goal.goal_savings_contributions.create!(
-            amount: goal_amount,
-            currency: @gig.currency.presence || 'USD',
-            date: Date.today,
-            user: current_user,
-            gig: @gig,
-            notes: goal_notes
-          )
-        end
-      end
-
-      # 4. Asignar excedente al Fondo de la Empresa / Caja si se especificó
-      if fund_allocation_amount > 0 && (params[:deposit_to_fund] == '1' || params[:deposit_to_fund] == true)
-        current_company.cash_adjustments.create!(
-          user: current_user,
-          amount: fund_allocation_amount,
-          currency: @gig.currency.presence || 'USD',
-          adjustment_type: :deposit,
-          date: Date.today,
-          description: fund_notes,
-          status: 'approved',
-          audit_reason: "Cierre de Show: Aporte al fondo de $#{fund_allocation_amount}"
-        )
-      end
-    end
-
-    redirect_to gig_path(@gig), notice: "🏁 Cierre de evento realizado exitosamente. Cobros, nóminas y balances actualizados."
-  rescue ActiveRecord::RecordInvalid => e
-    redirect_to closeout_gig_path(@gig), alert: "Error al procesar el cierre: #{e.message}"
-  rescue StandardError => e
-    redirect_to closeout_gig_path(@gig), alert: "Ocurrió un problema: #{e.message}"
-  end
-
-  def save_profit_to_goal
-    goal_id = params[:reinvestment_goal_id].presence
-    amount = params[:amount].to_s.tr(',', '.').strip.to_f
-    notes = params[:notes].presence || "Aporte de ganancia libre del evento #{@gig.client_display_name}"
-
-    if goal_id.blank?
-      redirect_to gig_path(@gig), alert: "Debes seleccionar una meta de ahorro."
-      return
-    end
-
-    if amount <= 0
-      redirect_to gig_path(@gig), alert: "El monto a ahorrar debe ser mayor a 0."
-      return
-    end
-
-    goal = current_company.reinvestment_goals.find(goal_id)
-    contribution = goal.goal_savings_contributions.create!(
-      amount: amount,
-      currency: @gig.currency.presence || 'USD',
-      date: Date.today,
-      user: current_user,
-      gig: @gig,
-      notes: notes
-    )
-
-    formatted = helpers.number_with_precision(amount, precision: 2)
-    redirect_to gig_path(@gig), notice: "🎉 ¡Se han guardado $#{formatted} USD de ganancia neta en la meta '#{goal.title}'! Tu progreso avanzó al #{goal.progress_percentage}%."
-  rescue ActiveRecord::RecordNotFound
-    redirect_to gig_path(@gig), alert: "Meta de ahorro no encontrada."
-  rescue StandardError => e
-    redirect_to gig_path(@gig), alert: "No se pudo registrar el ahorro: #{e.message}"
-  end
 
   private
 
@@ -663,7 +246,10 @@ class GigsController < ApplicationController
   end
 
   def gig_params
-    params.require(:gig).permit(:client_id, :client_email, :amount, :date, :location, :currency, :details, :music_notes, :start_time, :end_time).tap do |whitelisted|
+    params.require(:gig).permit(
+      :client_id, :client_email, :amount, :date, :location,
+      :currency, :details, :music_notes, :start_time, :end_time
+    ).tap do |whitelisted|
       if params[:gig].has_key?(:custom_upsells)
         whitelisted[:custom_upsells] = params[:gig][:custom_upsells].presence&.to_unsafe_h || {}
       end

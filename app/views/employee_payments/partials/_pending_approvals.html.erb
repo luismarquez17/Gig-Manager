@@ -1,0 +1,75 @@
+<%# --- SECCIÓN: NOTIFICACIÓN DE PAGOS REPORTADOS POR TRABAJADORES PENDIENTES DE APROBACIÓN --- %>
+<% if @pending_approvals.any? %>
+  <div style="background: #fffbeb; border: 2px solid #fde68a; border-radius: 18px; padding: 22px; margin-bottom: 25px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.1);">
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; flex-wrap: wrap;">
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <span style="font-size: 2em; line-height: 1;">🔔</span>
+        <div>
+          <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #92400e;">
+            Notificación: <%= @pending_approvals.count %> pago(s) reportado(s) por <%= venue_mode? ? 'el personal' : 'trabajadores' %>
+          </h3>
+          <p style="margin: 3px 0 0 0; font-size: 0.88em; color: #b45309;">
+            <%= venue_mode? ? 'Un integrante del personal reportó que ya se le pagó.' : 'Un trabajador asignó que ya se le pagó.' %> Confirma si es cierto para aprobarlo o rechazarlo:
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; flex-direction: column; gap: 12px;">
+      <% @pending_approvals.each do |p| %>
+        <div style="background: white; border-radius: 14px; padding: 16px 20px; border: 1px solid #fef3c7; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+          
+          <div>
+            <div style="font-size: 1.05em; font-weight: 800; color: #0f172a;">
+              👤 <%= p.user.display_name rescue p.user.email %> 
+              <span style="font-weight: 500; color: #64748b; font-size: 0.85em;">(<%= p.user.email %>)</span>
+            </div>
+            
+            <div style="margin-top: 4px; font-size: 0.9em; color: #334155;">
+              <strong><%= venue_mode? ? 'Evento:' : 'Evento / Show:' %></strong> 
+              <% if p.gig.present? %>
+                <%= link_to gig_path(p.gig), style: "color: #2563eb; text-decoration: none; font-weight: 700;" do %>
+                  <%= p.gig.client&.name || (venue_mode? ? "Evento" : "Show") %> (<%= p.gig.date&.strftime("%d/%m/%Y") %>)
+                <% end %>
+              <% else %>
+                <span style="color: #64748b; font-style: italic;">Pago general / Anticipo</span>
+              <% end %>
+              &nbsp;•&nbsp;
+              <strong>Fecha:</strong> <%= p.date_paid&.strftime("%d/%m/%Y") %>
+              &nbsp;•&nbsp;
+              <strong>Método:</strong> <%= p.payment_method.presence || "No especificado" %>
+            </div>
+
+            <% if p.notes.present? %>
+              <div style="margin-top: 4px; font-size: 0.84em; color: #64748b;">
+                📝 <em>"<%= p.notes %>"</em>
+              </div>
+            <% end %>
+          </div>
+
+          <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <div style="text-align: right;">
+              <span style="font-size: 1.35em; font-weight: 900; color: #059669; display: block;">
+                <%= number_to_currency(p.amount, unit: p.currency) %>
+              </span>
+              <span style="font-size: 0.75em; font-weight: 700; color: #b45309; text-transform: uppercase;">
+                Pendiente de Aprobación
+              </span>
+            </div>
+
+            <div style="display: flex; gap: 8px;">
+              <%= button_to approve_employee_payment_path(p), method: :post, data: { turbo_confirm: "¿Confirmas que el pago de #{number_to_currency(p.amount, unit: p.currency)} a #{p.user.display_name} es correcto y deseas aceptarlo?" }, class: "btn-main btn-success-custom", style: "padding: 8px 16px; font-size: 0.88em; font-weight: 800;" do %>
+                ✅ Aceptar y Confirmar
+              <% end %>
+
+              <%= button_to reject_employee_payment_path(p), method: :post, data: { turbo_confirm: "¿Estás seguro de rechazar este reporte de pago?" }, class: "btn-main btn-danger-custom", style: "padding: 8px 14px; font-size: 0.88em; font-weight: 700;" do %>
+                ❌ Rechazar
+              <% end %>
+            </div>
+          </div>
+
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,29 @@
+<%# --- RESUMEN GENERAL DE PAGOS Y DEUDAS --- %>
+<div class="custom-card" style="margin-bottom: 20px;">
+  <h3 style="margin: 0 0 12px 0;">Resumen general</h3>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #64748b; font-weight: 700; text-transform: uppercase;">💰 Total pagado</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #065f46; margin-top: 4px;"><%= number_to_currency(@total_payroll_paid, unit: 'USD') %></div>
+      <div style="font-size: 0.72em; color: #059669; font-weight: 600; margin-top: 2px;">
+        Shows registrados
+      </div>
+    </div>
+    <div style="background: #fff7ed; border: 1px solid #fed7aa; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #c2410c; font-weight: 700; text-transform: uppercase;">⏳ Deuda (<%= venue_mode? ? 'eventos ya realizados' : 'shows ya realizados' %>)</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #ea580c; margin-top: 4px;"><%= number_to_currency(@worker_metrics.sum { |m| m[:past_balance] }, unit: 'USD') %></div>
+    </div>
+    <% settled_count = @worker_metrics.count { |m| m[:past_balance] <= 0 && m[:overpaid] <= 0 } %>
+    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 12px;">
+      <div style="font-size: 0.8em; color: #15803d; font-weight: 700; text-transform: uppercase;">✅ Al día</div>
+      <div style="font-size: 1.15em; font-weight: 800; color: #15803d; margin-top: 4px;"><%= settled_count %> / <%= @worker_metrics.size %> <%= venue_mode? ? 'personas' : 'trabajadores' %></div>
+    </div>
+    <% total_worker_owes = @worker_metrics.sum { |m| m[:overpaid] } %>
+    <% if total_worker_owes > 0 %>
+      <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 12px; padding: 12px;">
+        <div style="font-size: 0.8em; color: #b91c1c; font-weight: 700; text-transform: uppercase;">⚠️ <%= venue_mode? ? 'Personal nos debe' : 'Trabajadores nos deben' %></div>
+        <div style="font-size: 1.15em; font-weight: 800; color: #dc2626; margin-top: 4px;"><%= number_to_currency(total_worker_owes, unit: 'USD') %></div>
+      </div>
+    <% end %>
+  </div>
+</div>

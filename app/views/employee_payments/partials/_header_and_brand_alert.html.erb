@@ -1,0 +1,35 @@
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 14px;">
+  <div>
+    <h1 style="color: #0f172a; margin: 0; font-size: 1.85em; font-weight: 800; letter-spacing: -0.5px;">
+      💼 <%= venue_mode? ? 'Pagos a Personal / Staff' : '💼 Pagos a Trabajadores' %>
+    </h1>
+    <p style="color: #64748b; margin: 4px 0 0 0; font-size: 0.95em;">
+      Control de nóminas, honorarios por <%= venue_mode? ? 'evento' : 'show' %>, capital externo y confirmación de pagos.
+    </p>
+  </div>
+
+  <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <%= link_to my_payments_path, class: 'btn-main btn-gray-custom', style: 'display: inline-flex; align-items: center; gap: 6px;' do %>
+      <span>💵</span> Ver Mis Pagos por Show
+    <% end %>
+    <%= link_to '➕ Registrar Nuevo Pago', new_employee_payment_path, class: 'btn-main btn-primary-custom' %>
+  </div>
+</div>
+
+<% if current_company.slug == 'marquez-musica' || current_company.name.to_s.downcase.include?('marquez') %>
+  <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%); border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 14px 18px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.05);">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="width: 38px; height: 38px; border-radius: 10px; background: #dcfce7; border: 1px solid #86efac; display: flex; align-items: center; justify-content: center; font-size: 1.25rem;">
+        📊
+      </div>
+      <div>
+        <div style="font-weight: 800; color: #065f46; font-size: 0.95em;">
+          Nómina y Pagos Calculados según Shows Registrados
+        </div>
+        <div style="font-size: 0.82em; color: #047857; margin-top: 2px;">
+          Las métricas reflejan exactamente los honorarios, asignaciones y pagos reales de los <%= venue_mode? ? 'eventos' : 'shows' %> registrados en Gig Manager.
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,180 @@
+<%# --- BALANCE FINANCIERO Y RENTABILIDAD DEL SHOW --- %>
+<% if current_user.leader? %>
+  <div style="background: white; padding: 24px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); border: 1px solid #e2e8f0; margin-bottom: 30px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px;">
+      <div>
+        <h3 style="margin: 0; font-size: 1.2em; font-weight: 800; color: #1e293b; display: flex; align-items: center; gap: 8px;">
+          <span>📊</span> Rentabilidad &amp; Finanzas del <%= company_term(:event_singular, (venue_mode? ? 'Evento' : 'Show')) %>
+        </h3>
+        <p style="margin: 3px 0 0 0; color: #64748b; font-size: 0.85em;">
+          Desglose en tiempo real de ingresos cobrados, costos de nómina y ganancia neta para la empresa.
+        </p>
+      </div>
+      <% if current_user.leader? %>
+        <%= form_with url: add_upsell_gig_path(@gig), method: :post, local: true, style: "margin: 0;" do |f| %>
+          <%= hidden_field_tag :upsell_key, 'extra_time' %>
+          <button type="submit" onclick="return confirm('¿Añadir 1 Hora Extra a este evento? Se sumará la tarifa correspondiente al monto del <%= venue_mode? ? 'evento' : 'toque' %> y 1 hora al horario final.');" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 7px 14px; border-radius: 10px; font-weight: 700; font-size: 0.82em; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;" onmouseover="this.style.background='#e0e7ff'" onmouseout="this.style.background='#eef2ff'">
+            <span><%= venue_mode? ? '⏰' : '🎵' %></span> + Añadir Hora Extra
+          </button>
+        <% end %>
+      <% end %>
+    </div>
+
+    <%# Progreso de Cobro al Cliente %>
+    <div style="margin-bottom: 20px;">
+      <%= render 'gigs/payment_progress', gig: @gig, size: :compact, show_details: true, show_footer: false %>
+    </div>
+
+    <%# Tarjetas de Resumen Financiero %>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px;">
+      
+      <%# 1. Presupuesto Cliente %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px;">
+        <div style="font-size: 0.78em; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">💵 Presupuesto Cliente</div>
+        <div style="font-size: 1.4em; font-weight: 900; color: #0f172a; margin-top: 4px;">
+          <%= number_with_precision(@gig.amount, precision: 2) %> <span style="font-size: 0.65em; color: #94a3b8;"><%= @gig.currency %></span>
+        </div>
+        <div style="font-size: 0.8em; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between;">
+          <span>Cobrado: <strong style="color: #16a34a;">$<%= number_with_precision(@gig.total_received, precision: 2) %></strong></span>
+          <span>Resta: <strong style="color: <%= @gig.remaining_amount > 0 ? '#ea580c' : '#16a34a' %>;">$<%= number_with_precision(@gig.remaining_amount, precision: 2) %></strong></span>
+        </div>
+      </div>
+
+      <%# 2. Costo Total de Nómina %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 16px 18px;">
+        <div style="font-size: 0.78em; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">👥 <%= company_term(:payroll_title, (venue_mode? ? 'Nómina del Evento' : 'Nómina del Show')) %></div>
+        <div style="font-size: 1.4em; font-weight: 900; color: #dc2626; margin-top: 4px;">
+          - $<%= number_with_precision(@gig.total_payroll_agreed, precision: 2) %> <span style="font-size: 0.65em; color: #94a3b8;"><%= @gig.currency %></span>
+        </div>
+        <div style="font-size: 0.8em; color: #64748b; margin-top: 6px; display: flex; justify-content: space-between;">
+          <span>Pagado: <strong style="color: #059669;">$<%= number_with_precision(@gig.total_payroll_paid, precision: 2) %></strong></span>
+          <% if @gig.future? %>
+            <span>Por pagar al celebrarse: <strong style="color: <%= @gig.pending_payroll_amount > 0 ? '#2563eb' : '#059669' %>;">$<%= number_with_precision(@gig.pending_payroll_amount, precision: 2) %></strong></span>
+          <% else %>
+            <span>Pendiente: <strong style="color: <%= @gig.pending_payroll_amount > 0 ? '#dc2626' : '#16a34a' %>;">$<%= number_with_precision(@gig.pending_payroll_amount, precision: 2) %></strong></span>
+          <% end %>
+        </div>
+      </div>
+
+      <%# 3. Ganancia Neta Estimada (Banda / Empresa) %>
+      <%
+        is_profitable = @gig.projected_net_profit >= 0
+      %>
+      <div style="background: <%= is_profitable ? '#f0fdf4' : '#fff1f2' %>; border: 2px solid <%= is_profitable ? '#86efac' : '#fecaca' %>; border-radius: 14px; padding: 16px 18px; position: relative;">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 6px;">
+          <div style="font-size: 0.78em; color: <%= is_profitable ? '#15803d' : '#991b1b' %>; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+            📈 <%= company_term(:net_profit_label, (venue_mode? ? 'Ganancia Neta Evento' : 'Ganancia Neta Banda')) %>
+          </div>
+          <%= profit_health_badge_tag(@gig) %>
+        </div>
+        <div style="font-size: 1.4em; font-weight: 900; color: <%= is_profitable ? '#16a34a' : '#dc2626' %>; margin-top: 4px;">
+          <%= is_profitable ? '+' : '' %>$<%= number_with_precision(@gig.projected_net_profit, precision: 2) %> <span style="font-size: 0.65em; color: #64748b;"><%= @gig.currency %></span>
+        </div>
+        <div style="font-size: 0.8em; color: <%= is_profitable ? '#166534' : '#991b1b' %>; margin-top: 6px;">
+          💡 Limpio para la empresa tras pagar nómina acordada.
+        </div>
+      </div>
+
+      <%# 4. Flujo Real en Mano (Cobrado vs Pagado Hoy) %>
+      <% cash_in_hand = @gig.actual_cash_profit %>
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 16px 18px;">
+        <div style="font-size: 0.78em; color: #1e40af; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">
+          💵 Flujo Real en Mano
+        </div>
+        <div style="font-size: 1.4em; font-weight: 900; color: <%= cash_in_hand >= 0 ? '#2563eb' : '#dc2626' %>; margin-top: 4px;">
+          <%= cash_in_hand >= 0 ? '+' : '' %>$<%= number_with_precision(cash_in_hand, precision: 2) %> <span style="font-size: 0.65em; color: #64748b;"><%= @gig.currency %></span>
+        </div>
+        <div style="font-size: 0.8em; color: #3b82f6; margin-top: 6px;">
+          Total Cobrado ($<%= number_with_precision(@gig.total_received, precision: 2) %>) - Nómina Pagada ($<%= number_with_precision(@gig.total_payroll_paid, precision: 2) %>).
+        </div>
+      </div>
+
+    </div>
+
+    <%# Barra Visual de Distribución del Presupuesto (Nómina vs Ganancia) %>
+    <% if @gig.amount.to_f > 0 %>
+      <%
+        payroll_pct = [((@gig.total_payroll_agreed / @gig.amount.to_f) * 100).round(1), 100.0].min
+        profit_pct = [100.0 - payroll_pct, 0.0].max.round(1)
+      %>
+      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;">
+        <div style="display: flex; justify-content: space-between; font-size: 0.82em; font-weight: 700; margin-bottom: 6px;">
+          <span style="color: #dc2626;">👥 Costo Nómina: <%= payroll_pct %>% ($<%= number_with_precision(@gig.total_payroll_agreed, precision: 2) %>)</span>
+          <span style="color: #16a34a;">🏢 Margen Ganancia Empresa: <%= profit_pct %>% ($<%= number_with_precision(@gig.projected_net_profit, precision: 2) %>)</span>
+        </div>
+        <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden; display: flex;">
+          <div style="width: <%= payroll_pct %>%; background: #ef4444; height: 100%;" title="Costo Nómina (<%= payroll_pct %>%)"></div>
+          <div style="width: <%= profit_pct %>%; background: #22c55e; height: 100%;" title="Margen Empresa (<%= profit_pct %>%)"></div>
+        </div>
+      </div>
+    <% end %>
+
+  </div>
+
+  <%# --- NOTIFICACIÓN DE REPORTES DE PAGO PENDIENTES DE TRABAJADORES PARA ESTE SHOW --- %>
+  <% pending_gig_reports = @gig.employee_payments.pending_approval.includes(:user).order(created_at: :desc) %>
+  <% if pending_gig_reports.any? %>
+    <div style="background: #fffbeb; border: 2px solid #fde68a; border-radius: 20px; padding: 22px 24px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.12);">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 16px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <span style="font-size: 2em; line-height: 1;">🔔</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.15em; font-weight: 800; color: #92400e;">
+              <%= pending_gig_reports.count %> reporte(s) de pago por confirmar en este <%= venue_mode? ? 'evento' : 'show' %>
+            </h3>
+            <p style="margin: 3px 0 0 0; font-size: 0.88em; color: #b45309;">
+              Un trabajador indicó que ya se le pagó su parte de este evento. Confirma si ya le pagaste para actualizar sus cuentas:
+            </p>
+          </div>
+        </div>
+        <span style="background: #fef3c7; color: #92400e; padding: 4px 12px; border-radius: 99px; font-weight: 800; font-size: 0.78em; border: 1px solid #fde68a;">
+          ⏳ Pendiente de Aprobación
+        </span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <% pending_gig_reports.each do |p| %>
+          <div style="background: white; border-radius: 14px; padding: 14px 18px; border: 1px solid #fef3c7; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+            <div>
+              <div style="font-size: 1.02em; font-weight: 800; color: #0f172a;">
+                👤 <%= p.user.display_name rescue p.user.email %>
+                <span style="font-weight: 500; color: #64748b; font-size: 0.85em;">(<%= p.user.email %>)</span>
+              </div>
+              <div style="margin-top: 3px; font-size: 0.88em; color: #334155;">
+                <strong>Fecha indicada:</strong> <%= p.date_paid&.strftime("%d/%m/%Y") %>
+                &nbsp;•&nbsp;
+                <strong>Método:</strong> <%= p.payment_method.presence || "Efectivo" %>
+              </div>
+              <% if p.notes.present? %>
+                <div style="margin-top: 3px; font-size: 0.82em; color: #64748b;">
+                  📝 "<%= p.notes %>"
+                </div>
+              <% end %>
+            </div>
+
+            <div style="display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+              <div style="text-align: right;">
+                <span style="font-size: 1.3em; font-weight: 900; color: #059669; display: block;">
+                  <%= number_to_currency(p.amount, unit: p.currency) %>
+                </span>
+                <span style="font-size: 0.72em; font-weight: 700; color: #b45309; text-transform: uppercase;">
+                  Pendiente
+                </span>
+              </div>
+
+              <div style="display: flex; gap: 6px;">
+                <%= button_to approve_employee_payment_path(p), method: :post, data: { turbo_confirm: "¿Confirmas que el pago de #{number_to_currency(p.amount, unit: p.currency)} a #{p.user.display_name} ya fue entregado?" }, class: "btn-main btn-success-custom", style: "padding: 8px 14px; font-size: 0.85em; font-weight: 800;" do %>
+                  ✅ Aceptar y Confirmar
+                <% end %>
+
+                <%= button_to reject_employee_payment_path(p), method: :post, data: { turbo_confirm: "¿Estás seguro de rechazar este reporte de pago?" }, class: "btn-main btn-danger-custom", style: "padding: 8px 12px; font-size: 0.85em; font-weight: 700;" do %>
+                  ❌ Rechazar
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+<% end %>

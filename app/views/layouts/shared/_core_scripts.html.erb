@@ -1,0 +1,546 @@
+<script>
+  /* ── GIG MANAGER: PWA, AUDIO & NOTIFICATION CORE ENGINE ── */
+  var gigAudioCtx = null;
+
+  function getGigAudioContext() {
+    try {
+      if (!gigAudioCtx) {
+        var AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+          gigAudioCtx = new AudioContextClass();
+        }
+      }
+      if (gigAudioCtx && gigAudioCtx.state === 'suspended') {
+        gigAudioCtx.resume().catch(function(){});
+      }
+    } catch (e) {
+      console.warn('AudioContext error:', e);
+    }
+    return gigAudioCtx;
+  }
+
+  function unlockAudio() {
+    var ctx = getGigAudioContext();
+    if (ctx && ctx.state === 'suspended') {
+      ctx.resume().catch(function(){});
+    }
+  }
+  ['click', 'touchstart', 'touchend', 'keydown', 'mousedown'].forEach(function(evt) {
+    document.addEventListener(evt, unlockAudio, { passive: true });
+  });
+
+  function isSoundEnabled() {
+    var setting = localStorage.getItem('gig_sound_enabled');
+    return setting === null || setting === 'true' || setting === '1';
+  }
+
+  function playTone(freq, startTime, duration, type, gainVal) {
+    var ctx = getGigAudioContext();
+    if (!ctx) return;
+    try {
+      if (ctx.state === 'suspended') ctx.resume();
+      var osc = ctx.createOscillator();
+      var gain = ctx.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.setValueAtTime(freq, startTime);
+      gain.gain.setValueAtTime(0.0001, startTime);
+      gain.gain.exponentialRampToValueAtTime(gainVal || 0.28, startTime + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(startTime);
+      osc.stop(startTime + duration + 0.05);
+    } catch (e) {
+      console.warn('Tone error:', e);
+    }
+  }
+
+  function playNotificationSound(soundType) {
+    if (!isSoundEnabled()) return;
+    var ctx = getGigAudioContext();
+    if (!ctx) return;
+    var now = ctx.currentTime;
+    if (soundType === 'urgent' || soundType === 'error') {
+      playTone(784.0, now, 0.12, 'triangle', 0.30);
+      playTone(880.0, now + 0.11, 0.12, 'triangle', 0.32);
+      playTone(1046.5, now + 0.22, 0.38, 'sine', 0.38);
+    } else if (soundType === 'payment' || soundType === 'cash') {
+      playTone(523.25, now, 0.09, 'sine', 0.22);
+      playTone(659.25, now + 0.08, 0.09, 'sine', 0.25);
+      playTone(783.99, now + 0.16, 0.12, 'triangle', 0.28);
+      playTone(1046.5, now + 0.24, 0.45, 'sine', 0.32);
+    } else if (soundType === 'pop') {
+      playTone(587.33, now, 0.08, 'sine', 0.22);
+    } else {
+      playTone(659.25, now, 0.14, 'sine', 0.28);
+      playTone(987.77, now + 0.12, 0.48, 'sine', 0.34);
+    }
+  }
+
+  function toggleSoundPreference() {
+    var current = isSoundEnabled();
+    var next = !current;
+    localStorage.setItem('gig_sound_enabled', next ? 'true' : 'false');
+    if (next) {
+      playNotificationSound('pop');
+      showToast('🔊 Efectos de sonido activados', 'success');
+    } else {
+      showToast('🔇 Efectos de sonido silenciados', 'error');
+    }
+    window.dispatchEvent(new CustomEvent('gig:sound_setting_changed', { detail: { enabled: next } }));
+    if (typeof updateControlStatus === 'function') {
+      updateControlStatus();
+    }
+    return next;
+  }
+
+  var gigDeferredPrompt = null;
+  window.addEventListener('beforeinstallprompt', function(e) {
+    e.preventDefault();
+    gigDeferredPrompt = e;
+    var banner = document.getElementById('pwa-install-banner');
+    if (banner && !isStandalone()) {
+      banner.style.display = 'flex';
+      requestAnimationFrame(function() {
+        banner.style.transform = 'translateY(0)';
+        banner.style.opacity = '1';
+      });
+    }
+  });
+
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+  }
+
+  function promptPWAInstall() {
+    if (gigDeferredPrompt) {
+      gigDeferredPrompt.prompt();
+      gigDeferredPrompt.userChoice.then(function(choice) {
+        if (choice.outcome === 'accepted') {
+          showToast('¡Instalando Gig Manager! 📱', 'success');
+        }
+        gigDeferredPrompt = null;
+        hideInstallBanner(true);
+      });
+    } else {
+      showInstallGuideModal();
+    }
+  }
+
+  function showInstallGuideModal() {
+    var modal = document.getElementById('pwa-install-guide-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      var isIos = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+      var isAndroid = /Android/.test(navigator.userAgent);
+      if (isIos) {
+        switchInstallTab('ios');
+      } else if (isAndroid) {
+        switchInstallTab('android');
+      } else {
+        switchInstallTab('pc');
+      }
+      requestAnimationFrame(function() {
+        modal.style.opacity = '1';
+      });
+    }
+  }
+
+  function hideInstallGuideModal() {
+    var modal = document.getElementById('pwa-install-guide-modal');
+    if (modal) {
+      modal.style.opacity = '0';
+      setTimeout(function() { modal.style.display = 'none'; }, 200);
+    }
+  }
+
+  function switchInstallTab(tabName) {
+    ['pc', 'ios', 'android'].forEach(function(name) {
+      var content = document.getElementById('tab-content-' + name);
+      var btn = document.getElementById('tab-btn-' + name);
+      if (content && btn) {
+        if (name === tabName) {
+          content.style.display = 'block';
+          btn.style.background = '#3b82f6';
+          btn.style.color = '#ffffff';
+        } else {
+          content.style.display = 'none';
+          btn.style.background = 'transparent';
+          btn.style.color = '#94a3b8';
+        }
+      }
+    });
+  }
+
+  function hideInstallBanner(permanent) {
+    var banner = document.getElementById('pwa-install-banner');
+    if (banner) {
+      banner.style.transform = 'translateY(100%)';
+      banner.style.opacity = '0';
+      setTimeout(function() { banner.style.display = 'none'; }, 300);
+    }
+    if (permanent) {
+      localStorage.setItem('gig_install_banner_dismissed', Date.now().toString());
+    }
+  }
+
+  function requestNotificationPermission() {
+    if (!('Notification' in window)) {
+      showToast('Las notificaciones no están soportadas en este navegador.', 'error');
+      return Promise.resolve('unsupported');
+    }
+
+    if (Notification.permission === 'granted') {
+      playNotificationSound('default');
+      showToast('✅ Notificaciones verificadas y activas en este equipo.', 'success');
+      sendDeviceNotification('¡Gig Manager! 🔔', 'Las notificaciones del sistema están funcionando.');
+      return Promise.resolve('granted');
+    }
+
+    return Notification.requestPermission().then(function(perm) {
+      window.dispatchEvent(new CustomEvent('gig:notification_permission_changed', { detail: { permission: perm } }));
+      if (perm === 'granted') {
+        playNotificationSound('default');
+        showToast('🎉 ¡Notificaciones del sistema activadas!', 'success');
+        sendDeviceNotification('¡Notificaciones Activadas! 🔔', 'Recibirás avisos de eventos y alertas.');
+      } else if (perm === 'denied') {
+        showToast('⚠️ Permiso denegado. Habilítalo en el candado 🔒 de tu navegador.', 'error');
+      }
+      if (typeof updateControlStatus === 'function') {
+        updateControlStatus();
+      }
+      return perm;
+    });
+  }
+
+  function sendDeviceNotification(title, message, options) {
+    if (!('Notification' in window) || Notification.permission !== 'granted') return;
+    var opts = {
+      body: message || 'Tienes una nueva actualización en Gig Manager',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/badge-96.png',
+      vibrate: [200, 100, 200],
+      data: { url: (options && options.url) || '/notifications' }
+    };
+    try {
+      var notif = new Notification(title, opts);
+      notif.onclick = function() {
+        window.focus();
+        if (opts.data && opts.data.url) window.location.href = opts.data.url;
+        notif.close();
+      };
+    } catch (e) {
+      if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then(function(reg) {
+          if (reg && reg.showNotification) reg.showNotification(title, opts);
+        }).catch(function(){});
+      }
+    }
+  }
+
+  function triggerNotificationAlert(title, message, type, force) {
+    var soundType = (type === 'urgent' || type === 'error') ? 'urgent' : (type === 'payment' ? 'payment' : 'default');
+    playNotificationSound(soundType);
+    showToast(title + ': ' + message, type === 'urgent' ? 'error' : 'success');
+    if (force || document.hidden || !document.hasFocus() || ('Notification' in window && Notification.permission === 'granted')) {
+      sendDeviceNotification(title, message, { url: '/notifications' });
+    }
+  }
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+      navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+        console.warn('Service Worker:', err);
+      });
+    });
+  }
+
+  /* ── Toast notification system ───────────────────────── */
+  function showToast(message, type) {
+    var container = document.getElementById('toast-container');
+    if (!container) return;
+
+    var isSuccess = type === 'success';
+
+    var toast = document.createElement('div');
+    toast.style.cssText = [
+      'pointer-events: all',
+      'display: flex',
+      'align-items: flex-start',
+      'gap: 10px',
+      'padding: 14px 16px',
+      'border-radius: 14px',
+      'font-family: Inter, sans-serif',
+      'font-size: 0.9rem',
+      'font-weight: 600',
+      'line-height: 1.4',
+      'box-shadow: 0 8px 30px rgba(0,0,0,0.14)',
+      'border: 1px solid ' + (isSuccess ? '#86efac' : '#fca5a5'),
+      'background: ' + (isSuccess ? '#f0fdf4' : '#fff1f2'),
+      'color: ' + (isSuccess ? '#15803d' : '#9f1239'),
+      'transform: translateX(120%)',
+      'transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1)',
+      'position: relative',
+      'overflow: hidden',
+      'max-width: 100%',
+    ].join(';');
+
+    toast.innerHTML =
+      '<span style="font-size:1.2em;flex-shrink:0;">' + (isSuccess ? '✅' : '⚠️') + '</span>' +
+      '<span style="flex:1;">' + message + '</span>' +
+      '<button onclick="this.closest(\'[data-toast]\').remove()" style="background:none;border:none;cursor:pointer;font-size:1.1em;color:inherit;opacity:0.6;padding:0;margin:0;line-height:1;flex-shrink:0;" title="Cerrar">✕</button>' +
+      '<div style="position:absolute;bottom:0;left:0;height:3px;background:' + (isSuccess ? '#22c55e' : '#f87171') + ';width:100%;transform-origin:left;animation:toastProgress 4s linear forwards;border-radius:0 0 14px 14px;"></div>';
+    toast.setAttribute('data-toast', '1');
+
+    container.appendChild(toast);
+    requestAnimationFrame(function() {
+      requestAnimationFrame(function() {
+        toast.style.transform = 'translateX(0)';
+      });
+    });
+
+    var timer = setTimeout(function() { dismissToast(toast); }, 4000);
+    toast.addEventListener('mouseenter', function() { clearTimeout(timer); });
+    toast.addEventListener('mouseleave', function() { timer = setTimeout(function() { dismissToast(toast); }, 1500); });
+  }
+
+  function dismissToast(toast) {
+    dismissAppToast(toast);
+  }
+
+  function dismissAppToast(toast) {
+    if (!toast || toast.getAttribute('data-dismissing') === '1') return;
+    toast.setAttribute('data-dismissing', '1');
+    toast.style.transition = 'opacity 0.28s ease, transform 0.28s cubic-bezier(0.4, 0, 0.2, 1)';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(110%)';
+    setTimeout(function() {
+      if (toast && toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
+  }
+
+  function initAppToast(toast) {
+    if (!toast || toast.getAttribute('data-initialized') === '1') return;
+    toast.setAttribute('data-initialized', '1');
+
+    // Deduplicación en tiempo real en el cliente
+    var notifId = toast.getAttribute('data-notif-id');
+    if (notifId) {
+      var duplicates = document.querySelectorAll('#toast-container [data-notif-id="' + notifId + '"]');
+      if (duplicates.length > 1) {
+        for (var i = 0; i < duplicates.length - 1; i++) {
+          duplicates[i].remove();
+        }
+      }
+    }
+
+    // Auto-dismiss sincronizado (6.5s)
+    var timer = setTimeout(function() {
+      dismissAppToast(toast);
+    }, 6500);
+
+    // Pausar barra y timer al posar el ratón para lectura cómoda
+    toast.addEventListener('mouseenter', function() {
+      clearTimeout(timer);
+      var bar = toast.querySelector('.app-toast-bar');
+      if (bar) bar.style.animationPlayState = 'paused';
+    });
+    toast.addEventListener('mouseleave', function() {
+      var bar = toast.querySelector('.app-toast-bar');
+      if (bar) bar.style.animationPlayState = 'running';
+      timer = setTimeout(function() {
+        dismissAppToast(toast);
+      }, 2000);
+    });
+  }
+
+  function updateUnreadBadge(delta) {
+    var badges = [
+      document.getElementById('unread-notifications-badge'),
+      document.getElementById('mobile-topbar-unread-badge')
+    ];
+    badges.forEach(function(badge) {
+      if (!badge) return;
+      var currentCount = parseInt(badge.getAttribute('data-count') || badge.textContent.trim() || '0', 10);
+      var newCount = Math.max(0, currentCount + delta);
+      badge.setAttribute('data-count', newCount);
+      badge.textContent = newCount;
+      badge.style.display = newCount > 0 ? (badge.id === 'unread-notifications-badge' ? 'inline-block' : 'inline-block') : 'none';
+    });
+  }
+
+  /* ── Auto-dismiss top notification banners ───────────────── */
+  function initTopDismissBanners() {
+    var banners = document.querySelectorAll('.top-auto-dismiss-banner');
+    banners.forEach(function(banner) {
+      var type = banner.getAttribute('data-banner-type');
+      var notifId = banner.getAttribute('data-notif-id');
+      var reportsCount = banner.getAttribute('data-reports-count');
+      var upsellsCount = banner.getAttribute('data-upsells-count');
+
+      // Check if already dismissed in this session
+      if (type === 'worker-notif' && notifId && sessionStorage.getItem('dismissed_worker_notif_' + notifId)) {
+        banner.style.display = 'none';
+        return;
+      }
+      if (type === 'worker-reports' && reportsCount && sessionStorage.getItem('dismissed_worker_reports_' + reportsCount)) {
+        banner.style.display = 'none';
+        return;
+      }
+      if (type === 'upsell-requests' && upsellsCount && sessionStorage.getItem('dismissed_upsell_requests_' + upsellsCount)) {
+        banner.style.display = 'none';
+        return;
+      }
+
+      // Auto-dismiss timer (7 seconds)
+      var dismissTimer = setTimeout(function() {
+        dismissTopBanner(banner);
+      }, 7000);
+
+      banner.addEventListener('mouseenter', function() {
+        clearTimeout(dismissTimer);
+      });
+      banner.addEventListener('mouseleave', function() {
+        dismissTimer = setTimeout(function() {
+          dismissTopBanner(banner);
+        }, 1800);
+      });
+    });
+  }
+
+  function dismissTopBanner(banner) {
+    if (!banner || banner.getAttribute('data-dismissing') === '1') return;
+    banner.setAttribute('data-dismissing', '1');
+
+    var type = banner.getAttribute('data-banner-type');
+    var notifId = banner.getAttribute('data-notif-id');
+    var reportsCount = banner.getAttribute('data-reports-count');
+    var upsellsCount = banner.getAttribute('data-upsells-count');
+
+    if (type === 'worker-notif' && notifId) {
+      sessionStorage.setItem('dismissed_worker_notif_' + notifId, '1');
+      var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+      fetch('/notifications/' + notifId + '/mark_as_read', {
+        method: 'POST',
+        headers: {
+          'X-CSRF-Token': csrfToken || '',
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        }
+      }).catch(function(){});
+    }
+    if (type === 'worker-reports' && reportsCount) {
+      sessionStorage.setItem('dismissed_worker_reports_' + reportsCount, '1');
+    }
+    if (type === 'upsell-requests' && upsellsCount) {
+      sessionStorage.setItem('dismissed_upsell_requests_' + upsellsCount, '1');
+    }
+
+    // Smooth transition out
+    banner.style.opacity = '0';
+    banner.style.transform = 'translateY(-10px)';
+    setTimeout(function() {
+      banner.style.maxHeight = '0px';
+      banner.style.marginTop = '0px';
+      banner.style.marginBottom = '0px';
+      banner.style.paddingTop = '0px';
+      banner.style.paddingBottom = '0px';
+    }, 120);
+    setTimeout(function() {
+      if (banner.parentNode) banner.parentNode.removeChild(banner);
+    }, 550);
+  }
+
+  document.addEventListener('turbo:load', initTopDismissBanners);
+  document.addEventListener('DOMContentLoaded', initTopDismissBanners);
+
+  /* ── Prevent Turbo scroll-to-top on form actions ─────── */
+  (function() {
+    var savedScrollY = 0;
+
+    // Guardar posición antes de que Turbo procese la respuesta
+    document.addEventListener('turbo:before-fetch-response', function() {
+      savedScrollY = window.scrollY;
+    });
+
+    // Después de que Turbo actualiza el DOM, restaurar posición
+    document.addEventListener('turbo:render', function() {
+      if (savedScrollY > 0) {
+        window.scrollTo({ top: savedScrollY, behavior: 'instant' });
+      }
+    });
+  })();
+
+  /* ── Turbo compatibility ─────────────────────────────── */
+  document.addEventListener('turbo:load', function() {
+    // container exists after SPA nav
+  });
+
+  (function() {
+    // ─── Scroll indicator (original) ───────────────────────────
+    document.addEventListener('DOMContentLoaded', function(){
+      var nav = document.querySelector('aside nav');
+      var indicator = document.getElementById('sidebar-scroll-indicator');
+      if(nav && indicator) {
+        function refresh(){
+          var scrollHeight = nav.scrollHeight;
+          var client = nav.clientHeight;
+          if(scrollHeight <= client){ indicator.style.opacity = '0'; return; }
+          indicator.style.opacity = '0.9';
+          var thumbPct = (client / scrollHeight) * 100;
+          var ratio = nav.scrollTop / (scrollHeight - client);
+          var translatePct = ratio * (100 - thumbPct);
+          indicator.style.height = thumbPct + '%';
+          indicator.style.top = translatePct + '%';
+        }
+        nav.addEventListener('scroll', refresh, { passive: true });
+        window.addEventListener('resize', refresh);
+        refresh();
+      }
+    });
+
+    // ─── Mobile drawer ──────────────────────────────────────────
+    function initDrawer() {
+      var sidebar   = document.getElementById('app-sidebar');
+      var hamburger = document.getElementById('hamburger-btn');
+      var closeBtns = document.querySelectorAll('#sidebar-close-btn, .sidebar-close-btn');
+      var backdrop  = document.getElementById('mobile-backdrop');
+      if (!sidebar) return;
+
+      function open() {
+        sidebar.classList.add('sidebar-open');
+        if (backdrop) backdrop.classList.add('open');
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      function close() {
+        sidebar.classList.remove('sidebar-open');
+        if (backdrop) backdrop.classList.remove('open');
+        if (hamburger) hamburger.setAttribute('aria-expanded', 'false');
+        document.body.style.overflow = '';
+      }
+
+      if (hamburger) hamburger.addEventListener('click', open);
+      closeBtns.forEach(function(btn) {
+        btn.addEventListener('click', close);
+      });
+      if (backdrop)  backdrop.addEventListener('click', close);
+
+      // Cerrar al navegar en móvil
+      sidebar.querySelectorAll('.sidebar-link').forEach(function(link) {
+        link.addEventListener('click', function() {
+          if (window.innerWidth <= 991) close();
+        });
+      });
+
+      // Cerrar drawer si se redimensiona a desktop
+      window.addEventListener('resize', function() {
+        if (window.innerWidth > 991) close();
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initDrawer);
+    document.addEventListener('turbo:load', initDrawer);
+  })();
+</script>

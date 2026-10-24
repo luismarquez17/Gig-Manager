@@ -1,0 +1,73 @@
+<%# --- MODAL DE AUTENTICACIÓN / CONTROL DE EVENTO PARA CLIENTES --- %>
+<div id="client-auth-modal" style="display: none; position: fixed; inset: 0; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 9999; align-items: center; justify-content: center; padding: 20px;">
+  <div style="background: #0f172a; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 24px; padding: 28px 24px; max-width: 460px; width: 100%; box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6); animation: scaleIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); text-align: left; color: white; box-sizing: border-box; position: relative;">
+    
+    <%# Botón cerrar %>
+    <button type="button" onclick="closeClientAuthModal()" style="position: absolute; top: 16px; right: 16px; background: transparent; border: none; color: #94a3b8; font-size: 1.5rem; cursor: pointer; line-height: 1; padding: 4px;">&times;</button>
+    
+    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 18px;">
+      <div style="width: 46px; height: 46px; border-radius: 14px; background: linear-gradient(135deg, rgba(139, 92, 246, 0.25), rgba(6, 182, 212, 0.25)); border: 1px solid rgba(139, 92, 246, 0.4); display: flex; align-items: center; justify-content: center; font-size: 1.4rem;">
+        🎮
+      </div>
+      <div>
+        <h3 style="font-family: var(--font-outfit); font-size: 1.25em; font-weight: 800; margin: 0; color: #f8fafc;">Control de tu Evento</h3>
+        <span style="font-size: 0.82em; color: #94a3b8;"><%= @gig.company&.name || "Portal de Cliente" %></span>
+      </div>
+    </div>
+
+    <%# Pestañas Iniciar Sesión / Activar Cuenta %>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 12px; padding: 4px; margin-bottom: 20px;">
+      <button type="button" id="tab-btn-login" onclick="switchAuthTab('login')" style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; border: none; border-radius: 8px; padding: 9px 12px; font-weight: 700; font-size: 0.85em; cursor: pointer; transition: 0.2s;">
+        🔑 Iniciar Sesión
+      </button>
+      <button type="button" id="tab-btn-signup" onclick="switchAuthTab('signup')" style="background: transparent; color: #94a3b8; border: none; border-radius: 8px; padding: 9px 12px; font-weight: 700; font-size: 0.85em; cursor: pointer; transition: 0.2s;">
+        ✨ Activar Cuenta
+      </button>
+    </div>
+
+    <%# Panel 1: Login %>
+    <div id="auth-panel-login">
+      <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 16px 0; line-height: 1.4;">
+        Ingresa con tu correo y contraseña para tener el control total de tu evento y ver todas tus opciones:
+      </p>
+      <%= form_with(url: login_public_portal_path(@gig.portal_token), method: :post, local: true, style: "display: flex; flex-direction: column; gap: 14px;") do |f| %>
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">Correo Electrónico</label>
+          <input type="email" name="email" value="<%= @gig.client_email.presence || @gig.client&.email %>" required placeholder="tu@email.com" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 23, 42, 0.8); color: white; font-size: 0.9rem; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">Contraseña</label>
+          <input type="password" name="password" required placeholder="Tu contraseña" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 23, 42, 0.8); color: white; font-size: 0.9rem; box-sizing: border-box;">
+        </div>
+        <button type="submit" style="background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.3); margin-top: 4px;">
+          <span>🚀</span> Iniciar Sesión y Entrar al Panel
+        </button>
+      <% end %>
+    </div>
+
+    <%# Panel 2: Signup / Activar cuenta %>
+    <div id="auth-panel-signup" style="display: none;">
+      <p style="color: #cbd5e1; font-size: 0.86em; margin: 0 0 16px 0; line-height: 1.4;">
+        Elige tu contraseña personal para activar tu cuenta de cliente y gestionar todos tus eventos:
+      </p>
+      <%= form_with(url: setup_password_public_portal_path(@gig.portal_token), method: :post, local: true, style: "display: flex; flex-direction: column; gap: 14px;") do |f| %>
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">Correo Electrónico</label>
+          <input type="email" name="email" value="<%= @gig.client_email.presence || @gig.client&.email %>" required placeholder="tu@email.com" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 23, 42, 0.8); color: white; font-size: 0.9rem; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">Nueva Contraseña Personal</label>
+          <input type="password" name="password" required minlength="6" placeholder="Mínimo 6 caracteres" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 23, 42, 0.8); color: white; font-size: 0.9rem; box-sizing: border-box;">
+        </div>
+        <div>
+          <label style="display: block; font-size: 0.78rem; font-weight: 700; color: #cbd5e1; margin-bottom: 4px;">Confirmar Contraseña</label>
+          <input type="password" name="password_confirmation" required minlength="6" placeholder="Repite tu contraseña" style="width: 100%; padding: 10px 14px; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 23, 42, 0.8); color: white; font-size: 0.9rem; box-sizing: border-box;">
+        </div>
+        <button type="submit" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 12px; border-radius: 12px; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); margin-top: 4px;">
+          <span>🔒</span> Activar Cuenta y Entrar
+        </button>
+      <% end %>
+    </div>
+
+  </div>
+</div>

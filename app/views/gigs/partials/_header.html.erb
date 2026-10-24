@@ -1,0 +1,63 @@
+<%# --- HEADER Y BARRA SUPERIOR DE ACCIONES --- %>
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 16px;">
+  <div>
+    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
+      <%= link_to gigs_path, style: "color: #64748b; text-decoration: none; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 5px; transition: color 0.15s;" do %>
+        <span>⬅</span> Volver al Historial
+      <% end %>
+      <% if current_user.leader? %>
+        <span style="color: #cbd5e1;">•</span>
+        <%= link_to edit_gig_path(@gig), style: "color: #2563eb; text-decoration: none; font-weight: 700; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 4px;" do %>
+          <span>✏️</span> Editar <%= company_term(:event_singular, 'Evento') %>
+        <% end %>
+      <% end %>
+    </div>
+    
+    <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+      <h1 style="color: var(--text-heading, #0f172a); margin: 0; font-weight: 900; font-size: 1.85rem; letter-spacing: -0.5px; display: flex; align-items: center; gap: 10px;">
+        <span>📋</span> Panel del <%= company_term(:event_singular, 'Evento') %>
+      </h1>
+      
+      <% if @gig.client %>
+        <%
+          priority_bg = case @gig.client.priority
+                        when 'alta' then '#ecfdf5'
+                        when 'media' then '#fffbeb'
+                        when 'baja' then '#fef2f2'
+                        else '#f1f5f9'
+                        end
+          priority_border = case @gig.client.priority
+                            when 'alta' then '#a7f3d0'
+                            when 'media' then '#fde68a'
+                            when 'baja' then '#fecaca'
+                            else '#cbd5e1'
+                            end
+          priority_color = case @gig.client.priority
+                           when 'alta' then '#059669'
+                           when 'media' then '#d97706'
+                           when 'baja' then '#dc2626'
+                           else '#64748b'
+                           end
+        %>
+        <span style="background: <%= priority_bg %>; color: <%= priority_color %>; border: 1px solid <%= priority_border %>; padding: 4px 12px; border-radius: 99px; font-weight: 800; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 1px 2px rgba(0,0,0,0.03);">
+          Prioridad: <%= @gig.client.priority.capitalize %>
+        </span>
+      <% end %>
+    </div>
+  </div>
+
+  <%# Botones de Acción Rápida Alineados %>
+  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+    <%= link_to stage_mode_gig_path(@gig), target: "_blank", style: "background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%); color: #a5b4fc; border: 1px solid #4f46e5; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: transform 0.15s;" do %>
+      <span>⚡</span> Modo Escenario
+    <% end %>
+
+    <button type="button" onclick="openWhatsAppShareModal('whatsapp-share-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25); transition: opacity 0.15s;">
+      <span>💬</span> Mensajes WhatsApp
+    </button>
+
+    <button type="button" onclick="openFlashcardModal('flashcard-modal-<%= @gig.id %>')" style="background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25); transition: opacity 0.15s;">
+      <span>📸</span> Ficha Visual WA
+    </button>
+  </div>
+</div>

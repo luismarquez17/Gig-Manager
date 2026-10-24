@@ -1,0 +1,53 @@
+<%# =============================================
+    TOPBAR MÓVIL (oculto en desktop por CSS)
+    ============================================= %>
+<% if user_signed_in? %>
+  <header id="mobile-topbar" aria-label="Barra de navegación móvil">
+    <button class="topbar-hamburger" id="hamburger-btn" aria-label="Abrir menú" aria-expanded="false" aria-controls="app-sidebar">
+      <span></span><span></span><span></span>
+    </button>
+    <div class="topbar-brand">
+      <%# Mobile Default Brand %>
+      <div class="brand-default-view">
+        <img src="/icons/logo.svg" alt="GigManager" style="width: 28px; height: 28px; border-radius: 8px; margin-right: 8px; flex-shrink: 0;" />
+        <span style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Gig Manager</span>
+      </div>
+
+      <%# Mobile Gero VIP Co-Brand %>
+      <div class="brand-gerovip-view" style="display: flex; align-items: center; gap: 6px; min-width: 0; width: 100%;">
+        <div style="display: flex; align-items: center; gap: 3px; flex-shrink: 0; background: rgba(0,0,0,0.22); padding: 2px 5px; border-radius: 8px; border: 1px solid rgba(212,175,55,0.35);">
+          <img src="/icons/logo.svg" alt="GigManager" style="width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;" />
+          <span style="font-weight: 900; color: #d4af37; font-size: 0.85rem; line-height: 1; flex-shrink: 0;">+</span>
+          <img src="/icons/gerovip_logo.png" alt="Gero Producciones" style="width: 24px; height: 24px; object-fit: contain; flex-shrink: 0; filter: drop-shadow(0 2px 5px rgba(212,175,55,0.45));" />
+        </div>
+        <div style="display: flex; flex-direction: column; text-align: left; line-height: 1.15; min-width: 0; overflow: hidden;">
+          <span style="color: white; font-weight: 800; font-size: 0.82rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Gig Manager</span>
+          <span style="color: #ffd700; font-weight: 700; font-size: 0.68rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">+ Gero Producciones <span style="font-size: 0.6rem; opacity: 0.9; color: #fef08a;">(VIP)</span></span>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+      <button type="button" onclick="openThemeCustomizer()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.05rem;" aria-label="Personalizar Tema" title="Personalizar Tema">
+        🎨
+      </button>
+      <%= link_to notifications_path, style: "background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; position: relative; text-decoration: none; font-size: 1.05rem;", aria: { label: "Notificaciones" } do %>
+        🔔
+        <% unread_count = current_user&.unread_notifications_count.to_i %>
+        <span id="mobile-topbar-unread-badge" style="<%= unread_count > 0 ? '' : 'display: none;' %> position: absolute; top: -4px; right: -4px; background: #ef4444; color: white; border-radius: 99px; font-size: 0.65rem; font-weight: 800; min-width: 17px; height: 17px; line-height: 17px; text-align: center; padding: 0 3px; border: 2px solid #0f172a;">
+          <%= unread_count %>
+        </span>
+      <% end %>
+    </div>
+  </header>
+
+  <%# Backdrop para cerrar sidebar en móvil %>
+  <div id="mobile-backdrop" aria-hidden="true"></div>
+<% end %>
+
+<% if user_signed_in? && current_company.present? %>
+  <%= turbo_stream_from current_company, "notifications_all_areas" %>
+  <%= turbo_stream_from current_company, "notifications_leaders" if current_user.leader? || current_user.superadmin? %>
+  <%= turbo_stream_from current_company, "notifications_musicians" if current_user.musician? %>
+  <%= turbo_stream_from current_company, "notifications_staffs" if current_user.staff? %>
+  <%= turbo_stream_from current_company, "notifications_user_#{current_user.id}" %>
+<% end %>

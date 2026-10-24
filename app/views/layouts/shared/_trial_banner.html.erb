@@ -1,0 +1,102 @@
+<%# --- BANNER DE FREE TRIAL (PRUEBA GRATUITA) --- %>
+<% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && current_company&.trial_active? && controller_name != 'subscriptions' %>
+  <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid rgba(139, 92, 246, 0.45); border-radius: 16px; padding: 14px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.15rem; flex-shrink: 0; box-shadow: 0 0 14px rgba(139, 92, 246, 0.5);">
+        <%= current_company.days_left_in_trial %>
+      </div>
+      <div>
+        <div style="color: white; font-size: 0.94rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span>Prueba Gratuita Activa:</span>
+          <span style="color: #a5b4fc; font-weight: 800;">Te quedan <%= current_company.days_left_in_trial %> días</span>
+          <span style="font-size: 0.75rem; background: rgba(139, 92, 246, 0.25); color: #c4b5fd; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(139, 92, 246, 0.4);">Acceso Total</span>
+        </div>
+        <div style="color: #94a3b8; font-size: 0.82rem; margin-top: 2px;">
+          Todos los módulos están desbloqueados. Elige tu plan o ajusta tus módulos en cualquier momento.
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <%= link_to company_modules_path, style: "background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15); color: #cbd5e1; padding: 8px 14px; border-radius: 9px; font-weight: 700; font-size: 0.84rem; text-decoration: none;" do %>
+        🧩 Ajustar Módulos
+      <% end %>
+
+      <%= link_to subscriptions_path, style: "background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 8px 18px; border-radius: 9px; font-weight: 800; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 12px rgba(139, 92, 246, 0.4); white-space: nowrap;" do %>
+        Elegir Plan ➔
+      <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if user_signed_in? && current_user.superadmin? && session[:superadmin_company_id].present? %>
+  <div style="background: linear-gradient(135deg, #4338ca, #3730a3); color: white; padding: 12px 20px; border-radius: 12px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; box-shadow: 0 4px 12px rgba(67, 56, 202, 0.3);">
+    <div style="display: flex; align-items: center; gap: 10px; font-size: 0.92rem; font-weight: 600;">
+      <span style="font-size: 1.2rem;">👁️</span>
+      <span>Modo Inspección Activo: Estás viendo la plataforma como <strong><%= current_company&.name %></strong>.</span>
+    </div>
+    <%= button_to switch_tenant_superadmin_company_path("all"), method: :post, style: "background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; padding: 6px 14px; border-radius: 8px; font-weight: 700; font-size: 0.82rem; cursor: pointer;" do %>
+      Volver a Modo Universo Superadmin
+    <% end %>
+  </div>
+<% end %>
+
+<% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && controller_name != 'employee_payments' && !(controller_name == 'pages' && action_name == 'dashboard') %>
+  <% pending_worker_reports = current_company&.employee_payments&.pending_approval&.count rescue 0 %>
+  <% if pending_worker_reports.to_i > 0 %>
+    <div class="top-auto-dismiss-banner" data-banner-type="worker-reports" data-reports-count="<%= pending_worker_reports %>" style="background: #fffbeb; border: 1px solid #fde68a; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.08); position: relative; overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: 10px; color: #92400e; font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 240px;">
+        <span style="font-size: 1.3rem; flex-shrink: 0;">🔔</span>
+        <span><strong>Notificación:</strong> Tienes <strong><%= pending_worker_reports %> pago(s) reportado(s)</strong> por trabajadores esperando tu confirmación.</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <%= link_to 'Revisar y Confirmar ➔', employee_payments_path, style: 'background: #f59e0b; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.25); white-space: nowrap;' %>
+        <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #b45309; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar aviso">✕</button>
+      </div>
+      <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: #f59e0b; width: 100%; transform-origin: left; animation: topBannerProgress 7s linear forwards;"></div>
+    </div>
+  <% end %>
+
+  <% pending_upsells = (current_company&.gig_upsell_requests&.pending&.includes(:gig)&.limit(10)&.to_a rescue []) || [] %>
+  <% pending_upsell_requests_count = pending_upsells.size %>
+  <% if pending_upsell_requests_count.positive? && !(controller_name == 'gigs' && action_name == 'show') %>
+    <% first_pending_gig = pending_upsells.first&.gig %>
+    <div class="top-auto-dismiss-banner" data-banner-type="upsell-requests" data-upsells-count="<%= pending_upsell_requests_count %>" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08); position: relative; overflow: hidden;">
+      <div style="display: flex; align-items: center; gap: 10px; color: #1e40af; font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 240px;">
+        <span style="font-size: 1.3rem; flex-shrink: 0;">🚀</span>
+        <span><strong>Aviso de Clientes:</strong> Tienes <strong><%= pending_upsell_requests_count %> solicitud(es) de adicionales (upsells)</strong> de clientes esperando tu decisión.</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <% if first_pending_gig %>
+          <%= link_to 'Ver y Decidir en el Evento ➔', gig_path(first_pending_gig), style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
+        <% else %>
+          <%= link_to 'Ver Eventos ➔', gigs_path, style: 'background: #2563eb; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(37, 99, 235, 0.25); white-space: nowrap;' %>
+        <% end %>
+        <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #1d4ed8; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar aviso">✕</button>
+      </div>
+      <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: #3b82f6; width: 100%; transform-origin: left; animation: topBannerProgress 7s linear forwards;"></div>
+    </div>
+  <% end %>
+<% end %>
+
+<% if user_signed_in? && (current_user.musician? || current_user.staff?) && controller_name != 'notifications' %>
+  <% worker_unread_count = current_user.unread_notifications_count %>
+  <% if worker_unread_count > 0 %>
+    <% latest_notif = current_user.app_notifications.unread_by(current_user).first %>
+    <% if latest_notif.present? %>
+      <div class="top-auto-dismiss-banner" data-banner-type="worker-notif" data-notif-id="<%= latest_notif.id %>" style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border: 1px solid #c7d2fe; border-radius: 14px; padding: 14px 20px; margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; box-shadow: 0 4px 15px rgba(79, 70, 229, 0.08); position: relative; overflow: hidden;">
+        <div style="display: flex; align-items: center; gap: 12px; color: #3730a3; font-size: 0.92rem; font-weight: 600; flex: 1; min-width: 240px;">
+          <span style="font-size: 1.4rem; flex-shrink: 0;"><%= latest_notif.type_icon %></span>
+          <span><strong><%= latest_notif.title %>:</strong> <%= latest_notif.message.truncate(95) %></span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <%= link_to (latest_notif.action_url.presence || notifications_path), style: 'background: #4f46e5; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); white-space: nowrap;' do %>
+            Ver Detalles ➔
+          <% end %>
+          <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #4338ca; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar notificación">✕</button>
+        </div>
+        <div style="position: absolute; bottom: 0; left: 0; height: 3px; background: #6366f1; width: 100%; transform-origin: left; animation: topBannerProgress 7s linear forwards;"></div>
+      </div>
+    <% end %>
+  <% end %>
+<% end %>

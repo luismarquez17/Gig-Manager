@@ -1,0 +1,15 @@
+<%# ── Flash notices ── %>
+<% if notice.present? %>
+  <script>
+    document.addEventListener('turbo:load', function() {
+      showToast(<%= notice.to_json.html_safe %>, 'success');
+    }, { once: true });
+  </script>
+<% end %>
+<% if alert.present? %>
+  <script>
+    document.addEventListener('turbo:load', function() {
+      showToast(<%= alert.to_json.html_safe %>, 'error');
+    }, { once: true });
+  </script>
+<% end %>

@@ -1,0 +1,97 @@
+<%# --- NORMATIVAS GENERALES DEL SERVICIO --- %>
+<section class="glass-card">
+  <h2 class="section-title">
+    <span class="icon"><%= venue_mode? ? '🏛️' : '📜' %></span>
+    <%= venue_mode? ? 'Normativas y Políticas del Salón' : 'Normativas y Políticas del Servicio' %>
+  </h2>
+
+  <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 16px; padding: 18px 20px; margin-bottom: 20px; color: #fef08a;">
+    <h4 style="margin: 0 0 6px 0; font-size: 1em; font-weight: 800; color: #fbbf24;">💳 REGLA CLAVE DE PAGO</h4>
+    <p style="margin: 0; font-size: 0.9em; line-height: 1.5; color: #fef3c7;">
+      <%= venue_mode? ? 'El saldo del alquiler y servicios debe estar <strong>cancelado al 100% el mismo día del evento</strong>, previo a la apertura de puertas o entrega de llaves.' : 'El evento debe estar <strong>pagado en su totalidad (100%) el mismo día del show</strong>, previo al inicio del montaje del equipamiento técnico.' %>
+    </p>
+  </div>
+
+  <details style="background: rgba(0,0,0,0.15); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 15px; color: #e2e8f0; font-size: 0.9em;">
+    <summary style="cursor: pointer; font-weight: 800; color: #a78bfa; font-size: 1em; list-style: none; display: flex; justify-content: space-between; align-items: center;">
+      <span>🔍 Ver detalle de Normativas y Requerimientos</span>
+      <span style="font-size: 0.8em; opacity: 0.7;">▼ Desplegar</span>
+    </summary>
+    <div style="margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 15px; display: grid; gap: 14px; line-height: 1.5;">
+      <% if venue_mode? %>
+        <div>
+          <strong style="color: #67e8f9;">1. Horarios y Desalojo:</strong> El alquiler inicia y concluye puntualmente a las horas pactadas. Se otorga hasta 1 hora para el retiro ordenado de invitados y pertenencias. Horas extra sujetas a autorización previa.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">2. Cuidado de Paredes e Instalaciones:</strong> Queda prohibido clavar, perforar o usar pegamentos agresivos en paredes y espejos. Toda decoración debe ser desmontable sin dañar la pintura.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">3. Depósito en Garantía y Mobiliario:</strong> El mobiliario e inventario entregado se revisa al cierre. Cualquier rotura o avería será descontada del depósito de garantía.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">4. Políticas de Reserva:</strong> El abono inicial bloquea la fecha de forma exclusiva en la agenda del salón y no es reembolsable por cancelación unilateral.
+        </div>
+      <% else %>
+        <div>
+          <strong style="color: #67e8f9;">1. Horarios y Horas Extra:</strong> El tiempo contratado inicia puntualmente a la hora acordada. Las extensiones de horario tienen un costo adicional.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">2. Toma Eléctrica y Techo / Servicio Eléctrico:</strong> Se requiere toma eléctrica estable (110V/220V) a menos de 10m y espacio techado si el evento es al aire libre. <strong>Importante:</strong> No nos hacemos responsables en caso de que donde estemos se vaya la luz, no tenemos planta contratada en nuestro paquete.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">3. Cuidado del Equipamiento:</strong> Cualquier daño a los equipos o instrumentos ocasionado por invitados será facturado al cliente contratante.
+        </div>
+        <div>
+          <strong style="color: #67e8f9;">4. Políticas de Abono:</strong> Las señas de reserva no son reembolsables en caso de cancelación del evento por causas ajenas a la empresa.
+        </div>
+      <% end %>
+    </div>
+  </details>
+</section>
+
+<%# --- RESUMEN DE CONTRATO / CONDICIONES --- %>
+<section class="glass-card">
+  <h2 class="section-title">
+    <span class="icon">📜</span>
+    Resumen de Contrato y Condiciones
+  </h2>
+  
+  <% if @gig.details.present? %>
+    <div class="contract-content">
+      <%= @gig.details %>
+    </div>
+  <% else %>
+    <div class="alert-warning" style="margin-bottom: 20px;">
+      ℹ️ Los detalles del paquete contratado se están terminando de redactar. Pronto aparecerán aquí.
+    </div>
+  <% end %>
+
+  <%# Panel de Firma Digital %>
+  <div id="signature-section">
+    <% if @gig.contract_signed? %>
+      <div class="signed-badge">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
+        <div class="signed-details">
+          <h4 style="margin: 0 0 5px 0; font-size: 1.05em; font-weight: 800;">Contrato Firmado Digitalmente</h4>
+          <p><strong>Firmante:</strong> <%= @gig.contract_signed_name %></p>
+          <p><strong>Fecha/Hora:</strong> <%= @gig.contract_signed_at&.strftime("%d/%m/%Y %I:%M %p") %></p>
+          <p><strong>IP de Registro:</strong> <%= @gig.contract_signed_ip %></p>
+        </div>
+      </div>
+    <% else %>
+      <div class="alert-warning">
+        ⚠️ El contrato se encuentra pendiente de aprobación. Por favor, lee los términos detallados arriba y fírmalo digitalmente escribiendo tu nombre completo.
+      </div>
+      <div class="signature-box">
+        <label style="display: block; font-weight: 700; font-size: 0.85em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px;">Firma Digital del Cliente</label>
+        <input type="text" id="signature-input" placeholder="Escribe tu nombre completo para firmar..." class="form-input">
+        <button id="btn-sign-contract" onclick="submitContractSignature()" class="btn-portal">
+          ✍️ Aceptar Términos y Firmar Contrato
+        </button>
+      </div>
+    <% end %>
+  </div>
+</section>
