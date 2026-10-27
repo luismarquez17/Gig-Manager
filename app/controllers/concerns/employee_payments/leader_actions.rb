@@ -78,7 +78,7 @@ module EmployeePayments
       mode = params[:adjustment_mode].presence || 'company_debt'
 
       # Calcular situación actual de shows pasados
-      today        = Date.today
+      today        = Date.current
       assignments  = StaffAssignment.joins(:gig).where(gigs: { company_id: current_company.id }, user_id: worker.id).includes(:gig)
       all_payments = current_company.employee_payments.approved.where(user_id: worker.id).to_a
 
@@ -115,12 +115,12 @@ module EmployeePayments
 
       note_text = case mode
       when 'settle_all'
-        "[AJUSTE LÍDER #{Date.today.strftime('%d/%m/%Y')}] Saldado completamente: $0.00 en ambos apartados."
+        "[AJUSTE LÍDER #{Date.current.strftime('%d/%m/%Y')}] Saldado completamente: $0.00 en ambos apartados."
       when 'worker_owes'
         target_val = -target_net_diff
-        "[AJUSTE LÍDER #{Date.today.strftime('%d/%m/%Y')}] 'Nos debe' ajustado: #{view_context.number_to_currency(current_worker_owes, unit: 'USD')} → #{view_context.number_to_currency(target_val, unit: 'USD')}."
+        "[AJUSTE LÍDER #{Date.current.strftime('%d/%m/%Y')}] 'Nos debe' ajustado: #{view_context.number_to_currency(current_worker_owes, unit: 'USD')} → #{view_context.number_to_currency(target_val, unit: 'USD')}."
       else
-        "[AJUSTE LÍDER #{Date.today.strftime('%d/%m/%Y')}] Deuda empresa ajustada: #{view_context.number_to_currency(current_company_debt, unit: 'USD')} → #{view_context.number_to_currency(target_net_diff, unit: 'USD')}."
+        "[AJUSTE LÍDER #{Date.current.strftime('%d/%m/%Y')}] Deuda empresa ajustada: #{view_context.number_to_currency(current_company_debt, unit: 'USD')} → #{view_context.number_to_currency(target_net_diff, unit: 'USD')}."
       end
 
       ActiveRecord::Base.transaction do
@@ -132,7 +132,7 @@ module EmployeePayments
             expected_amount:      delta,
             gig_id:               nil,
             currency:             'USD',
-            date_paid:            Date.today,
+            date_paid:            Date.current,
             payment_method:       'Ajuste contable',
             funding_source:       'external_capital',
             external_source_name: 'Ajuste por el Líder',
@@ -148,7 +148,7 @@ module EmployeePayments
             expected_amount:      0.0,
             gig_id:               nil,
             currency:             'USD',
-            date_paid:            Date.today,
+            date_paid:            Date.current,
             payment_method:       'Ajuste contable',
             funding_source:       'external_capital',
             external_source_name: 'Ajuste por el Líder',

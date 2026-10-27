@@ -3,7 +3,7 @@
 class WorkerBalanceService
   attr_reader :worker, :worker_payments, :worker_assignments, :agreed_total, :paid_total, :payment_count, :today
 
-  def initialize(worker:, worker_payments: [], worker_assignments: [], agreed_total: nil, paid_total: nil, payment_count: nil, today: Date.today)
+  def initialize(worker:, worker_payments: [], worker_assignments: [], agreed_total: nil, paid_total: nil, payment_count: nil, today: Date.current)
     @worker             = worker
     @worker_payments    = worker_payments || []
     @worker_assignments = worker_assignments || []
@@ -33,7 +33,7 @@ class WorkerBalanceService
     all_approved_payments = company.employee_payments.approved.where(user_id: worker_ids).includes(:gig)
     payments_by_worker    = all_approved_payments.group_by(&:user_id)
 
-    today = Date.today
+    today = Date.current
 
     workers.map do |worker|
       new(

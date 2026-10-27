@@ -92,7 +92,7 @@ module EmployeePayments
         gig: gig,
         amount: amount,
         currency: report_params[:currency].presence || gig&.currency.presence || "USD",
-        date_paid: report_params[:date_paid].presence || Date.today,
+        date_paid: report_params[:date_paid].presence || Date.current,
         payment_method: report_params[:payment_method].presence || "Efectivo",
         notes: report_params[:notes],
         status: 'pending_approval',

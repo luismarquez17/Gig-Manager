@@ -465,9 +465,12 @@
     container.appendChild(newRow);
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initGigPaymentsNew() {
     updateSingleRemaining();
     recalculateSplitTotal();
     syncSingleToCalculator();
-  });
+  }
+
+  document.addEventListener('turbo:load', initGigPaymentsNew);
+  document.addEventListener('DOMContentLoaded', initGigPaymentsNew);
 </script>

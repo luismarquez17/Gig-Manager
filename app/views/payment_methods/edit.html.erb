@@ -538,8 +538,11 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initPaymentMethodsEdit() {
     updateRateModeUI();
     testCalculateFromUsd();
-  });
+  }
+
+  document.addEventListener('turbo:load', initPaymentMethodsEdit);
+  document.addEventListener('DOMContentLoaded', initPaymentMethodsEdit);
 </script>

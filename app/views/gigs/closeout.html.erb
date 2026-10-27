@@ -317,13 +317,17 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
+  function initGigCloseout() {
     recalculateSummary();
     const goalAmountInput = document.getElementById('goal_amount');
-    if (goalAmountInput) {
+    if (goalAmountInput && !goalAmountInput.dataset.listenerAttached) {
+      goalAmountInput.dataset.listenerAttached = 'true';
       goalAmountInput.addEventListener('input', () => {
         goalAmountInput.dataset.manualEdited = 'true';
       });
     }
-  });
+  }
+
+  document.addEventListener('turbo:load', initGigCloseout);
+  document.addEventListener('DOMContentLoaded', initGigCloseout);
 </script>

@@ -17,7 +17,7 @@ module Pages
         @total_cash_deposits = current_company.cash_adjustments.where("date >= ?", reset_date).inflows.sum(:amount).to_f
         @total_inflow_usd    = (@total_received_usd + @total_cash_deposits).round(2)
         @budgeted_usd        = company_gigs.sum(:amount).to_f
-        @upcoming_usd        = current_company.gigs.where("date >= ?", Date.today).sum(:amount).to_f
+        @upcoming_usd        = current_company.gigs.where("date >= ?", Date.current).sum(:amount).to_f
 
         # 2. Nómina Pagada a Trabajadores (Músicos y Staff) - Excluye ajustes contables sintéticos y shows previos al reinicio
         payroll_scope            = current_company.employee_payments.approved.where.not(funding_source: 'external_capital').where.not(payment_method: 'Ajuste contable').joins(:gig).where("gigs.date >= ?", reset_date)
@@ -51,7 +51,7 @@ module Pages
         @total_cash_deposits = current_company.cash_adjustments.inflows.sum(:amount).to_f
         @total_inflow_usd    = (@total_received_usd + @total_cash_deposits).round(2)
         @budgeted_usd        = company_gigs.sum(:amount).to_f
-        @upcoming_usd        = company_gigs.where("date >= ?", Date.today).sum(:amount).to_f
+        @upcoming_usd        = company_gigs.where("date >= ?", Date.current).sum(:amount).to_f
 
         # 2. Nómina Pagada a Trabajadores (Músicos y Staff) - Excluye ajustes contables
         @total_payroll_paid      = current_company.employee_payments.approved.where.not(payment_method: 'Ajuste contable').sum(:amount).to_f
@@ -154,7 +154,7 @@ module Pages
       # Reparaciones por mes
       company_maintenance.find_each do |mr|
         next unless mr.cost.to_f > 0
-        date = mr.completed_at || mr.created_at&.to_date || Date.today
+        date = mr.completed_at || mr.created_at&.to_date || Date.current
         next if min_date && date < min_date
         month_date = date.beginning_of_month
         key = month_date.strftime("%Y-%m")
@@ -176,7 +176,7 @@ module Pages
       # Inversiones por mes
       company_investments.find_each do |inv|
         next unless inv.amount.to_f > 0
-        date = inv.date || inv.created_at&.to_date || Date.today
+        date = inv.date || inv.created_at&.to_date || Date.current
         next if min_date && date < min_date
         month_date = date.beginning_of_month
         key = month_date.strftime("%Y-%m")

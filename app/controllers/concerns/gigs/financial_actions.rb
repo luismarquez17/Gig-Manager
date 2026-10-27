@@ -164,7 +164,7 @@ module Gigs
       contribution = goal.goal_savings_contributions.create!(
         amount: amount,
         currency: @gig.currency.presence || 'USD',
-        date: Date.today,
+        date: Date.current,
         user: current_user,
         gig: @gig,
         notes: notes

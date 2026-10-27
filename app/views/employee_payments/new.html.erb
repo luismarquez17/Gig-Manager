@@ -177,14 +177,17 @@
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function() {
+  function initNewEmployeePayment() {
     const userSelect = document.getElementById('payment_user_select');
     const gigSelect = document.getElementById('payment_gig_select');
     if (userSelect && userSelect.value) {
       const initialGigId = gigSelect ? gigSelect.value : null;
       updateWorkerShows(userSelect.value, initialGigId);
     }
-  });
+  }
+
+  document.addEventListener('turbo:load', initNewEmployeePayment);
+  document.addEventListener('DOMContentLoaded', initNewEmployeePayment);
 </script>
 <% end %>
 

@@ -241,9 +241,11 @@
 <script>
   // Inicializar con la sugerencia automática si hay una
   <% if @suggested_item %>
-  document.addEventListener('DOMContentLoaded', function() {
+  function initSuggestedItem() {
     selectSuggested(<%= @suggested_item.id %>);
-  });
+  }
+  document.addEventListener('turbo:load', initSuggestedItem);
+  document.addEventListener('DOMContentLoaded', initSuggestedItem);
   <% end %>
 
   function selectSuggested(itemId) {

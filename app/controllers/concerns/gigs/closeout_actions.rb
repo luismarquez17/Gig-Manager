@@ -47,7 +47,7 @@ module Gigs
           @gig.gig_payments.create!(
             amount: client_amount,
             currency: @gig.currency.presence || 'USD',
-            date_paid: Date.today,
+            date_paid: Date.current,
             payment_method: client_payment_method,
             reference_number: client_reference,
             notes: client_notes,
@@ -71,7 +71,7 @@ module Gigs
             gig: @gig,
             amount: w_amt,
             currency: @gig.currency.presence || 'USD',
-            date_paid: Date.today,
+            date_paid: Date.current,
             payment_method: w_method,
             notes: w_notes,
             funding_source: 'payroll_fund',
@@ -87,7 +87,7 @@ module Gigs
             target_goal.goal_savings_contributions.create!(
               amount: goal_amount,
               currency: @gig.currency.presence || 'USD',
-              date: Date.today,
+              date: Date.current,
               user: current_user,
               gig: @gig,
               notes: goal_notes
@@ -102,7 +102,7 @@ module Gigs
             amount: fund_allocation_amount,
             currency: @gig.currency.presence || 'USD',
             adjustment_type: :deposit,
-            date: Date.today,
+            date: Date.current,
             description: fund_notes,
             status: 'approved',
             audit_reason: "Cierre de Show: Aporte al fondo de $#{fund_allocation_amount}"

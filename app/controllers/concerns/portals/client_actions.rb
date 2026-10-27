@@ -129,7 +129,7 @@ module Portals
       payment = @gig.gig_payments.build(
         amount: amount,
         payment_method: params[:payment_method].presence || 'cash',
-        date_paid: params[:date_paid].presence || Date.today,
+        date_paid: params[:date_paid].presence || Date.current,
         reference_number: params[:reference_number],
         notes: params[:notes],
         status: 'pending_approval',
