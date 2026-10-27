@@ -62,6 +62,20 @@ class Company < ApplicationRecord
     financial_reset_date
   end
 
+  def current_cash_balance
+    total_gigs_received    = GigPayment.joins(:gig).where(gigs: { company_id: id }).approved.sum(:amount).to_f
+    total_cash_deposits    = cash_adjustments.inflows.sum(:amount).to_f
+    total_inflow           = total_gigs_received + total_cash_deposits
+
+    total_payroll_paid     = employee_payments.approved.where.not(funding_source: 'external_capital').sum(:amount).to_f
+    total_maintenance      = MaintenanceRecord.joins(:item).where(items: { company_id: id }).sum(:cost).to_f
+    total_investments      = investments.sum(:amount).to_f
+    total_cash_withdrawals = cash_adjustments.outflows.sum(:amount).to_f
+    total_outflow          = total_payroll_paid + total_maintenance + total_investments + total_cash_withdrawals
+
+    (total_inflow - total_outflow).round(2)
+  end
+
   # ==========================================
   # GESTIÓN DE MÓDULOS / FEATURE FLAGS
   # ==========================================

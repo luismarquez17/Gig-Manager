@@ -5,16 +5,64 @@ class ReinvestmentGoalsController < ApplicationController
   before_action :set_goal, only: [:show, :edit, :update, :destroy, :deposit, :toggle_status, :quick_purchase_item]
 
   def index
+    @current_cash_balance = current_company.current_cash_balance
+
+    # 1. Deudas del sistema (músicos / personal por shows ya realizados)
+    @worker_metrics = WorkerBalanceService.build_metrics_for_company(current_company)
+    @total_pending_debts = @worker_metrics.sum { |m| m[:past_balance] }.round(2)
+
+    @system_debts = []
+    @worker_metrics.each do |m|
+      next if m[:past_balance] <= 0
+
+      worker_name = m[:worker]&.display_name || m[:worker]&.email || (current_company.venue_mode? ? "Personal" : "Trabajador")
+      if m[:gig_debts].present? && m[:gig_debts].any?
+        m[:gig_debts].each_with_index do |d, idx|
+          concept = if d[:gig].present?
+                      show_name = d[:gig].client&.name || "#{current_company.term_for(:event_singular, 'Show')} ##{d[:gig].id}"
+                      show_date = d[:gig].date ? d[:gig].date.strftime("%d/%m/%Y") : "S/F"
+                      "#{show_name} (#{show_date})"
+                    else
+                      d[:title] || "Ajuste contable pendiente"
+                    end
+          @system_debts << {
+            id: "worker_#{m[:worker].id}_debt_#{idx}",
+            worker_id: m[:worker].id,
+            debtor_name: worker_name,
+            concept: concept,
+            amount: d[:pending_amount].to_f.round(2)
+          }
+        end
+      else
+        @system_debts << {
+          id: "worker_#{m[:worker].id}_balance",
+          worker_id: m[:worker].id,
+          debtor_name: worker_name,
+          concept: "Deuda acumulada de shows pasados",
+          amount: m[:past_balance].to_f.round(2)
+        }
+      end
+    end
+
+    # 2. Ítems pendientes de la lista de compras para evaluar en el simulador
+    @shopping_items = current_company.shopping_items.pending.order(priority: :desc, created_at: :asc)
+
+    # 3. Datos de shows venideros y ganancia promedio para proyecciones
+    recent_gigs = current_company.gigs.where("amount > 0").order(date: :desc).limit(10)
+    profits = recent_gigs.map { |g| g.actual_cash_profit.to_f }.select(&:positive?)
+    @avg_gig_profit = profits.any? ? (profits.sum / profits.size.to_f).round(2) : 250.0
+    @upcoming_gigs_count = current_company.gigs.where("date >= ?", Date.today).count
+
+    # 4. Compatibilidad con metas previas existentes
     @goals = current_company.reinvestment_goals.order(status: :asc, priority: :desc, created_at: :desc)
     @active_goals = @goals.select(&:active?)
     @completed_goals = @goals.select(&:completed?)
-
     @total_goals_target = @active_goals.sum { |g| g.effective_target_amount }.round(2)
     @total_goals_saved = @active_goals.sum { |g| g.saved_amount.to_f }.round(2)
     @total_pending_deficit = [@total_goals_target - @total_goals_saved, 0.0].max.round(2)
     @total_completed_count = @completed_goals.size
 
-    @recommendation_service = GoalRecommendationService.new(company: current_company)
+    @recommendation_service = GoalRecommendationService.new(company: current_company, custom_cash: @current_cash_balance)
     @smart_recommendations = @recommendation_service.smart_recommendations
   end
 

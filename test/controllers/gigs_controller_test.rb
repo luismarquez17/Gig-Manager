@@ -12,6 +12,24 @@ class GigsControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
   end
 
+  test "should get index with next date_filter and calculate next_gig" do
+    upcoming_gig = Gig.create!(
+      company: @user.company,
+      date: Date.current + 2.days,
+      amount: 500,
+      client: clients(:one)
+    )
+
+    get gigs_url
+    assert_response :success
+    assert_includes response.body, "El siguiente show es"
+    assert_includes response.body, upcoming_gig.client_display_name
+
+    get gigs_url, params: { date_filter: "next" }
+    assert_response :success
+    assert_includes response.body, upcoming_gig.client_display_name
+  end
+
   test "should get new" do
     get new_gig_url
     assert_response :success

@@ -55,11 +55,18 @@ class GigsController < ApplicationController
       @gigs = @gigs.where(clients: { priority: params[:priority].downcase })
     end
 
-    # Filtro por Fecha (Próximos vs Pasados)
-    if params[:date_filter] == "upcoming"
-      @gigs = @gigs.where("gigs.date >= ?", Date.today)
+    # Siguiente show absoluto de la empresa (calculado con fecha >= hoy)
+    # Lo cargamos con cliente para el mensaje/banner superior
+    @next_gig = current_company.gigs.includes(:client).where("gigs.date >= ?", Date.current).order(date: :asc, start_time: :asc).first
+
+    # Filtro por Fecha (El Siguiente vs Próximos vs Pasados)
+    if params[:date_filter] == "next"
+      next_id = @gigs.where("gigs.date >= ?", Date.current).order(date: :asc, start_time: :asc).limit(1).pluck(:id).first
+      @gigs = next_id ? @gigs.where(id: next_id) : @gigs.none
+    elsif params[:date_filter] == "upcoming"
+      @gigs = @gigs.where("gigs.date >= ?", Date.current)
     elsif params[:date_filter] == "past"
-      @gigs = @gigs.where("gigs.date < ?", Date.today)
+      @gigs = @gigs.where("gigs.date < ?", Date.current)
     end
 
     # 4. Lógica de Ordenamiento Dinámico
@@ -73,9 +80,9 @@ class GigsController < ApplicationController
     when "fecha_desc"
       @gigs = @gigs.order(date: :desc)
     else
-      # Si el filtro es "Próximos", ordenamos del show más cercano (Date.today ➔ Futuro)
-      if params[:date_filter] == "upcoming"
-        @gigs = @gigs.order(date: :asc)
+      # Si el filtro es "Próximos" o "El Siguiente", ordenamos del show más cercano (Date.current ➔ Futuro)
+      if params[:date_filter].in?(["upcoming", "next"])
+        @gigs = @gigs.order(date: :asc, start_time: :asc)
       else
         # Orden por defecto general: Fecha más reciente primero
         @gigs = @gigs.order(date: :desc)

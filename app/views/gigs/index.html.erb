@@ -5,6 +5,95 @@
     <%= link_to company_term(:new_gig_btn, (venue_mode? ? '➕ Registrar Nuevo Evento' : '➕ Registrar Nuevo Toque')), new_gig_path, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
   </div>
 
+  <%# --- AVISO / BANNER DEL SIGUIENTE SHOW --- %>
+  <% if @next_gig.present? %>
+    <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; color: white; box-shadow: 0 8px 20px rgba(67, 56, 202, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border: 1px solid rgba(255, 255, 255, 0.12);">
+      <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
+        <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; font-size: 1.45em; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);">
+          🎯
+        </div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 4px;">
+            <span style="font-size: 0.75em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.06em; background: rgba(255, 255, 255, 0.2); padding: 2px 9px; border-radius: 99px;">
+              <%= venue_mode? ? 'Próximo Evento' : 'Próximo Show' %>
+            </span>
+            <span style="font-size: 0.82em; font-weight: 700; color: #a5b4fc;">
+              <%= time_until_gig_in_words(@next_gig) %>
+            </span>
+            <% if params[:date_filter] == 'next' %>
+              <span style="font-size: 0.72em; font-weight: 700; background: #22c55e; color: white; padding: 2px 8px; border-radius: 99px;">
+                Filtro activo en tabla
+              </span>
+            <% end %>
+          </div>
+          <div style="font-size: 1.18em; font-weight: 800; line-height: 1.3;">
+            El siguiente <%= venue_mode? ? 'evento' : 'show' %> es 
+            <span style="color: #fde047; text-decoration: underline; text-underline-offset: 3px;"><%= @next_gig.client_display_name %></span>
+          </div>
+          <div style="font-size: 0.88em; color: #c7d2fe; margin-top: 4px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;">
+            <span>📅 <%= spanish_long_date(@next_gig.date) %></span>
+            <% if @next_gig.start_time.present? %>
+              <span>🕒 <%= @next_gig.start_time.strftime("%I:%M %p") rescue nil %></span>
+            <% end %>
+            <% if @next_gig.location.present? %>
+              <span>📍 <%= @next_gig.location %></span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      
+      <div style="display: flex; align-items: center; gap: 10px; flex-shrink: 0; margin-left: auto;">
+        <% if params[:date_filter] == 'next' %>
+          <%= link_to gigs_path(request.query_parameters.except("date_filter")), 
+              style: "background: rgba(255, 255, 255, 0.15); color: white; padding: 9px 15px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.88em; border: 1px solid rgba(255, 255, 255, 0.25); display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;",
+              title: "Ver todos los eventos" do %>
+            <span>Ver todos</span> ✕
+          <% end %>
+        <% else %>
+          <%= link_to gigs_path(request.query_parameters.merge("date_filter" => "next")), 
+              style: "background: rgba(255, 255, 255, 0.15); color: white; padding: 9px 15px; text-decoration: none; border-radius: 8px; font-weight: 700; font-size: 0.88em; border: 1px solid rgba(255, 255, 255, 0.25); display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s;",
+              title: "Filtrar la tabla para mostrar únicamente este show" do %>
+            <span>Filtrar</span> 🎯
+          <% end %>
+        <% end %>
+        <%= link_to gig_path(@next_gig), 
+            style: "background: #ffffff; color: #3730a3; padding: 9px 20px; text-decoration: none; border-radius: 8px; font-weight: 800; font-size: 0.9em; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); display: inline-flex; align-items: center; gap: 6px; transition: transform 0.15s;",
+            title: "Ver detalles completos del show" do %>
+          <span>Ver</span> ➔
+        <% end %>
+      </div>
+    </div>
+  <% elsif params[:date_filter] != 'past' %>
+    <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 12px; padding: 14px 20px; margin-bottom: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #64748b; font-size: 0.9em;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>🗓️</span>
+        <span>No hay <%= venue_mode? ? 'eventos próximos' : 'shows próximos' %> programados actualmente.</span>
+      </div>
+      <%= link_to company_term(:new_gig_btn, (venue_mode? ? '➕ Registrar Evento' : '➕ Registrar Show')), new_gig_path, style: "color: #2563eb; font-weight: 700; text-decoration: none; font-size: 0.88em;" %>
+    </div>
+  <% end %>
+
+  <%# --- ACCESOS RÁPIDOS DE FILTRADO (PILLS) --- %>
+  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+    <span style="font-size: 0.82em; font-weight: 700; color: #64748b; margin-right: 4px;">Filtro rápido:</span>
+    <%= link_to gigs_path(request.query_parameters.except("date_filter")), 
+        style: "text-decoration: none; padding: 6px 14px; border-radius: 99px; font-size: 0.82em; font-weight: 700; transition: all 0.15s; #{params[:date_filter].blank? ? 'background: #0f172a; color: white;' : 'background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;'}" do %>
+      Todos
+    <% end %>
+    <%= link_to gigs_path(request.query_parameters.merge("date_filter" => "next")), 
+        style: "text-decoration: none; padding: 6px 14px; border-radius: 99px; font-size: 0.82em; font-weight: 700; transition: all 0.15s; #{params[:date_filter] == 'next' ? 'background: #4f46e5; color: white;' : 'background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;'}" do %>
+      🎯 El Siguiente
+    <% end %>
+    <%= link_to gigs_path(request.query_parameters.merge("date_filter" => "upcoming")), 
+        style: "text-decoration: none; padding: 6px 14px; border-radius: 99px; font-size: 0.82em; font-weight: 700; transition: all 0.15s; #{params[:date_filter] == 'upcoming' ? 'background: #2563eb; color: white;' : 'background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;'}" do %>
+      🔮 Próximos
+    <% end %>
+    <%= link_to gigs_path(request.query_parameters.merge("date_filter" => "past")), 
+        style: "text-decoration: none; padding: 6px 14px; border-radius: 99px; font-size: 0.82em; font-weight: 700; transition: all 0.15s; #{params[:date_filter] == 'past' ? 'background: #64748b; color: white;' : 'background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;'}" do %>
+      ⏳ Pasados
+    <% end %>
+  </div>
+
   <%# --- SECCIÓN DE BÚSQUEDA, FILTROS Y ORDEN (DESPLEGABLE) --- %>
   <% 
     has_active_gigs_filters = params[:query].present? || params[:priority].present? || params[:date_filter].present? || (params[:sort].present? && params[:sort] != 'fecha_desc')
@@ -43,9 +132,9 @@
         </div>
 
         <%# Filtro de Fecha %>
-        <div style="flex-grow: 1; min-width: 130px; margin-bottom: 15px;">
+        <div style="flex-grow: 1; min-width: 140px; margin-bottom: 15px;">
           <%= f.label :date_filter, "Fecha", style: "display: block; font-size: 0.85em; font-weight: bold; margin-bottom: 8px; color: #555;" %>
-          <%= f.select :date_filter, [["Todos", ""], ["Próximos 🔮", "upcoming"], ["Pasados ⏳", "past"]], { selected: params[:date_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
+          <%= f.select :date_filter, [["Todos", ""], ["El Siguiente 🎯", "next"], ["Próximos 🔮", "upcoming"], ["Pasados ⏳", "past"]], { selected: params[:date_filter] }, { style: "width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: white;" } %>
         </div>
 
         <%# Selector de Ordenamiento %>
@@ -191,7 +280,9 @@
     <% else %>
       <div style="padding: 60px 20px; text-align: center; color: #94a3b8;">
         <div style="font-size: 50px; margin-bottom: 10px;">🤷‍♂️</div>
-        <h3 style="margin: 0; color: #64748b;"><%= venue_mode? ? 'No se encontraron eventos registrados' : 'No se encontraron shows registrados' %></h3>
+        <h3 style="margin: 0; color: #64748b;">
+          <%= params[:date_filter] == 'next' ? (venue_mode? ? 'No hay ningún evento próximo programado' : 'No hay ningún show próximo programado') : (venue_mode? ? 'No se encontraron eventos registrados' : 'No se encontraron shows registrados') %>
+        </h3>
         <%= link_to (venue_mode? ? "Ver todos los eventos" : "Ver todos los shows"), gigs_path, style: "display: inline-block; margin-top: 20px; color: #007bff; text-decoration: none; font-weight: bold;" %>
       </div>
     <% end %>

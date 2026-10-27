@@ -104,19 +104,20 @@ module GigsHelper
 
   def time_until_gig_in_words(gig)
     return "" unless gig.date.present?
-    today = Date.today
+    today = Date.current
     days = (gig.date - today).to_i
+    term = venue_mode? ? "evento" : "show"
 
     if days == 0
-      "🔥 ¡HOY ES EL DÍA DEL SHOW!"
+      "🔥 ¡HOY ES EL DÍA DEL #{term.upcase}!"
     elsif days == 1
-      "⏳ Mañana es el evento"
+      "⏳ Mañana es el #{term}"
     elsif days > 1
       "⏳ Faltan #{days} días"
     elsif days == -1
-      "✅ Evento realizado ayer"
+      "✅ #{term.capitalize} realizado ayer"
     else
-      "✅ Evento pasado hace #{days.abs} días"
+      "✅ #{term.capitalize} pasado hace #{days.abs} días"
     end
   end
 end

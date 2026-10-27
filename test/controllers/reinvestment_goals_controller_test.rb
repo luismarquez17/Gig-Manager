@@ -21,7 +21,7 @@ class ReinvestmentGoalsControllerTest < ActionDispatch::IntegrationTest
   test "should get index" do
     get reinvestment_goals_url
     assert_response :success
-    assert_select "h1", /Metas de Reinversión/
+    assert_select "h1", /Simulador Financiero/
   end
 
   test "should get show" do

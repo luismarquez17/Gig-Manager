@@ -1,319 +1,1206 @@
-<div style="max-width: 1200px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; padding: 10px 15px;">
+<div style="max-width: 1240px; margin: 0 auto; font-family: 'Inter', -apple-system, sans-serif; padding: 10px 16px;">
 
-  <%# --- HEADER --- %>
-  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 2px solid #f1f5f9; flex-wrap: wrap; gap: 16px;">
+  <%# --- ENCABEZADO --- %>
+  <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px solid #f1f5f9; flex-wrap: wrap; gap: 16px;">
     <div>
       <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 6px;">
         <span style="background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; font-size: 0.75rem; font-weight: 800; padding: 3px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.5px;">
-          Área de Líderes · Finanzas &amp; Crecimiento
+          Área de Líderes · Planificación Financiera &amp; Flujo de Caja
         </span>
       </div>
-      <h1 style="color: #0f172a; margin: 0; font-size: 2.2rem; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px;">
-        <span>🎯</span> Metas de Reinversión &amp; Fondo de Ahorro
+      <h1 style="color: #0f172a; margin: 0; font-size: 2.1rem; font-weight: 900; letter-spacing: -0.5px; display: flex; align-items: center; gap: 12px;">
+        <span>🎯</span> Simulador Financiero &amp; Calculadora de Reinversión
       </h1>
-      <p style="color: #64748b; margin: 6px 0 0 0; font-size: 1rem;">
-        Guarda la ganancia neta libre de tus shows para reinvertir en equipos, estructura, luces y sonido con objetivos claros y recomendaciones inteligentes.
+      <p style="color: #64748b; margin: 6px 0 0 0; font-size: 0.98rem; max-width: 780px;">
+        Proyecta tus compras y gastos futuros utilizando los fondos reales de la Caja General. Modula el pago de deudas de músicos, suma imprevistos y evalúa si te alcanza para tu próximo ítem sin alterar la contabilidad real.
       </p>
     </div>
 
     <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-      <%= link_to shopping_items_path, style: "background: #f8fafc; color: #334155; border: 1.5px solid #cbd5e1; padding: 11px 18px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.9rem; display: inline-flex; align-items: center; gap: 6px;" do %>
-        <span>🛒</span> Lista de Compras
+      <%= link_to shopping_items_path, style: "background: #f8fafc; color: #334155; border: 1.5px solid #cbd5e1; padding: 10px 16px; border-radius: 12px; font-weight: 700; text-decoration: none; font-size: 0.88rem; display: inline-flex; align-items: center; gap: 6px;" do %>
+        <span>🛒</span> Ver Lista de Compras
       <% end %>
 
-      <%= link_to new_reinvestment_goal_path, style: "background: linear-gradient(135deg, #4f46e5 0%, #3b82f6 100%); color: white; border: none; padding: 12px 22px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.95rem; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 14px rgba(79, 70, 229, 0.35); transition: transform 0.15s;" do %>
-        <span>➕</span> Crear Nueva Meta
-      <% end %>
+      <button type="button" onclick="resetSimulator()" style="background: #ffffff; color: #475569; border: 1.5px solid #cbd5e1; padding: 10px 16px; border-radius: 12px; font-weight: 700; font-size: 0.88rem; cursor: pointer; display: inline-flex; align-items: center; gap: 6px;">
+        <span>🔄</span> Reiniciar Calculadora
+      </button>
+    </div>
+  </div>
+
+  <%# --- BANNER DE SEGURIDAD: 100% CALCULADORA / SANDBOX --- %>
+  <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); border: 1.5px solid #4338ca; border-radius: 16px; padding: 16px 20px; color: white; margin-bottom: 24px; box-shadow: 0 4px 15px rgba(30, 27, 75, 0.15); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <span style="font-size: 1.6rem; background: rgba(255,255,255,0.1); border-radius: 10px; width: 42px; height: 42px; display: inline-flex; align-items: center; justify-content: center;">
+        🛡️
+      </span>
+      <div>
+        <div style="font-weight: 800; font-size: 0.96rem; color: #e0e7ff;">
+          Modo Simulador Activo: 100% Seguro &amp; Sin Efectos Contables
+        </div>
+        <div style="font-size: 0.84rem; color: #c7d2fe; margin-top: 2px;">
+          Esta herramienta funciona como una calculadora interactiva. Puedes posponer deudas o ingresar gastos previstos sin alterar la Caja General real ni realizar pagos a nadie.
+        </div>
+      </div>
+    </div>
+    <div style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 5px 12px; border-radius: 99px; font-size: 0.78rem; font-weight: 800; text-transform: uppercase;">
+      ● Sandbox Aislado
     </div>
   </div>
 
   <%# --- FLASH NOTICES --- %>
   <% if notice %>
-    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 14px; padding: 14px 20px; color: #166534; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
-      <span>✅</span> <%= notice %>
+    <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 12px; padding: 12px 18px; color: #166534; font-weight: 700; margin-bottom: 20px;">
+      ✅ <%= notice %>
     </div>
   <% end %>
   <% if alert %>
-    <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 14px; padding: 14px 20px; color: #991b1b; font-weight: 700; margin-bottom: 24px; display: flex; align-items: center; gap: 10px;">
-      <span>⚠️</span> <%= alert %>
+    <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 12px; padding: 12px 18px; color: #991b1b; font-weight: 700; margin-bottom: 20px;">
+      ⚠️ <%= alert %>
     </div>
   <% end %>
 
-  <%# --- TOP KPIS --- %>
-  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 16px; margin-bottom: 30px;">
+  <%# --- TOP KPIS RESUMEN EN TIEMPO REAL --- %>
+  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 26px;">
     
-    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-      <div style="font-size: 0.78rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-        💰 Ahorro Acumulado en Metas
+    <div style="background: white; padding: 18px 20px; border-radius: 16px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+        🏦 Caja General (Dato Real)
       </div>
-      <div style="font-size: 1.9rem; font-weight: 900; color: #10b981; font-family: 'Outfit', sans-serif;">
-        $<%= number_with_precision(@total_goals_saved, precision: 2) %>
+      <div style="font-size: 1.7rem; font-weight: 900; color: #0f172a; font-family: 'Outfit', sans-serif;">
+        $<%= number_with_precision(@current_cash_balance, precision: 2) %>
         <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
       </div>
-      <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
-        Dinero libre reservado para reinversión
+      <div style="font-size: 0.78rem; color: #2563eb; margin-top: 4px; font-weight: 700;">
+        <%= link_to "Ver libro de caja →", cash_adjustments_path, style: "color: inherit; text-decoration: none;" %>
       </div>
     </div>
 
-    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-      <div style="font-size: 0.78rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-        🎯 Presupuesto de Metas Activas
+    <div style="background: white; padding: 18px 20px; border-radius: 16px; border: 1.5px solid #fed7aa; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.75rem; font-weight: 800; color: #c2410c; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+        ⏳ Deudas a Deducir Hoy
       </div>
-      <div style="font-size: 1.9rem; font-weight: 900; color: #0f172a; font-family: 'Outfit', sans-serif;">
-        $<%= number_with_precision(@total_goals_target, precision: 2) %>
-        <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
+      <div style="font-size: 1.7rem; font-weight: 900; color: #ea580c; font-family: 'Outfit', sans-serif;">
+        $<span id="kpi-deducted-debts"><%= number_with_precision(@total_pending_debts, precision: 2) %></span>
+        <span style="font-size: 0.5em; color: #9a3412; font-weight: 700;">USD</span>
       </div>
-      <div style="font-size: 0.8rem; color: #64748b; margin-top: 4px;">
-        <%= @active_goals.count %> <%= @active_goals.count == 1 ? 'meta en progreso' : 'metas en progreso' %>
-      </div>
-    </div>
-
-    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #fde68a; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-      <div style="font-size: 0.78rem; font-weight: 800; color: #b45309; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-        ⏳ Faltante Global para Objetivos
-      </div>
-      <div style="font-size: 1.9rem; font-weight: 900; color: #d97706; font-family: 'Outfit', sans-serif;">
-        $<%= number_with_precision(@total_pending_deficit, precision: 2) %>
-        <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
-      </div>
-      <div style="font-size: 0.8rem; color: #92400e; margin-top: 4px;">
-        Brecha restante para comprar todo
+      <div style="font-size: 0.78rem; color: #9a3412; margin-top: 4px;" id="kpi-debts-subtitle">
+        Modulables en la calculadora
       </div>
     </div>
 
-    <div style="background: white; padding: 22px; border-radius: 20px; border: 1.5px solid #c7d2fe; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
-      <div style="font-size: 0.78rem; font-weight: 800; color: #4338ca; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
-        🏆 Metas Logradas
+    <div style="background: white; padding: 18px 20px; border-radius: 16px; border: 1.5px solid #e2e8f0; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <div style="font-size: 0.75rem; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+        📦 Gastos Futuros Previstos
       </div>
-      <div style="font-size: 1.9rem; font-weight: 900; color: #4f46e5; font-family: 'Outfit', sans-serif;">
-        <%= @total_completed_count %>
+      <div style="font-size: 1.7rem; font-weight: 900; color: #6366f1; font-family: 'Outfit', sans-serif;">
+        $<span id="kpi-future-expenses">0.00</span>
+        <span style="font-size: 0.5em; color: #64748b; font-weight: 700;">USD</span>
       </div>
-      <div style="font-size: 0.8rem; color: #4338ca; margin-top: 4px;">
-        Equipos adquiridos exitosamente
+      <div style="font-size: 0.78rem; color: #64748b; margin-top: 4px;" id="kpi-expenses-count">
+        0 gastos en simulación
+      </div>
+    </div>
+
+    <div id="kpi-remaining-card" style="background: #f0fdf4; padding: 18px 20px; border-radius: 16px; border: 2px solid #86efac; box-shadow: 0 2px 8px rgba(16, 185, 129, 0.08); transition: background 0.2s, border-color 0.2s;">
+      <div id="kpi-remaining-label" style="font-size: 0.75rem; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px;">
+        💰 Saldo Disponible Libre
+      </div>
+      <div style="font-size: 1.7rem; font-weight: 900; color: #15803d; font-family: 'Outfit', sans-serif;">
+        <span id="kpi-remaining-prefix">$</span><span id="kpi-simulated-remaining">0.00</span>
+        <span id="kpi-remaining-currency" style="font-size: 0.5em; color: #166534; font-weight: 700;">USD</span>
+      </div>
+      <div style="font-size: 0.78rem; color: #166534; margin-top: 4px; font-weight: 700;" id="kpi-remaining-subtitle">
+        Fondo resultante para compras
       </div>
     </div>
 
   </div>
 
-  <%# --- MOTOR RECOMENDADOR INTELIGENTE (BANNER DESTACADO) --- %>
-  <% if @smart_recommendations.any? %>
-    <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1.5px solid #4338ca; border-radius: 22px; padding: 24px 28px; color: white; margin-bottom: 34px; box-shadow: 0 10px 30px rgba(30, 27, 75, 0.25);">
-      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; margin-bottom: 16px;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <span style="font-size: 1.5rem; background: rgba(99, 102, 241, 0.25); border: 1px solid #818cf8; width: 44px; height: 44px; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center;">
-            🤖
-          </span>
-          <div>
-            <h3 style="margin: 0; font-size: 1.25rem; font-weight: 900; color: white; letter-spacing: -0.3px;">
-              Recomendador Inteligente de Compras &amp; Reinversión
-            </h3>
-            <p style="margin: 2px 0 0 0; color: #c7d2fe; font-size: 0.88rem;">
-              La app analiza tus fondos de ahorro y la ganancia de tus shows para recomendarte qué comprar hoy:
-            </p>
+  <%# --- MAIN SIMULATOR GRID --- %>
+  <div style="display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; align-items: flex-start; margin-bottom: 34px;">
+    
+    <%# ===== COLUMNA IZQUIERDA: ENTRADAS Y MODULACIÓN ===== %>
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+      
+      <%# --- BLOQUE 1: EFECTIVO DISPONIBLE --- %>
+      <div style="background: white; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px;">
+          <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+            <span>💵</span> 1. Dinero Total Disponible a Simular
+          </h3>
+          <button type="button" onclick="setCashToCurrent()" style="background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe; padding: 5px 12px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+            Cargar Saldo de Caja General ($<%= number_with_precision(@current_cash_balance, precision: 2) %>)
+          </button>
+        </div>
+
+        <div>
+          <label style="display: block; font-size: 0.82rem; font-weight: 700; color: #475569; margin-bottom: 6px;">
+            Monto disponible para esta simulación ($ USD)
+          </label>
+          <div style="position: relative; display: flex; align-items: center;">
+            <span style="position: absolute; left: 14px; font-weight: 800; color: #64748b; font-size: 1.2rem;">$</span>
+            <input type="number" id="sim-available-cash" step="0.01" min="0" value="<%= @current_cash_balance %>" 
+                   oninput="recalculateSimulator()"
+                   style="width: 100%; font-size: 1.25rem; font-weight: 800; color: #0f172a; padding: 12px 14px 12px 34px; border: 1.5px solid #cbd5e1; border-radius: 12px; outline: none; background: #f8fafc; font-family: 'Outfit', sans-serif;"
+                   placeholder="0.00">
+          </div>
+          <div style="font-size: 0.78rem; color: #64748b; margin-top: 6px;">
+            💡 Toma automáticamente el saldo actual de Caja General, pero puedes escribir cualquier monto si dispones de otro efectivo.
           </div>
         </div>
-        <span style="background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 12px; border-radius: 99px; font-weight: 800; font-size: 0.78rem; text-transform: uppercase;">
-          Fondo Ahorrado: $<%= number_with_precision(@total_goals_saved, precision: 2) %> USD
-        </span>
       </div>
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px;">
-        <% @smart_recommendations.first(3).each do |rec| %>
-          <%
-            card_bg = case rec[:type]
-                      when :ready_to_buy then 'rgba(16, 185, 129, 0.12)'
-                      when :partial_units then 'rgba(59, 130, 246, 0.14)'
-                      when :close_to_goal then 'rgba(245, 158, 11, 0.14)'
-                      else 'rgba(255, 255, 255, 0.06)'
-                      end
-            card_border = case rec[:type]
-                          when :ready_to_buy then 'rgba(52, 211, 153, 0.4)'
-                          when :partial_units then 'rgba(96, 165, 250, 0.4)'
-                          when :close_to_goal then 'rgba(251, 191, 36, 0.4)'
-                          else 'rgba(255, 255, 255, 0.12)'
-                          end
-          %>
-          <div style="background: <%= card_bg %>; border: 1px solid <%= card_border %>; border-radius: 16px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px;">
-            <div>
-              <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px;">
-                <span style="font-size: 1.3rem;"><%= rec[:emoji] %></span>
-                <span style="font-weight: 800; font-size: 0.95rem; color: white;"><%= rec[:title] %></span>
-              </div>
-              <p style="margin: 0; color: #e2e8f0; font-size: 0.86rem; line-height: 1.45;">
-                <%= rec[:message] %>
-              </p>
+      <%# --- BLOQUE 2: MODULAR DEUDAS (PAGAR O RETRASAR) --- %>
+      <div style="background: white; border-radius: 18px; border: 1.5px solid #fed7aa; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #9a3412; display: flex; align-items: center; gap: 8px;">
+              <span>⚖️</span> 2. Modular Deudas de Músicos &amp; Shows
+            </h3>
+            <div style="font-size: 0.8rem; color: #c2410c; margin-top: 2px;">
+              Decide si liquidar hoy las deudas o retrasar pagos temporalmente para ganar liquidez.
             </div>
+          </div>
+          <span style="background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; padding: 4px 10px; border-radius: 99px; font-size: 0.76rem; font-weight: 800;">
+            Total Registrado: $<%= number_with_precision(@total_pending_debts, precision: 2) %> USD
+          </span>
+        </div>
 
-            <% if rec[:item].present? %>
-              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1); margin-top: 4px;">
-                <span style="font-size: 0.8rem; color: #cbd5e1;">Costo: $<%= number_with_precision(rec[:cost] || rec[:item].total_price, precision: 2) %></span>
-                <% if rec[:item].reinvestment_goal_id.present? %>
-                  <%= button_to quick_purchase_item_reinvestment_goal_path(rec[:item].reinvestment_goal_id, item_id: rec[:item].id), method: :post, style: "background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 800; font-size: 0.8rem; cursor: pointer;", data: { turbo_confirm: "¿Comprar '#{rec[:item].name}' ahora con los fondos ahorrados y pasarlo al inventario?" } do %>
-                    🛒 Comprar Ahora
-                  <% end %>
-                <% end %>
-              </div>
+        <%# Master Switches %>
+        <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; background: #fff7ed; padding: 8px; border-radius: 10px; border: 1px solid #ffedd5;">
+          <button type="button" onclick="setDebtsMode('all')" id="btn-debt-all" style="flex: 1; padding: 7px 12px; font-size: 0.8rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; background: #ea580c; color: white;">
+            Pagar Todas (<%= @system_debts.size %>)
+          </button>
+          <button type="button" onclick="setDebtsMode('none')" id="btn-debt-none" style="flex: 1; padding: 7px 12px; font-size: 0.8rem; font-weight: 800; border-radius: 8px; border: 1px solid #fdba74; cursor: pointer; background: white; color: #9a3412;">
+            ⏳ Posponer Todas ($0)
+          </button>
+          <button type="button" onclick="setDebtsMode('custom')" id="btn-debt-custom" style="flex: 1; padding: 7px 12px; font-size: 0.8rem; font-weight: 800; border-radius: 8px; border: 1px solid #fdba74; cursor: pointer; background: white; color: #9a3412;">
+            Personalizado
+          </button>
+        </div>
+
+        <%# Lista de Deudas Individuales %>
+        <% if @system_debts.any? %>
+          <div style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
+            <% @system_debts.each do |debt| %>
+              <label id="debt-row-<%= debt[:id] %>" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fafaf9; border: 1.5px solid #e7e5e4; border-radius: 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s;">
+                <div style="display: flex; align-items: center; gap: 12px;">
+                  <input type="checkbox" class="sim-debt-checkbox" 
+                         data-id="<%= debt[:id] %>" 
+                         data-amount="<%= debt[:amount] %>" 
+                         data-name="<%= debt[:debtor_name] %>" 
+                         data-concept="<%= debt[:concept] %>" 
+                         checked 
+                         onchange="handleDebtToggle(this)"
+                         style="width: 18px; height: 18px; accent-color: #ea580c; cursor: pointer;">
+                  <div>
+                    <div style="font-weight: 800; font-size: 0.88rem; color: #1c1917;">
+                      <%= debt[:debtor_name] %>
+                    </div>
+                    <div style="font-size: 0.76rem; color: #78716c;">
+                      <%= debt[:concept] %>
+                    </div>
+                  </div>
+                </div>
+
+                <div style="text-align: right;">
+                  <div style="font-weight: 900; font-size: 0.95rem; color: #ea580c; font-family: 'Outfit', sans-serif;">
+                    $<%= number_with_precision(debt[:amount], precision: 2) %>
+                  </div>
+                  <span id="badge-debt-<%= debt[:id] %>" style="font-size: 0.7rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">
+                    Deduciendo hoy
+                  </span>
+                </div>
+              </label>
             <% end %>
           </div>
-        <% end %>
-      </div>
-    </div>
-  <% end %>
-
-  <%# --- LISTADO DE METAS ACTIVAS --- %>
-  <div style="margin-bottom: 40px;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h2 style="margin: 0; font-size: 1.45rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
-        <span>🚀</span> Metas Activas (<%= @active_goals.count %>)
-      </h2>
-    </div>
-
-    <% if @active_goals.any? %>
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px;">
-        <% @active_goals.each do |goal| %>
-          <%
-            pct = goal.progress_percentage
-            bar_color = if pct >= 100 then '#10b981' elsif pct >= 60 then '#3b82f6' elsif pct >= 30 then '#f59e0b' else '#6366f1' end
-            prio_badge = case goal.priority
-                         when 'high' then { bg: '#fee2e2', color: '#b91c1c', border: '#fca5a5', label: '🔴 Alta' }
-                         when 'medium' then { bg: '#fef3c7', color: '#b45309', border: '#fde68a', label: '🟡 Media' }
-                         else { bg: '#ecfdf5', color: '#047857', border: '#a7f3d0', label: '🟢 Baja' }
-                         end
-          %>
-          <div style="background: white; border-radius: 20px; border: 1.5px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; justify-content: space-between; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.06)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(0,0,0,0.03)';">
-            
-            <%# Foto de la Meta %>
-            <div style="height: 180px; width: 100%; background: #0f172a; position: relative; overflow: hidden;">
-              <% if goal.image_attached? %>
-                <img src="<%= goal.image_url_or_data %>" alt="<%= goal.title %>" style="width: 100%; height: 100%; object-fit: cover;">
-              <% else %>
-                <div style="width: 100%; height: 100%; background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white;">
-                  <span style="font-size: 3.2rem;">🎯</span>
-                  <span style="font-size: 0.85rem; color: #a5b4fc; font-weight: 700; margin-top: 6px;">Meta de Reinversión</span>
-                </div>
-              <% end %>
-
-              <div style="position: absolute; top: 12px; left: 12px; display: flex; gap: 6px;">
-                <span style="background: <%= prio_badge[:bg] %>; color: <%= prio_badge[:color] %>; border: 1px solid <%= prio_badge[:border] %>; padding: 4px 10px; border-radius: 99px; font-weight: 800; font-size: 0.75rem; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                  <%= prio_badge[:label] %>
-                </span>
-              </div>
-
-              <div style="position: absolute; bottom: 10px; right: 12px; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(4px); color: white; padding: 4px 10px; border-radius: 8px; font-size: 0.8rem; font-weight: 800;">
-                <%= pct %>% Alcanzado
-              </div>
-            </div>
-
-            <%# Contenido de la Meta %>
-            <div style="padding: 20px; flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between;">
-              <div>
-                <h3 style="margin: 0 0 10px 0; font-size: 1.25rem; font-weight: 900; color: #0f172a; line-height: 1.3;">
-                  <%= link_to goal.title, reinvestment_goal_path(goal), style: "color: #0f172a; text-decoration: none;" %>
-                </h3>
-
-                <% if goal.objective.present? %>
-                  <div style="background: #fffdf5; border-left: 3px solid #f59e0b; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-bottom: 8px;">
-                    <div style="font-size: 0.7rem; font-weight: 800; color: #b45309; text-transform: uppercase;">❓ Objetivo</div>
-                    <div style="font-size: 0.84rem; color: #475569; line-height: 1.4;"><%= truncate(goal.objective, length: 110) %></div>
-                  </div>
-                <% end %>
-
-                <% if goal.purpose.present? %>
-                  <div style="background: #faf5ff; border-left: 3px solid #8b5cf6; padding: 8px 12px; border-radius: 0 8px 8px 0; margin-bottom: 14px;">
-                    <div style="font-size: 0.7rem; font-weight: 800; color: #6d28d9; text-transform: uppercase;">🎯 ¿Para qué?</div>
-                    <div style="font-size: 0.84rem; color: #475569; line-height: 1.4;"><%= truncate(goal.purpose, length: 110) %></div>
-                  </div>
-                <% end %>
-              </div>
-
-              <div>
-                <%# Barra de Progreso %>
-                <div style="margin-bottom: 14px;">
-                  <div style="display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 800; margin-bottom: 5px;">
-                    <span style="color: #059669;">
-                      <% if goal.purchased_items_cost > 0 %>
-                        Logrado: $<%= number_with_precision(goal.total_achieved_amount, precision: 2) %>
-                      <% else %>
-                        Ahorrado: $<%= number_with_precision(goal.saved_amount, precision: 2) %>
-                      <% end %>
-                    </span>
-                    <span style="color: #64748b;">Meta: $<%= number_with_precision(goal.effective_target_amount, precision: 2) %> USD</span>
-                  </div>
-                  <div style="width: 100%; height: 10px; background: #e2e8f0; border-radius: 99px; overflow: hidden;">
-                    <div style="width: <%= pct %>%; height: 100%; background: <%= bar_color %>; border-radius: 99px; transition: width 0.4s ease;"></div>
-                  </div>
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 0.75rem; color: #64748b;">
-                    <span>Faltan: <strong>$<%= number_with_precision(goal.pending_amount, precision: 2) %></strong></span>
-                    <span>
-                      <%= goal.completed_items_count %>/<%= goal.shopping_items.count %> comprados
-                    </span>
-                  </div>
-                </div>
-
-                <%# Acciones %>
-                <div style="display: flex; gap: 8px; border-top: 1px solid #f1f5f9; padding-top: 14px;">
-                  <%= link_to reinvestment_goal_path(goal), style: "flex: 1; background: #0f172a; color: white; padding: 9px 12px; border-radius: 10px; font-weight: 800; font-size: 0.85rem; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center; gap: 5px;" do %>
-                    <span>📋</span> Ver Ítems &amp; Aportar
-                  <% end %>
-
-                  <%= link_to edit_reinvestment_goal_path(goal), style: "background: #f1f5f9; color: #475569; padding: 9px 12px; border-radius: 10px; font-weight: 700; font-size: 0.85rem; text-decoration: none; border: 1px solid #cbd5e1;", title: "Editar Meta" do %>
-                    ✏️
-                  <% end %>
-                </div>
-              </div>
-
-            </div>
-
+        <% else %>
+          <div style="text-align: center; padding: 20px; background: #f0fdf4; border: 1px dashed #86efac; border-radius: 12px; color: #166534; font-size: 0.88rem; font-weight: 700;">
+            🎉 ¡Excelente! No tienes deudas pendientes con músicos registradas en el sistema.
           </div>
         <% end %>
+
+        <%# Agregar Deuda Extra Temporal %>
+        <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #fed7aa;">
+          <button type="button" onclick="toggleExtraDebtForm()" style="background: none; border: none; color: #ea580c; font-size: 0.82rem; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+            <span>➕</span> Añadir otra deuda u obligación externa a la simulación
+          </button>
+          
+          <div id="extra-debt-form" style="display: none; margin-top: 10px; background: #fff7ed; padding: 12px; border-radius: 10px; border: 1px solid #fed7aa;">
+            <div style="display: grid; grid-template-columns: 1.5fr 1fr auto; gap: 8px; align-items: flex-end;">
+              <div>
+                <label style="font-size: 0.74rem; font-weight: 700; color: #9a3412;">Acreedor o Concepto</label>
+                <input type="text" id="extra-debt-concept" placeholder="ej. Alquiler de sala, Flete..." style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem;">
+              </div>
+              <div>
+                <label style="font-size: 0.74rem; font-weight: 700; color: #9a3412;">Monto ($ USD)</label>
+                <input type="number" id="extra-debt-amount" placeholder="0.00" step="0.01" style="width: 100%; padding: 8px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.82rem;">
+              </div>
+              <button type="button" onclick="addExtraDebt()" style="background: #ea580c; color: white; border: none; padding: 8px 14px; border-radius: 8px; font-weight: 800; font-size: 0.82rem; cursor: pointer;">
+                Sumar
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <%# Resumen de Deudas Moduladas %>
+        <div style="margin-top: 12px; display: flex; justify-content: space-between; font-size: 0.82rem; font-weight: 700; padding: 8px 12px; background: #fff7ed; border-radius: 8px;">
+          <span style="color: #9a3412;">Deudas a descontar hoy: <strong id="summary-debts-deducted">$0.00</strong></span>
+          <span style="color: #047857;">Dinero liberado al posponer: <strong id="summary-debts-postponed">$0.00</strong></span>
+        </div>
       </div>
-    <% else %>
-      <div style="text-align: center; padding: 50px 20px; background: #f8fafc; border: 2px dashed #cbd5e1; border-radius: 20px;">
-        <div style="font-size: 3rem; margin-bottom: 10px;">🎯</div>
-        <h3 style="color: #0f172a; margin: 0 0 6px 0; font-size: 1.25rem;">Aún no tienes metas de ahorro activas</h3>
-        <p style="color: #64748b; font-size: 0.9rem; max-width: 500px; margin: 0 auto 20px auto;">
-          Crea tu primera meta (por ejemplo: "Estructura Truss 4m" o "Luces Cabezas Móviles") para empezar a guardar la ganancia neta libre de tus eventos.
-        </p>
-        <%= link_to new_reinvestment_goal_path, style: "background: #4f46e5; color: white; padding: 12px 24px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.92rem; display: inline-flex; align-items: center; gap: 6px;" do %>
-          <span>➕</span> Crear Primera Meta
+
+      <%# --- BLOQUE 3: GASTOS FUTUROS PREVISTOS (INTERNOS / EXTERNOS) --- %>
+      <div style="background: white; border-radius: 18px; border: 1.5px solid #e2e8f0; padding: 22px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 8px;">
+          <div>
+            <h3 style="margin: 0; font-size: 1.15rem; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <span>📦</span> 3. Gastos Futuros Previstos (Simulados)
+            </h3>
+            <div style="font-size: 0.8rem; color: #64748b; margin-top: 2px;">
+              Ingresa gastos operativos (cables, viáticos, comidas, reparaciones). 
+              <strong style="color: #4f46e5;">No se mezclan con tu Lista de Compras.</strong>
+            </div>
+          </div>
+        </div>
+
+        <%# Formulario para añadir gasto futuro %>
+        <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 14px; padding: 14px; margin-bottom: 16px;">
+          <div style="display: grid; grid-template-columns: 1.8fr 1fr 1fr auto; gap: 10px; align-items: flex-end;">
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 800; color: #475569; margin-bottom: 4px;">
+                Descripción del Gasto
+              </label>
+              <input type="text" id="new-expense-name" placeholder="ej. Cable XLR 10m de repuesto" 
+                     style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; outline: none; background: white;">
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 800; color: #475569; margin-bottom: 4px;">
+                Costo ($ USD)
+              </label>
+              <input type="number" id="new-expense-amount" placeholder="ej. 100" step="0.01" min="0" 
+                     style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; outline: none; background: white; font-weight: 700;">
+            </div>
+
+            <div>
+              <label style="display: block; font-size: 0.76rem; font-weight: 800; color: #475569; margin-bottom: 4px;">
+                Tipo de Gasto
+              </label>
+              <select id="new-expense-type" style="width: 100%; padding: 9px 10px; border: 1.5px solid #cbd5e1; border-radius: 8px; font-size: 0.85rem; outline: none; background: white; font-weight: 600;">
+                <option value="interno">🎸 Interno Grupo</option>
+                <option value="externo">🏢 Externo / Proveedor</option>
+                <option value="viaticos">🚗 Traslado / Logística</option>
+              </select>
+            </div>
+
+            <button type="button" onclick="addFutureExpense()" style="background: #4f46e5; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-weight: 800; font-size: 0.88rem; cursor: pointer; white-space: nowrap; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);">
+              ➕ Añadir
+            </button>
+          </div>
+        </div>
+
+        <%# Lista de Gastos Futuros Agregados %>
+        <div id="future-expenses-container" style="display: flex; flex-direction: column; gap: 8px;">
+          <%# Renderizado dinámico vía JavaScript %>
+        </div>
+
+        <div id="empty-expenses-notice" style="text-align: center; padding: 20px; background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 12px; color: #64748b; font-size: 0.84rem;">
+          📦 No has agregado gastos futuros aún. Escribe arriba gastos previstos (como el cable de $100) para calcular su impacto en la caja.
+        </div>
+      </div>
+
+    </div>
+
+    <%# ===== COLUMNA DERECHA: ÍTEM A EVALUAR & RECOMENDADOR INTELIGENTE ===== %>
+    <div style="display: flex; flex-direction: column; gap: 20px; position: sticky; top: 20px;">
+      
+      <%# --- BLOQUE 4: ÍTEM OBJETIVO A EVALUAR --- %>
+      <div style="background: white; border-radius: 18px; border: 2px solid #6366f1; padding: 22px; box-shadow: 0 4px 18px rgba(99, 102, 241, 0.1);">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <span style="font-size: 1.4rem;">🎯</span>
+          <div>
+            <h3 style="margin: 0; font-size: 1.2rem; font-weight: 900; color: #0f172a;">
+              4. ¿Qué ítem o compra deseas evaluar?
+            </h3>
+            <div style="font-size: 0.8rem; color: #64748b;">
+              Comprueba si el dinero restante alcanza tras pagar gastos y deudas seleccionadas.
+            </div>
+          </div>
+        </div>
+
+        <%# Selección de Lista de Compras existente o ítem manual %>
+        <% if @shopping_items.any? %>
+          <div style="margin-bottom: 14px;">
+            <label style="display: block; font-size: 0.78rem; font-weight: 800; color: #475569; margin-bottom: 4px;">
+              Seleccionar de tu Lista de Compras registrada:
+            </label>
+            <select id="target-item-selector" onchange="handleSelectShoppingItem(this)" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.88rem; background: #f8fafc; font-weight: 600;">
+              <option value="">-- O escribe un ítem personalizado abajo --</option>
+              <% @shopping_items.each do |item| %>
+                <option value="<%= item.id %>" data-name="<%= item.name %>" data-price="<%= item.total_price %>">
+                  <%= item.name %> — $<%= number_with_precision(item.total_price, precision: 2) %> USD <%= "(x#{item.quantity})" if item.quantity > 1 %>
+                </option>
+              <% end %>
+            </select>
+          </div>
         <% end %>
+
+        <div style="display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; margin-bottom: 12px;">
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 800; color: #475569; margin-bottom: 4px;">
+              Nombre del Ítem Deseado
+            </label>
+            <input type="text" id="target-item-name" placeholder="ej. Cable 100$, Micrófono, Consola..." 
+                   oninput="recalculateSimulator()"
+                   style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.9rem; font-weight: 700; background: white;">
+          </div>
+
+          <div>
+            <label style="display: block; font-size: 0.78rem; font-weight: 800; color: #475569; margin-bottom: 4px;">
+              Precio del Ítem ($ USD)
+            </label>
+            <input type="number" id="target-item-cost" placeholder="ej. 100.00" step="0.01" min="0" 
+                   oninput="recalculateSimulator()"
+                   style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 10px; font-size: 0.95rem; font-weight: 900; color: #4f46e5; background: white; font-family: 'Outfit', sans-serif;">
+          </div>
+        </div>
+
+        <%# Recibo Matemático del Flujo %>
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; margin-top: 14px; font-size: 0.84rem;">
+          <div style="font-weight: 800; color: #64748b; text-transform: uppercase; font-size: 0.72rem; margin-bottom: 8px; letter-spacing: 0.5px;">
+            Desglose del Balance en Vivo
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #334155;">
+            <span>(+) Dinero disponible que tienes:</span>
+            <strong id="receipt-cash">$0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #ea580c;">
+            <span>(-) Deudas seleccionadas a pagar:</span>
+            <strong id="receipt-debts">-$0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px; color: #6366f1;">
+            <span>(-) Gastos futuros previstos:</span>
+            <strong id="receipt-expenses">-$0.00</strong>
+          </div>
+          <div id="receipt-item-row" style="display: none; justify-content: space-between; margin-bottom: 6px; color: #4338ca;">
+            <span>(-) Ítem a evaluar (<span id="receipt-item-label">Ítem</span>):</span>
+            <strong id="receipt-item-cost">-$0.00</strong>
+          </div>
+          <div style="display: flex; justify-content: space-between; padding-top: 6px; border-top: 1.5px solid #cbd5e1; font-weight: 900; font-size: 0.95rem; color: #0f172a;">
+            <span id="receipt-remaining-label">(=) Saldo Disponible Libre:</span>
+            <span id="receipt-remaining" style="color: #15803d; font-family: 'Outfit', sans-serif;">$0.00 USD</span>
+          </div>
+          <div id="receipt-shortfall-alert" style="display: none; margin-top: 8px; padding: 8px 12px; background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 8px; color: #b91c1c; font-size: 0.84rem; font-weight: 800; text-align: center;">
+            ⚠️ Te hacen falta <span id="receipt-shortfall-amount" style="font-family: 'Outfit', sans-serif; font-size: 0.95rem;">$0.00 USD</span> para pagar todo
+          </div>
+        </div>
+
+        <%# Tarjeta de Veredicto / Diagnóstico %>
+        <div id="verdict-card" style="margin-top: 16px; padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 8px;">
+          <%# Renderizado dinámico en recalculateSimulator() %>
+        </div>
+
       </div>
-    <% end %>
+
+      <%# --- BLOQUE 5: RECOMENDADOR INTELIGENTE DINÁMICO --- %>
+      <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border-radius: 18px; border: 1.5px solid #4338ca; padding: 22px; color: white; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+          <span style="font-size: 1.3rem;">🤖</span>
+          <h4 style="margin: 0; font-size: 1.05rem; font-weight: 900; color: white;">
+            Recomendador Inteligente &amp; Consejos Tácticos
+          </h4>
+        </div>
+
+        <div id="smart-insights-container" style="display: flex; flex-direction: column; gap: 10px; font-size: 0.85rem; line-height: 1.45;">
+          <%# Consejos generados dinámicamente %>
+        </div>
+
+        <%# Oportunidades de compra con remanente %>
+        <div id="affordable-wishlist-container" style="margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.15); display: none;">
+          <div style="font-size: 0.78rem; font-weight: 800; color: #34d399; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px;">
+            🛍️ De tu Lista de Compras también te alcanza para:
+          </div>
+          <div id="affordable-wishlist-items" style="display: flex; flex-direction: column; gap: 6px;">
+            <%# Ítems alcanzables %>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
   </div>
 
-  <%# --- METAS COMPLETADAS (HISTORIAL) --- %>
-  <% if @completed_goals.any? %>
-    <div style="margin-top: 40px; padding-top: 30px; border-top: 2px solid #f1f5f9;">
-      <h2 style="margin: 0 0 20px 0; font-size: 1.3rem; font-weight: 800; color: #059669; display: flex; align-items: center; gap: 8px;">
-        <span>🏆</span> Metas Logradas / Equipamiento Comprado (<%= @completed_goals.count %>)
-      </h2>
-
-      <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
-        <% @completed_goals.each do |goal| %>
-          <div style="background: #f0fdf4; border: 1.5px solid #a7f3d0; border-radius: 16px; padding: 18px; display: flex; justify-content: space-between; align-items: center; gap: 14px;">
-            <div style="display: flex; align-items: center; gap: 14px;">
-              <% if goal.image_attached? %>
-                <img src="<%= goal.image_url_or_data %>" alt="<%= goal.title %>" style="width: 50px; height: 50px; border-radius: 10px; object-fit: cover; border: 1px solid #86efac;">
-              <% else %>
-                <div style="width: 50px; height: 50px; border-radius: 10px; background: #dcfce7; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
-                  🎉
-                </div>
-              <% end %>
-              <div>
-                <h4 style="margin: 0; font-size: 1.05rem; font-weight: 800; color: #065f46;">
-                  <%= link_to goal.title, reinvestment_goal_path(goal), style: "color: #065f46; text-decoration: none;" %>
-                </h4>
-                <div style="font-size: 0.8rem; color: #047857; margin-top: 2px;">
-                  Inversión: <strong>$<%= number_with_precision(goal.saved_amount, precision: 2) %> USD</strong> · Lograda <%= goal.completed_at&.strftime("%d/%m/%Y") %>
-                </div>
+  <%# --- HISTORIAL ARCHIVADO DE METAS ANTERIORES (SI EXISTEN) --- %>
+  <% if @goals.any? %>
+    <details style="margin-top: 30px; background: white; border: 1.5px solid #e2e8f0; border-radius: 16px; padding: 18px 24px; box-shadow: 0 2px 6px rgba(0,0,0,0.02);">
+      <summary style="font-weight: 800; font-size: 0.95rem; color: #475569; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+        <span>📁</span> Ver registro de Metas de Ahorro previas en el sistema (<%= @goals.count %> registradas)
+      </summary>
+      
+      <div style="margin-top: 18px; padding-top: 14px; border-top: 1px solid #f1f5f9; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px;">
+        <% @goals.each do |goal| %>
+          <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 12px; padding: 14px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-weight: 800; font-size: 0.9rem; color: #0f172a;"><%= goal.title %></div>
+              <div style="font-size: 0.78rem; color: #64748b; margin-top: 2px;">
+                Meta: $<%= number_with_precision(goal.effective_target_amount, precision: 2) %> · Ahorrado: $<%= number_with_precision(goal.saved_amount, precision: 2) %>
               </div>
             </div>
-
-            <%= link_to "Ver", reinvestment_goal_path(goal), style: "background: white; color: #059669; border: 1px solid #a7f3d0; padding: 6px 12px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-decoration: none;" %>
+            <%= link_to "Ver", reinvestment_goal_path(goal), style: "background: white; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 10px; border-radius: 8px; font-size: 0.78rem; font-weight: 700; text-decoration: none;" %>
           </div>
         <% end %>
       </div>
-    </div>
+    </details>
   <% end %>
 
 </div>
+
+<%# ======================================================== %>
+<%# MOTOR JAVASCRIPT DEL SIMULADOR REACTIVO EN TIEMPO REAL %>
+<%# ======================================================== %>
+<script>
+  // Datos precargados desde Rails
+  window.SIMULATOR_DATA = {
+    realCashBalance: <%= @current_cash_balance.to_f %>,
+    systemDebts: <%= raw @system_debts.to_json %>,
+    shoppingItems: <%= raw @shopping_items.map { |i| { id: i.id, name: i.name, total_price: i.total_price.to_f, quantity: i.quantity, unit_price: i.effective_unit_price.to_f } }.to_json %>,
+    avgGigProfit: <%= @avg_gig_profit.to_f %>,
+    upcomingGigsCount: <%= @upcoming_gigs_count.to_i %>
+  };
+
+  // Estado del simulador (con persistencia en localStorage para que no se pierdan los gastos añadidos)
+  var STORAGE_KEY = "gig_manager_simulator_future_expenses_v1";
+  var futureExpenses = [];
+  var extraDebts = [];
+
+  // Cargar estado guardado al iniciar
+  try {
+    var stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      futureExpenses = JSON.parse(stored);
+    }
+  } catch (e) {
+    futureExpenses = [];
+  }
+
+  function saveExpenses() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(futureExpenses));
+    } catch (e) {}
+  }
+
+  // Helper de formateo de moneda
+  function fmtUSD(val) {
+    return Number(val || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  // Restablecer dinero inicial a la Caja General
+  function setCashToCurrent() {
+    var cashInput = document.getElementById("sim-available-cash");
+    if (cashInput) {
+      cashInput.value = window.SIMULATOR_DATA.realCashBalance.toFixed(2);
+      recalculateSimulator();
+    }
+  }
+
+  // Modos de deudas: 'all', 'none', 'custom'
+  function setDebtsMode(mode) {
+    var checkboxes = document.querySelectorAll(".sim-debt-checkbox");
+    var btnAll = document.getElementById("btn-debt-all");
+    var btnNone = document.getElementById("btn-debt-none");
+    var btnCustom = document.getElementById("btn-debt-custom");
+
+    if (mode === 'all') {
+      checkboxes.forEach(function(cb) { cb.checked = true; updateDebtRowAppearance(cb); });
+      setActiveDebtButton(btnAll, [btnNone, btnCustom]);
+    } else if (mode === 'none') {
+      checkboxes.forEach(function(cb) { cb.checked = false; updateDebtRowAppearance(cb); });
+      setActiveDebtButton(btnNone, [btnAll, btnCustom]);
+    } else {
+      setActiveDebtButton(btnCustom, [btnAll, btnNone]);
+    }
+    recalculateSimulator();
+  }
+
+  function setActiveDebtButton(activeBtn, inactives) {
+    if (activeBtn) {
+      activeBtn.style.background = "#ea580c";
+      activeBtn.style.color = "white";
+      activeBtn.style.border = "none";
+    }
+    inactives.forEach(function(btn) {
+      if (btn) {
+        btn.style.background = "white";
+        btn.style.color = "#9a3412";
+        btn.style.border = "1px solid #fdba74";
+      }
+    });
+  }
+
+  function handleDebtToggle(cb) {
+    updateDebtRowAppearance(cb);
+    var btnCustom = document.getElementById("btn-debt-custom");
+    var btnAll = document.getElementById("btn-debt-all");
+    var btnNone = document.getElementById("btn-debt-none");
+    setActiveDebtButton(btnCustom, [btnAll, btnNone]);
+    recalculateSimulator();
+  }
+
+  function updateDebtRowAppearance(cb) {
+    var debtId = cb.getAttribute("data-id");
+    var row = document.getElementById("debt-row-" + debtId);
+    var badge = document.getElementById("badge-debt-" + debtId);
+    if (!badge) return;
+
+    if (cb.checked) {
+      badge.innerText = "Deduciendo hoy";
+      badge.style.background = "#dcfce7";
+      badge.style.color = "#166534";
+      if (row) row.style.borderColor = "#e7e5e4";
+    } else {
+      badge.innerText = "⏳ Pago Pospuesto";
+      badge.style.background = "#fef3c7";
+      badge.style.color = "#b45309";
+      if (row) row.style.borderColor = "#f59e0b";
+    }
+  }
+
+  // Gestión de Deuda Extra Temporal
+  function toggleExtraDebtForm() {
+    var form = document.getElementById("extra-debt-form");
+    if (form) {
+      form.style.display = (form.style.display === "none" || form.style.display === "") ? "block" : "none";
+    }
+  }
+
+  function addExtraDebt() {
+    var conceptInput = document.getElementById("extra-debt-concept");
+    var amountInput = document.getElementById("extra-debt-amount");
+    var concept = conceptInput.value.trim();
+    var amount = parseFloat(amountInput.value);
+
+    if (!concept || isNaN(amount) || amount <= 0) {
+      alert("Por favor ingresa un concepto y monto válido mayor a 0.");
+      return;
+    }
+
+    var id = "extra_debt_" + Date.now();
+    extraDebts.push({ id: id, debtor_name: concept, concept: "Obligación externa simulada", amount: amount, checked: true });
+    conceptInput.value = "";
+    amountInput.value = "";
+    toggleExtraDebtForm();
+    renderExtraDebts();
+    recalculateSimulator();
+  }
+
+  function renderExtraDebts() {
+    // Inserta filas adicionales en la lista de deudas si existen
+    extraDebts.forEach(function(ed) {
+      if (!document.getElementById("debt-row-" + ed.id)) {
+        var container = document.querySelector(".sim-debt-checkbox") ? document.querySelector(".sim-debt-checkbox").closest("div") : null;
+        if (!container) return;
+
+        var label = document.createElement("label");
+        label.id = "debt-row-" + ed.id;
+        label.style.display = "flex";
+        label.style.alignItems = "center";
+        label.style.justifyContent = "space-between";
+        label.style.padding = "10px 14px";
+        label.style.background = "#fffbeb";
+        label.style.border = "1.5px solid #fde68a";
+        label.style.borderRadius = "12px";
+        label.style.cursor = "pointer";
+        label.innerHTML = 
+          '<div style="display: flex; align-items: center; gap: 12px;">' +
+            '<input type="checkbox" class="sim-debt-checkbox" data-id="' + ed.id + '" data-amount="' + ed.amount + '" data-name="' + ed.debtor_name + '" checked onchange="handleDebtToggle(this)" style="width: 18px; height: 18px; accent-color: #ea580c; cursor: pointer;">' +
+            '<div>' +
+              '<div style="font-weight: 800; font-size: 0.88rem; color: #92400e;">' + ed.debtor_name + ' (Extra)</div>' +
+              '<div style="font-size: 0.76rem; color: #b45309;">' + ed.concept + '</div>' +
+            '</div>' +
+          '</div>' +
+          '<div style="text-align: right;">' +
+            '<div style="font-weight: 900; font-size: 0.95rem; color: #ea580c; font-family: Outfit, sans-serif;">$' + fmtUSD(ed.amount) + '</div>' +
+            '<span id="badge-debt-' + ed.id + '" style="font-size: 0.7rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Deduciendo hoy</span>' +
+          '</div>';
+        container.appendChild(label);
+      }
+    });
+  }
+
+  // Gestión de Gastos Futuros Previstos
+  function addFutureExpense() {
+    var nameInput = document.getElementById("new-expense-name");
+    var amountInput = document.getElementById("new-expense-amount");
+    var typeSelect = document.getElementById("new-expense-type");
+
+    var name = nameInput.value.trim();
+    var amount = parseFloat(amountInput.value);
+    var type = typeSelect.value;
+
+    if (!name) {
+      alert("Por favor escribe la descripción del gasto futuro (ej. 'Cable XLR').");
+      nameInput.focus();
+      return;
+    }
+    if (isNaN(amount) || amount <= 0) {
+      alert("Por favor ingresa un monto válido mayor a 0.");
+      amountInput.focus();
+      return;
+    }
+
+    var expense = {
+      id: "exp_" + Date.now(),
+      name: name,
+      amount: amount,
+      type: type,
+      enabled: true
+    };
+
+    futureExpenses.push(expense);
+    saveExpenses();
+    renderFutureExpenses();
+    recalculateSimulator();
+
+    nameInput.value = "";
+    amountInput.value = "";
+  }
+
+  function removeFutureExpense(id) {
+    futureExpenses = futureExpenses.filter(function(e) { return e.id !== id; });
+    saveExpenses();
+    renderFutureExpenses();
+    recalculateSimulator();
+  }
+
+  function toggleFutureExpense(id, checked) {
+    var exp = futureExpenses.find(function(e) { return e.id === id; });
+    if (exp) {
+      exp.enabled = checked;
+      saveExpenses();
+      recalculateSimulator();
+    }
+  }
+
+  function renderFutureExpenses() {
+    var container = document.getElementById("future-expenses-container");
+    var emptyNotice = document.getElementById("empty-expenses-notice");
+    if (!container) return;
+
+    container.innerHTML = "";
+    if (futureExpenses.length === 0) {
+      if (emptyNotice) emptyNotice.style.display = "block";
+      return;
+    }
+    if (emptyNotice) emptyNotice.style.display = "none";
+
+    futureExpenses.forEach(function(exp) {
+      var badgeStyle = "";
+      var badgeText = "";
+      if (exp.type === "interno") {
+        badgeStyle = "background: #eef2ff; color: #4338ca; border: 1px solid #c7d2fe;";
+        badgeText = "🎸 Interno";
+      } else if (exp.type === "viaticos") {
+        badgeStyle = "background: #fef3c7; color: #92400e; border: 1px solid #fde68a;";
+        badgeText = "🚗 Logística";
+      } else {
+        badgeStyle = "background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1;";
+        badgeText = "🏢 Externo";
+      }
+
+      var row = document.createElement("div");
+      row.style.display = "flex";
+      row.style.alignItems = "center";
+      row.style.justifyContent = "space-between";
+      row.style.padding = "10px 14px";
+      row.style.background = exp.enabled ? "#ffffff" : "#f8fafc";
+      row.style.border = "1.5px solid " + (exp.enabled ? "#c7d2fe" : "#e2e8f0");
+      row.style.borderRadius = "12px";
+      row.style.opacity = exp.enabled ? "1" : "0.6";
+
+      row.innerHTML = 
+        '<div style="display: flex; align-items: center; gap: 10px;">' +
+          '<input type="checkbox" ' + (exp.enabled ? 'checked' : '') + ' onchange="toggleFutureExpense(\'' + exp.id + '\', this.checked)" style="width: 17px; height: 17px; accent-color: #4f46e5; cursor: pointer;">' +
+          '<div>' +
+            '<div style="font-weight: 800; font-size: 0.88rem; color: #0f172a;">' + escapeHtml(exp.name) + '</div>' +
+            '<span style="display: inline-block; font-size: 0.7rem; font-weight: 800; padding: 1px 7px; border-radius: 4px; margin-top: 2px; ' + badgeStyle + '">' + badgeText + '</span>' +
+          '</div>' +
+        '</div>' +
+        '<div style="display: flex; align-items: center; gap: 12px;">' +
+          '<span style="font-weight: 900; font-size: 0.95rem; color: #4f46e5; font-family: Outfit, sans-serif;">$' + fmtUSD(exp.amount) + '</span>' +
+          '<button type="button" onclick="removeFutureExpense(\'' + exp.id + '\')" style="background: none; border: none; color: #ef4444; font-size: 1rem; cursor: pointer; padding: 4px;" title="Eliminar gasto">🗑️</button>' +
+        '</div>';
+
+      container.appendChild(row);
+    });
+  }
+
+  // Selección de Ítem desde Lista de Compras
+  function handleSelectShoppingItem(select) {
+    var option = select.options[select.selectedIndex];
+    var nameInput = document.getElementById("target-item-name");
+    var costInput = document.getElementById("target-item-cost");
+
+    if (option && option.value) {
+      nameInput.value = option.getAttribute("data-name") || "";
+      costInput.value = parseFloat(option.getAttribute("data-price") || 0).toFixed(2);
+    }
+    recalculateSimulator();
+  }
+
+  function escapeHtml(str) {
+    var div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  // ==========================================
+  // NÚCLEO DE RECÁLCULO DEL SIMULADOR
+  // ==========================================
+  function recalculateSimulator() {
+    var cashInput = document.getElementById("sim-available-cash");
+    var availableCash = parseFloat(cashInput.value) || 0;
+
+    // 1. Calcular deudas marcadas para deducir vs pospuestas
+    var debtCheckboxes = document.querySelectorAll(".sim-debt-checkbox");
+    var totalDeductedDebts = 0;
+    var totalPostponedDebts = 0;
+    var postponedDebtNames = [];
+
+    debtCheckboxes.forEach(function(cb) {
+      var amt = parseFloat(cb.getAttribute("data-amount")) || 0;
+      var debtorName = cb.getAttribute("data-name") || "Deuda";
+      if (cb.checked) {
+        totalDeductedDebts += amt;
+      } else {
+        totalPostponedDebts += amt;
+        postponedDebtNames.push(debtorName + " ($" + fmtUSD(amt) + ")");
+      }
+    });
+
+    // 2. Calcular gastos futuros habilitados
+    var totalFutureExpenses = 0;
+    var activeExpensesCount = 0;
+    futureExpenses.forEach(function(exp) {
+      if (exp.enabled) {
+        totalFutureExpenses += Number(exp.amount || 0);
+        activeExpensesCount++;
+      }
+    });
+
+    // 3. Saldo Libre Resultante de compromisos operativos (deudas + gastos)
+    var netRemainingCash = availableCash - totalDeductedDebts - totalFutureExpenses;
+
+    // Subtotales en bloque de deudas y gastos
+    document.getElementById("kpi-deducted-debts").innerText = fmtUSD(totalDeductedDebts);
+    document.getElementById("kpi-future-expenses").innerText = fmtUSD(totalFutureExpenses);
+    document.getElementById("kpi-expenses-count").innerText = activeExpensesCount + (activeExpensesCount === 1 ? " gasto activo" : " gastos activos");
+
+    var debtSub = document.getElementById("kpi-debts-subtitle");
+    if (debtSub) {
+      debtSub.innerText = totalPostponedDebts > 0 ? "⏳ " + fmtUSD(totalPostponedDebts) + " pospuestos" : "100% deudas cubiertas";
+    }
+
+    document.getElementById("summary-debts-deducted").innerText = "$" + fmtUSD(totalDeductedDebts);
+    document.getElementById("summary-debts-postponed").innerText = "$" + fmtUSD(totalPostponedDebts);
+
+    // 4. Evaluar Ítem Objetivo y Total Necesario
+    var itemNameInput = document.getElementById("target-item-name");
+    var itemCostInput = document.getElementById("target-item-cost");
+    var itemName = itemNameInput.value.trim() || "Ítem objetivo";
+    var itemCost = parseFloat(itemCostInput.value) || 0;
+
+    var totalToPayWithItem = totalDeductedDebts + totalFutureExpenses + itemCost;
+    var finalBalance = availableCash - totalToPayWithItem; // = netRemainingCash - itemCost
+
+    // Actualizar Recibo de flujo
+    document.getElementById("receipt-cash").innerText = "$" + fmtUSD(availableCash);
+    document.getElementById("receipt-debts").innerText = "-$" + fmtUSD(totalDeductedDebts);
+    document.getElementById("receipt-expenses").innerText = "-$" + fmtUSD(totalFutureExpenses);
+
+    var itemRow = document.getElementById("receipt-item-row");
+    var itemLabel = document.getElementById("receipt-item-label");
+    var itemCostElem = document.getElementById("receipt-item-cost");
+    var receiptRemainingLabel = document.getElementById("receipt-remaining-label");
+    var receiptShortfallAlert = document.getElementById("receipt-shortfall-alert");
+    var receiptShortfallAmt = document.getElementById("receipt-shortfall-amount");
+
+    if (itemCost > 0) {
+      if (itemRow) {
+        itemRow.style.display = "flex";
+        if (itemLabel) itemLabel.innerText = itemName;
+        if (itemCostElem) itemCostElem.innerText = "-$" + fmtUSD(itemCost);
+      }
+      if (receiptRemainingLabel) {
+        receiptRemainingLabel.innerText = finalBalance >= 0 ? "(=) Saldo Restante tras Ítem:" : "(=) Saldo en Menos (Déficit):";
+      }
+    } else {
+      if (itemRow) itemRow.style.display = "none";
+      if (receiptRemainingLabel) {
+        receiptRemainingLabel.innerText = finalBalance >= 0 ? "(=) Saldo Disponible Libre:" : "(=) Saldo en Menos (Déficit):";
+      }
+    }
+
+    var receiptRem = document.getElementById("receipt-remaining");
+    if (finalBalance < 0) {
+      receiptRem.innerText = "-$" + fmtUSD(Math.abs(finalBalance)) + " USD";
+      receiptRem.style.color = "#dc2626";
+      if (receiptShortfallAlert && receiptShortfallAmt) {
+        receiptShortfallAlert.style.display = "block";
+        receiptShortfallAmt.innerText = "$" + fmtUSD(Math.abs(finalBalance)) + " USD";
+      }
+    } else {
+      receiptRem.innerText = "$" + fmtUSD(finalBalance) + " USD";
+      receiptRem.style.color = "#15803d";
+      if (receiptShortfallAlert) receiptShortfallAlert.style.display = "none";
+    }
+
+    // Actualizar KPI superior de Saldo / Déficit
+    var kpiCard = document.getElementById("kpi-remaining-card");
+    var kpiLabel = document.getElementById("kpi-remaining-label");
+    var kpiRemaining = document.getElementById("kpi-simulated-remaining");
+    var kpiPrefix = document.getElementById("kpi-remaining-prefix");
+    var kpiCurrency = document.getElementById("kpi-remaining-currency");
+    var kpiSub = document.getElementById("kpi-remaining-subtitle");
+
+    var kpiDisplayBalance = (itemCost > 0) ? finalBalance : netRemainingCash;
+    if (kpiDisplayBalance < 0) {
+      var kpiDeficit = Math.abs(kpiDisplayBalance);
+      if (kpiPrefix) kpiPrefix.innerText = "-$";
+      if (kpiRemaining) {
+        kpiRemaining.innerText = fmtUSD(kpiDeficit);
+        kpiRemaining.style.color = "#dc2626";
+      }
+      if (kpiCard) {
+        kpiCard.style.background = "#fef2f2";
+        kpiCard.style.borderColor = "#fca5a5";
+      }
+      if (kpiLabel) {
+        kpiLabel.innerText = "⚠️ DÉFICIT / FALTANTE";
+        kpiLabel.style.color = "#991b1b";
+      }
+      if (kpiCurrency) kpiCurrency.style.color = "#dc2626";
+      if (kpiSub) {
+        kpiSub.innerText = "Te hacen falta $" + fmtUSD(kpiDeficit) + " para pagar todo";
+        kpiSub.style.color = "#b91c1c";
+      }
+    } else {
+      if (kpiPrefix) kpiPrefix.innerText = "$";
+      if (kpiRemaining) {
+        kpiRemaining.innerText = fmtUSD(kpiDisplayBalance);
+        kpiRemaining.style.color = "#15803d";
+      }
+      if (kpiCard) {
+        kpiCard.style.background = "#f0fdf4";
+        kpiCard.style.borderColor = "#86efac";
+      }
+      if (kpiLabel) {
+        kpiLabel.innerText = "💰 Saldo Disponible Libre";
+        kpiLabel.style.color = "#166534";
+      }
+      if (kpiCurrency) kpiCurrency.style.color = "#166534";
+      if (kpiSub) {
+        kpiSub.innerText = (itemCost > 0) ? "Colchón libre tras comprar ítem" : "Fondo resultante para compras";
+        kpiSub.style.color = "#166534";
+      }
+    }
+
+    renderVerdict(itemName, itemCost, availableCash, totalDeductedDebts, totalFutureExpenses, netRemainingCash, finalBalance, postponedDebtNames);
+    renderSmartInsights(itemName, itemCost, availableCash, totalDeductedDebts, totalFutureExpenses, netRemainingCash, finalBalance);
+  }
+
+  // Renderizar la tarjeta de veredicto sobre el ítem
+  function renderVerdict(itemName, itemCost, availableCash, totalDeductedDebts, totalFutureExpenses, netRemainingCash, finalBalance, postponedDebtNames) {
+    var card = document.getElementById("verdict-card");
+    if (!card) return;
+
+    // Caso A: No hay ítem especificado (itemCost <= 0)
+    if (itemCost <= 0) {
+      if (netRemainingCash < 0) {
+        // No alcanza ni para deudas + gastos
+        var shortfallNoItem = Math.abs(netRemainingCash);
+        var totalCommitments = totalDeductedDebts + totalFutureExpenses;
+
+        card.style.background = "#fef2f2";
+        card.style.border = "2px solid #f87171";
+        card.style.color = "#7f1d1d";
+        card.innerHTML = 
+          '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">' +
+            '<div style="display: flex; align-items: center; gap: 8px;">' +
+              '<span style="font-size: 1.4rem;">🛑</span>' +
+              '<span style="font-weight: 900; font-size: 1.05rem; color: #b91c1c;">NO TE ALCANZA PARA CUBRIR TUS COMPROMISOS</span>' +
+            '</div>' +
+            '<span style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 3px 9px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">Saldo en Menos</span>' +
+          '</div>' +
+
+          '<div style="margin: 12px 0; background: white; border: 2px solid #ef4444; border-radius: 12px; padding: 14px 16px; text-align: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);">' +
+            '<div style="font-size: 0.78rem; font-weight: 800; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Faltante para liquidar todo</div>' +
+            '<div style="font-size: 1.45rem; font-weight: 900; color: #dc2626; font-family: Outfit, sans-serif; margin: 4px 0;">' +
+              'Te hacen falta $' + fmtUSD(shortfallNoItem) + ' USD para pagar todo' +
+            '</div>' +
+          '</div>' +
+
+          '<div style="background: #fff5f5; border: 1px solid #fed7aa; border-radius: 10px; padding: 12px; font-size: 0.84rem; line-height: 1.5; color: #450a0a;">' +
+            '<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">' +
+              '<span>💵 <strong>Dinero disponible que tienes:</strong></span>' +
+              '<strong style="color: #0f172a;">$' + fmtUSD(availableCash) + ' USD</strong>' +
+            '</div>' +
+            '<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">' +
+              '<span>📋 <strong>Total deudas y gastos a pagar:</strong></span>' +
+              '<span style="color: #9a3412; font-weight: 700;">$' + fmtUSD(totalCommitments) + ' USD</span>' +
+            '</div>' +
+            '<div style="display: flex; justify-content: space-between; border-top: 1px dashed #fca5a5; padding-top: 5px; margin-top: 4px; color: #dc2626; font-weight: 900; font-size: 0.9rem;">' +
+              '<span>📉 <strong>Saldo en menos (Déficit):</strong></span>' +
+              '<span>-$' + fmtUSD(shortfallNoItem) + ' USD</span>' +
+            '</div>' +
+          '</div>' +
+
+          '<div style="font-size: 0.84rem; line-height: 1.45; margin-top: 10px; color: #7f1d1d;">' +
+            'Tienes disponible <strong>$' + fmtUSD(availableCash) + ' USD</strong>, pero tus compromisos seleccionados suman <strong>$' + fmtUSD(totalCommitments) + ' USD</strong>. <strong>Te hacen falta $' + fmtUSD(shortfallNoItem) + ' USD para pagar todo</strong>. Puedes posponer pagos de deudas en el paso 2 para recuperar liquidez.' +
+          '</div>';
+        return;
+      }
+
+      // Si no hay ítem y el dinero sí alcanza para deudas y gastos
+      card.style.background = "#f8fafc";
+      card.style.border = "1.5px dashed #cbd5e1";
+      card.style.color = "#475569";
+      card.innerHTML = 
+        '<div style="font-weight: 800; font-size: 0.92rem; color: #0f172a; display: flex; align-items: center; gap: 6px;">' +
+          '<span>🎯</span> Ingresa un precio para evaluar tu ítem' +
+        '</div>' +
+        '<div style="font-size: 0.82rem; color: #64748b; margin-top: 4px;">' +
+          'Dispones de <strong>$' + fmtUSD(netRemainingCash) + ' USD</strong> libres tras deudas y gastos. Escribe el costo del equipo que deseas comprar para comprobar si tu saldo lo cubre.' +
+        '</div>';
+      return;
+    }
+
+    // Caso B: Hay ítem especificado (itemCost > 0)
+    var totalToPay = totalDeductedDebts + totalFutureExpenses + itemCost;
+
+    if (finalBalance >= 0) {
+      // Sí alcanza
+      card.style.background = "#f0fdf4";
+      card.style.border = "2px solid #86efac";
+      card.style.color = "#14532d";
+      card.innerHTML = 
+        '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">' +
+          '<div style="display: flex; align-items: center; gap: 8px;">' +
+            '<span style="font-size: 1.4rem;">🎉</span>' +
+            '<span style="font-weight: 900; font-size: 1.05rem; color: #15803d;">¡COMPRA 100% FACTIBLE!</span>' +
+          '</div>' +
+          '<span style="background: #bbf7d0; color: #166534; padding: 3px 9px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">Luz Verde 🟢</span>' +
+        '</div>' +
+
+        '<div style="margin: 10px 0; background: white; border: 1.5px solid #86efac; border-radius: 12px; padding: 12px 14px; text-align: center;">' +
+          '<div style="font-size: 0.76rem; font-weight: 800; color: #166534; text-transform: uppercase; letter-spacing: 0.5px;">Reserva libre resultante</div>' +
+          '<div style="font-size: 1.45rem; font-weight: 900; color: #15803d; font-family: Outfit, sans-serif; margin: 2px 0;">' +
+            '+$' + fmtUSD(finalBalance) + ' USD en caja' +
+          '</div>' +
+        '</div>' +
+
+        '<div style="font-size: 0.86rem; line-height: 1.45; margin-top: 4px;">' +
+          '¡Excelente! Tras cubrir tus deudas seleccionadas ($' + fmtUSD(totalDeductedDebts) + ') y gastos futuros ($' + fmtUSD(totalFutureExpenses) + '), puedes adquirir <strong>' + escapeHtml(itemName) + '</strong> ($' + fmtUSD(itemCost) + ' USD) y aún te sobrará un colchón de reserva de <strong style="color: #15803d;">$' + fmtUSD(finalBalance) + ' USD</strong> libre.' +
+        '</div>';
+    } else {
+      // No alcanza
+      var shortfall = Math.abs(finalBalance);
+      var coveragePct = availableCash > 0 ? ((availableCash / totalToPay) * 100).toFixed(1) : 0.0;
+
+      card.style.background = "#fef2f2";
+      card.style.border = "2px solid #f87171";
+      card.style.color = "#7f1d1d";
+      card.innerHTML = 
+        '<div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">' +
+          '<div style="display: flex; align-items: center; gap: 8px;">' +
+            '<span style="font-size: 1.4rem;">🛑</span>' +
+            '<span style="font-weight: 900; font-size: 1.05rem; color: #b91c1c;">NO TE ALCANZA PARA COMPRAR ESTE ÍTEM</span>' +
+          '</div>' +
+          '<span style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 3px 9px; border-radius: 6px; font-weight: 800; font-size: 0.75rem;">Cubierto al ' + coveragePct + '%</span>' +
+        '</div>' +
+
+        '<div style="margin: 12px 0; background: white; border: 2px solid #ef4444; border-radius: 12px; padding: 14px 16px; text-align: center; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.1);">' +
+          '<div style="font-size: 0.78rem; font-weight: 800; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Faltante para pagar todo</div>' +
+          '<div style="font-size: 1.45rem; font-weight: 900; color: #dc2626; font-family: Outfit, sans-serif; margin: 4px 0;">' +
+            'Te hacen falta $' + fmtUSD(shortfall) + ' USD para pagar todo' +
+          '</div>' +
+        '</div>' +
+
+        '<div style="background: #fff5f5; border: 1px solid #fecaca; border-radius: 10px; padding: 12px; font-size: 0.84rem; line-height: 1.5; color: #450a0a;">' +
+          '<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">' +
+            '<span>💵 <strong>Dinero disponible que tienes:</strong></span>' +
+            '<strong style="color: #0f172a;">$' + fmtUSD(availableCash) + ' USD</strong>' +
+          '</div>' +
+          '<div style="display: flex; justify-content: space-between; margin-bottom: 3px;">' +
+            '<span>📋 <strong>Total necesario para pagar todo:</strong></span>' +
+            '<span style="color: #9a3412; font-weight: 700;">$' + fmtUSD(totalToPay) + ' USD</span>' +
+          '</div>' +
+          '<div style="display: flex; justify-content: space-between; border-top: 1px dashed #fca5a5; padding-top: 5px; margin-top: 4px; color: #dc2626; font-weight: 900; font-size: 0.9rem;">' +
+            '<span>📉 <strong>Saldo en menos (Déficit):</strong></span>' +
+            '<span>-$' + fmtUSD(shortfall) + ' USD</span>' +
+          '</div>' +
+        '</div>' +
+
+        '<div style="font-size: 0.84rem; line-height: 1.45; margin-top: 10px; color: #7f1d1d;">' +
+          'Tienes disponible <strong>$' + fmtUSD(availableCash) + ' USD</strong>, pero pagar tus deudas ($' + fmtUSD(totalDeductedDebts) + '), gastos futuros ($' + fmtUSD(totalFutureExpenses) + ') y <strong>' + escapeHtml(itemName) + '</strong> ($' + fmtUSD(itemCost) + ') requiere un total de <strong>$' + fmtUSD(totalToPay) + ' USD</strong>. <strong>Te hacen falta $' + fmtUSD(shortfall) + ' USD para pagar todo</strong>.' +
+        '</div>';
+    }
+  }
+
+  // Renderizar recomendaciones y sugerencias dinámicas
+  function renderSmartInsights(itemName, itemCost, availableCash, totalDeductedDebts, totalFutureExpenses, netRemainingCash, finalBalance) {
+    var container = document.getElementById("smart-insights-container");
+    if (!container) return;
+
+    var insights = [];
+    var totalToPay = totalDeductedDebts + totalFutureExpenses + itemCost;
+    var deficit = (itemCost > 0) ? -finalBalance : -netRemainingCash;
+
+    // Insight 0: Alerta explícita de lo que hace falta si no alcanza
+    if (deficit > 0) {
+      insights.push({
+        emoji: "🚨",
+        type: "shortfall",
+        title: "Te hacen falta $" + fmtUSD(deficit) + " USD para pagar todo",
+        text: "Dispones de <strong>$" + fmtUSD(availableCash) + " USD</strong>, pero el total a cubrir suma <strong>$" + fmtUSD(itemCost > 0 ? totalToPay : (totalDeductedDebts + totalFutureExpenses)) + " USD</strong>. Tu balance queda en menos por <strong>-$" + fmtUSD(deficit) + " USD</strong>."
+      });
+    }
+
+    // Insight 1: Análisis de Posponer Deudas
+    if (deficit > 0 && totalDeductedDebts > 0) {
+      if (totalDeductedDebts >= deficit) {
+        insights.push({
+          emoji: "💡",
+          type: "tactical",
+          title: "Consejo de Modulación Inmediata",
+          text: "Si decides <strong>posponer temporalmente el pago de $" + fmtUSD(deficit) + " en deudas de músicos</strong> (desmarcando algunas en el paso 2), ¡tu saldo libre cubrirá el 100% de tus compromisos" + (itemCost > 0 ? " y de " + escapeHtml(itemName) : "") + " hoy mismo!"
+        });
+      } else {
+        var newRemaining = (itemCost > 0 ? finalBalance : netRemainingCash) + totalDeductedDebts;
+        insights.push({
+          emoji: "💡",
+          type: "tactical",
+          title: "Alivio de Liquidez",
+          text: "Si pospones todas las deudas activas ($" + fmtUSD(totalDeductedDebts) + "), tu saldo en menos se reduciría de -$" + fmtUSD(deficit) + " a solo -$" + fmtUSD(Math.abs(newRemaining)) + "."
+        });
+      }
+    }
+
+    var totalPostponedDebts = 0;
+    document.querySelectorAll(".sim-debt-checkbox").forEach(function(cb) {
+      if (!cb.checked) totalPostponedDebts += (parseFloat(cb.getAttribute("data-amount")) || 0);
+    });
+
+    if (totalPostponedDebts > 0) {
+      insights.push({
+        emoji: "⏳",
+        type: "notice",
+        title: "Deudas en Espera",
+        text: "Actualmente tienes <strong>$" + fmtUSD(totalPostponedDebts) + " USD</strong> en deudas pospuestas. Recuerda contemplar liquidarlas con la ganancia de los próximos shows."
+      });
+    }
+
+    // Insight 2: Shows venideros
+    var avgProfit = window.SIMULATOR_DATA.avgGigProfit || 250;
+    if (deficit > 0) {
+      var showsNeeded = Math.ceil(deficit / (avgProfit > 0 ? avgProfit : 100));
+      insights.push({
+        emoji: "📅",
+        type: "projection",
+        title: "Proyección por Próximos Shows",
+        text: "Con el promedio de ganancia neta de tu agrupación (~$" + fmtUSD(avgProfit) + " USD/show), estimamos que en <strong>" + showsNeeded + (showsNeeded === 1 ? " show" : " shows") + "</strong> habrás cubierto los $" + fmtUSD(deficit) + " USD que te hacen falta."
+      });
+    }
+
+    // Si todo alcanza
+    if (itemCost > 0 && deficit <= 0) {
+      insights.push({
+        emoji: "🛡️",
+        type: "positive",
+        title: "Margen de Seguridad Sólido",
+        text: "Tu compra está respaldada. No te sobre-endeudas y mantienes solvencia para afrontar tus compromisos operativos."
+      });
+    }
+
+    // Renderizar tips en HTML
+    container.innerHTML = "";
+    insights.forEach(function(tip) {
+      var itemDiv = document.createElement("div");
+      itemDiv.style.background = tip.type === "shortfall" ? "rgba(239, 68, 68, 0.2)" : "rgba(255, 255, 255, 0.07)";
+      itemDiv.style.border = tip.type === "shortfall" ? "1.5px solid rgba(248, 113, 113, 0.5)" : "1px solid rgba(255, 255, 255, 0.12)";
+      itemDiv.style.borderRadius = "12px";
+      itemDiv.style.padding = "10px 14px";
+      itemDiv.innerHTML = 
+        '<div style="font-weight: 800; font-size: 0.88rem; color: ' + (tip.type === "shortfall" ? "#fca5a5" : "#a5b4fc") + '; display: flex; align-items: center; gap: 6px; margin-bottom: 2px;">' +
+          '<span>' + tip.emoji + '</span> ' + tip.title +
+        '</div>' +
+        '<div style="color: #e2e8f0; font-size: 0.82rem; line-height: 1.4;">' + tip.text + '</div>';
+      container.appendChild(itemDiv);
+    });
+
+    // 5. Evaluar qué otros ítems de la Lista de Compras alcanzan con el remanente
+    var wishlistContainer = document.getElementById("affordable-wishlist-container");
+    var wishlistItemsDiv = document.getElementById("affordable-wishlist-items");
+
+    var freeSurplus = (itemCost > 0) ? finalBalance : netRemainingCash;
+    if (freeSurplus > 0 && window.SIMULATOR_DATA.shoppingItems && window.SIMULATOR_DATA.shoppingItems.length > 0) {
+      var affordable = window.SIMULATOR_DATA.shoppingItems.filter(function(i) {
+        return i.total_price > 0 && i.total_price <= freeSurplus;
+      });
+
+      if (affordable.length > 0) {
+        wishlistContainer.style.display = "block";
+        wishlistItemsDiv.innerHTML = "";
+        affordable.slice(0, 3).forEach(function(item) {
+          var line = document.createElement("div");
+          line.style.display = "flex";
+          line.style.justifyContent = "space-between";
+          line.style.alignItems = "center";
+          line.style.background = "rgba(16, 185, 129, 0.12)";
+          line.style.border = "1px solid rgba(52, 211, 153, 0.3)";
+          line.style.borderRadius = "8px";
+          line.style.padding = "6px 10px";
+          line.style.fontSize = "0.8rem";
+          line.innerHTML = 
+            '<span style="color: white; font-weight: 700;">' + escapeHtml(item.name) + '</span>' +
+            '<span style="color: #34d399; font-weight: 800; font-family: Outfit, sans-serif;">$' + fmtUSD(item.total_price) + '</span>';
+          wishlistItemsDiv.appendChild(line);
+        });
+      } else {
+        wishlistContainer.style.display = "none";
+      }
+    } else {
+      if (wishlistContainer) wishlistContainer.style.display = "none";
+    }
+  }
+
+  // Reiniciar simulador
+  function resetSimulator() {
+    if (confirm("¿Deseas reiniciar los valores del simulador al estado original de Caja General?")) {
+      setCashToCurrent();
+      setDebtsMode('all');
+      futureExpenses = [];
+      extraDebts = [];
+      saveExpenses();
+      renderFutureExpenses();
+      document.getElementById("target-item-name").value = "";
+      document.getElementById("target-item-cost").value = "";
+      var sel = document.getElementById("target-item-selector");
+      if (sel) sel.selectedIndex = 0;
+      recalculateSimulator();
+    }
+  }
+
+  // Inicialización en carga de página
+  document.addEventListener("turbo:load", function() {
+    renderFutureExpenses();
+    renderExtraDebts();
+    recalculateSimulator();
+  });
+
+  document.addEventListener("DOMContentLoaded", function() {
+    renderFutureExpenses();
+    renderExtraDebts();
+    recalculateSimulator();
+  });
+</script>
