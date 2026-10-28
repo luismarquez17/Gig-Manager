@@ -113,4 +113,45 @@ class ReinvestmentGoalsControllerTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to reinvestment_goals_url
   end
+
+  test "index groups multiple debts for same worker into single entry with complete amount" do
+    worker = User.create!(
+      email: "carlos_debts_test@example.com",
+      password: "password123",
+      role: :musician,
+      company: @company,
+      name: "Carlos Marquez"
+    )
+
+    gig1 = Gig.create!(
+      company: @company,
+      date: Date.yesterday - 5.days,
+      amount: 500,
+      client: clients(:one)
+    )
+    gig2 = Gig.create!(
+      company: @company,
+      date: Date.yesterday,
+      amount: 400,
+      client: clients(:one)
+    )
+
+    StaffAssignment.create!(gig: gig1, user: worker, agreed_amount: 80.0)
+    StaffAssignment.create!(gig: gig2, user: worker, agreed_amount: 50.0)
+
+    get reinvestment_goals_url
+    assert_response :success
+
+    # Verify that the worker's debt row appears EXACTLY ONCE
+    assert_select "label#debt-row-worker_#{worker.id}", 1
+
+    # Verify full amount and lack of duplicate rows in the DOM
+    assert_select "label#debt-row-worker_#{worker.id}" do
+      assert_select "input[data-amount='130.0']", 1
+      assert_select "input[data-name='Carlos Marquez']", 1
+      assert_select "div", text: /Carlos Marquez/
+      assert_select "div", text: /\$130\.00/
+      assert_select "div", text: /2 shows pasados/
+    end
+  end
 end

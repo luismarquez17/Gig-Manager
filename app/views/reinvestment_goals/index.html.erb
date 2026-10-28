@@ -169,10 +169,10 @@
         <%# Master Switches %>
         <div style="display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; background: #fff7ed; padding: 8px; border-radius: 10px; border: 1px solid #ffedd5;">
           <button type="button" onclick="setDebtsMode('all')" id="btn-debt-all" style="flex: 1; padding: 7px 12px; font-size: 0.8rem; font-weight: 800; border-radius: 8px; border: none; cursor: pointer; background: #ea580c; color: white;">
-            Pagar Todas (<%= @system_debts.size %>)
+            Pagar a Todos (<%= @system_debts.size %>)
           </button>
           <button type="button" onclick="setDebtsMode('none')" id="btn-debt-none" style="flex: 1; padding: 7px 12px; font-size: 0.8rem; font-weight: 800; border-radius: 8px; border: 1px solid #fdba74; cursor: pointer; background: white; color: #9a3412;">
-            ⏳ Posponer Todas ($0)
+            ⏳ Posponer Todos ($0)
           </button>
           <button type="button" onclick="setDebtsMode('custom')" id="btn-debt-custom" style="flex: 1; padding: 7px 12px; font-size: 0.8rem; font-weight: 800; border-radius: 8px; border: 1px solid #fdba74; cursor: pointer; background: white; color: #9a3412;">
             Personalizado
@@ -180,45 +180,61 @@
         </div>
 
         <%# Lista de Deudas Individuales %>
-        <% if @system_debts.any? %>
-          <div style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px;">
-            <% @system_debts.each do |debt| %>
-              <label id="debt-row-<%= debt[:id] %>" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fafaf9; border: 1.5px solid #e7e5e4; border-radius: 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s;">
-                <div style="display: flex; align-items: center; gap: 12px;">
-                  <input type="checkbox" class="sim-debt-checkbox" 
-                         data-id="<%= debt[:id] %>" 
-                         data-amount="<%= debt[:amount] %>" 
-                         data-name="<%= debt[:debtor_name] %>" 
-                         data-concept="<%= debt[:concept] %>" 
-                         checked 
-                         onchange="handleDebtToggle(this)"
-                         style="width: 18px; height: 18px; accent-color: #ea580c; cursor: pointer;">
-                  <div>
-                    <div style="font-weight: 800; font-size: 0.88rem; color: #1c1917;">
-                      <%= debt[:debtor_name] %>
-                    </div>
-                    <div style="font-size: 0.76rem; color: #78716c;">
-                      <%= debt[:concept] %>
-                    </div>
+        <div id="debts-list-container" style="display: flex; flex-direction: column; gap: 8px; max-height: 280px; overflow-y: auto; padding-right: 4px; <%= 'display: none;' if @system_debts.empty? %>">
+          <% @system_debts.each do |debt| %>
+            <label id="debt-row-<%= debt[:id] %>" style="display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: #fafaf9; border: 1.5px solid #e7e5e4; border-radius: 12px; cursor: pointer; transition: background 0.15s, border-color 0.15s;">
+              <div style="display: flex; align-items: center; gap: 12px;">
+                <input type="checkbox" class="sim-debt-checkbox" 
+                       data-id="<%= debt[:id] %>" 
+                       data-amount="<%= debt[:amount] %>" 
+                       data-name="<%= debt[:debtor_name] %>" 
+                       data-concept="<%= debt[:concept] %>" 
+                       checked 
+                       onchange="handleDebtToggle(this)"
+                       style="width: 18px; height: 18px; accent-color: #ea580c; cursor: pointer;">
+                <div>
+                  <div style="font-weight: 800; font-size: 0.88rem; color: #1c1917;">
+                    <%= debt[:debtor_name] %>
                   </div>
+                  <div style="font-size: 0.76rem; color: #78716c;">
+                    <%= debt[:concept] %>
+                  </div>
+                  <% if debt[:shows_breakdown].present? && debt[:shows_breakdown].size > 1 %>
+                    <% if debt[:shows_breakdown].size <= 3 %>
+                      <div style="font-size: 0.73rem; color: #78716c; margin-top: 3px;">
+                        <span style="font-weight: 700; color: #9a3412;">Desglose:</span> <%= debt[:shows_breakdown].join(" · ") %>
+                      </div>
+                    <% else %>
+                      <div style="font-size: 0.73rem; color: #78716c; margin-top: 3px;" onclick="event.stopPropagation();">
+                        <details style="cursor: pointer;">
+                          <summary style="font-weight: 700; color: #ea580c; outline: none; user-select: none;">
+                            📋 Ver desglose de los <%= debt[:shows_breakdown].size %> shows ▾
+                          </summary>
+                          <div style="margin-top: 5px; padding: 6px 10px; background: #fff7ed; border: 1px dashed #fed7aa; border-radius: 8px; font-size: 0.72rem; color: #9a3412; line-height: 1.4; max-height: 120px; overflow-y: auto;">
+                            <%= debt[:shows_breakdown].join("<br>").html_safe %>
+                          </div>
+                        </details>
+                      </div>
+                    <% end %>
+                  <% end %>
                 </div>
+              </div>
 
-                <div style="text-align: right;">
-                  <div style="font-weight: 900; font-size: 0.95rem; color: #ea580c; font-family: 'Outfit', sans-serif;">
-                    $<%= number_with_precision(debt[:amount], precision: 2) %>
-                  </div>
-                  <span id="badge-debt-<%= debt[:id] %>" style="font-size: 0.7rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">
-                    Deduciendo hoy
-                  </span>
+              <div style="text-align: right; flex-shrink: 0; margin-left: 10px;">
+                <div style="font-weight: 900; font-size: 0.95rem; color: #ea580c; font-family: 'Outfit', sans-serif;">
+                  $<%= number_with_precision(debt[:amount], precision: 2) %>
                 </div>
-              </label>
-            <% end %>
-          </div>
-        <% else %>
-          <div style="text-align: center; padding: 20px; background: #f0fdf4; border: 1px dashed #86efac; border-radius: 12px; color: #166534; font-size: 0.88rem; font-weight: 700;">
-            🎉 ¡Excelente! No tienes deudas pendientes con músicos registradas en el sistema.
-          </div>
-        <% end %>
+                <span id="badge-debt-<%= debt[:id] %>" style="font-size: 0.7rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">
+                  Deduciendo hoy
+                </span>
+              </div>
+            </label>
+          <% end %>
+        </div>
+
+        <div id="no-debts-alert" style="text-align: center; padding: 20px; background: #f0fdf4; border: 1px dashed #86efac; border-radius: 12px; color: #166534; font-size: 0.88rem; font-weight: 700; <%= 'display: none;' if @system_debts.any? %>">
+          🎉 ¡Excelente! No tienes deudas pendientes con músicos registradas en el sistema.
+        </div>
 
         <%# Agregar Deuda Extra Temporal %>
         <div style="margin-top: 14px; padding-top: 12px; border-top: 1px dashed #fed7aa;">
@@ -596,10 +612,14 @@
 
   function renderExtraDebts() {
     // Inserta filas adicionales en la lista de deudas si existen
+    var container = document.getElementById("debts-list-container");
+    var noDebtsAlert = document.getElementById("no-debts-alert");
+    if (!container) return;
+
     extraDebts.forEach(function(ed) {
       if (!document.getElementById("debt-row-" + ed.id)) {
-        var container = document.querySelector(".sim-debt-checkbox") ? document.querySelector(".sim-debt-checkbox").closest("div") : null;
-        if (!container) return;
+        if (noDebtsAlert) noDebtsAlert.style.display = "none";
+        container.style.display = "flex";
 
         var label = document.createElement("label");
         label.id = "debt-row-" + ed.id;
@@ -619,7 +639,7 @@
               '<div style="font-size: 0.76rem; color: #b45309;">' + ed.concept + '</div>' +
             '</div>' +
           '</div>' +
-          '<div style="text-align: right;">' +
+          '<div style="text-align: right; flex-shrink: 0; margin-left: 10px;">' +
             '<div style="font-weight: 900; font-size: 0.95rem; color: #ea580c; font-family: Outfit, sans-serif;">$' + fmtUSD(ed.amount) + '</div>' +
             '<span id="badge-debt-' + ed.id + '" style="font-size: 0.7rem; font-weight: 700; color: #166534; background: #dcfce7; padding: 2px 6px; border-radius: 4px;">Deduciendo hoy</span>' +
           '</div>';

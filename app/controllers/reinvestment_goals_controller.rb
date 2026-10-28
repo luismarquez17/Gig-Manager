@@ -16,32 +16,40 @@ class ReinvestmentGoalsController < ApplicationController
       next if m[:past_balance] <= 0
 
       worker_name = m[:worker]&.display_name || m[:worker]&.email || (current_company.venue_mode? ? "Personal" : "Trabajador")
+      show_details = []
+
       if m[:gig_debts].present? && m[:gig_debts].any?
-        m[:gig_debts].each_with_index do |d, idx|
-          concept = if d[:gig].present?
-                      show_name = d[:gig].client&.name || "#{current_company.term_for(:event_singular, 'Show')} ##{d[:gig].id}"
-                      show_date = d[:gig].date ? d[:gig].date.strftime("%d/%m/%Y") : "S/F"
-                      "#{show_name} (#{show_date})"
-                    else
-                      d[:title] || "Ajuste contable pendiente"
-                    end
-          @system_debts << {
-            id: "worker_#{m[:worker].id}_debt_#{idx}",
-            worker_id: m[:worker].id,
-            debtor_name: worker_name,
-            concept: concept,
-            amount: d[:pending_amount].to_f.round(2)
-          }
+        m[:gig_debts].each do |d|
+          amt_str = sprintf('$%.2f', d[:pending_amount].to_f)
+          if d[:gig].present?
+            show_name = d[:gig].client&.name || "#{current_company.term_for(:event_singular, 'Show')} ##{d[:gig].id}"
+            show_date = d[:gig].date ? d[:gig].date.strftime("%d/%m") : nil
+            show_details << (show_date ? "#{show_name} (#{show_date}): #{amt_str}" : "#{show_name}: #{amt_str}")
+          else
+            show_details << "#{d[:title] || 'Ajuste contable'}: #{amt_str}"
+          end
         end
-      else
-        @system_debts << {
-          id: "worker_#{m[:worker].id}_balance",
-          worker_id: m[:worker].id,
-          debtor_name: worker_name,
-          concept: "Deuda acumulada de shows pasados",
-          amount: m[:past_balance].to_f.round(2)
-        }
       end
+
+      term_show = current_company.venue_mode? ? "evento" : "show"
+      term_shows = current_company.venue_mode? ? "eventos" : "shows"
+
+      concept = if show_details.size > 1
+                  "Deuda total en #{show_details.size} #{term_shows} pasados"
+                elsif show_details.size == 1
+                  show_details.first
+                else
+                  "Deuda acumulada de #{term_shows} pasados"
+                end
+
+      @system_debts << {
+        id: "worker_#{m[:worker].id}",
+        worker_id: m[:worker].id,
+        debtor_name: worker_name,
+        concept: concept,
+        shows_breakdown: show_details,
+        amount: m[:past_balance].to_f.round(2)
+      }
     end
 
     # 2. Ítems pendientes de la lista de compras para evaluar en el simulador
