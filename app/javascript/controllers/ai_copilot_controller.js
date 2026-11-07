@@ -3,7 +3,8 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "panel", "messages", "input", "micBtn", "micIcon", "micStatus",
-    "badge", "form", "sendBtn", "voiceToggleBtn", "voiceToggleIcon", "speakingBar"
+    "badge", "form", "sendBtn", "voiceToggleBtn", "voiceToggleIcon", "speakingBar",
+    "voiceSettingsBtn", "voiceSettingsPanel", "voiceSelect"
   ]
 
   connect() {
@@ -573,9 +574,24 @@ export default class extends Controller {
     const voices = window.speechSynthesis.getVoices()
     if (!voices || voices.length === 0) return
 
-    // Buscar voces en español naturales y modernas
+    // Buscar voces en español
     const esVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("es"))
 
+    // Poblar el menú desplegable de selección de voz
+    this.populateVoiceSelect(voices, esVoices)
+
+    // 1. Si el usuario ya eligió una voz previamente en este dispositivo, usarla
+    const savedVoiceName = localStorage.getItem("gigai_selected_voice")
+    if (savedVoiceName) {
+      const match = voices.find(v => v.name === savedVoiceName)
+      if (match) {
+        this.selectedVoice = match
+        if (this.hasVoiceSelectTarget) this.voiceSelectTarget.value = match.name
+        return
+      }
+    }
+
+    // 2. Si no hay voz guardada, elegir la voz más natural en español disponible
     const preferredNames = [
       "google español", "paulina", "mónica", "monica", "jorge", "diego", "penélope", 
       "luciana", "angélica", "carlos", "soledad", "alva", "elena", "paloma"
@@ -593,7 +609,74 @@ export default class extends Controller {
       bestVoice = esVoices[0]
     }
 
+    if (!bestVoice && voices.length > 0) {
+      bestVoice = voices[0]
+    }
+
     this.selectedVoice = bestVoice
+    if (this.selectedVoice && this.hasVoiceSelectTarget) {
+      this.voiceSelectTarget.value = this.selectedVoice.name
+    }
+  }
+
+  populateVoiceSelect(allVoices, esVoices) {
+    if (!this.hasVoiceSelectTarget) return
+    const select = this.voiceSelectTarget
+    select.innerHTML = ""
+
+    if (esVoices.length > 0) {
+      const optGroupEs = document.createElement("optgroup")
+      optGroupEs.label = "Voces en Español (Recomendadas)"
+      esVoices.forEach(voice => {
+        const opt = document.createElement("option")
+        opt.value = voice.name
+        opt.textContent = `${voice.name} (${voice.lang})`
+        optGroupEs.appendChild(opt)
+      })
+      select.appendChild(optGroupEs)
+    }
+
+    const otherVoices = allVoices.filter(v => !v.lang || !v.lang.toLowerCase().startsWith("es"))
+    if (otherVoices.length > 0) {
+      const optGroupOther = document.createElement("optgroup")
+      optGroupOther.label = "Otras Voces del Sistema"
+      otherVoices.forEach(voice => {
+        const opt = document.createElement("option")
+        opt.value = voice.name
+        opt.textContent = `${voice.name} (${voice.lang})`
+        optGroupOther.appendChild(opt)
+      })
+      select.appendChild(optGroupOther)
+    }
+
+    if (this.selectedVoice) {
+      select.value = this.selectedVoice.name
+    }
+  }
+
+  onVoiceSelected(event) {
+    const voiceName = event.target.value
+    if (!voiceName) return
+    const voices = window.speechSynthesis.getVoices()
+    const voice = voices.find(v => v.name === voiceName)
+    if (voice) {
+      this.selectedVoice = voice
+      localStorage.setItem("gigai_selected_voice", voice.name)
+      this.speakText("Voz cambiada con éxito. Soy tu copiloto de Gig Manager.")
+    }
+  }
+
+  testSelectedVoice(event) {
+    if (event) event.preventDefault()
+    if (!this.selectedVoice) return
+    this.speakText("Hola, soy tu copiloto de Gig Manager. Todo el dinero entra al Fondo General y tus finanzas están al día.")
+  }
+
+  toggleVoiceSettings(event) {
+    if (event) event.preventDefault()
+    if (!this.hasVoiceSettingsPanelTarget) return
+    const isHidden = this.voiceSettingsPanelTarget.style.display === "none"
+    this.voiceSettingsPanelTarget.style.display = isHidden ? "block" : "none"
   }
 
   speakText(rawText, bubble = null) {
