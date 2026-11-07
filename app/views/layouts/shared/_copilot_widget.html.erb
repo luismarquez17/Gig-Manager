@@ -35,7 +35,10 @@
                 data-action="click->ai-copilot#closePanel" 
                 aria-label="Regresar y cerrar chat"
                 title="Regresar">
-          <span class="gigai-btn-symbol">&#8592;</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; stroke: #ffffff !important; display: block; margin: auto;" aria-hidden="true">
+            <line x1="19" y1="12" x2="5" y2="12"></line>
+            <polyline points="12 19 5 12 12 5"></polyline>
+          </svg>
         </button>
 
         <%# Identidad y estado del copiloto %>
@@ -62,7 +65,7 @@
                 data-ai-copilot-target="voiceToggleBtn" 
                 aria-label="Respuestas por voz activadas"
                 title="Respuestas por voz activadas (clic para silenciar)">
-          <span class="gigai-btn-symbol" data-ai-copilot-target="voiceToggleIcon" style="font-size: 1.05rem;">🔊</span>
+          <span class="gigai-btn-symbol" data-ai-copilot-target="voiceToggleIcon" style="font-size: 1.15rem; line-height: 1; display: flex; align-items: center; justify-content: center; user-select: none;">🔊</span>
         </button>
 
         <%# Botón cerrar %>
@@ -71,7 +74,10 @@
                 data-action="click->ai-copilot#closePanel" 
                 aria-label="Cerrar chat"
                 title="Cerrar">
-          <span class="gigai-btn-symbol">&times;</span>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 20px; height: 20px; stroke: #ffffff !important; display: block; margin: auto;" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
 
@@ -102,6 +108,18 @@
               <span>🔔 Autorizar Pagos</span>
             </button>
           <% end %>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Dame un reporte de este mes comparado con el anterior">
+            📈 Comparar con Mes Anterior
+          </button>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿Cómo está el inventario de equipos y qué tenemos disponible o dañado?">
+            📦 Inventario
+          </button>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿Qué equipos tenemos actualmente en el taller o en reparación?">
+            🛠️ Taller & Reparaciones
+          </button>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Muéstrame los paquetes de shows y catálogo de upsells adicionales">
+            ✨ Paquetes & Upsells
+          </button>
           <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿Cuánto dinero neto tengo en caja y qué cobros están pendientes?">
             📊 Saldo en Caja
           </button>
@@ -280,7 +298,10 @@
                 class="gigai-composer-send-btn" 
                 aria-label="Enviar mensaje"
                 title="Enviar mensaje">
-          <span class="gigai-send-symbol">➤</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width: 18px; height: 18px; stroke: #ffffff !important; display: block; margin: auto;" aria-hidden="true">
+            <line x1="22" y1="2" x2="11" y2="13"></line>
+            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+          </svg>
         </button>
       </div>
 
@@ -446,6 +467,22 @@
       background: rgba(255, 255, 255, 0.32);
     }
 
+    .gigai-header-btn svg {
+      width: 20px !important;
+      height: 20px !important;
+      min-width: 20px !important;
+      min-height: 20px !important;
+      stroke: #ffffff !important;
+      fill: none !important;
+      stroke-width: 2.5 !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+      display: block !important;
+      margin: auto !important;
+      pointer-events: none !important;
+      flex-shrink: 0 !important;
+    }
+
     .gigai-btn-symbol {
       display: flex;
       align-items: center;
@@ -559,6 +596,8 @@
       flex-shrink: 0;
       box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);
       animation: gigaiFadeIn 0.2s ease-out;
+      box-sizing: border-box;
+      width: 100%;
     }
 
     .gigai-speaking-inner {
@@ -566,6 +605,7 @@
       align-items: center;
       gap: 8px;
       font-weight: 700;
+      min-width: 0;
     }
 
     .gigai-sound-waves {
@@ -573,6 +613,7 @@
       align-items: center;
       gap: 3px;
       height: 14px;
+      flex-shrink: 0;
     }
 
     .gigai-sound-waves span {
@@ -606,6 +647,9 @@
       align-items: center;
       gap: 4px;
       transition: background 0.15s ease;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
     }
 
     .gigai-speaking-stop-btn:hover {
@@ -1038,6 +1082,22 @@
     .gigai-composer-send-btn:active {
       transform: scale(0.92);
       box-shadow: 0 2px 6px <%= theme_shadow %>;
+    }
+
+    .gigai-composer-send-btn svg {
+      width: 18px !important;
+      height: 18px !important;
+      min-width: 18px !important;
+      min-height: 18px !important;
+      stroke: #ffffff !important;
+      fill: none !important;
+      stroke-width: 2.5 !important;
+      stroke-linecap: round !important;
+      stroke-linejoin: round !important;
+      display: block !important;
+      margin: auto !important;
+      pointer-events: none !important;
+      flex-shrink: 0 !important;
     }
 
     .gigai-send-symbol {

@@ -451,6 +451,22 @@ class GeminiService
       "No hay notificaciones sin leer."
     end
 
+    # Contexto rápido de Inventario y Taller
+    total_equipos = company.items.count rescue 0
+    equipos_danados = company.items.where(status: 'Dañado').count rescue 0
+    equipos_en_taller = MaintenanceRecord.joins(:item).where(items: { company_id: company.id }, status: [:pending, :in_repair]).count rescue 0
+    repairs_active = MaintenanceRecord.joins(:item).where(items: { company_id: company.id }, status: [:pending, :in_repair]).includes(:item).limit(4) rescue []
+    taller_lines = repairs_active.map { |r| "• #{r.item&.name} (Costo: $#{r.cost} USD, Estado: #{r.status}): #{r.description.to_s.truncate(60)}" }
+    taller_context = if taller_lines.any?
+      "TALLER Y MANTENIMIENTO ACTIVO (#{equipos_en_taller} equipos):\n#{taller_lines.join("\n")}"
+    else
+      "Taller al día: no hay reparaciones activas pendientes."
+    end
+
+    # Contexto rápido de Upsells y Paquetes
+    upsells_list = StandardUpsell.where(company_id: [company.id, nil]).active_catalog.limit(6).map { |u| "#{u.emoji} #{u.title} ($#{u.price} USD)" }.join(', ') rescue ""
+    packages_list = company.preset_budgets.limit(4).map { |p| "#{p.title} ($#{p.price} USD)" }.join(', ') rescue ""
+
     <<~PROMPT
       Eres GigAI, el Copiloto Inteligente, Director Financiero y Operativo de Gig Manager para la empresa "#{company.name}".
 
@@ -466,6 +482,11 @@ class GeminiService
       2. AGENDAR EVENTOS Y REGISTRAR ABONOS: Crear shows, clientes, anticipos y asignar músicos con una sola instrucción sin fricción.
       3. SEGUIMIENTO PROACTIVO DE CIERRE DE SHOWS: Cuando un evento acaba de pasar (ayer o hace pocos días), ayudar al usuario a no olvidar registrar el pago a la nómina de músicos, el saldo cobrado al cliente o los gastos de transporte.
       4. GESTIÓN PROACTIVA DE NOTIFICACIONES Y AUTORIZACIÓN DE PAGOS: Leer los reportes de pago de músicos y abonos de clientes para avisar de inmediato al líder y autorizarlos o rechazarlos con órdenes sencillas en lenguaje natural.
+      5. GESTIÓN INTEGRAL DE OPERACIONES (INVENTARIO, TALLER, UPSELLS Y REPORTES):
+         - Inventario: Conocer el stock de equipos, disponibilidad y estado físico (cables, cornetas, luces, etc.).
+         - Taller: Monitorear equipos en reparación, costos acumulados y registrar ingresos de equipos dañados al taller.
+         - Paquetes & Upsells: Recomendar servicios adicionales (humo, chisperos, subwoofers, horas extra) y paquetes de presupuesto.
+         - Reporte Mensual Comparativo: Generar reportes financieros detallados entre el mes actual y el mes anterior con cálculo de variaciones (% delta).
 
       DATOS DE CONTEXTO ACTUAL DE LA EMPRESA:
       - Fecha de hoy: #{today_str}
@@ -474,35 +495,53 @@ class GeminiService
       - Personal / Músicos registrados: #{workers_list.presence || 'Sin personal registrado aún'}
       - Próximos Shows:
       #{upcoming.presence || 'No hay shows próximos en los próximos días.'}
+      - Resumen de Inventario: #{total_equipos} equipos en catálogo (#{equipos_danados} dañados, #{equipos_en_taller} en taller).
+      - Catálogo de Upsells disponibles: #{upsells_list.presence || 'Ninguno configurado'}
+      - Paquetes de Shows: #{packages_list.presence || 'Estándar'}
 
       #{post_gig_context}
+
+      #{taller_context}
 
       #{pending_approvals_context}
 
       #{unread_notifs_context}
 
       REGLAS DE ACTUACIÓN:
-      - PROACTIVIDAD EN PAGOS PENDIENTES Y NOTIFICACIONES (¡CRUCIAL!):
-        Si en la sección "REPORTES DE PAGO Y ABONOS PENDIENTES DE AUTORIZAR" hay elementos, y el usuario te saluda ("hola", "¿qué hay pendiente?", "¿qué notificaciones tengo?", "¿tengo algo pendiente?"):
-        ¡DEBES INFORMARLE DE INMEDIATO E INTUITIVAMENTE!
-        Ejemplo: "¡Hola! Tienes [X] reporte(s) de pago pendiente(s) de confirmar:
-        • Gabriel Morales indicó haber recibido $100.00 USD en Efectivo (06/11/2026).
-        ¿Deseas que lo autorice de una vez?"
-        NUNCA digas que no tienes notificaciones ni pendientes si hay pagos pendientes en la lista.
+      - REPORTE MENSUAL COMPARATIVO (¡MUY IMPORTANTE!):
+        Si el usuario te dice: "dame un reporte de este mes comparado con el anterior", "¿cómo vamos este mes vs el mes pasado?", "comparativa mensual", "reporte de este mes":
+        Llama INMEDIATAMENTE a la herramienta `get_monthly_comparative_report`. Al recibir los datos, resume en tu respuesta hablada y escrita los números clave: Cobranzas de shows, gastos de caja, nómina de músicos, gastos en taller, saldo neto final y los porcentajes de variación (% delta).
+      - INVENTARIO DE EQUIPOS:
+        Si el usuario pregunta por equipos, cables, cornetas, luces, consolas, stock o disponibilidad (ej. "¿cuántos micrófonos tenemos?", "¿tenemos cables disponibles?", "¿qué equipos están dañados?"):
+        Llama a la herramienta `get_inventory_status`.
+      - TALLER Y MANTENIMIENTO:
+        Si el usuario pregunta por el taller, reparaciones o equipos dañados (ej. "¿qué tenemos en el taller?", "¿cuánto hemos gastado en reparaciones?"):
+        Llama a `get_workshop_status`.
+        Si el usuario dice que mandó o va a mandar un equipo al taller (ej. "manda la corneta al taller porque suena con ruido, costará $30"):
+        Llama a `record_maintenance_entry`.
+      - PAQUETES Y UPSELLS:
+        Si el usuario pregunta por los paquetes de shows, precios de servicios adicionales o upsells (ej. "¿qué upsells ofrecemos?", "¿cuánto cobramos por la máquina de humo?"):
+        Llama a `get_packages_and_upsells`.
+      - OTRAS ÁREAS (METAS, COMPRAS, COTIZACIONES):
+        Si el usuario pregunta por la lista de compras de equipos o metas de ahorro, llama a `get_company_area_overview`.
+      - PROACTIVIDAD EN PAGOS PENDIENTES Y NOTIFICACIONES:
+        Si en la sección "REPORTES DE PAGO Y ABONOS PENDIENTES DE AUTORIZAR" hay elementos, y el usuario te saluda ("hola", "¿qué hay pendiente?", "¿qué notificaciones tengo?"):
+        ¡INFORMA DE INMEDIATO!
       - AUTORIZAR PAGOS:
-        Si el usuario dice "autoriza el pago de [Nombre]", "aprueba el pago de Gabriel", "confirma el pago", "sí, autorízalo", "acepta el reporte", o "autorizar todos":
+        Si el usuario dice "autoriza el pago de [Nombre]", "aprueba el pago de Gabriel", "confirma el pago", "sí, autorízalo", o "autorizar todos":
         Llama de inmediato a la herramienta `approve_payment` con el nombre de la persona (o `approve_all: true` si pide todos).
       - RECHAZAR PAGOS:
         Si el usuario dice "rechaza el pago de Gabriel" o "no lo aceptes":
         Llama a la herramienta `reject_payment` con el motivo del rechazo.
       - CONSULTAR NOTIFICACIONES / PENDIENTES:
-        Si el usuario pide ver notificaciones o pendientes, llama a `get_pending_approvals` o enumérale de forma clara los pagos y notificaciones pendientes.
-      - Si el usuario dice que gastó dinero en efectivo (ej. "anota $20 de taxi" o "gasté $15 en cables"), llama inmediatamente a la función `record_cash_adjustment` con adjustment_type: "withdrawal".
-      - Si el usuario dice que cobró o entró un dinero a caja, llama a `record_cash_adjustment` con adjustment_type: "deposit" (o `record_gig_payment` si menciona un show/cliente).
-      - Si el usuario pide agendar un show, usa `create_gig`. Si menciona un anticipo, inclúyelo en `advance_amount`. Si menciona músicos, inclúyelos en `staff_names`.
-      - Si el usuario dice que ya le pagó a un músico o pregunta por nómina, usa `record_employee_payment` o `get_worker_balances`.
+        Si el usuario pide ver notificaciones o pendientes, llama a `get_pending_approvals`.
+      - CAJA Y GASTOS DIRECTOS:
+        Si el usuario dice que gastó dinero en efectivo (ej. "anota $20 de taxi" o "gasté $15 en cables"), llama a `record_cash_adjustment` con adjustment_type: "withdrawal".
+        Si entró dinero a caja, llama a `record_cash_adjustment` con adjustment_type: "deposit" (o `record_gig_payment` si menciona un show/cliente).
+      - AGENDAR Y NÓMINA:
+        Usa `create_gig`, `record_employee_payment` y `get_worker_balances` según corresponda.
       - NUNCA le digas al usuario que debe repartir o asignar dinero a sub-fondos, porque solo existe un fondo general único.
-      - ESTILO CONVERSACIONAL Y DE VOZ (MUY IMPORTANTE): Tus respuestas se leen en voz alta con audio interactivo por el navegador. Responde siempre en español natural, fluido, conciso y motivador. Sé muy claro sobre los montos y acciones realizadas, con frases directas y agradables de escuchar.
+      - ESTILO CONVERSACIONAL Y DE VOZ: Tus respuestas se leen en voz alta con audio interactivo por el navegador. Responde siempre en español natural, fluido, conciso y motivador. Sé muy claro sobre los montos y acciones realizadas, con frases directas y agradables de escuchar.
     PROMPT
   end
 
@@ -668,6 +707,118 @@ class GeminiService
               type: 'OBJECT',
               properties: {}
             }
+          },
+          {
+            name: 'get_inventory_status',
+            description: 'Consulta el inventario de equipos (disponibilidad, cantidades, estado excelente/operativo/dañado, y categorías como cables, cornetas, luces, pantallas, consolas).',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                category: {
+                  type: 'STRING',
+                  description: 'Categoría opcional a filtrar (ej. "Cables", "Cornetas", "Luces", "Microfonos", "Consolas")'
+                },
+                status: {
+                  type: 'STRING',
+                  enum: %w[Excelente Operativo Dañado],
+                  description: 'Estado físico del equipo para filtrar'
+                },
+                search_query: {
+                  type: 'STRING',
+                  description: 'Nombre o término de búsqueda del equipo (ej. "xlr", "shure", "jbl", "pantalla")'
+                }
+              }
+            }
+          },
+          {
+            name: 'get_workshop_status',
+            description: 'Consulta el taller y área de reparaciones/mantenimiento (equipos en reparación, costo acumulado, historial técnico y averías reportadas).',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                status_filter: {
+                  type: 'STRING',
+                  enum: %w[active pending in_repair fixed discarded all],
+                  description: 'Filtro de estado: "active" (en taller/reparación), "fixed" (reparados), "discarded" (descartados) o "all". Por defecto es "active".'
+                },
+                item_name: {
+                  type: 'STRING',
+                  description: 'Nombre del equipo a consultar en el taller (opcional)'
+                }
+              }
+            }
+          },
+          {
+            name: 'record_maintenance_entry',
+            description: 'Registra el ingreso de un equipo averiado al taller o actualiza el estado de una reparación, especificando la falla y el costo.',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                item_name: {
+                  type: 'STRING',
+                  description: 'Nombre del equipo que entra al taller (ej. "Corneta JBL", "Cable XLR 10m")'
+                },
+                description: {
+                  type: 'STRING',
+                  description: 'Descripción detallada de la falla o trabajo a realizar (ej. "Falso contacto en conector XLR", "Cono de bajo quemado")'
+                },
+                cost: {
+                  type: 'NUMBER',
+                  description: 'Costo estimado o pagado por la reparación en USD'
+                },
+                status: {
+                  type: 'STRING',
+                  enum: %w[pending in_repair fixed discarded],
+                  description: 'Estado del mantenimiento. Por defecto es "in_repair".'
+                }
+              },
+              required: %w[item_name description]
+            }
+          },
+          {
+            name: 'get_packages_and_upsells',
+            description: 'Consulta los paquetes de shows predefinidos (PresetBudgets), catálogo de servicios adicionales / upsells (máquinas de humo, sparkulas, subwoofers, horas extra) y kits de equipos.',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                filter: {
+                  type: 'STRING',
+                  enum: %w[all upsells preset_budgets kits client_requests],
+                  description: 'Filtro para ver solo upsells, solo paquetes de shows, solo kits de equipos o todo el catálogo.'
+                }
+              }
+            }
+          },
+          {
+            name: 'get_monthly_comparative_report',
+            description: 'Genera un reporte financiero y operativo comparativo profundo entre dos meses (por defecto este mes vs el mes anterior). Analiza cobranzas de shows, total facturado, gastos de caja en efectivo, nómina de músicos, gastos en taller, saldo neto y porcentajes de variación (% delta).',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                target_month: {
+                  type: 'STRING',
+                  description: 'Mes a evaluar (ej. "current", "este mes", "2026-11", "noviembre"). Por defecto es el mes actual.'
+                },
+                compare_month: {
+                  type: 'STRING',
+                  description: 'Mes con el cual comparar (ej. "previous", "mes anterior", "2026-10", "octubre"). Por defecto es el mes anterior.'
+                }
+              }
+            }
+          },
+          {
+            name: 'get_company_area_overview',
+            description: 'Consulta el estado de otras áreas clave de la empresa: metas de reinversión/ahorro, lista de compras de equipos pendientes y presupuestos emitidos a clientes.',
+            parameters: {
+              type: 'OBJECT',
+              properties: {
+                area: {
+                  type: 'STRING',
+                  enum: %w[all goals shopping quotes],
+                  description: 'Área específica a consultar: "goals" (metas de ahorro), "shopping" (lista de compras de equipos), "quotes" (cotizaciones enviadas) o "all".'
+                }
+              }
+            }
           }
         ]
       }
@@ -698,6 +849,18 @@ class GeminiService
       tool_reject_payment(args)
     when 'get_pending_approvals'
       tool_get_pending_approvals(args)
+    when 'get_inventory_status'
+      tool_get_inventory_status(args)
+    when 'get_workshop_status'
+      tool_get_workshop_status(args)
+    when 'record_maintenance_entry'
+      tool_record_maintenance_entry(args)
+    when 'get_packages_and_upsells'
+      tool_get_packages_and_upsells(args)
+    when 'get_monthly_comparative_report'
+      tool_get_monthly_comparative_report(args)
+    when 'get_company_area_overview'
+      tool_get_company_area_overview(args)
     else
       { success: false, message: "Herramienta desconocida: #{tool_name}" }
     end
@@ -1190,6 +1353,483 @@ class GeminiService
       client_abonos: client_items,
       unread_notifications: notif_items
     }
+  end
+
+  # ==========================================
+  # HERRAMIENTAS DE INVENTARIO Y TALLER
+  # ==========================================
+
+  def tool_get_inventory_status(args)
+    category = args['category'].to_s.strip
+    status_filter = args['status'].to_s.strip
+    query = args['search_query'].to_s.strip.downcase
+
+    scope = company.items.includes(:inventory_items)
+    scope = scope.where('LOWER(category) = ?', category.downcase) if category.present?
+    scope = scope.where(status: status_filter) if status_filter.present?
+    if query.present?
+      scope = scope.where('LOWER(name) LIKE ? OR LOWER(sub_category) LIKE ? OR LOWER(category) LIKE ?', "%#{query}%", "%#{query}%", "%#{query}%")
+    end
+
+    items = scope.order(category: :asc, name: :asc).limit(40)
+    total_company_items = company.items.count
+    damaged_total = company.items.where(status: 'Dañado').count
+    operativo_total = company.items.where(status: ['Operativo', 'Excelente']).count
+
+    lines = items.map do |item|
+      "• **#{item.name}** (#{item.category || 'General'}#{item.sub_category.present? ? " - #{item.sub_category}" : ''}): Total: #{item.total_count} (Disponibles: #{item.available_count}, Dañados: #{item.damaged_count}, Taller: #{item.maintenance_count}) | Estado: #{item.status}"
+    end
+
+    summary = if items.empty?
+      "📦 No se encontraron equipos en inventario que coincidan con la búsqueda."
+    else
+      "📦 **Inventario de Equipos (#{items.count} resultados):**\n\n#{lines.join("\n")}\n\n" \
+      "📊 **Balance Global:** #{total_company_items} equipos registrados en total (#{operativo_total} operativos/excelentes, #{damaged_total} con daños/alerta)."
+    end
+
+    {
+      success: true,
+      total_listed: items.count,
+      message: summary,
+      card: {
+        type: 'inventory_status',
+        title: "📦 Inventario de Equipos",
+        amount: "#{operativo_total}/#{total_company_items} Operativos",
+        details: "#{damaged_total} con daños o en taller • #{company.items.pluck(:category).compact.uniq.count} categorías",
+        url: "/items"
+      }
+    }
+  end
+
+  def tool_get_workshop_status(args)
+    status_filter = args['status_filter'].to_s.strip.downcase
+    item_name = args['item_name'].to_s.strip.downcase
+
+    scope = MaintenanceRecord.joins(:item).where(items: { company_id: company.id }).includes(:item)
+
+    case status_filter
+    when 'pending'
+      scope = scope.where(status: :pending)
+    when 'in_repair'
+      scope = scope.where(status: :in_repair)
+    when 'fixed'
+      scope = scope.where(status: :fixed)
+    when 'discarded'
+      scope = scope.where(status: :discarded)
+    when 'all'
+      # sin filtro
+    else
+      scope = scope.where(status: [:pending, :in_repair])
+    end
+
+    if item_name.present?
+      scope = scope.where('LOWER(items.name) LIKE ?', "%#{item_name}%")
+    end
+
+    records = scope.order(created_at: :desc).limit(20)
+    total_spent_in_repairs = MaintenanceRecord.joins(:item).where(items: { company_id: company.id }).sum(:cost).to_f
+    active_repairs_count = MaintenanceRecord.joins(:item).where(items: { company_id: company.id }, status: [:pending, :in_repair]).count
+
+    lines = records.map do |mr|
+      item_title = mr.item&.name || "Equipo ##{mr.item_id}"
+      cost_str = "$#{sprintf('%.2f', mr.cost)} USD"
+      date_str = mr.started_at&.strftime('%d/%m/%Y') || mr.created_at.strftime('%d/%m/%Y')
+      status_label = case mr.status
+                     when 'pending' then '⏳ Pendiente'
+                     when 'in_repair' then '🔧 En reparación'
+                     when 'fixed' then '✅ Reparado'
+                     when 'discarded' then '🗑️ Descartado'
+                     else mr.status
+                     end
+      "• **#{item_title}** [#{status_label}] | Costo: #{cost_str} | Desde: #{date_str} | Falla: #{mr.description}"
+    end
+
+    summary = if records.empty?
+      "🛠️ **Taller y Mantenimiento:**\nNo hay equipos registrados bajo este criterio. Actualmente hay #{active_repairs_count} equipos activos en reparación."
+    else
+      "🛠️ **Taller y Mantenimiento (#{records.count} registros):**\n\n#{lines.join("\n")}\n\n" \
+      "💰 Total histórico invertido en reparaciones: **$#{sprintf('%.2f', total_spent_in_repairs)} USD**."
+    end
+
+    {
+      success: true,
+      total_listed: records.count,
+      active_repairs_count: active_repairs_count,
+      message: summary,
+      card: {
+        type: 'workshop_status',
+        title: "🛠️ Taller y Reparaciones",
+        amount: "#{active_repairs_count} en taller",
+        details: "Gasto acumulado: $#{sprintf('%.2f', total_spent_in_repairs)} USD",
+        url: "/maintenance_records"
+      }
+    }
+  end
+
+  def tool_record_maintenance_entry(args)
+    item_name = args['item_name'].to_s.strip
+    desc = args['description'].to_s.strip
+    cost = args['cost'].to_f
+    status_param = args['status'].to_s.strip.downcase
+    status_enum = case status_param
+                  when 'fixed' then :fixed
+                  when 'discarded' then :discarded
+                  when 'pending' then :pending
+                  else :in_repair
+                  end
+
+    item = company.items.where('LOWER(name) LIKE ?', "%#{item_name.downcase}%").first
+    unless item
+      return { success: false, message: "No encontré en el inventario ningún equipo llamado '#{item_name}'." }
+    end
+
+    record = MaintenanceRecord.create!(
+      item: item,
+      description: desc.presence || "Ingreso al taller por mantenimiento reportado vía GigAI Copilot",
+      cost: [cost, 0.0].max,
+      status: status_enum,
+      started_at: Date.current
+    )
+
+    item.sync_status_from_inventory!
+
+    status_label = status_enum == :in_repair ? "en reparación" : status_enum.to_s
+    cost_str = "$#{sprintf('%.2f', record.cost)} USD"
+    {
+      success: true,
+      message: "🛠️ ¡Equipo enviado al taller con éxito!\n• **Equipo:** #{item.name}\n• **Estado:** #{status_label}\n• **Costo asignado:** #{cost_str}\n• **Falla:** #{record.description}.",
+      card: {
+        type: 'workshop_status',
+        title: "🛠️ Ingreso a Taller: #{item.name}",
+        amount: cost_str,
+        details: record.description.to_s.truncate(80),
+        url: "/maintenance_records"
+      }
+    }
+  end
+
+  # ==========================================
+  # PAQUETES Y UPSELLS
+  # ==========================================
+
+  def tool_get_packages_and_upsells(args)
+    filter = args['filter'].to_s.strip.downcase
+
+    upsells = StandardUpsell.where(company_id: [company.id, nil]).active_catalog
+    packages = company.preset_budgets.order(position: :asc, created_at: :asc)
+    kits = company.kits.includes(kit_items: :item)
+    client_requests = GigUpsellRequest.where(company_id: company.id).order(created_at: :desc).limit(10)
+
+    parts = []
+
+    if %w[all upsells ''].include?(filter)
+      upsell_lines = upsells.map do |u|
+        "• #{u.emoji} **#{u.title}**: $#{sprintf('%.2f', u.price)} #{u.currency}#{u.description.present? ? " - #{u.description.truncate(90)}" : ''}"
+      end
+      parts << "✨ **Catálogo de Servicios Adicionales (Upsells):**\n#{upsell_lines.join("\n")}" if upsell_lines.any?
+    end
+
+    if %w[all preset_budgets packages ''].include?(filter)
+      pkg_lines = packages.map do |p|
+        "• 🎸 **#{p.title}**: $#{sprintf('%.2f', p.price)} #{p.currency}#{p.description.present? ? " - #{p.description.truncate(90)}" : ''}"
+      end
+      parts << "📦 **Paquetes y Presupuestos Predefinidos de Shows:**\n#{pkg_lines.join("\n")}" if pkg_lines.any?
+    end
+
+    if %w[all kits ''].include?(filter)
+      kit_lines = kits.map do |k|
+        gear = k.kit_items.map { |ki| "#{ki.item&.name} (x#{ki.quantity})" }.join(', ')
+        "• 🎛️ **Kit '#{k.name}'**: #{gear.presence || 'Sin equipos asignados'}"
+      end
+      parts << "🧰 **Kits de Equipos para Shows:**\n#{kit_lines.join("\n")}" if kit_lines.any?
+    end
+
+    if %w[all client_requests ''].include?(filter) && client_requests.any?
+      req_lines = client_requests.map do |cr|
+        "• #{cr.emoji} **#{cr.title}** para show de #{cr.gig&.client_display_name} | $#{cr.price} USD | Estado: #{cr.status.upcase}"
+      end
+      parts << "📋 **Solicitudes Recientes de Upsells por Clientes:**\n#{req_lines.join("\n")}"
+    end
+
+    summary = parts.join("\n\n")
+
+    {
+      success: true,
+      message: summary,
+      upsells_count: upsells.count,
+      packages_count: packages.count,
+      kits_count: kits.count,
+      card: {
+        type: 'packages_upsells',
+        title: "✨ Paquetes & Upsells",
+        amount: "#{upsells.count} Upsells Activos",
+        details: "#{packages.count} Paquetes • #{kits.count} Kits de Sonido",
+        url: "/standard_upsells"
+      }
+    }
+  end
+
+  # ==========================================
+  # REPORTE COMPARATIVO MENSUAL
+  # ==========================================
+
+  def tool_get_monthly_comparative_report(args)
+    target_date = parse_month_string(args['target_month'], Date.current)
+    compare_date = parse_month_string(args['compare_month'], Date.current.prev_month)
+
+    # Si por alguna razón comparan el mismo mes, forzar que compare_date sea el mes anterior
+    compare_date = target_date.prev_month if target_date.year == compare_date.year && target_date.month == compare_date.month
+
+    target_start = target_date.beginning_of_month
+    target_end = target_date.end_of_month
+    comp_start = compare_date.beginning_of_month
+    comp_end = compare_date.end_of_month
+
+    target_m = calculate_month_metrics(target_start, target_end)
+    comp_m = calculate_month_metrics(comp_start, comp_end)
+
+    # Variaciones porcentuales (% delta)
+    delta_revenue = calc_delta(target_m[:total_collected], comp_m[:total_collected])
+    delta_contracted = calc_delta(target_m[:gigs_amount], comp_m[:gigs_amount])
+    delta_gigs = calc_delta(target_m[:gigs_count], comp_m[:gigs_count])
+    delta_cash_expenses = calc_delta(target_m[:cash_withdrawals], comp_m[:cash_withdrawals])
+    delta_payroll = calc_delta(target_m[:payroll_paid], comp_m[:payroll_paid])
+    delta_maintenance = calc_delta(target_m[:maintenance_cost], comp_m[:maintenance_cost])
+    delta_net = calc_delta(target_m[:net_cashflow], comp_m[:net_cashflow])
+
+    target_label = month_label_es(target_date)
+    compare_label = month_label_es(compare_date)
+
+    summary_text = <<~REPORT
+      📊 **Reporte Comparativo: #{target_label} vs. #{compare_label}**
+
+      💰 **1. Ingresos y Cobranzas de Shows:**
+      • **Recaudado en Shows:** $#{sprintf('%.2f', target_m[:total_collected])} USD (#{target_m[:payments_count]} cobros) vs. $#{sprintf('%.2f', comp_m[:total_collected])} USD (#{format_delta(delta_revenue)})
+      • **Valor Contratado en Shows:** $#{sprintf('%.2f', target_m[:gigs_amount])} USD vs. $#{sprintf('%.2f', comp_m[:gigs_amount])} USD (#{format_delta(delta_contracted)})
+      • **Cantidad de Shows:** #{target_m[:gigs_count]} shows vs. #{comp_m[:gigs_count]} shows (#{format_delta(delta_gigs)})
+
+      💸 **2. Egresos y Salidas del Fondo General:**
+      • **Nómina pagada a Músicos/Staff:** $#{sprintf('%.2f', target_m[:payroll_paid])} USD (#{target_m[:payroll_count]} pagos) vs. $#{sprintf('%.2f', comp_m[:payroll_paid])} USD (#{format_delta(delta_payroll)})
+      • **Gastos Operativos en Efectivo (Caja):** $#{sprintf('%.2f', target_m[:cash_withdrawals])} USD vs. $#{sprintf('%.2f', comp_m[:cash_withdrawals])} USD (#{format_delta(delta_cash_expenses)})
+      • **Gastos de Taller y Reparaciones:** $#{sprintf('%.2f', target_m[:maintenance_cost])} USD vs. $#{sprintf('%.2f', comp_m[:maintenance_cost])} USD (#{format_delta(delta_maintenance)})
+
+      📈 **3. Flujo Neto de Efectivo (Margen de Caja):**
+      • **#{target_label}:** $#{sprintf('%.2f', target_m[:net_cashflow])} USD
+      • **#{compare_label}:** $#{sprintf('%.2f', comp_m[:net_cashflow])} USD
+      • **Variación Neta:** #{format_delta(delta_net)}
+
+      💡 **Diagnóstico Operativo:**
+      #{generate_report_insight(target_m, comp_m, delta_revenue, delta_net)}
+    REPORT
+
+    {
+      success: true,
+      message: summary_text.strip,
+      target_month: target_label,
+      compare_month: compare_label,
+      metrics: {
+        target: target_m,
+        compare: comp_m,
+        deltas: {
+          revenue: delta_revenue,
+          contracted: delta_contracted,
+          gigs: delta_gigs,
+          payroll: delta_payroll,
+          cash_expenses: delta_cash_expenses,
+          net: delta_net
+        }
+      },
+      card: {
+        type: 'comparative_report',
+        title: "📊 Comparativa: #{target_label} vs. #{compare_label}",
+        amount: "$#{sprintf('%.2f', target_m[:net_cashflow])} USD Neto",
+        details: "Cobrado: $#{sprintf('%.2f', target_m[:total_collected])} (#{format_delta(delta_revenue)}) • Nómina: $#{sprintf('%.2f', target_m[:payroll_paid])} • Shows: #{target_m[:gigs_count]}",
+        url: "/financials"
+      }
+    }
+  end
+
+  def calculate_month_metrics(start_date, end_date)
+    # Shows
+    gigs_scope = company.gigs.where(date: start_date..end_date)
+    gigs_count = gigs_scope.count
+    gigs_amount = gigs_scope.sum(:amount).to_f
+    gigs_completed = gigs_scope.where('date <= ?', Date.current).count
+
+    # Cobranzas de shows (GigPayment aprobados)
+    gp_scope = GigPayment.joins(:gig)
+                         .where(gigs: { company_id: company.id }, status: 'approved')
+                         .where(date_paid: start_date..end_date)
+    total_collected = gp_scope.sum(:amount).to_f
+    payments_count = gp_scope.count
+
+    # Caja General (Movimientos directos en efectivo)
+    cash_deposits = company.cash_adjustments.inflows.approved.where(date: start_date..end_date).sum(:amount).to_f
+    cash_withdrawals = company.cash_adjustments.outflows.approved.where(date: start_date..end_date).sum(:amount).to_f
+
+    # Nómina a músicos / personal
+    ep_scope = company.employee_payments.approved
+                      .where.not(funding_source: 'external_capital')
+                      .where(date_paid: start_date..end_date)
+    payroll_paid = ep_scope.sum(:amount).to_f
+    payroll_count = ep_scope.count
+
+    # Taller / Reparaciones iniciadas en el mes
+    m_scope = MaintenanceRecord.joins(:item)
+                               .where(items: { company_id: company.id })
+                               .where(started_at: start_date..end_date)
+    maintenance_cost = m_scope.sum(:cost).to_f
+
+    # Totales
+    total_inflow = (total_collected + cash_deposits).round(2)
+    total_outflow = (cash_withdrawals + payroll_paid + maintenance_cost).round(2)
+    net_cashflow = (total_inflow - total_outflow).round(2)
+
+    {
+      gigs_count: gigs_count,
+      gigs_amount: gigs_amount.round(2),
+      gigs_completed: gigs_completed,
+      total_collected: total_collected.round(2),
+      payments_count: payments_count,
+      cash_deposits: cash_deposits.round(2),
+      cash_withdrawals: cash_withdrawals.round(2),
+      payroll_paid: payroll_paid.round(2),
+      payroll_count: payroll_count,
+      maintenance_cost: maintenance_cost.round(2),
+      total_inflow: total_inflow,
+      total_outflow: total_outflow,
+      net_cashflow: net_cashflow
+    }
+  end
+
+  def tool_get_company_area_overview(args)
+    area = args['area'].to_s.strip.downcase
+
+    parts = []
+
+    # Metas de reinversión / ahorro
+    if %w[all goals ''].include?(area)
+      goals = company.reinvestment_goals.where(status: 'active').order(priority: :asc)
+      if goals.any?
+        goal_lines = goals.map do |g|
+          pct = g.target_amount.to_f.positive? ? ((g.saved_amount.to_f / g.target_amount.to_f) * 100).round(1) : 0
+          "• 🎯 **#{g.title}**: Ahorrado $#{sprintf('%.2f', g.saved_amount)} de $#{sprintf('%.2f', g.target_amount)} USD (#{pct}%)"
+        end
+        parts << "🎯 **Metas de Reinversión y Ahorro:**\n#{goal_lines.join("\n")}"
+      end
+    end
+
+    # Lista de compras de equipo
+    if %w[all shopping ''].include?(area)
+      shopping = company.shopping_items.where(status: :pending).by_priority.limit(8)
+      if shopping.any?
+        shop_lines = shopping.map do |s|
+          "• 🛒 **#{s.name}** (x#{s.quantity}): ~$#{sprintf('%.2f', s.total_price)} USD [Prioridad: #{s.priority.upcase}]"
+        end
+        parts << "🛒 **Lista de Compras de Equipos (Pendientes):**\n#{shop_lines.join("\n")}"
+      end
+    end
+
+    # Presupuestos / Cotizaciones a clientes
+    if %w[all quotes ''].include?(area)
+      quotes = company.client_quotes.recent_first.limit(5)
+      if quotes.any?
+        quote_lines = quotes.map do |q|
+          "• 📋 **#{q.display_client_name}**: $#{sprintf('%.2f', q.amount)} USD (#{q.package_display_title}) | Estado: #{q.status_label}"
+        end
+        parts << "📋 **Presupuestos y Cotizaciones Recientes:**\n#{quote_lines.join("\n")}"
+      end
+    end
+
+    summary = parts.any? ? parts.join("\n\n") : "Todas las áreas consultadas se encuentran al día."
+
+    {
+      success: true,
+      message: summary,
+      card: {
+        type: 'area_overview',
+        title: "🏢 Vista General de la Empresa",
+        amount: "#{company.reinvestment_goals.where(status: 'active').count} Metas Activas",
+        details: "#{company.shopping_items.where(status: :pending).count} Compras pendientes • #{company.client_quotes.count} Cotizaciones",
+        url: "/reinvestment_goals"
+      }
+    }
+  end
+
+  def parse_month_string(str, default_date)
+    return default_date if str.blank? || str.downcase == 'current' || str.downcase == 'este mes'
+    return default_date.prev_month if str.downcase == 'previous' || str.downcase == 'mes anterior'
+
+    clean = str.to_s.strip.downcase
+
+    # Formato numérico YYYY-MM
+    if clean =~ /^(\d{4})-(\d{1,2})$/
+      return Date.new($1.to_i, $2.to_i, 1) rescue default_date
+    end
+
+    # Meses en español
+    months_es = {
+      'enero' => 1, 'febrero' => 2, 'marzo' => 3, 'abril' => 4,
+      'mayo' => 5, 'junio' => 6, 'julio' => 7, 'agosto' => 8,
+      'septiembre' => 9, 'octubre' => 10, 'noviembre' => 11, 'diciembre' => 12
+    }
+
+    months_es.each do |m_name, m_num|
+      if clean.include?(m_name)
+        year_match = clean.scan(/\b(20\d\d)\b/).flatten.first
+        year = year_match.present? ? year_match.to_i : default_date.year
+        return Date.new(year, m_num, 1) rescue default_date
+      end
+    end
+
+    Date.parse(str).beginning_of_month rescue default_date
+  end
+
+  def month_label_es(date)
+    months = %w[Enero Febrero Marzo Abril Mayo Junio Julio Agosto Septiembre Octubre Noviembre Diciembre]
+    "#{months[date.month - 1]} #{date.year}"
+  end
+
+  def calc_delta(curr, prev)
+    c = curr.to_f
+    p = prev.to_f
+    return 0.0 if p.zero? && c.zero?
+    return 100.0 if p.zero? && c > 0
+    return -100.0 if c.zero? && p > 0
+    (((c - p) / p.abs) * 100).round(1)
+  end
+
+  def format_delta(delta)
+    if delta > 0
+      "+#{delta}% ↗️"
+    elsif delta < 0
+      "#{delta}% ↘️"
+    else
+      "0.0% ➡️"
+    end
+  end
+
+  def generate_report_insight(target_m, comp_m, delta_revenue, delta_net)
+    insights = []
+    if delta_revenue > 0
+      insights << "Las cobranzas de shows crecieron un #{delta_revenue}% respecto al mes anterior."
+    elsif delta_revenue < 0
+      insights << "Las cobranzas de shows disminuyeron un #{delta_revenue.abs}% frente al mes previo."
+    else
+      insights << "Las cobranzas se mantuvieron estables respecto al mes previo."
+    end
+
+    if target_m[:net_cashflow] > comp_m[:net_cashflow]
+      insights << "El flujo neto de caja mejoró en $#{sprintf('%.2f', target_m[:net_cashflow] - comp_m[:net_cashflow])} USD."
+    elsif target_m[:net_cashflow] < comp_m[:net_cashflow]
+      insights << "El margen neto de caja se redujo en $#{sprintf('%.2f', comp_m[:net_cashflow] - target_m[:net_cashflow])} USD."
+    end
+
+    if target_m[:maintenance_cost].positive?
+      insights << "Se registraron $#{sprintf('%.2f', target_m[:maintenance_cost])} USD en reparaciones de taller."
+    end
+
+    insights.join(" ")
   end
 
   # ==========================================

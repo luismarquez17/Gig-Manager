@@ -410,15 +410,36 @@ export default class extends Controller {
     cardEl.style.borderRadius = "14px"
     cardEl.style.wordBreak = "break-word"
 
+    let amountColor = "#16a34a"
+
     if (card.type === 'payment_approved') {
       cardEl.style.background = "rgba(16, 185, 129, 0.08)"
       cardEl.style.border = "1.5px solid rgba(16, 185, 129, 0.3)"
+      amountColor = "#16a34a"
     } else if (card.type === 'payment_rejected') {
       cardEl.style.background = "rgba(239, 68, 68, 0.08)"
       cardEl.style.border = "1.5px solid rgba(239, 68, 68, 0.3)"
+      amountColor = "#dc2626"
+    } else if (card.type === 'comparative_report') {
+      cardEl.style.background = "rgba(99, 102, 241, 0.08)"
+      cardEl.style.border = "1.5px solid rgba(99, 102, 241, 0.35)"
+      amountColor = "#4f46e5"
+    } else if (card.type === 'inventory_status') {
+      cardEl.style.background = "rgba(14, 165, 233, 0.08)"
+      cardEl.style.border = "1.5px solid rgba(14, 165, 233, 0.3)"
+      amountColor = "#0284c7"
+    } else if (card.type === 'workshop_status') {
+      cardEl.style.background = "rgba(245, 158, 11, 0.08)"
+      cardEl.style.border = "1.5px solid rgba(245, 158, 11, 0.35)"
+      amountColor = "#d97706"
+    } else if (card.type === 'packages_upsells') {
+      cardEl.style.background = "rgba(168, 85, 247, 0.08)"
+      cardEl.style.border = "1.5px solid rgba(168, 85, 247, 0.35)"
+      amountColor = "#9333ea"
     } else {
       cardEl.style.background = "rgba(37, 99, 235, 0.06)"
       cardEl.style.border = "1.5px solid rgba(37, 99, 235, 0.2)"
+      amountColor = "#2563eb"
     }
 
     cardEl.style.fontSize = "0.85rem"
@@ -429,7 +450,7 @@ export default class extends Controller {
     cardEl.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
         <strong style="color: #1e293b; min-width: 0; word-break: break-word;">${card.title}</strong>
-        <span style="font-weight: 800; color: #16a34a; flex-shrink: 0;">${card.amount || ''}</span>
+        <span style="font-weight: 800; color: ${amountColor}; flex-shrink: 0;">${card.amount || ''}</span>
       </div>
       ${detailsHtml}
       ${urlHtml}

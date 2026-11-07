@@ -164,4 +164,160 @@ class GeminiServiceTest < ActiveSupport::TestCase
     assert_equal 'No asistió al evento', pending_ep.rejection_reason
     assert_includes result[:message], "fue rechazado"
   end
+
+  test "tool_get_inventory_status returns inventory items, counts and card" do
+    item = @company.items.create!(
+      name: "Corneta JBL PRX815",
+      category: "Cornetas",
+      status: "Excelente",
+      quantity: 2
+    )
+
+    result = @service.send(:tool_get_inventory_status, { 'search_query' => 'JBL' })
+    assert result[:success]
+    assert result[:total_listed] >= 1
+    assert_includes result[:message], "Corneta JBL PRX815"
+    assert_equal 'inventory_status', result[:card][:type]
+  end
+
+  test "tool_get_workshop_status and tool_record_maintenance_entry" do
+    item = @company.items.create!(
+      name: "Micrófono Shure SM58",
+      category: "Microfonos",
+      status: "Excelente",
+      quantity: 1
+    )
+
+    # 1. Registrar ingreso a taller
+    record_result = @service.send(
+      :tool_record_maintenance_entry,
+      {
+        'item_name' => item.name,
+        'description' => 'Malla abollada y cable interno desoldado',
+        'cost' => 35.0,
+        'status' => 'in_repair'
+      }
+    )
+
+    assert record_result[:success]
+    assert_includes record_result[:message], "Micrófono Shure SM58"
+    assert_equal 'workshop_status', record_result[:card][:type]
+
+    # 2. Consultar taller
+    status_result = @service.send(:tool_get_workshop_status, { 'status_filter' => 'active' })
+    assert status_result[:success]
+    assert status_result[:active_repairs_count] >= 1
+    assert_includes status_result[:message], "Malla abollada"
+  end
+
+  test "tool_get_packages_and_upsells returns standard upsells, preset budgets and kits" do
+    StandardUpsell.seed_defaults!
+    @company.preset_budgets.create!(
+      title: "Show Acústico Íntimo",
+      description: "Dúo acústico con guitarra y voz",
+      price: 350.0,
+      currency: "USD"
+    )
+
+    result = @service.send(:tool_get_packages_and_upsells, { 'filter' => 'all' })
+    assert result[:success]
+    assert result[:upsells_count] >= 1
+    assert result[:packages_count] >= 1
+    assert_includes result[:message], "Máquina de Humo"
+    assert_includes result[:message], "Show Acústico Íntimo"
+    assert_equal 'packages_upsells', result[:card][:type]
+  end
+
+  test "tool_get_monthly_comparative_report calculates exact revenue, expenses, payroll and deltas" do
+    # Mes actual (target)
+    client = @company.clients.create!(name: "Cliente Reporte", phone: "1111111111")
+    gig_this_month = @company.gigs.create!(
+      client: client,
+      date: Date.current,
+      amount: 1000.0,
+      currency: "USD"
+    )
+    gig_this_month.gig_payments.create!(
+      amount: 600.0,
+      currency: "USD",
+      date_paid: Date.current,
+      status: "approved"
+    )
+    @company.employee_payments.create!(
+      user: users(:musician),
+      amount: 200.0,
+      currency: "USD",
+      date_paid: Date.current,
+      status: "approved"
+    )
+    @company.cash_adjustments.create!(
+      user: @leader,
+      amount: 50.0,
+      adjustment_type: :withdrawal,
+      description: "Gasto de transporte actual",
+      date: Date.current,
+      status: "approved"
+    )
+
+    # Mes anterior (compare)
+    prev_date = Date.current.prev_month
+    gig_last_month = @company.gigs.create!(
+      client: client,
+      date: prev_date,
+      amount: 800.0,
+      currency: "USD"
+    )
+    gig_last_month.gig_payments.create!(
+      amount: 400.0,
+      currency: "USD",
+      date_paid: prev_date,
+      status: "approved"
+    )
+    @company.employee_payments.create!(
+      user: users(:musician),
+      amount: 150.0,
+      currency: "USD",
+      date_paid: prev_date,
+      status: "approved"
+    )
+
+    result = @service.send(
+      :tool_get_monthly_comparative_report,
+      {
+        'target_month' => Date.current.strftime('%Y-%m'),
+        'compare_month' => prev_date.strftime('%Y-%m')
+      }
+    )
+
+    assert result[:success]
+    assert_equal 'comparative_report', result[:card][:type]
+    metrics = result[:metrics]
+    assert metrics[:target][:total_collected] >= 600.0
+    assert metrics[:compare][:total_collected] >= 400.0
+    assert metrics[:deltas][:revenue] > 0
+    assert_includes result[:message], "Reporte Comparativo"
+    assert_includes result[:message], "Recaudado en Shows"
+    assert_includes result[:message], "Nómina pagada a Músicos"
+  end
+
+  test "tool_get_company_area_overview returns goals, shopping and quotes" do
+    @company.reinvestment_goals.create!(
+      title: "Nueva Consola Digital",
+      target_amount: 1500.0,
+      saved_amount: 500.0,
+      status: "active"
+    )
+    @company.shopping_items.create!(
+      name: "Cables Neutrik XLR 6m",
+      priority: :high,
+      quantity: 4,
+      unit_price: 15.0,
+      status: :pending
+    )
+
+    result = @service.send(:tool_get_company_area_overview, { 'area' => 'all' })
+    assert result[:success]
+    assert_includes result[:message], "Nueva Consola Digital"
+    assert_includes result[:message], "Cables Neutrik XLR 6m"
+  end
 end
