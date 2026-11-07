@@ -220,11 +220,11 @@ export default class extends Controller {
       this.history.push({ role: "user", content: text })
       if (data.reply) {
         this.history.push({ role: "model", content: data.reply })
-        this.appendMessage("model", data.reply, data.cards)
+        const { bubble } = this.appendMessage("model", data.reply, data.cards, [], true)
 
         // Reproducir por voz si la orden vino por micrófono o la voz está activada
         if (wasVoice || this.voiceOutputEnabled) {
-          this.speakText(data.reply)
+          this.speakText(data.reply, bubble)
         }
       }
 
@@ -312,20 +312,26 @@ export default class extends Controller {
   }
 
   // --- RENDERIZADO VISUAL ---
-  appendMessage(role, text, cards = [], diagnosticItems = []) {
-    if (!this.hasMessagesTarget) return
+  // --- RENDERIZADO VISUAL ---
+  appendMessage(role, text, cards = [], diagnosticItems = [], animate = false) {
+    if (!this.hasMessagesTarget) return { msgDiv: null, bubble: null }
 
     const msgDiv = document.createElement("div")
     msgDiv.style.marginBottom = "14px"
     msgDiv.style.display = "flex"
     msgDiv.style.flexDirection = "column"
     msgDiv.style.alignItems = role === "user" ? "flex-end" : "flex-start"
+    msgDiv.style.width = "100%"
+
+    let bubble = null
 
     if (role === "user") {
-      const bubble = document.createElement("div")
+      bubble = document.createElement("div")
       bubble.className = "gigai-bubble-user"
       bubble.textContent = text
       msgDiv.appendChild(bubble)
+      this.messagesTarget.appendChild(msgDiv)
+      this.scrollToBottom()
     } else {
       const row = document.createElement("div")
       row.className = "gigai-bubble-row-model"
@@ -335,9 +341,12 @@ export default class extends Controller {
       avatar.textContent = "🤖"
       row.appendChild(avatar)
 
-      const bubble = document.createElement("div")
+      bubble = document.createElement("div")
       bubble.className = "gigai-bubble-model"
-      bubble.innerHTML = this.formatMarkdown(text)
+
+      const textContainer = document.createElement("div")
+      textContainer.className = "gigai-bubble-text-content"
+      bubble.appendChild(textContainer)
 
       // Botón para reproducir audio del mensaje
       const actionsBar = document.createElement("div")
@@ -347,27 +356,50 @@ export default class extends Controller {
       speakBtn.className = "gigai-bubble-action-btn"
       speakBtn.title = "Escuchar respuesta por voz"
       speakBtn.innerHTML = "<span>🔊</span> <span>Escuchar</span>"
-      speakBtn.addEventListener("click", () => this.speakText(text))
+      speakBtn.addEventListener("click", () => this.speakText(text, bubble))
       actionsBar.appendChild(speakBtn)
       bubble.appendChild(actionsBar)
 
       row.appendChild(bubble)
-
       msgDiv.appendChild(row)
+
+      // Contenedor para tarjetas
+      const cardsContainer = document.createElement("div")
+      cardsContainer.className = "gigai-cards-container"
+      msgDiv.appendChild(cardsContainer)
+
+      const renderCards = () => {
+        if (cards && Array.isArray(cards) && cards.length > 0) {
+          cards.forEach(card => {
+            if (card) {
+              const cardEl = this.buildCardElement(card)
+              cardsContainer.appendChild(cardEl)
+            }
+          })
+          this.scrollToBottom()
+        }
+      }
+
+      this.messagesTarget.appendChild(msgDiv)
+      this.scrollToBottom()
+
+      if (animate) {
+        actionsBar.style.display = "none"
+        this.typewriterEffect(textContainer, text, () => {
+          actionsBar.style.display = "flex"
+          renderCards()
+          this.scrollToBottom()
+        })
+      } else {
+        textContainer.innerHTML = this.formatMarkdown(text)
+        renderCards()
+      }
     }
 
-    // Renderizar tarjetas interactivas de acciones ejecutadas
-    if (cards && cards.length > 0) {
-      cards.forEach(card => {
-        const cardEl = this.buildCardElement(card)
-        msgDiv.appendChild(cardEl)
-      })
-    }
-
-    // Renderizar botones de acción para diagnóstico
+    // Renderizar botones de acción para diagnóstico si existen
     if (diagnosticItems && diagnosticItems.length > 0) {
       diagnosticItems.forEach(item => {
-        if (item.action_key || item.prompt) {
+        if (item && (item.action_key || item.prompt)) {
           const btn = document.createElement("button")
           btn.className = "btn btn-sm mt-2"
           btn.style.marginLeft = "36px"
@@ -396,10 +428,60 @@ export default class extends Controller {
       })
     }
 
-    this.messagesTarget.appendChild(msgDiv)
+    this.scrollToBottom()
+    try {
+      msgDiv.scrollIntoView({ behavior: 'smooth', block: 'end' })
+    } catch(e) {}
+
+    return { msgDiv, bubble }
+  }
+
+  typewriterEffect(container, fullText, onComplete) {
+    if (!container) return
+    const words = fullText.split(" ")
+
+    // Si el texto es muy corto (menos de 5 palabras), renderizar de inmediato
+    if (words.length <= 5) {
+      container.innerHTML = this.formatMarkdown(fullText)
+      if (onComplete) onComplete()
+      this.scrollToBottom()
+      return
+    }
+
+    let currentIndex = 0
+    let finished = false
+
+    const finish = () => {
+      if (finished) return
+      finished = true
+      clearInterval(interval)
+      container.innerHTML = this.formatMarkdown(fullText)
+      if (onComplete) onComplete()
+      this.scrollToBottom()
+    }
+
+    // Si el usuario hace clic en el texto, completar todo al instante
+    container.style.cursor = "pointer"
+    container.onclick = finish
+
+    // Avanza de 2 en 2 palabras cada 28ms para que fluya en ~2-4 segundos en sincronía con la voz
+    const interval = setInterval(() => {
+      if (currentIndex < words.length) {
+        currentIndex += 2
+        const currentSlice = words.slice(0, currentIndex).join(" ")
+        container.innerHTML = this.formatMarkdown(currentSlice) + '<span style="display:inline-block; width:5px; height:12px; background:#6366f1; margin-left:3px; vertical-align:middle; border-radius:1px;"></span>'
+        this.scrollToBottom()
+      } else {
+        finish()
+      }
+    }, 28)
+
+    // Timeout de seguridad
+    setTimeout(finish, words.length * 35 + 800)
   }
 
   buildCardElement(card) {
+    if (!card) return document.createElement("div")
     const cardEl = document.createElement("div")
     cardEl.style.width = "calc(100% - 36px)"
     cardEl.style.maxWidth = "400px"
@@ -449,7 +531,7 @@ export default class extends Controller {
 
     cardEl.innerHTML = `
       <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
-        <strong style="color: #1e293b; min-width: 0; word-break: break-word;">${card.title}</strong>
+        <strong style="color: #1e293b; min-width: 0; word-break: break-word;">${card.title || 'Detalle'}</strong>
         <span style="font-weight: 800; color: ${amountColor}; flex-shrink: 0;">${card.amount || ''}</span>
       </div>
       ${detailsHtml}
@@ -487,15 +569,48 @@ export default class extends Controller {
 
   formatMarkdown(text) {
     if (!text) return ""
-    return text
-      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*(.*?)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>')
+
+    // 1. Escapar HTML para evitar etiquetas rotas o que se coman texto
+    let html = text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+
+    // 2. Encabezados Markdown
+    html = html.replace(/^###\s+(.*?)$/gm, '<div style="font-weight: 800; font-size: 0.96rem; margin: 8px 0 4px 0; color: inherit;">$1</div>')
+    html = html.replace(/^##\s+(.*?)$/gm, '<div style="font-weight: 800; font-size: 1.02rem; margin: 10px 0 4px 0; color: inherit;">$1</div>')
+    html = html.replace(/^#\s+(.*?)$/gm, '<div style="font-weight: 800; font-size: 1.08rem; margin: 12px 0 6px 0; color: inherit;">$1</div>')
+
+    // 3. Negrita y Cursiva
+    html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    html = html.replace(/\*(.*?)\*/g, '<em>$1</em>')
+
+    // 4. Bloques de código en línea
+    html = html.replace(/`([^`]+)`/g, '<code style="background: rgba(0,0,0,0.06); padding: 1px 4px; border-radius: 4px; font-size: 0.88em; font-family: monospace;">$1</code>')
+
+    // 5. Viñetas limpias
+    html = html.replace(/^[•\-\*]\s+(.*?)$/gm, '<div style="display: flex; gap: 6px; margin: 3px 0; align-items: baseline;"><span style="color: #6366f1; font-weight: 800; font-size: 0.9rem;">•</span><span>$1</span></div>')
+
+    // 6. Saltos de línea
+    html = html.replace(/\n\n+/g, '<div style="height: 6px;"></div>')
+    html = html.replace(/\n/g, '<br>')
+
+    return html
   }
 
   scrollToBottom() {
     if (!this.hasMessagesTarget) return
-    this.messagesTarget.scrollTop = this.messagesTarget.scrollHeight
+    const el = this.messagesTarget
+    el.scrollTop = el.scrollHeight
+    requestAnimationFrame(() => {
+      if (el) el.scrollTop = el.scrollHeight
+    })
+    setTimeout(() => {
+      if (el) el.scrollTop = el.scrollHeight
+    }, 60)
+    setTimeout(() => {
+      if (el) el.scrollTop = el.scrollHeight
+    }, 250)
   }
 
   // --- SÍNTESIS DE VOZ (TEXT-TO-SPEECH WEB SPEECH API) ---
@@ -545,7 +660,7 @@ export default class extends Controller {
     this.selectedVoice = bestVoice
   }
 
-  speakText(rawText) {
+  speakText(rawText, bubble = null) {
     if (!this.ttsSupported || !this.voiceOutputEnabled || !rawText) return
 
     // Cancelar cualquier audio anterior
@@ -585,20 +700,35 @@ export default class extends Controller {
     utterance.rate = 1.05
     utterance.pitch = 1.0
 
+    const highlightBubble = (active) => {
+      if (bubble) {
+        if (active) bubble.classList.add("gigai-bubble-speaking")
+        else bubble.classList.remove("gigai-bubble-speaking")
+      }
+      if (!active && this.hasMessagesTarget) {
+        this.messagesTarget.querySelectorAll(".gigai-bubble-speaking").forEach(b => b.classList.remove("gigai-bubble-speaking"))
+      }
+    }
+
     utterance.onstart = () => {
       this.isSpeaking = true
       this.showSpeakingBar()
+      highlightBubble(true)
+      this.scrollToBottom()
     }
 
     utterance.onend = () => {
       this.isSpeaking = false
       this.hideSpeakingBar()
+      highlightBubble(false)
+      this.scrollToBottom()
     }
 
     utterance.onerror = (e) => {
       console.warn("[GigAI SpeechSynthesis] Error:", e)
       this.isSpeaking = false
       this.hideSpeakingBar()
+      highlightBubble(false)
     }
 
     window.speechSynthesis.speak(utterance)
@@ -610,6 +740,9 @@ export default class extends Controller {
     }
     this.isSpeaking = false
     this.hideSpeakingBar()
+    if (this.hasMessagesTarget) {
+      this.messagesTarget.querySelectorAll(".gigai-bubble-speaking").forEach(b => b.classList.remove("gigai-bubble-speaking"))
+    }
   }
 
   toggleVoiceOutput(event) {
@@ -648,12 +781,14 @@ export default class extends Controller {
   showSpeakingBar() {
     if (this.hasSpeakingBarTarget) {
       this.speakingBarTarget.style.display = "flex"
+      this.scrollToBottom()
     }
   }
 
   hideSpeakingBar() {
     if (this.hasSpeakingBarTarget) {
       this.speakingBarTarget.style.display = "none"
+      this.scrollToBottom()
     }
   }
 }
