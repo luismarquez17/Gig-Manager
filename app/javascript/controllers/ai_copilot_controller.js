@@ -40,6 +40,7 @@ export default class extends Controller {
     }
     this.panelTarget.classList.remove("d-none")
     this.panelTarget.style.display = "flex"
+    this.panelTarget.scrollTop = 0
     setTimeout(() => {
       if (this.hasInputTarget && window.innerWidth > 768) {
         this.inputTarget.focus()
@@ -220,7 +221,7 @@ export default class extends Controller {
       this.history.push({ role: "user", content: text })
       if (data.reply) {
         this.history.push({ role: "model", content: data.reply })
-        const { bubble } = this.appendMessage("model", data.reply, data.cards, [], true)
+        const { bubble } = this.appendMessage("model", data.reply, data.cards)
 
         // Reproducir por voz si la orden vino por micrófono o la voz está activada
         if (wasVoice || this.voiceOutputEnabled) {
@@ -258,17 +259,17 @@ export default class extends Controller {
       const data = await response.json()
       this.removeLoading(loadingId)
 
-      let replyHtml = `💰 <strong>Saldo actual en Caja:</strong> $${data.cash_balance.toFixed(2)} USD<br><br>`
+      let reply = `💰 **Saldo actual en Caja:** $${data.cash_balance.toFixed(2)} USD\n\n`
       if (data.healthy) {
-        replyHtml += `✅ <strong>¡Excelente!</strong> Tu caja está al día y no tienes alertas pendientes.`
+        reply += `✅ **¡Excelente!** Tu caja está al día y no tienes alertas pendientes.`
       } else {
-        replyHtml += `<strong>Alertas detectadas (${data.diagnostic_items.length}):</strong><br>`
+        reply += `**Alertas detectadas (${data.diagnostic_items.length}):**\n`
         data.diagnostic_items.forEach(item => {
-          replyHtml += `• <strong>${item.title}:</strong> ${item.description}<br>`
+          reply += `• **${item.title}:** ${item.description}\n`
         })
       }
 
-      this.appendMessage("model", replyHtml, null, data.diagnostic_items)
+      this.appendMessage("model", reply, null, data.diagnostic_items)
     } catch (e) {
       this.removeLoading(loadingId)
       this.appendMessage("model", "No se pudo completar el diagnóstico en este momento.")
@@ -312,8 +313,7 @@ export default class extends Controller {
   }
 
   // --- RENDERIZADO VISUAL ---
-  // --- RENDERIZADO VISUAL ---
-  appendMessage(role, text, cards = [], diagnosticItems = [], animate = false) {
+  appendMessage(role, text, cards = [], diagnosticItems = []) {
     if (!this.hasMessagesTarget) return { msgDiv: null, bubble: null }
 
     const msgDiv = document.createElement("div")
@@ -346,6 +346,8 @@ export default class extends Controller {
 
       const textContainer = document.createElement("div")
       textContainer.className = "gigai-bubble-text-content"
+      // Renderizado inmediato y normal en pantalla
+      textContainer.innerHTML = this.formatMarkdown(text)
       bubble.appendChild(textContainer)
 
       // Botón para reproducir audio del mensaje
@@ -363,37 +365,21 @@ export default class extends Controller {
       row.appendChild(bubble)
       msgDiv.appendChild(row)
 
-      // Contenedor para tarjetas
-      const cardsContainer = document.createElement("div")
-      cardsContainer.className = "gigai-cards-container"
-      msgDiv.appendChild(cardsContainer)
-
-      const renderCards = () => {
-        if (cards && Array.isArray(cards) && cards.length > 0) {
-          cards.forEach(card => {
-            if (card) {
-              const cardEl = this.buildCardElement(card)
-              cardsContainer.appendChild(cardEl)
-            }
-          })
-          this.scrollToBottom()
-        }
+      // Contenedor para tarjetas interactivas
+      if (cards && Array.isArray(cards) && cards.length > 0) {
+        const cardsContainer = document.createElement("div")
+        cardsContainer.className = "gigai-cards-container"
+        cards.forEach(card => {
+          if (card) {
+            const cardEl = this.buildCardElement(card)
+            cardsContainer.appendChild(cardEl)
+          }
+        })
+        msgDiv.appendChild(cardsContainer)
       }
 
       this.messagesTarget.appendChild(msgDiv)
       this.scrollToBottom()
-
-      if (animate) {
-        actionsBar.style.display = "none"
-        this.typewriterEffect(textContainer, text, () => {
-          actionsBar.style.display = "flex"
-          renderCards()
-          this.scrollToBottom()
-        })
-      } else {
-        textContainer.innerHTML = this.formatMarkdown(text)
-        renderCards()
-      }
     }
 
     // Renderizar botones de acción para diagnóstico si existen
@@ -429,55 +415,7 @@ export default class extends Controller {
     }
 
     this.scrollToBottom()
-    try {
-      msgDiv.scrollIntoView({ behavior: 'smooth', block: 'end' })
-    } catch(e) {}
-
     return { msgDiv, bubble }
-  }
-
-  typewriterEffect(container, fullText, onComplete) {
-    if (!container) return
-    const words = fullText.split(" ")
-
-    // Si el texto es muy corto (menos de 5 palabras), renderizar de inmediato
-    if (words.length <= 5) {
-      container.innerHTML = this.formatMarkdown(fullText)
-      if (onComplete) onComplete()
-      this.scrollToBottom()
-      return
-    }
-
-    let currentIndex = 0
-    let finished = false
-
-    const finish = () => {
-      if (finished) return
-      finished = true
-      clearInterval(interval)
-      container.innerHTML = this.formatMarkdown(fullText)
-      if (onComplete) onComplete()
-      this.scrollToBottom()
-    }
-
-    // Si el usuario hace clic en el texto, completar todo al instante
-    container.style.cursor = "pointer"
-    container.onclick = finish
-
-    // Avanza de 2 en 2 palabras cada 28ms para que fluya en ~2-4 segundos en sincronía con la voz
-    const interval = setInterval(() => {
-      if (currentIndex < words.length) {
-        currentIndex += 2
-        const currentSlice = words.slice(0, currentIndex).join(" ")
-        container.innerHTML = this.formatMarkdown(currentSlice) + '<span style="display:inline-block; width:5px; height:12px; background:#6366f1; margin-left:3px; vertical-align:middle; border-radius:1px;"></span>'
-        this.scrollToBottom()
-      } else {
-        finish()
-      }
-    }, 28)
-
-    // Timeout de seguridad
-    setTimeout(finish, words.length * 35 + 800)
   }
 
   buildCardElement(card) {
@@ -599,18 +537,16 @@ export default class extends Controller {
   }
 
   scrollToBottom() {
+    if (this.hasPanelTarget) {
+      this.panelTarget.scrollTop = 0
+    }
     if (!this.hasMessagesTarget) return
     const el = this.messagesTarget
     el.scrollTop = el.scrollHeight
     requestAnimationFrame(() => {
       if (el) el.scrollTop = el.scrollHeight
+      if (this.hasPanelTarget) this.panelTarget.scrollTop = 0
     })
-    setTimeout(() => {
-      if (el) el.scrollTop = el.scrollHeight
-    }, 60)
-    setTimeout(() => {
-      if (el) el.scrollTop = el.scrollHeight
-    }, 250)
   }
 
   // --- SÍNTESIS DE VOZ (TEXT-TO-SPEECH WEB SPEECH API) ---

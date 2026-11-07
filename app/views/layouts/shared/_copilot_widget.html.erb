@@ -730,7 +730,8 @@
 
     /* ── 6. Cuerpo de Mensajes ── */
     .gigai-chat-body {
-      flex: 1 1 auto;
+      flex: 1 1 0%;
+      min-height: 0;
       padding: 14px;
       overflow-y: auto;
       background: #f8fafc;
@@ -1164,17 +1165,7 @@
 
     .gigai-bubble-speaking {
       border-color: #6366f1 !important;
-      box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25), 0 4px 14px rgba(99, 102, 241, 0.15) !important;
-      animation: gigaiPulseSpeaking 1.8s infinite ease-in-out !important;
-    }
-
-    @keyframes gigaiPulseSpeaking {
-      0%, 100% {
-        box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.25), 0 4px 14px rgba(99, 102, 241, 0.15);
-      }
-      50% {
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.45), 0 6px 20px rgba(99, 102, 241, 0.25);
-      }
+      box-shadow: 0 0 0 2.5px rgba(99, 102, 241, 0.35) !important;
     }
 
     .gigai-bubble-footer-actions {
@@ -1339,6 +1330,18 @@
       .gigai-copilot-container {
         bottom: 24px;
         right: 24px;
+      }
+
+      .gigai-copilot-container.panel-open {
+        position: fixed !important;
+        inset: auto !important;
+        top: auto !important;
+        left: auto !important;
+        bottom: 24px !important;
+        right: 24px !important;
+        width: auto !important;
+        height: auto !important;
+        max-width: none !important;
       }
 
       .gigai-chat-panel {
