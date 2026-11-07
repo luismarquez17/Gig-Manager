@@ -11,6 +11,8 @@ export default class extends Controller {
     this.history = []
     this.isListening = false
     this.isSpeaking = false
+    this.isSending = false
+    this.silenceTimer = null
     this.lastInputWasVoice = false
     this.voiceOutputEnabled = localStorage.getItem("gigai_voice_output") !== "false"
     this.initSpeechRecognition()
@@ -19,6 +21,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.clearSilenceTimer()
     this.stopListening()
     this.stopSpeaking()
     document.body.classList.remove("gigai-panel-open")
@@ -51,6 +54,7 @@ export default class extends Controller {
   }
 
   closePanel() {
+    this.clearSilenceTimer()
     this.element.classList.remove("panel-open")
     document.body.classList.remove("gigai-panel-open")
     this.panelTarget.classList.add("d-none")
@@ -76,49 +80,97 @@ export default class extends Controller {
     this.recognition = new SpeechRecognition()
     this.recognition.lang = "es-ES"
     this.recognition.interimResults = true
+    this.recognition.continuous = true
     this.recognition.maxAlternatives = 1
 
     this.recognition.onstart = () => {
       this.stopSpeaking() // Silenciar a la IA de inmediato si el usuario presiona el micrófono
       this.isListening = true
-      this.updateMicUI(true)
+      this.clearSilenceTimer()
+      this.updateMicUI(true, "🎙️ Escuchando... habla con confianza")
     }
 
     this.recognition.onresult = (event) => {
-      const transcript = Array.from(event.results)
-        .map(result => result[0].transcript)
-        .join("")
+      let transcript = ""
+      for (let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript
+      }
+      transcript = transcript.trim()
 
-      if (this.hasInputTarget) {
+      if (this.hasInputTarget && transcript) {
         this.inputTarget.value = transcript
+      }
+
+      if (transcript) {
+        this.updateMicStatusText(`🎙️ "${transcript}" (se enviará en 3s de silencio...)`)
+        // Reiniciar el temporizador de silencio: si pasan 3.5 segundos sin hablar, enviar automáticamente
+        this.resetSilenceTimer()
       }
     }
 
     this.recognition.onerror = (event) => {
       console.warn("[GigAI SpeechRecognition] Error:", event.error)
+      if (event.error === "no-speech") {
+        return // Pausa momentánea, no cortar abruptamente
+      }
+      this.clearSilenceTimer()
       this.stopListening()
     }
 
     this.recognition.onend = () => {
       this.isListening = false
       this.updateMicUI(false)
-      // Si capturó texto completo, marcar que la pregunta provino de voz y enviar automáticamente
-      if (this.hasInputTarget && this.inputTarget.value.trim().length > 3) {
-        this.lastInputWasVoice = true
-        this.sendMessage()
+      this.clearSilenceTimer()
+
+      // Si el navegador terminó la sesión por su cuenta y hay texto no enviado
+      if (!this.isSending && this.lastInputWasVoice && this.hasInputTarget) {
+        const text = this.inputTarget.value.trim()
+        if (text.length > 0) {
+          this.sendMessage()
+        }
       }
     }
   }
 
+  resetSilenceTimer() {
+    this.clearSilenceTimer()
+    this.silenceTimer = setTimeout(() => {
+      if (this.isListening && !this.isSending) {
+        const text = this.hasInputTarget ? this.inputTarget.value.trim() : ""
+        if (text.length > 0) {
+          this.lastInputWasVoice = true
+          this.stopListening()
+          this.sendMessage()
+        }
+      }
+    }, 3500)
+  }
+
+  clearSilenceTimer() {
+    if (this.silenceTimer) {
+      clearTimeout(this.silenceTimer)
+      this.silenceTimer = null
+    }
+  }
+
   toggleMic(event) {
-    if (event) event.preventDefault()
+    if (event) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
     if (!this.speechSupported) {
       alert("El reconocimiento de voz por navegador no está habilitado en este dispositivo. Puedes escribir tu orden directamente.")
       return
     }
 
     if (this.isListening) {
+      this.clearSilenceTimer()
+      const hasText = this.hasInputTarget && this.inputTarget.value.trim().length > 0
       this.stopListening()
+      if (hasText && !this.isSending) {
+        this.lastInputWasVoice = true
+        this.sendMessage()
+      }
     } else {
       this.startListening()
     }
@@ -126,57 +178,95 @@ export default class extends Controller {
 
   startListening() {
     if (!this.recognition) return
+    this.clearSilenceTimer()
+    this.stopSpeaking()
+
+    // Limpiar input previo para que la nueva frase empiece de cero y no se haga cada vez más larga
+    if (this.hasInputTarget) {
+      this.inputTarget.value = ""
+    }
+
     try {
-      if (this.hasInputTarget) this.inputTarget.value = ""
       this.recognition.start()
     } catch (e) {
-      console.warn("Could not start recognition:", e)
+      // Si la instancia ya estaba corriendo por un error de estado previo, detener y reiniciar
+      try {
+        this.recognition.stop()
+        setTimeout(() => {
+          try { this.recognition.start() } catch (err) {}
+        }, 150)
+      } catch (err) {}
     }
   }
 
   stopListening() {
-    if (!this.recognition) return
-    try {
-      this.recognition.stop()
-    } catch (e) {}
+    this.clearSilenceTimer()
+    if (this.recognition) {
+      try {
+        this.recognition.stop()
+      } catch (e) {}
+    }
     this.isListening = false
     this.updateMicUI(false)
   }
 
-  updateMicUI(listening) {
+  updateMicUI(listening, customText = null) {
     if (!this.hasMicBtnTarget) return
     if (listening) {
       this.micBtnTarget.classList.add("btn-danger", "pulse-mic")
       this.micBtnTarget.classList.remove("btn-light", "btn-secondary")
       if (this.hasMicStatusTarget) {
-        this.micStatusTarget.textContent = "🎙️ Escuchando... habla ahora"
-        this.micStatusTarget.style.display = "block"
+        this.micStatusTarget.style.display = "flex"
       }
+      this.updateMicStatusText(customText || "🎙️ Escuchando... habla con confianza")
     } else {
       this.micBtnTarget.classList.remove("btn-danger", "pulse-mic")
       this.micBtnTarget.classList.add("btn-light")
       if (this.hasMicStatusTarget) {
         this.micStatusTarget.style.display = "none"
       }
+      this.updateMicStatusText("🎙️ Escuchando tu voz... habla con confianza")
+    }
+  }
+
+  updateMicStatusText(text) {
+    if (!this.hasMicStatusTarget) return
+    const textEl = this.micStatusTarget.querySelector(".gigai-mic-recording-text")
+    if (textEl) {
+      textEl.textContent = text
+    } else {
+      this.micStatusTarget.textContent = text
     }
   }
 
   // --- ENVÍO DE MENSAJES Y CHAT ---
   sendPrompt(event) {
-    if (event) event.preventDefault()
+    if (event) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
     this.sendMessage()
   }
 
   handleKeydown(event) {
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault()
+      event.stopPropagation()
       this.sendMessage()
     }
   }
 
   quickPrompt(event) {
+    if (event) {
+      event.preventDefault()
+      event.stopPropagation()
+    }
     const text = event.currentTarget.dataset.prompt
     if (!text) return
+    this.clearSilenceTimer()
+    if (this.isListening) {
+      this.stopListening()
+    }
     if (this.hasInputTarget) {
       this.inputTarget.value = text
     }
@@ -184,16 +274,36 @@ export default class extends Controller {
   }
 
   async sendMessage() {
+    // 🛡️ Mutex de seguridad: Si ya hay un envío en curso, ignorar llamadas concurrentes para evitar mensajes dobles
+    if (this.isSending) return
     if (!this.hasInputTarget) return
+
     const text = this.inputTarget.value.trim()
     if (!text) return
+
+    this.isSending = true
+    this.clearSilenceTimer()
+
+    // Si el micrófono seguía encendido, detenerlo de inmediato
+    if (this.isListening) {
+      this.stopListening()
+    }
+
+    // Deshabilitar botón enviar temporalmente para feedback visual y prevenir doble clic
+    if (this.hasSendBtnTarget) {
+      this.sendBtnTarget.disabled = true
+      this.sendBtnTarget.style.opacity = "0.55"
+      this.sendBtnTarget.style.pointerEvents = "none"
+    }
 
     const wasVoice = this.lastInputWasVoice
     this.lastInputWasVoice = false
     this.stopSpeaking()
 
-    // Limpiar input y agregar mensaje del usuario en pantalla
+    // Limpiar input de inmediato para evitar que cualquier evento posterior reenvíe el texto
     this.inputTarget.value = ""
+
+    // Agregar mensaje del usuario en pantalla
     this.appendMessage("user", text)
     this.scrollToBottom()
 
@@ -241,6 +351,13 @@ export default class extends Controller {
       this.removeLoading(loadingId)
       this.appendMessage("model", "⚠️ Ocurrió un error al contactar al Copiloto. Por favor verifica tu conexión o configuración de Gemini.")
       console.error("[GigAI Copilot Error]", error)
+    } finally {
+      this.isSending = false
+      if (this.hasSendBtnTarget) {
+        this.sendBtnTarget.disabled = false
+        this.sendBtnTarget.style.opacity = "1"
+        this.sendBtnTarget.style.pointerEvents = "auto"
+      }
     }
 
     this.scrollToBottom()

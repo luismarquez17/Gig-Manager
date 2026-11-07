@@ -4,6 +4,7 @@ ruby "3.3.4"
 
 # Rails y Core
 gem "rails", "~> 7.1.6"
+gem "json", "~> 2.8"
 gem "sprockets-rails"
 gem "puma", ">= 5.0"
 gem "importmap-rails"
@@ -20,6 +21,8 @@ gem "money-rails", "~> 1.15"
 gem "aasm", "~> 5.5"
 gem "bootstrap", "~> 5.3"
 gem "devise", "~> 4.9"
+gem "omniauth-google-oauth2", "~> 1.1"
+gem "omniauth-rails_csrf_protection", "~> 1.0"
 gem "dartsass-rails"
 
 # Multi-tenancy y Pagos SaaS
