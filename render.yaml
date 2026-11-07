@@ -20,3 +20,6 @@ services:
       # Reduce la fragmentación de memoria en glibc (recomendado para contenedores Ruby)
       - key: MALLOC_ARENA_MAX
         value: "2"
+      # Clave para GigAI Copilot (Google Gemini) - configurar en el panel de Render
+      - key: GEMINI_API_KEY
+        sync: false
