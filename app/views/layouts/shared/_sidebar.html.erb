@@ -88,6 +88,17 @@
         <span class="icon">🏠</span> <span>Inicio (Dashboard)</span>
       <% end %>
 
+      <% if current_user.leader? || current_user.superadmin? %>
+        <button type="button" 
+                onclick="document.querySelector('[data-action*=\'ai-copilot#togglePanel\']')?.click()"
+                class="sidebar-link" 
+                style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), rgba(6, 182, 212, 0.18)); border: 1px solid rgba(79, 70, 229, 0.4); color: #a5b4fc; width: 100%; text-align: left; cursor: pointer; margin-bottom: 6px; border-radius: 12px; display: flex; align-items: center;">
+          <span class="icon">✨</span> 
+          <span style="font-weight: 800;">Copiloto Gig IA</span>
+          <span style="background: #4f46e5; color: white; border-radius: 99px; font-size: 0.68em; padding: 2px 8px; font-weight: 800; margin-left: auto; text-transform: uppercase;">Gemini</span>
+        </button>
+      <% end %>
+
       <% if current_user.leader? || current_user.staff? || current_user.musician? || current_user.superadmin? %>
         <%= link_to notifications_path, class: "sidebar-link #{'active' if controller_name == 'notifications'}" do %>
           <span class="icon">🔔</span> <span>Notificaciones</span>

@@ -1,0 +1,528 @@
+<%# --- GIGAI COPILOT FLOATING WIDGET (GOOGLE GEMINI) --- %>
+<% if user_signed_in? && (current_user.leader? || current_user.superadmin?) %>
+  <%
+    is_gero = current_company.present? && (current_company.name.to_s.downcase.include?('gero') || current_company.slug.to_s.downcase.include?('gero'))
+    theme_gradient = is_gero ? 'linear-gradient(135deg, #d4af37, #f59e0b)' : 'linear-gradient(135deg, #4f46e5, #06b6d4)'
+    theme_shadow = is_gero ? 'rgba(212, 175, 55, 0.45)' : 'rgba(79, 70, 229, 0.45)'
+  %>
+
+  <div data-controller="ai-copilot" class="gigai-copilot-container">
+    
+    <%# BOTÓN FLOTANTE (FAB) %>
+    <button type="button" 
+            class="gigai-fab-btn" 
+            data-action="click->ai-copilot#togglePanel" 
+            aria-label="Abrir Copiloto IA"
+            title="Copiloto Gig IA (Gemini) - Habla o escribe para agendar, gastos y caja">
+      <div class="gigai-fab-inner">
+        <span class="gigai-fab-icon">✨</span>
+        <span class="gigai-fab-label d-none d-md-inline">Gig IA</span>
+      </div>
+      <span class="gigai-fab-pulse"></span>
+    </button>
+
+    <%# PANEL DESPLEGABLE / DRAWER CHAT %>
+    <div data-ai-copilot-target="panel" 
+         class="gigai-chat-panel d-none" 
+         style="display: none;">
+      
+      <%# CABECERA %>
+      <div class="gigai-panel-header" style="background: <%= theme_gradient %>;">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; backdrop-filter: blur(4px);">
+            🤖
+          </div>
+          <div>
+            <div style="font-weight: 800; font-size: 0.95rem; color: #ffffff; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px;">
+              <span>Gig IA Copilot</span>
+              <span style="font-size: 0.65rem; background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 99px; text-transform: uppercase; font-weight: 700;">Gemini</span>
+            </div>
+            <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.9); font-weight: 500;">
+              Director de Caja, Finanzas y Operaciones
+            </div>
+          </div>
+        </div>
+        <button type="button" 
+                class="gigai-panel-close-btn" 
+                data-action="click->ai-copilot#closePanel" 
+                aria-label="Cerrar panel">&times;</button>
+      </div>
+
+      <%# SUGERENCIAS RÁPIDAS (PILLS) %>
+      <% 
+        pending_approvals_count = (current_company.employee_payments.pending_approval.count rescue 0) + (GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).pending_approval.count rescue 0)
+      %>
+      <div class="gigai-quick-pills">
+        <% if pending_approvals_count.positive? %>
+          <button type="button" class="gigai-pill-btn" style="background: #ecfdf5; color: #065f46; border-color: #a7f3d0; font-weight: 800;" data-action="click->ai-copilot#quickPrompt" data-prompt="Revisa las notificaciones y dime qué pagos o abonos tengo pendientes de autorizar">
+            🔔 Autorizar Pagos (<%= pending_approvals_count %>)
+          </button>
+        <% end %>
+        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿Cuánto dinero neto tengo en caja y qué cobros están pendientes?">
+          📊 Saldo Caja
+        </button>
+        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#runDiagnostic">
+          🩺 Diagnóstico Caja & Shows
+        </button>
+        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Anota un gasto de caja en efectivo de $20 por transporte">
+          💸 Anotar Gasto
+        </button>
+        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Agenda un show para este sábado con Carlos Pérez por $800 y anticipo de $200">
+          🎸 Agendar Show
+        </button>
+        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿A qué músicos les debo dinero y cuánto?">
+          👥 Deudas con Músicos
+        </button>
+      </div>
+
+      <%# HISTORIAL DE MENSAJES %>
+      <div data-ai-copilot-target="messages" class="gigai-messages-body">
+        <div class="gigai-welcome-box">
+          <div style="font-size: 1.5rem; margin-bottom: 6px;">👋 🎙️</div>
+          <div style="font-weight: 700; color: #1e293b; font-size: 0.92rem; margin-bottom: 4px;">
+            ¡Hola! ¿Qué deseas hacer hoy?
+          </div>
+          <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4; margin-bottom: 6px;">
+            Puedes <strong>hablarme con el micrófono</strong> o escribir. Anota gastos de caja, autoriza pagos a músicos, agenda eventos o consulta tu saldo.
+          </div>
+
+          <%# TARJETAS DE PAGOS PENDIENTES DE AUTORIZAR %>
+          <% 
+            pending_ep_list = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc).limit(3) rescue []
+            pending_gp_list = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).pending_approval.includes(:gig).order(created_at: :desc).limit(2) rescue []
+          %>
+          <% pending_ep_list.each do |ep| %>
+            <div style="background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 12px 14px; margin-top: 10px; text-align: left;">
+              <div style="font-weight: 800; color: #065f46; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <span style="display: flex; align-items: center; gap: 5px;">
+                  <span>💰</span> <span>Reporte de Pago: <%= ep.user&.display_name %></span>
+                </span>
+                <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 800;">
+                  $<%= sprintf('%.2f', ep.amount) %> USD
+                </span>
+              </div>
+              <p style="color: #047857; font-size: 0.78rem; line-height: 1.35; margin: 0 0 8px 0;">
+                <%= ep.user&.display_name %> indicó haber recibido <strong>$<%= sprintf('%.2f', ep.amount) %> USD</strong> vía <%= ep.payment_method.presence || 'Efectivo' %> (<%= ep.date_paid&.strftime('%d/%m/%Y') %>). Confirma si ya se realizó.
+                <% if ep.notes.present? %><br>📝 "<%= ep.notes %>"<% end %>
+              </p>
+              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+                <button type="button" 
+                        class="btn btn-sm"
+                        data-action="click->ai-copilot#quickPrompt"
+                        data-prompt="Autoriza el reporte de pago de <%= ep.user&.display_name %> por $<%= sprintf('%.2f', ep.amount) %> USD"
+                        style="background: #059669; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; cursor: pointer;">
+                  ⚡ Autorizar con IA ➔
+                </button>
+                <button type="button" 
+                        class="btn btn-sm"
+                        data-action="click->ai-copilot#quickPrompt"
+                        data-prompt="Rechaza el reporte de pago de <%= ep.user&.display_name %>"
+                        style="background: #fff1f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 10px; cursor: pointer;">
+                  ❌ Rechazar
+                </button>
+              </div>
+            </div>
+          <% end %>
+
+          <% pending_gp_list.each do |gp| %>
+            <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 12px 14px; margin-top: 10px; text-align: left;">
+              <div style="font-weight: 800; color: #1e40af; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
+                <span style="display: flex; align-items: center; gap: 5px;">
+                  <span>💳</span> <span>Abono de Cliente: <%= gp.payer_name || gp.gig&.client_display_name %></span>
+                </span>
+                <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 800;">
+                  $<%= sprintf('%.2f', gp.amount) %> USD
+                </span>
+              </div>
+              <p style="color: #1e3a8a; font-size: 0.78rem; line-height: 1.35; margin: 0 0 8px 0;">
+                Comprobante de abono recibido para el show de <strong><%= gp.gig&.client_display_name %></strong>.
+              </p>
+              <button type="button" 
+                      class="btn btn-sm"
+                      data-action="click->ai-copilot#quickPrompt"
+                      data-prompt="Aprueba el comprobante de abono de <%= gp.payer_name || gp.gig&.client_display_name %> por $<%= sprintf('%.2f', gp.amount) %> USD"
+                      style="background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; cursor: pointer;">
+                ⚡ Aprobar Abono con IA ➔
+              </button>
+            </div>
+          <% end %>
+
+          <%
+            recent_followups = GeminiService.new(company: current_company, user: current_user).recent_post_gig_audits rescue []
+          %>
+          <% if recent_followups.any? %>
+            <% first_f = recent_followups.first %>
+            <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 12px 14px; margin-top: 10px; text-align: left;">
+              <div style="font-weight: 800; color: #b45309; font-size: 0.84rem; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
+                <span>🔔</span> <span>Seguimiento: <%= first_f[:client_name] %> (<%= first_f[:days_label] %>)</span>
+              </div>
+              <p style="color: #78350f; font-size: 0.78rem; line-height: 1.35; margin: 0 0 8px 0;">
+                Veo que este evento acaba de pasar. ¿Le pagaste a los músicos, cobraste el saldo o hubo algún gasto de transporte?
+              </p>
+              <button type="button" 
+                      class="btn btn-sm"
+                      data-action="click->ai-copilot#quickPrompt"
+                      data-prompt="¿Qué pasó con el show de <%= first_f[:client_name] %> del <%= first_f[:date_str] %>? Ayúdame a revisar nómina, cobros y gastos."
+                      style="background: #f59e0b; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 10px; cursor: pointer;">
+                ⚡ Revisar y Cerrar este Show ➔
+              </button>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <%# ESTADO DEL MICRÓFONO %>
+      <div data-ai-copilot-target="micStatus" class="gigai-mic-status-bar" style="display: none;">
+        🎙️ Escuchando... habla con confianza
+      </div>
+
+      <%# INPUT Y CONTROLES %>
+      <div class="gigai-input-footer">
+        <button type="button" 
+                data-ai-copilot-target="micBtn" 
+                data-action="click->ai-copilot#toggleMic" 
+                class="gigai-mic-btn" 
+                title="Presiona para hablar con tu voz">
+          🎙️
+        </button>
+        
+        <input type="text" 
+               data-ai-copilot-target="input" 
+               data-action="keydown->ai-copilot#handleKeydown" 
+               placeholder="Escribe o di: 'Anotar gasto de $30' o 'Agendar show'..." 
+               class="gigai-text-input" 
+               autocomplete="off" />
+
+        <button type="button" 
+                data-ai-copilot-target="sendBtn" 
+                data-action="click->ai-copilot#sendPrompt" 
+                class="gigai-send-btn" 
+                title="Enviar mensaje">
+          ➤
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <style>
+    /* ======================================================
+       GIGAI COPILOT FLOATING STYLES
+       ====================================================== */
+    .gigai-copilot-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 9999;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
+
+    /* Botón Flotante */
+    .gigai-fab-btn {
+      position: relative;
+      background: <%= theme_gradient %>;
+      border: none;
+      border-radius: 999px;
+      padding: 12px 18px;
+      color: #ffffff;
+      cursor: pointer;
+      box-shadow: 0 8px 24px <%= theme_shadow %>, 0 2px 6px rgba(0,0,0,0.1);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+    }
+
+    .gigai-fab-btn:hover {
+      transform: translateY(-2px) scale(1.03);
+      box-shadow: 0 12px 28px <%= theme_shadow %>, 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    .gigai-fab-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.92rem;
+      letter-spacing: -0.2px;
+    }
+
+    .gigai-fab-icon {
+      font-size: 1.15rem;
+      animation: gigaiSparkle 2s infinite ease-in-out;
+    }
+
+    @keyframes gigaiSparkle {
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
+      50% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+    }
+
+    /* Panel de Chat */
+    .gigai-chat-panel {
+      position: fixed;
+      bottom: 84px;
+      right: 24px;
+      width: 380px;
+      max-width: calc(100vw - 32px);
+      height: 540px;
+      max-height: calc(100vh - 120px);
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22), 0 4px 12px rgba(15, 23, 42, 0.08);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      animation: gigaiSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 10000;
+    }
+
+    @keyframes gigaiSlideUp {
+      from { opacity: 0; transform: translateY(20px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .gigai-panel-header {
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #ffffff;
+    }
+
+    .gigai-panel-close-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: #ffffff;
+      width: 28px;
+      height: 28px;
+      border-radius: 99px;
+      font-size: 1.2rem;
+      line-height: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .gigai-panel-close-btn:hover {
+      background: rgba(255, 255, 255, 0.35);
+    }
+
+    /* Quick Pills */
+    .gigai-quick-pills {
+      padding: 10px 14px;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .gigai-quick-pills::-webkit-scrollbar { display: none; }
+
+    .gigai-pill-btn {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      border-radius: 99px;
+      padding: 4px 10px;
+      font-size: 0.73rem;
+      font-weight: 600;
+      color: #334155;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .gigai-pill-btn:hover {
+      background: #eff6ff;
+      border-color: #3b82f6;
+      color: #1d4ed8;
+      transform: translateY(-1px);
+    }
+
+    /* Mensajes */
+    .gigai-messages-body {
+      flex: 1 1 auto;
+      padding: 16px;
+      overflow-y: auto;
+      background: #fdfdfd;
+    }
+
+    .gigai-welcome-box {
+      background: #f1f5f9;
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+      margin-bottom: 12px;
+      border: 1px dashed #cbd5e1;
+    }
+
+    /* Micrófono Status Bar */
+    .gigai-mic-status-bar {
+      background: #fee2e2;
+      color: #991b1b;
+      font-size: 0.78rem;
+      font-weight: 700;
+      padding: 6px 14px;
+      text-align: center;
+      animation: pulseAlert 1.5s infinite;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    /* Input Footer */
+    .gigai-input-footer {
+      padding: 12px 14px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .gigai-mic-btn {
+      background: #f1f5f9;
+      border: 1px solid #cbd5e1;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.15rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .gigai-mic-btn:hover {
+      background: #e2e8f0;
+    }
+
+    .gigai-mic-btn.pulse-mic {
+      background: #ef4444 !important;
+      border-color: #dc2626 !important;
+      color: #fff !important;
+      animation: micPulseRing 1.2s infinite;
+    }
+
+    @keyframes micPulseRing {
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    }
+
+    .gigai-text-input {
+      flex: 1 1 auto;
+      border: 1px solid #cbd5e1;
+      border-radius: 99px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+      outline: none;
+      transition: border-color 0.15s ease;
+      background: #f8fafc;
+    }
+
+    .gigai-text-input:focus {
+      border-color: #3b82f6;
+      background: #ffffff;
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+    }
+
+    .gigai-send-btn {
+      background: #2563eb;
+      color: #ffffff;
+      border: none;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .gigai-send-btn:hover {
+      background: #1d4ed8;
+      transform: scale(1.05);
+    }
+
+    /* Adaptación a Dark Mode si data-theme="dark" o "gerovip" */
+    [data-theme="dark"] .gigai-chat-panel,
+    [data-theme="gerovip"] .gigai-chat-panel {
+      background: #0f172a;
+      border-color: #334155;
+      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+    }
+
+    [data-theme="dark"] .gigai-quick-pills,
+    [data-theme="gerovip"] .gigai-quick-pills {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .gigai-pill-btn,
+    [data-theme="gerovip"] .gigai-pill-btn {
+      background: #0f172a;
+      border-color: #475569;
+      color: #cbd5e1;
+    }
+
+    [data-theme="dark"] .gigai-messages-body,
+    [data-theme="gerovip"] .gigai-messages-body {
+      background: #090d16;
+    }
+
+    [data-theme="dark"] .gigai-welcome-box,
+    [data-theme="gerovip"] .gigai-welcome-box {
+      background: #1e293b;
+      border-color: #334155;
+      color: #f1f5f9;
+    }
+
+    [data-theme="dark"] .gigai-welcome-box div:first-child + div,
+    [data-theme="gerovip"] .gigai-welcome-box div:first-child + div {
+      color: #ffffff !important;
+    }
+
+    [data-theme="dark"] .gigai-input-footer,
+    [data-theme="gerovip"] .gigai-input-footer {
+      background: #0f172a;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .gigai-text-input,
+    [data-theme="gerovip"] .gigai-text-input {
+      background: #1e293b;
+      border-color: #334155;
+      color: #ffffff;
+    }
+
+    /* Móvil: pantalla completa ajustada */
+    @media (max-width: 640px) {
+      .gigai-chat-panel {
+        bottom: 0;
+        right: 0;
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+      }
+      .gigai-copilot-container {
+        bottom: 20px;
+        right: 18px;
+      }
+    }
+  </style>
+<% end %>

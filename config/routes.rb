@@ -107,6 +107,11 @@ Rails.application.routes.draw do
 
   resources :financial_audit_logs, only: [:index]
   get '/auditoria', to: 'financial_audit_logs#index', as: 'financial_audit_logs_dashboard'
+
+  # Copiloto Inteligente GigAI (Google Gemini)
+  post '/ai_copilot/message', to: 'ai_copilot#message', as: 'ai_copilot_message'
+  get  '/ai_copilot/diagnostic', to: 'ai_copilot#diagnostic', as: 'ai_copilot_diagnostic'
+  post '/ai_copilot/quick_action', to: 'ai_copilot#quick_action', as: 'ai_copilot_quick_action'
   
   namespace :client do
     resources :gigs, only: [:index, :show] do
