@@ -1,9 +1,10 @@
-<%# --- GIGAI COPILOT FLOATING WIDGET (GOOGLE GEMINI) --- %>
+<%# --- GIG IA COPILOT MOBILE-FIRST CHAT WIDGET (GOOGLE GEMINI) --- %>
 <% if user_signed_in? && (current_user.leader? || current_user.superadmin?) %>
   <%
     is_gero = current_company.present? && (current_company.name.to_s.downcase.include?('gero') || current_company.slug.to_s.downcase.include?('gero'))
-    theme_gradient = is_gero ? 'linear-gradient(135deg, #d4af37, #f59e0b)' : 'linear-gradient(135deg, #4f46e5, #06b6d4)'
-    theme_shadow = is_gero ? 'rgba(212, 175, 55, 0.45)' : 'rgba(79, 70, 229, 0.45)'
+    theme_gradient = is_gero ? 'linear-gradient(135deg, #d4af37, #f59e0b)' : 'linear-gradient(135deg, #2563eb, #06b6d4)'
+    theme_shadow = is_gero ? 'rgba(212, 175, 55, 0.4)' : 'rgba(37, 99, 235, 0.35)'
+    theme_accent = is_gero ? '#d4af37' : '#2563eb'
   %>
 
   <div data-controller="ai-copilot" class="gigai-copilot-container">
@@ -12,138 +13,201 @@
     <button type="button" 
             class="gigai-fab-btn" 
             data-action="click->ai-copilot#togglePanel" 
-            aria-label="Abrir Copiloto IA"
+            aria-label="Abrir Copiloto Gig IA"
             title="Copiloto Gig IA (Gemini) - Habla o escribe para agendar, gastos y caja">
       <div class="gigai-fab-inner">
         <span class="gigai-fab-icon">✨</span>
-        <span class="gigai-fab-label d-none d-md-inline">Gig IA</span>
+        <span class="gigai-fab-label">Gig IA</span>
       </div>
       <span class="gigai-fab-pulse"></span>
     </button>
 
-    <%# PANEL DESPLEGABLE / DRAWER CHAT %>
+    <%# PANEL DE CHAT (MOBILE-FIRST FULL-SCREEN / DESKTOP FLOATING) %>
     <div data-ai-copilot-target="panel" 
          class="gigai-chat-panel d-none" 
          style="display: none;">
       
-      <%# CABECERA %>
-      <div class="gigai-panel-header" style="background: <%= theme_gradient %>;">
-        <div style="display: flex; align-items: center; gap: 10px;">
-          <div style="background: rgba(255, 255, 255, 0.2); width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; backdrop-filter: blur(4px);">
-            🤖
+      <%# CABECERA / APP BAR %>
+      <div class="gigai-app-header" style="background: <%= theme_gradient %>;">
+        <%# Botón atrás (móvil) %>
+        <button type="button" 
+                class="gigai-header-btn gigai-btn-back" 
+                data-action="click->ai-copilot#closePanel" 
+                aria-label="Regresar y cerrar chat"
+                title="Regresar">
+          <span class="gigai-btn-symbol">&#8592;</span>
+        </button>
+
+        <%# Identidad y estado del copiloto %>
+        <div class="gigai-header-identity">
+          <div class="gigai-avatar-wrapper">
+            <span class="gigai-avatar-icon">🤖</span>
+            <span class="gigai-online-dot" title="En línea"></span>
           </div>
-          <div>
-            <div style="font-weight: 800; font-size: 0.95rem; color: #ffffff; letter-spacing: -0.2px; display: flex; align-items: center; gap: 6px;">
-              <span>Gig IA Copilot</span>
-              <span style="font-size: 0.65rem; background: rgba(255,255,255,0.25); padding: 1px 6px; border-radius: 99px; text-transform: uppercase; font-weight: 700;">Gemini</span>
+          <div class="gigai-header-text">
+            <div class="gigai-header-title-row">
+              <span class="gigai-header-title">Gig IA Copilot</span>
+              <span class="gigai-model-tag">Gemini</span>
             </div>
-            <div style="font-size: 0.72rem; color: rgba(255, 255, 255, 0.9); font-weight: 500;">
-              Director de Caja, Finanzas y Operaciones
+            <div class="gigai-header-subtitle">
+              <span class="gigai-status-text">En línea</span> · Caja, Finanzas y Operaciones
             </div>
           </div>
         </div>
+
+        <%# Botón selector de voz (activar/silenciar respuestas por voz) %>
         <button type="button" 
-                class="gigai-panel-close-btn" 
+                class="gigai-header-btn gigai-btn-voice-toggle" 
+                data-action="click->ai-copilot#toggleVoiceResponse" 
+                data-ai-copilot-target="voiceToggleBtn" 
+                aria-label="Respuestas por voz activadas"
+                title="Respuestas por voz activadas (clic para silenciar)">
+          <span class="gigai-btn-symbol" data-ai-copilot-target="voiceToggleIcon" style="font-size: 1.05rem;">🔊</span>
+        </button>
+
+        <%# Botón cerrar %>
+        <button type="button" 
+                class="gigai-header-btn gigai-btn-close" 
                 data-action="click->ai-copilot#closePanel" 
-                aria-label="Cerrar panel">&times;</button>
+                aria-label="Cerrar chat"
+                title="Cerrar">
+          <span class="gigai-btn-symbol">&times;</span>
+        </button>
       </div>
 
-      <%# SUGERENCIAS RÁPIDAS (PILLS) %>
+      <%# BARRA DE REPRODUCCIÓN DE VOZ DE LA IA (SPEAKING INDICATOR) %>
+      <div data-ai-copilot-target="speakingBar" class="gigai-speaking-bar" style="display: none;">
+        <div class="gigai-speaking-inner">
+          <span>🔊 Gig IA hablando...</span>
+          <div class="gigai-sound-waves">
+            <span></span><span></span><span></span><span></span>
+          </div>
+        </div>
+        <button type="button" 
+                class="gigai-speaking-stop-btn" 
+                data-action="click->ai-copilot#stopSpeaking">
+          ⏹ Detener voz
+        </button>
+      </div>
+
+      <%# SUGERENCIAS RÁPIDAS (PILLS CAROUSEL) %>
       <% 
         pending_approvals_count = (current_company.employee_payments.pending_approval.count rescue 0) + (GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).pending_approval.count rescue 0)
       %>
-      <div class="gigai-quick-pills">
-        <% if pending_approvals_count.positive? %>
-          <button type="button" class="gigai-pill-btn" style="background: #ecfdf5; color: #065f46; border-color: #a7f3d0; font-weight: 800;" data-action="click->ai-copilot#quickPrompt" data-prompt="Revisa las notificaciones y dime qué pagos o abonos tengo pendientes de autorizar">
-            🔔 Autorizar Pagos (<%= pending_approvals_count %>)
+      <div class="gigai-quick-pills-bar">
+        <div class="gigai-quick-pills-track">
+          <% if pending_approvals_count.positive? %>
+            <button type="button" class="gigai-pill-btn gigai-pill-alert" data-action="click->ai-copilot#quickPrompt" data-prompt="Revisa las notificaciones y dime qué pagos o abonos tengo pendientes de autorizar">
+              <span class="gigai-pill-badge"><%= pending_approvals_count %></span>
+              <span>🔔 Autorizar Pagos</span>
+            </button>
+          <% end %>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿Cuánto dinero neto tengo en caja y qué cobros están pendientes?">
+            📊 Saldo en Caja
           </button>
-        <% end %>
-        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿Cuánto dinero neto tengo en caja y qué cobros están pendientes?">
-          📊 Saldo Caja
-        </button>
-        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#runDiagnostic">
-          🩺 Diagnóstico Caja & Shows
-        </button>
-        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Anota un gasto de caja en efectivo de $20 por transporte">
-          💸 Anotar Gasto
-        </button>
-        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Agenda un show para este sábado con Carlos Pérez por $800 y anticipo de $200">
-          🎸 Agendar Show
-        </button>
-        <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿A qué músicos les debo dinero y cuánto?">
-          👥 Deudas con Músicos
-        </button>
+          <button type="button" class="gigai-pill-btn gigai-pill-action" data-action="click->ai-copilot#runDiagnostic">
+            🩺 Diagnóstico Caja & Shows
+          </button>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Anota un gasto de caja en efectivo de $20 por transporte">
+            💸 Anotar Gasto
+          </button>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="Agenda un show para este sábado con Carlos Pérez por $800 y anticipo de $200">
+            🎸 Agendar Show
+          </button>
+          <button type="button" class="gigai-pill-btn" data-action="click->ai-copilot#quickPrompt" data-prompt="¿A qué músicos les debo dinero y cuánto?">
+            👥 Deudas Músicos
+          </button>
+        </div>
       </div>
 
-      <%# HISTORIAL DE MENSAJES %>
-      <div data-ai-copilot-target="messages" class="gigai-messages-body">
-        <div class="gigai-welcome-box">
-          <div style="font-size: 1.5rem; margin-bottom: 6px;">👋 🎙️</div>
-          <div style="font-weight: 700; color: #1e293b; font-size: 0.92rem; margin-bottom: 4px;">
-            ¡Hola! ¿Qué deseas hacer hoy?
-          </div>
-          <div style="font-size: 0.8rem; color: #64748b; line-height: 1.4; margin-bottom: 6px;">
-            Puedes <strong>hablarme con el micrófono</strong> o escribir. Anota gastos de caja, autoriza pagos a músicos, agenda eventos o consulta tu saldo.
-          </div>
+      <%# CUERPO DEL CHAT / MENSAJES %>
+      <div data-ai-copilot-target="messages" class="gigai-chat-body">
+        
+        <%# Separador de fecha %>
+        <div class="gigai-date-divider">
+          <span>Hoy</span>
+        </div>
 
-          <%# TARJETAS DE PAGOS PENDIENTES DE AUTORIZAR %>
+        <%# TARJETA DE BIENVENIDA (ESTILO ASISTENTE) %>
+        <div class="gigai-welcome-card">
+          <div class="gigai-welcome-header">
+            <div class="gigai-welcome-avatar">🤖</div>
+            <div class="gigai-welcome-titles">
+              <div class="gigai-welcome-name">¡Hola! Soy tu Copiloto Gig IA</div>
+              <div class="gigai-welcome-role">Director de Finanzas, Caja y Agenda</div>
+            </div>
+          </div>
+          <p class="gigai-welcome-desc">
+            Estoy conectado en tiempo real a tu caja, cobros y shows. Puedes <strong>escribirme o hablarme por voz con el micrófono</strong> y te responderé en el chat y por voz en español.
+          </p>
+
+          <%# PENDIENTES DE AUTORIZAR RENDERIZADOS CON ESTILO FINTECH %>
           <% 
             pending_ep_list = current_company.employee_payments.pending_approval.includes(:user, :gig).order(created_at: :desc).limit(3) rescue []
             pending_gp_list = GigPayment.joins(:gig).where(gigs: { company_id: current_company.id }).pending_approval.includes(:gig).order(created_at: :desc).limit(2) rescue []
           %>
+          <% if pending_ep_list.any? || pending_gp_list.any? %>
+            <div class="gigai-pending-section-title">
+              ⚡ Acciones rápidas pendientes
+            </div>
+          <% end %>
+
           <% pending_ep_list.each do |ep| %>
-            <div style="background: #ecfdf5; border: 1.5px solid #a7f3d0; border-radius: 12px; padding: 12px 14px; margin-top: 10px; text-align: left;">
-              <div style="font-weight: 800; color: #065f46; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <span style="display: flex; align-items: center; gap: 5px;">
-                  <span>💰</span> <span>Reporte de Pago: <%= ep.user&.display_name %></span>
-                </span>
-                <span style="background: #10b981; color: white; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 800;">
+            <div class="gigai-fintech-card gigai-card-worker">
+              <div class="gigai-fintech-top">
+                <div class="gigai-fintech-icon-group">
+                  <span class="gigai-fintech-icon">💰</span>
+                  <div class="gigai-fintech-info">
+                    <span class="gigai-fintech-subject">Pago: <%= ep.user&.display_name %></span>
+                    <span class="gigai-fintech-meta"><%= ep.payment_method.presence || 'Efectivo' %> · <%= ep.date_paid&.strftime('%d/%m/%Y') %></span>
+                  </div>
+                </div>
+                <div class="gigai-fintech-amount">
                   $<%= sprintf('%.2f', ep.amount) %> USD
-                </span>
+                </div>
               </div>
-              <p style="color: #047857; font-size: 0.78rem; line-height: 1.35; margin: 0 0 8px 0;">
-                <%= ep.user&.display_name %> indicó haber recibido <strong>$<%= sprintf('%.2f', ep.amount) %> USD</strong> vía <%= ep.payment_method.presence || 'Efectivo' %> (<%= ep.date_paid&.strftime('%d/%m/%Y') %>). Confirma si ya se realizó.
-                <% if ep.notes.present? %><br>📝 "<%= ep.notes %>"<% end %>
-              </p>
-              <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <% if ep.notes.present? %>
+                <div class="gigai-fintech-notes">📝 "<%= ep.notes %>"</div>
+              <% end %>
+              <div class="gigai-fintech-actions">
                 <button type="button" 
-                        class="btn btn-sm"
-                        data-action="click->ai-copilot#quickPrompt"
-                        data-prompt="Autoriza el reporte de pago de <%= ep.user&.display_name %> por $<%= sprintf('%.2f', ep.amount) %> USD"
-                        style="background: #059669; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; cursor: pointer;">
-                  ⚡ Autorizar con IA ➔
+                        class="gigai-btn-approve" 
+                        data-action="click->ai-copilot#quickPrompt" 
+                        data-prompt="Autoriza el reporte de pago de <%= ep.user&.display_name %> por $<%= sprintf('%.2f', ep.amount) %> USD">
+                  ⚡ Autorizar
                 </button>
                 <button type="button" 
-                        class="btn btn-sm"
-                        data-action="click->ai-copilot#quickPrompt"
-                        data-prompt="Rechaza el reporte de pago de <%= ep.user&.display_name %>"
-                        style="background: #fff1f2; color: #dc2626; border: 1px solid #fecaca; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 10px; cursor: pointer;">
-                  ❌ Rechazar
+                        class="gigai-btn-reject" 
+                        data-action="click->ai-copilot#quickPrompt" 
+                        data-prompt="Rechaza el reporte de pago de <%= ep.user&.display_name %>">
+                  ✕ Rechazar
                 </button>
               </div>
             </div>
           <% end %>
 
           <% pending_gp_list.each do |gp| %>
-            <div style="background: #eff6ff; border: 1.5px solid #bfdbfe; border-radius: 12px; padding: 12px 14px; margin-top: 10px; text-align: left;">
-              <div style="font-weight: 800; color: #1e40af; font-size: 0.85rem; display: flex; align-items: center; justify-content: space-between; gap: 6px; margin-bottom: 4px;">
-                <span style="display: flex; align-items: center; gap: 5px;">
-                  <span>💳</span> <span>Abono de Cliente: <%= gp.payer_name || gp.gig&.client_display_name %></span>
-                </span>
-                <span style="background: #2563eb; color: white; padding: 2px 8px; border-radius: 99px; font-size: 0.72rem; font-weight: 800;">
+            <div class="gigai-fintech-card gigai-card-client">
+              <div class="gigai-fintech-top">
+                <div class="gigai-fintech-icon-group">
+                  <span class="gigai-fintech-icon">💳</span>
+                  <div class="gigai-fintech-info">
+                    <span class="gigai-fintech-subject">Abono: <%= gp.payer_name || gp.gig&.client_display_name %></span>
+                    <span class="gigai-fintech-meta">Show: <%= gp.gig&.client_display_name %></span>
+                  </div>
+                </div>
+                <div class="gigai-fintech-amount gigai-amount-blue">
                   $<%= sprintf('%.2f', gp.amount) %> USD
-                </span>
+                </div>
               </div>
-              <p style="color: #1e3a8a; font-size: 0.78rem; line-height: 1.35; margin: 0 0 8px 0;">
-                Comprobante de abono recibido para el show de <strong><%= gp.gig&.client_display_name %></strong>.
-              </p>
-              <button type="button" 
-                      class="btn btn-sm"
-                      data-action="click->ai-copilot#quickPrompt"
-                      data-prompt="Aprueba el comprobante de abono de <%= gp.payer_name || gp.gig&.client_display_name %> por $<%= sprintf('%.2f', gp.amount) %> USD"
-                      style="background: #2563eb; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 12px; cursor: pointer;">
-                ⚡ Aprobar Abono con IA ➔
-              </button>
+              <div class="gigai-fintech-actions">
+                <button type="button" 
+                        class="gigai-btn-approve gigai-btn-blue" 
+                        data-action="click->ai-copilot#quickPrompt" 
+                        data-prompt="Aprueba el comprobante de abono de <%= gp.payer_name || gp.gig&.client_display_name %> por $<%= sprintf('%.2f', gp.amount) %> USD">
+                  ⚡ Aprobar Abono
+                </button>
+              </div>
             </div>
           <% end %>
 
@@ -152,53 +216,71 @@
           %>
           <% if recent_followups.any? %>
             <% first_f = recent_followups.first %>
-            <div style="background: #fffbeb; border: 1.5px solid #fde68a; border-radius: 12px; padding: 12px 14px; margin-top: 10px; text-align: left;">
-              <div style="font-weight: 800; color: #b45309; font-size: 0.84rem; display: flex; align-items: center; gap: 6px; margin-bottom: 4px;">
-                <span>🔔</span> <span>Seguimiento: <%= first_f[:client_name] %> (<%= first_f[:days_label] %>)</span>
+            <div class="gigai-fintech-card gigai-card-warning">
+              <div class="gigai-fintech-top">
+                <div class="gigai-fintech-icon-group">
+                  <span class="gigai-fintech-icon">🔔</span>
+                  <div class="gigai-fintech-info">
+                    <span class="gigai-fintech-subject">Cierre de Show: <%= first_f[:client_name] %></span>
+                    <span class="gigai-fintech-meta"><%= first_f[:days_label] %></span>
+                  </div>
+                </div>
               </div>
-              <p style="color: #78350f; font-size: 0.78rem; line-height: 1.35; margin: 0 0 8px 0;">
-                Veo que este evento acaba de pasar. ¿Le pagaste a los músicos, cobraste el saldo o hubo algún gasto de transporte?
+              <p class="gigai-fintech-notes">
+                ¿Le pagaste a los músicos, cobraste el saldo o hubo algún gasto de transporte?
               </p>
-              <button type="button" 
-                      class="btn btn-sm"
-                      data-action="click->ai-copilot#quickPrompt"
-                      data-prompt="¿Qué pasó con el show de <%= first_f[:client_name] %> del <%= first_f[:date_str] %>? Ayúdame a revisar nómina, cobros y gastos."
-                      style="background: #f59e0b; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 700; padding: 5px 10px; cursor: pointer;">
-                ⚡ Revisar y Cerrar este Show ➔
-              </button>
+              <div class="gigai-fintech-actions">
+                <button type="button" 
+                        class="gigai-btn-approve gigai-btn-amber" 
+                        data-action="click->ai-copilot#quickPrompt" 
+                        data-prompt="¿Qué pasó con el show de <%= first_f[:client_name] %> del <%= first_f[:date_str] %>? Ayúdame a revisar nómina, cobros y gastos.">
+                  ⚡ Revisar y Cerrar Show
+                </button>
+              </div>
             </div>
           <% end %>
+
         </div>
       </div>
 
-      <%# ESTADO DEL MICRÓFONO %>
-      <div data-ai-copilot-target="micStatus" class="gigai-mic-status-bar" style="display: none;">
-        🎙️ Escuchando... habla con confianza
+      <%# BARRA DE ESTADO DE ESCUCHA DEL MICRÓFONO %>
+      <div data-ai-copilot-target="micStatus" class="gigai-mic-recording-bar" style="display: none;">
+        <span class="gigai-mic-wave-dot"></span>
+        <span class="gigai-mic-wave-dot"></span>
+        <span class="gigai-mic-wave-dot"></span>
+        <span class="gigai-mic-recording-text">🎙️ Escuchando tu voz... habla con confianza</span>
       </div>
 
-      <%# INPUT Y CONTROLES %>
-      <div class="gigai-input-footer">
+      <%# FOOTER / BARRA DE ENTRADA (ESTILO CHAT MODERNO) %>
+      <div class="gigai-composer-footer">
+        <%# Botón micrófono %>
         <button type="button" 
                 data-ai-copilot-target="micBtn" 
                 data-action="click->ai-copilot#toggleMic" 
-                class="gigai-mic-btn" 
+                class="gigai-composer-mic-btn" 
+                aria-label="Hablar por micrófono"
                 title="Presiona para hablar con tu voz">
-          🎙️
+          <span class="gigai-composer-mic-icon">🎙️</span>
         </button>
         
-        <input type="text" 
-               data-ai-copilot-target="input" 
-               data-action="keydown->ai-copilot#handleKeydown" 
-               placeholder="Escribe o di: 'Anotar gasto de $30' o 'Agendar show'..." 
-               class="gigai-text-input" 
-               autocomplete="off" />
+        <%# Campo de texto %>
+        <div class="gigai-composer-input-wrap">
+          <input type="text" 
+                 data-ai-copilot-target="input" 
+                 data-action="keydown->ai-copilot#handleKeydown" 
+                 placeholder="Pregunta o pide algo a Gig IA..." 
+                 class="gigai-composer-input" 
+                 autocomplete="off" />
+        </div>
 
+        <%# Botón enviar %>
         <button type="button" 
                 data-ai-copilot-target="sendBtn" 
                 data-action="click->ai-copilot#sendPrompt" 
-                class="gigai-send-btn" 
+                class="gigai-composer-send-btn" 
+                aria-label="Enviar mensaje"
                 title="Enviar mensaje">
-          ➤
+          <span class="gigai-send-symbol">➤</span>
         </button>
       </div>
 
@@ -207,169 +289,654 @@
 
   <style>
     /* ======================================================
-       GIGAI COPILOT FLOATING STYLES
+       GIG IA COPILOT — MOBILE-FIRST DESIGN ARCHITECTURE
        ====================================================== */
+
+    /* ── 1. Contenedor base ── */
     .gigai-copilot-container {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
-      z-index: 9999;
-      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      bottom: max(18px, env(safe-area-inset-bottom, 18px));
+      right: max(16px, env(safe-area-inset-right, 16px));
+      z-index: 99999;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Inter", sans-serif;
+      -webkit-font-smoothing: antialiased;
     }
 
-    /* Botón Flotante */
+    /* Cuando el chat está abierto en móvil: toma la pantalla completa sin márgenes */
+    .gigai-copilot-container.panel-open {
+      position: fixed !important;
+      inset: 0 !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100% !important;
+      max-width: 100vw !important;
+      height: 100% !important;
+      height: 100dvh !important;
+      z-index: 100000 !important;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    .gigai-copilot-container.panel-open .gigai-fab-btn {
+      display: none !important;
+    }
+
+    /* ── 2. Botón Flotante (FAB) ── */
     .gigai-fab-btn {
       position: relative;
       background: <%= theme_gradient %>;
       border: none;
       border-radius: 999px;
-      padding: 12px 18px;
+      padding: 10px 16px;
       color: #ffffff;
       cursor: pointer;
-      box-shadow: 0 8px 24px <%= theme_shadow %>, 0 2px 6px rgba(0,0,0,0.1);
-      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-      display: flex;
+      box-shadow: 0 8px 24px <%= theme_shadow %>, 0 2px 6px rgba(0,0,0,0.15);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.2s ease;
+      display: inline-flex;
       align-items: center;
       justify-content: center;
       outline: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .gigai-fab-btn:hover {
-      transform: translateY(-2px) scale(1.03);
-      box-shadow: 0 12px 28px <%= theme_shadow %>, 0 4px 10px rgba(0,0,0,0.15);
+    .gigai-fab-btn:active {
+      transform: scale(0.94);
     }
 
     .gigai-fab-inner {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 7px;
       font-weight: 800;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       letter-spacing: -0.2px;
     }
 
     .gigai-fab-icon {
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       animation: gigaiSparkle 2s infinite ease-in-out;
     }
 
     @keyframes gigaiSparkle {
-      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.9; }
-      50% { transform: scale(1.2) rotate(15deg); opacity: 1; }
+      0%, 100% { transform: scale(1) rotate(0deg); opacity: 0.95; }
+      50% { transform: scale(1.18) rotate(12deg); opacity: 1; }
     }
 
-    /* Panel de Chat */
+    .gigai-fab-pulse {
+      position: absolute;
+      inset: -4px;
+      border-radius: 999px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      animation: gigaiPulseRing 2.4s infinite cubic-bezier(0.24, 0, 0.38, 1);
+      pointer-events: none;
+    }
+
+    @keyframes gigaiPulseRing {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      60% { transform: scale(1.15); opacity: 0; }
+      100% { transform: scale(1.2); opacity: 0; }
+    }
+
+    /* ── 3. Panel de Chat (Mobile Default: Full Screen 100dvh) ── */
     .gigai-chat-panel {
       position: fixed;
-      bottom: 84px;
-      right: 24px;
-      width: 380px;
-      max-width: calc(100vw - 32px);
-      height: 540px;
-      max-height: calc(100vh - 120px);
-      background: #ffffff;
-      border-radius: 18px;
-      box-shadow: 0 20px 45px rgba(15, 23, 42, 0.22), 0 4px 12px rgba(15, 23, 42, 0.08);
-      border: 1px solid rgba(226, 232, 240, 0.8);
+      inset: 0;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      max-width: 100vw;
+      height: 100%;
+      height: 100dvh;
+      background: #f8fafc;
       display: flex;
       flex-direction: column;
       overflow: hidden;
-      animation: gigaiSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 10000;
+      box-sizing: border-box;
+      z-index: 100000;
+      animation: gigaiFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     }
 
-    @keyframes gigaiSlideUp {
-      from { opacity: 0; transform: translateY(20px) scale(0.96); }
-      to { opacity: 1; transform: translateY(0) scale(1); }
+    @keyframes gigaiFadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
-    .gigai-panel-header {
-      padding: 14px 18px;
+    /* ── 4. Cabecera (App Bar) ── */
+    .gigai-app-header {
+      padding-top: max(12px, env(safe-area-inset-top, 12px));
+      padding-bottom: 12px;
+      padding-left: max(12px, env(safe-area-inset-left, 12px));
+      padding-right: max(12px, env(safe-area-inset-right, 12px));
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      gap: 8px;
       color: #ffffff;
+      flex-shrink: 0;
+      box-sizing: border-box;
+      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+      position: relative;
+      z-index: 10;
     }
 
-    .gigai-panel-close-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: none;
-      color: #ffffff;
-      width: 28px;
-      height: 28px;
-      border-radius: 99px;
-      font-size: 1.2rem;
-      line-height: 1;
+    .gigai-header-btn {
+      background: rgba(255, 255, 255, 0.18);
+      border: 1px solid rgba(255, 255, 255, 0.28);
+      color: #ffffff !important;
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
+      transition: background 0.15s ease, transform 0.15s ease;
+      flex-shrink: 0;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      padding: 0;
+    }
+
+    .gigai-header-btn:active {
+      transform: scale(0.92);
+      background: rgba(255, 255, 255, 0.32);
+    }
+
+    .gigai-btn-symbol {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 1.35rem;
+      line-height: 1;
+      color: #ffffff !important;
+      font-weight: 700;
+      user-select: none;
+    }
+
+    .gigai-header-identity {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    .gigai-avatar-wrapper {
+      position: relative;
+      width: 38px;
+      height: 38px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.22);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .gigai-online-dot {
+      position: absolute;
+      bottom: -2px;
+      right: -2px;
+      width: 10px;
+      height: 10px;
+      background: #10b981;
+      border-radius: 50%;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 6px rgba(16, 185, 129, 0.8);
+    }
+
+    .gigai-header-text {
+      min-width: 0;
+      flex: 1 1 auto;
+      overflow: hidden;
+    }
+
+    .gigai-header-title-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .gigai-header-title {
+      font-weight: 800;
+      font-size: 0.98rem;
+      letter-spacing: -0.3px;
+      color: #ffffff;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gigai-model-tag {
+      font-size: 0.65rem;
+      background: rgba(255, 255, 255, 0.25);
+      padding: 1px 7px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      font-weight: 800;
+      letter-spacing: 0.4px;
+      flex-shrink: 0;
+    }
+
+    .gigai-header-subtitle {
+      font-size: 0.73rem;
+      color: rgba(255, 255, 255, 0.92);
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 1px;
+    }
+
+    .gigai-status-text {
+      color: #a7f3d0;
+      font-weight: 700;
+    }
+
+    /* ── Barra de Reproducción de Voz (Speaking Bar) ── */
+    .gigai-speaking-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 7px 14px;
+      background: linear-gradient(135deg, #ecfdf5, #f0fdf4);
+      border-bottom: 1.5px solid #a7f3d0;
+      color: #065f46;
+      font-size: 0.78rem;
+      flex-shrink: 0;
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.08);
+      animation: gigaiFadeIn 0.2s ease-out;
+    }
+
+    .gigai-speaking-inner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+    }
+
+    .gigai-sound-waves {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 14px;
+    }
+
+    .gigai-sound-waves span {
+      display: block;
+      width: 3px;
+      background: #10b981;
+      border-radius: 99px;
+      animation: soundWaveBounce 0.8s ease-in-out infinite alternate;
+    }
+
+    .gigai-sound-waves span:nth-child(1) { height: 6px; animation-delay: 0.1s; }
+    .gigai-sound-waves span:nth-child(2) { height: 14px; animation-delay: 0.25s; }
+    .gigai-sound-waves span:nth-child(3) { height: 8px; animation-delay: 0.15s; }
+    .gigai-sound-waves span:nth-child(4) { height: 12px; animation-delay: 0.35s; }
+
+    @keyframes soundWaveBounce {
+      0% { transform: scaleY(0.3); opacity: 0.5; }
+      100% { transform: scaleY(1.1); opacity: 1; }
+    }
+
+    .gigai-speaking-stop-btn {
+      background: #fee2e2;
+      border: 1px solid #fecaca;
+      color: #dc2626;
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
       transition: background 0.15s ease;
     }
 
-    .gigai-panel-close-btn:hover {
-      background: rgba(255, 255, 255, 0.35);
+    .gigai-speaking-stop-btn:hover {
+      background: #fecaca;
     }
 
-    /* Quick Pills */
-    .gigai-quick-pills {
-      padding: 10px 14px;
-      background: #f8fafc;
+    .gigai-btn-voice-toggle.muted {
+      opacity: 0.55;
+    }
+
+    /* ── 5. Sugerencias Rápidas (Pills) ── */
+    .gigai-quick-pills-bar {
+      background: #ffffff;
       border-bottom: 1px solid #e2e8f0;
+      padding: 8px 12px;
+      flex-shrink: 0;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+
+    .gigai-quick-pills-track {
       display: flex;
-      gap: 6px;
+      gap: 8px;
       overflow-x: auto;
       white-space: nowrap;
       scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+      padding-bottom: 2px;
     }
-    .gigai-quick-pills::-webkit-scrollbar { display: none; }
+    .gigai-quick-pills-track::-webkit-scrollbar { display: none; }
 
     .gigai-pill-btn {
-      background: #ffffff;
+      background: #f8fafc;
       border: 1px solid #cbd5e1;
-      border-radius: 99px;
-      padding: 4px 10px;
-      font-size: 0.73rem;
-      font-weight: 600;
+      border-radius: 999px;
+      padding: 6px 13px;
+      font-size: 0.76rem;
+      font-weight: 700;
       color: #334155;
       cursor: pointer;
       transition: all 0.15s ease;
       flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
     }
 
-    .gigai-pill-btn:hover {
-      background: #eff6ff;
-      border-color: #3b82f6;
-      color: #1d4ed8;
-      transform: translateY(-1px);
+    .gigai-pill-btn:active {
+      transform: scale(0.96);
+      background: #e2e8f0;
     }
 
-    /* Mensajes */
-    .gigai-messages-body {
+    .gigai-pill-alert {
+      background: #ecfdf5;
+      color: #065f46;
+      border-color: #a7f3d0;
+    }
+
+    .gigai-pill-badge {
+      background: #10b981;
+      color: white;
+      font-size: 0.68rem;
+      padding: 1px 6px;
+      border-radius: 99px;
+      font-weight: 800;
+    }
+
+    .gigai-pill-action {
+      background: #f5f3ff;
+      color: #5b21b6;
+      border-color: #ddd6fe;
+    }
+
+    /* ── 6. Cuerpo de Mensajes ── */
+    .gigai-chat-body {
       flex: 1 1 auto;
-      padding: 16px;
-      overflow-y: auto;
-      background: #fdfdfd;
-    }
-
-    .gigai-welcome-box {
-      background: #f1f5f9;
-      border-radius: 12px;
       padding: 14px;
-      text-align: center;
-      margin-bottom: 12px;
-      border: 1px dashed #cbd5e1;
+      overflow-y: auto;
+      background: #f8fafc;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-y: contain;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
     }
 
-    /* Micrófono Status Bar */
-    .gigai-mic-status-bar {
-      background: #fee2e2;
-      color: #991b1b;
-      font-size: 0.78rem;
+    .gigai-date-divider {
+      display: flex;
+      justify-content: center;
+      margin: 4px 0 14px 0;
+    }
+
+    .gigai-date-divider span {
+      background: #e2e8f0;
+      color: #64748b;
+      font-size: 0.7rem;
       font-weight: 700;
+      padding: 3px 12px;
+      border-radius: 999px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Tarjeta de Bienvenida */
+    .gigai-welcome-card {
+      background: #ffffff;
+      border-radius: 16px;
+      padding: 16px;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
+      margin-bottom: 14px;
+      box-sizing: border-box;
+      max-width: 100%;
+    }
+
+    .gigai-welcome-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .gigai-welcome-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+
+    .gigai-welcome-name {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: #0f172a;
+      letter-spacing: -0.2px;
+    }
+
+    .gigai-welcome-role {
+      font-size: 0.74rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .gigai-welcome-desc {
+      font-size: 0.82rem;
+      color: #475569;
+      line-height: 1.45;
+      margin: 0 0 12px 0;
+    }
+
+    .gigai-pending-section-title {
+      font-size: 0.75rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #64748b;
+      margin: 12px 0 8px 0;
+    }
+
+    /* Tarjetas Fintech (Estilo Neobank) */
+    .gigai-fintech-card {
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-top: 8px;
+      box-sizing: border-box;
+      transition: transform 0.15s ease;
+    }
+
+    .gigai-card-worker {
+      background: #f0fdf4;
+      border: 1.5px solid #bbf7d0;
+    }
+
+    .gigai-card-client {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+    }
+
+    .gigai-card-warning {
+      background: #fffbeb;
+      border: 1.5px solid #fde68a;
+    }
+
+    .gigai-fintech-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .gigai-fintech-icon-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      flex: 1 1 auto;
+    }
+
+    .gigai-fintech-icon {
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .gigai-fintech-info {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .gigai-fintech-subject {
+      font-weight: 800;
+      font-size: 0.84rem;
+      color: #0f172a;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .gigai-fintech-meta {
+      font-size: 0.72rem;
+      color: #64748b;
+      font-weight: 600;
+    }
+
+    .gigai-fintech-amount {
+      font-size: 0.82rem;
+      font-weight: 900;
+      background: #10b981;
+      color: #ffffff;
+      padding: 3px 9px;
+      border-radius: 99px;
+      flex-shrink: 0;
+    }
+
+    .gigai-amount-blue {
+      background: #2563eb;
+    }
+
+    .gigai-fintech-notes {
+      font-size: 0.78rem;
+      color: #334155;
+      margin: 8px 0;
+      line-height: 1.35;
+    }
+
+    .gigai-fintech-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 8px;
+    }
+
+    .gigai-btn-approve {
+      background: #059669;
+      color: #ffffff;
+      border: none;
+      border-radius: 999px;
       padding: 6px 14px;
-      text-align: center;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 2px 6px rgba(5, 150, 105, 0.25);
+    }
+    .gigai-btn-approve:active { transform: scale(0.95); }
+
+    .gigai-btn-blue {
+      background: #2563eb;
+      box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+    }
+
+    .gigai-btn-amber {
+      background: #d97706;
+      box-shadow: 0 2px 6px rgba(217, 119, 6, 0.25);
+    }
+
+    .gigai-btn-reject {
+      background: #ffffff;
+      color: #dc2626;
+      border: 1px solid #fca5a5;
+      border-radius: 999px;
+      padding: 5px 12px;
+      font-size: 0.76rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .gigai-btn-reject:active { transform: scale(0.95); }
+
+    /* ── 7. Mic Recording Bar ── */
+    .gigai-mic-recording-bar {
+      background: #fee2e2;
+      border-top: 1px solid #fecaca;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      color: #991b1b;
+      font-size: 0.8rem;
+      font-weight: 700;
+      flex-shrink: 0;
       animation: pulseAlert 1.5s infinite;
+    }
+
+    .gigai-mic-wave-dot {
+      width: 6px;
+      height: 6px;
+      background: #ef4444;
+      border-radius: 50%;
+      animation: micDotBounce 1s infinite ease-in-out;
+    }
+    .gigai-mic-wave-dot:nth-child(2) { animation-delay: 0.2s; }
+    .gigai-mic-wave-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes micDotBounce {
+      0%, 100% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.4); opacity: 1; }
     }
 
     @keyframes pulseAlert {
@@ -377,39 +944,45 @@
       50% { opacity: 0.6; }
     }
 
-    /* Input Footer */
-    .gigai-input-footer {
-      padding: 12px 14px;
+    /* ── 8. Footer Composer (Barra de Entrada) ── */
+    .gigai-composer-footer {
       background: #ffffff;
       border-top: 1px solid #e2e8f0;
+      padding: 8px 10px max(14px, env(safe-area-inset-bottom, 14px)) 10px;
       display: flex;
       align-items: center;
       gap: 8px;
+      flex-shrink: 0;
+      width: 100%;
+      box-sizing: border-box;
+      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
     }
 
-    .gigai-mic-btn {
+    .gigai-composer-mic-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
       background: #f1f5f9;
       border: 1px solid #cbd5e1;
-      width: 38px;
-      height: 38px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1.15rem;
+      font-size: 1.25rem;
       cursor: pointer;
-      transition: all 0.2s ease;
       flex-shrink: 0;
+      transition: all 0.15s ease;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
     }
-
-    .gigai-mic-btn:hover {
+    .gigai-composer-mic-btn:active {
+      transform: scale(0.92);
       background: #e2e8f0;
     }
 
-    .gigai-mic-btn.pulse-mic {
+    .gigai-composer-mic-btn.pulse-mic {
       background: #ef4444 !important;
       border-color: #dc2626 !important;
-      color: #fff !important;
+      color: #ffffff !important;
       animation: micPulseRing 1.2s infinite;
     }
 
@@ -419,109 +992,299 @@
       100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
 
-    .gigai-text-input {
-      flex: 1 1 auto;
-      border: 1px solid #cbd5e1;
-      border-radius: 99px;
-      padding: 8px 14px;
-      font-size: 0.85rem;
+    .gigai-composer-input-wrap {
+      flex: 1 1 0%;
+      min-width: 0;
+      display: flex;
+    }
+
+    .gigai-composer-input {
+      width: 100%;
+      box-sizing: border-box;
+      background: #f1f5f9;
+      border: 1.5px solid #cbd5e1;
+      border-radius: 999px;
+      padding: 10px 16px;
+      font-size: 16px !important; /* Vital para anular auto-zoom en iOS Safari */
+      color: #0f172a;
       outline: none;
-      transition: border-color 0.15s ease;
-      background: #f8fafc;
+      transition: all 0.2s ease;
+      min-height: 42px;
     }
 
-    .gigai-text-input:focus {
-      border-color: #3b82f6;
+    .gigai-composer-input:focus {
       background: #ffffff;
-      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
     }
 
-    .gigai-send-btn {
-      background: #2563eb;
-      color: #ffffff;
-      border: none;
-      width: 38px;
-      height: 38px;
+    .gigai-composer-send-btn {
+      width: 42px;
+      height: 42px;
       border-radius: 50%;
+      background: <%= theme_gradient %>;
+      border: none;
+      color: #ffffff;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 1rem;
       cursor: pointer;
-      transition: all 0.15s ease;
       flex-shrink: 0;
+      box-shadow: 0 4px 12px <%= theme_shadow %>;
+      transition: all 0.15s ease;
+      outline: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .gigai-composer-send-btn:active {
+      transform: scale(0.92);
+      box-shadow: 0 2px 6px <%= theme_shadow %>;
     }
 
-    .gigai-send-btn:hover {
-      background: #1d4ed8;
-      transform: scale(1.05);
+    .gigai-send-symbol {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      font-size: 1.15rem;
+      line-height: 1;
+      color: #ffffff !important;
+      user-select: none;
     }
 
-    /* Adaptación a Dark Mode si data-theme="dark" o "gerovip" */
+    /* ── 9. Bubbles y Cards generadas por JS ── */
+    .gigai-bubble-user {
+      background: <%= theme_gradient %> !important;
+      color: #ffffff !important;
+      border-radius: 18px 18px 4px 18px !important;
+      padding: 11px 16px !important;
+      font-size: 0.92rem !important;
+      line-height: 1.45 !important;
+      box-shadow: 0 3px 12px <%= theme_shadow %> !important;
+      word-break: break-word !important;
+      max-width: 86% !important;
+    }
+
+    .gigai-bubble-row-model {
+      display: flex !important;
+      align-items: flex-start !important;
+      gap: 8px !important;
+      max-width: 94% !important;
+      width: 100% !important;
+    }
+
+    .gigai-bubble-avatar-mini {
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 8px !important;
+      background: #eff6ff !important;
+      border: 1px solid #bfdbfe !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      font-size: 1rem !important;
+      flex-shrink: 0 !important;
+      margin-top: 2px !important;
+    }
+
+    .gigai-bubble-model {
+      background: #ffffff !important;
+      color: #0f172a !important;
+      border: 1px solid #e2e8f0 !important;
+      border-radius: 18px 18px 18px 4px !important;
+      padding: 12px 16px !important;
+      font-size: 0.9rem !important;
+      line-height: 1.5 !important;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04) !important;
+      word-break: break-word !important;
+      flex: 1 1 auto !important;
+      min-width: 0 !important;
+    }
+
+    .gigai-bubble-footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+      padding-top: 6px;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .gigai-bubble-action-btn {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      color: #475569;
+      border-radius: 999px;
+      padding: 3px 9px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+      outline: none;
+    }
+
+    .gigai-bubble-action-btn:hover {
+      background: #eff6ff;
+      border-color: #bfdbfe;
+      color: #2563eb;
+      transform: translateY(-1px);
+    }
+
+    /* Indicador de escritura (3 dots) */
+    .gigai-typing-loader {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 14px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 18px 18px 18px 4px;
+      width: fit-content;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .gigai-typing-dot {
+      width: 7px;
+      height: 7px;
+      background: #3b82f6;
+      border-radius: 50%;
+      animation: gigaiDotJump 1.2s infinite ease-in-out;
+    }
+    .gigai-typing-dot:nth-child(2) { animation-delay: 0.2s; }
+    .gigai-typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes gigaiDotJump {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── 10. Bloqueo de scroll body en móvil ── */
+    body.gigai-panel-open {
+      overflow: hidden !important;
+      touch-action: none;
+    }
+
+    /* ── 11. Adaptación a Dark Mode / Gerovip ── */
     [data-theme="dark"] .gigai-chat-panel,
     [data-theme="gerovip"] .gigai-chat-panel {
-      background: #0f172a;
-      border-color: #334155;
-      box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+      background: #0b1120;
     }
 
-    [data-theme="dark"] .gigai-quick-pills,
-    [data-theme="gerovip"] .gigai-quick-pills {
-      background: #1e293b;
-      border-color: #334155;
+    [data-theme="dark"] .gigai-quick-pills-bar,
+    [data-theme="gerovip"] .gigai-quick-pills-bar {
+      background: #0f172a;
+      border-color: #1e293b;
     }
 
     [data-theme="dark"] .gigai-pill-btn,
     [data-theme="gerovip"] .gigai-pill-btn {
-      background: #0f172a;
-      border-color: #475569;
-      color: #cbd5e1;
-    }
-
-    [data-theme="dark"] .gigai-messages-body,
-    [data-theme="gerovip"] .gigai-messages-body {
-      background: #090d16;
-    }
-
-    [data-theme="dark"] .gigai-welcome-box,
-    [data-theme="gerovip"] .gigai-welcome-box {
       background: #1e293b;
       border-color: #334155;
+      color: #e2e8f0;
+    }
+
+    [data-theme="dark"] .gigai-chat-body,
+    [data-theme="gerovip"] .gigai-chat-body {
+      background: #0b1120;
+    }
+
+    [data-theme="dark"] .gigai-welcome-card,
+    [data-theme="gerovip"] .gigai-welcome-card {
+      background: #0f172a;
+      border-color: #1e293b;
       color: #f1f5f9;
     }
 
-    [data-theme="dark"] .gigai-welcome-box div:first-child + div,
-    [data-theme="gerovip"] .gigai-welcome-box div:first-child + div {
-      color: #ffffff !important;
+    [data-theme="dark"] .gigai-welcome-name,
+    [data-theme="gerovip"] .gigai-welcome-name {
+      color: #ffffff;
     }
 
-    [data-theme="dark"] .gigai-input-footer,
-    [data-theme="gerovip"] .gigai-input-footer {
+    [data-theme="dark"] .gigai-welcome-desc,
+    [data-theme="gerovip"] .gigai-welcome-desc {
+      color: #94a3b8;
+    }
+
+    [data-theme="dark"] .gigai-composer-footer,
+    [data-theme="gerovip"] .gigai-composer-footer {
       background: #0f172a;
-      border-color: #334155;
+      border-color: #1e293b;
     }
 
-    [data-theme="dark"] .gigai-text-input,
-    [data-theme="gerovip"] .gigai-text-input {
+    [data-theme="dark"] .gigai-composer-input,
+    [data-theme="gerovip"] .gigai-composer-input {
       background: #1e293b;
       border-color: #334155;
       color: #ffffff;
     }
 
-    /* Móvil: pantalla completa ajustada */
-    @media (max-width: 640px) {
-      .gigai-chat-panel {
-        bottom: 0;
-        right: 0;
-        width: 100vw;
-        max-width: 100vw;
-        height: 100vh;
-        max-height: 100vh;
-        border-radius: 0;
-      }
+    [data-theme="dark"] .gigai-composer-mic-btn,
+    [data-theme="gerovip"] .gigai-composer-mic-btn {
+      background: #1e293b;
+      border-color: #334155;
+    }
+
+    [data-theme="dark"] .gigai-bubble-model,
+    [data-theme="gerovip"] .gigai-bubble-model {
+      background: #0f172a !important;
+      border-color: #1e293b !important;
+      color: #f1f5f9 !important;
+    }
+
+    [data-theme="dark"] .gigai-bubble-avatar-mini,
+    [data-theme="gerovip"] .gigai-bubble-avatar-mini {
+      background: #1e293b !important;
+      border-color: #334155 !important;
+    }
+
+    [data-theme="dark"] .gigai-typing-loader,
+    [data-theme="gerovip"] .gigai-typing-loader {
+      background: #0f172a;
+      border-color: #1e293b;
+    }
+
+    [data-theme="dark"] .gigai-speaking-bar,
+    [data-theme="gerovip"] .gigai-speaking-bar {
+      background: #064e3b;
+      border-color: #059669;
+      color: #a7f3d0;
+    }
+
+    /* ── 12. Modo Pantalla de Escritorio (≥ 769px) ── */
+    @media (min-width: 769px) {
       .gigai-copilot-container {
-        bottom: 20px;
-        right: 18px;
+        bottom: 24px;
+        right: 24px;
+      }
+
+      .gigai-chat-panel {
+        inset: auto;
+        top: auto;
+        left: auto;
+        bottom: 84px;
+        right: 24px;
+        width: 410px;
+        max-width: calc(100vw - 32px);
+        height: 620px;
+        max-height: calc(100vh - 110px);
+        border-radius: 22px;
+        box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.35), 0 0 0 1px rgba(0, 0, 0, 0.08);
+      }
+
+      .gigai-btn-back {
+        display: none !important; /* En desktop solo mostramos el botón de cerrar ✕ a la derecha */
+      }
+
+      .gigai-app-header {
+        border-radius: 22px 22px 0 0;
+        padding-top: 14px;
+      }
+
+      .gigai-composer-footer {
+        border-radius: 0 0 22px 22px;
+        padding-bottom: 12px;
       }
     }
   </style>

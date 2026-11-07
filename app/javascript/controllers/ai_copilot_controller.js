@@ -3,13 +3,24 @@ import { Controller } from "@hotwired/stimulus"
 export default class extends Controller {
   static targets = [
     "panel", "messages", "input", "micBtn", "micIcon", "micStatus",
-    "badge", "form", "sendBtn"
+    "badge", "form", "sendBtn", "voiceToggleBtn", "voiceToggleIcon", "speakingBar"
   ]
 
   connect() {
     this.history = []
     this.isListening = false
+    this.isSpeaking = false
+    this.lastInputWasVoice = false
+    this.voiceOutputEnabled = localStorage.getItem("gigai_voice_output") !== "false"
     this.initSpeechRecognition()
+    this.initSpeechSynthesis()
+    this.updateVoiceToggleUI()
+  }
+
+  disconnect() {
+    this.stopListening()
+    this.stopSpeaking()
+    document.body.classList.remove("gigai-panel-open")
   }
 
   togglePanel() {
@@ -23,20 +34,29 @@ export default class extends Controller {
   }
 
   openPanel() {
+    this.element.classList.add("panel-open")
+    if (window.innerWidth <= 768) {
+      document.body.classList.add("gigai-panel-open")
+    }
     this.panelTarget.classList.remove("d-none")
     this.panelTarget.style.display = "flex"
     setTimeout(() => {
-      if (this.hasInputTarget) this.inputTarget.focus()
+      if (this.hasInputTarget && window.innerWidth > 768) {
+        this.inputTarget.focus()
+      }
       this.scrollToBottom()
     }, 100)
   }
 
   closePanel() {
+    this.element.classList.remove("panel-open")
+    document.body.classList.remove("gigai-panel-open")
     this.panelTarget.classList.add("d-none")
     this.panelTarget.style.display = "none"
     if (this.isListening) {
       this.stopListening()
     }
+    this.stopSpeaking()
   }
 
   // --- RECONOCIMIENTO DE VOZ (WEB SPEECH API) ---
@@ -57,6 +77,7 @@ export default class extends Controller {
     this.recognition.maxAlternatives = 1
 
     this.recognition.onstart = () => {
+      this.stopSpeaking() // Silenciar a la IA de inmediato si el usuario presiona el micrófono
       this.isListening = true
       this.updateMicUI(true)
     }
@@ -79,8 +100,9 @@ export default class extends Controller {
     this.recognition.onend = () => {
       this.isListening = false
       this.updateMicUI(false)
-      // Si capturó texto completo, enviar automáticamente tras pequeña pausa
+      // Si capturó texto completo, marcar que la pregunta provino de voz y enviar automáticamente
       if (this.hasInputTarget && this.inputTarget.value.trim().length > 3) {
+        this.lastInputWasVoice = true
         this.sendMessage()
       }
     }
@@ -164,6 +186,10 @@ export default class extends Controller {
     const text = this.inputTarget.value.trim()
     if (!text) return
 
+    const wasVoice = this.lastInputWasVoice
+    this.lastInputWasVoice = false
+    this.stopSpeaking()
+
     // Limpiar input y agregar mensaje del usuario en pantalla
     this.inputTarget.value = ""
     this.appendMessage("user", text)
@@ -195,6 +221,11 @@ export default class extends Controller {
       if (data.reply) {
         this.history.push({ role: "model", content: data.reply })
         this.appendMessage("model", data.reply, data.cards)
+
+        // Reproducir por voz si la orden vino por micrófono o la voz está activada
+        if (wasVoice || this.voiceOutputEnabled) {
+          this.speakText(data.reply)
+        }
       }
 
       // Si se autorizó o rechazó un pago y estamos en la vista de notificaciones o pagos, refrescar suavemente
@@ -290,27 +321,40 @@ export default class extends Controller {
     msgDiv.style.flexDirection = "column"
     msgDiv.style.alignItems = role === "user" ? "flex-end" : "flex-start"
 
-    const bubble = document.createElement("div")
-    bubble.style.maxWidth = "88%"
-    bubble.style.padding = "10px 14px"
-    bubble.style.borderRadius = role === "user" ? "16px 16px 2px 16px" : "16px 16px 16px 2px"
-    bubble.style.fontSize = "0.9rem"
-    bubble.style.lineHeight = "1.4"
-    bubble.style.boxShadow = "0 2px 8px rgba(0,0,0,0.06)"
-
     if (role === "user") {
-      bubble.style.background = "linear-gradient(135deg, #2563eb, #1d4ed8)"
-      bubble.style.color = "#ffffff"
+      const bubble = document.createElement("div")
+      bubble.className = "gigai-bubble-user"
       bubble.textContent = text
+      msgDiv.appendChild(bubble)
     } else {
-      bubble.style.background = "var(--card-bg, #ffffff)"
-      bubble.style.color = "var(--text-color, #1e293b)"
-      bubble.style.border = "1px solid var(--border-color, #e2e8f0)"
-      // Permitir formato básico
-      bubble.innerHTML = this.formatMarkdown(text)
-    }
+      const row = document.createElement("div")
+      row.className = "gigai-bubble-row-model"
 
-    msgDiv.appendChild(bubble)
+      const avatar = document.createElement("div")
+      avatar.className = "gigai-bubble-avatar-mini"
+      avatar.textContent = "🤖"
+      row.appendChild(avatar)
+
+      const bubble = document.createElement("div")
+      bubble.className = "gigai-bubble-model"
+      bubble.innerHTML = this.formatMarkdown(text)
+
+      // Botón para reproducir audio del mensaje
+      const actionsBar = document.createElement("div")
+      actionsBar.className = "gigai-bubble-footer-actions"
+      const speakBtn = document.createElement("button")
+      speakBtn.type = "button"
+      speakBtn.className = "gigai-bubble-action-btn"
+      speakBtn.title = "Escuchar respuesta por voz"
+      speakBtn.innerHTML = "<span>🔊</span> <span>Escuchar</span>"
+      speakBtn.addEventListener("click", () => this.speakText(text))
+      actionsBar.appendChild(speakBtn)
+      bubble.appendChild(actionsBar)
+
+      row.appendChild(bubble)
+
+      msgDiv.appendChild(row)
+    }
 
     // Renderizar tarjetas interactivas de acciones ejecutadas
     if (cards && cards.length > 0) {
@@ -326,15 +370,17 @@ export default class extends Controller {
         if (item.action_key || item.prompt) {
           const btn = document.createElement("button")
           btn.className = "btn btn-sm mt-2"
+          btn.style.marginLeft = "36px"
           btn.style.background = item.type === 'pending_worker_approval' 
             ? "linear-gradient(135deg, #10b981, #059669)" 
             : "linear-gradient(135deg, #8b5cf6, #6366f1)"
           btn.style.color = "#fff"
           btn.style.fontWeight = "700"
-          btn.style.borderRadius = "8px"
-          btn.style.padding = "6px 12px"
+          btn.style.borderRadius = "999px"
+          btn.style.padding = "6px 14px"
           btn.style.border = "none"
           btn.style.fontSize = "0.78rem"
+          btn.style.boxShadow = "0 2px 8px rgba(0,0,0,0.1)"
 
           if (item.prompt) {
             btn.dataset.action = "click->ai-copilot#quickPrompt"
@@ -355,31 +401,35 @@ export default class extends Controller {
 
   buildCardElement(card) {
     const cardEl = document.createElement("div")
-    cardEl.style.width = "88%"
+    cardEl.style.width = "calc(100% - 36px)"
+    cardEl.style.maxWidth = "400px"
+    cardEl.style.marginLeft = "36px"
+    cardEl.style.boxSizing = "border-box"
     cardEl.style.marginTop = "8px"
-    cardEl.style.padding = "10px 12px"
-    cardEl.style.borderRadius = "10px"
+    cardEl.style.padding = "12px 14px"
+    cardEl.style.borderRadius = "14px"
+    cardEl.style.wordBreak = "break-word"
 
     if (card.type === 'payment_approved') {
       cardEl.style.background = "rgba(16, 185, 129, 0.08)"
-      cardEl.style.border = "1px solid rgba(16, 185, 129, 0.3)"
+      cardEl.style.border = "1.5px solid rgba(16, 185, 129, 0.3)"
     } else if (card.type === 'payment_rejected') {
       cardEl.style.background = "rgba(239, 68, 68, 0.08)"
-      cardEl.style.border = "1px solid rgba(239, 68, 68, 0.3)"
+      cardEl.style.border = "1.5px solid rgba(239, 68, 68, 0.3)"
     } else {
       cardEl.style.background = "rgba(37, 99, 235, 0.06)"
-      cardEl.style.border = "1px solid rgba(37, 99, 235, 0.2)"
+      cardEl.style.border = "1.5px solid rgba(37, 99, 235, 0.2)"
     }
 
     cardEl.style.fontSize = "0.85rem"
 
-    let detailsHtml = card.details ? `<div style="color: #64748b; font-size: 0.78rem; margin-top: 3px;">${card.details}</div>` : ""
-    let urlHtml = card.url ? `<a href="${card.url}" style="display: inline-block; margin-top: 6px; font-weight: 700; color: #2563eb; text-decoration: underline;">Ver detalle &rarr;</a>` : ""
+    let detailsHtml = card.details ? `<div style="color: #64748b; font-size: 0.78rem; margin-top: 4px;">${card.details}</div>` : ""
+    let urlHtml = card.url ? `<a href="${card.url}" style="display: inline-block; margin-top: 8px; font-weight: 700; color: #2563eb; text-decoration: underline;">Ver detalle &rarr;</a>` : ""
 
     cardEl.innerHTML = `
-      <div style="display: flex; justify-content: space-between; align-items: center;">
-        <strong style="color: #1e293b;">${card.title}</strong>
-        <span style="font-weight: 800; color: #16a34a;">${card.amount || ''}</span>
+      <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px;">
+        <strong style="color: #1e293b; min-width: 0; word-break: break-word;">${card.title}</strong>
+        <span style="font-weight: 800; color: #16a34a; flex-shrink: 0;">${card.amount || ''}</span>
       </div>
       ${detailsHtml}
       ${urlHtml}
@@ -395,11 +445,14 @@ export default class extends Controller {
     loadingDiv.style.display = "flex"
     loadingDiv.style.alignItems = "center"
     loadingDiv.style.gap = "8px"
-    loadingDiv.style.color = "#64748b"
-    loadingDiv.style.fontSize = "0.82rem"
     loadingDiv.innerHTML = `
-      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-      <span>${text}</span>
+      <div class="gigai-bubble-avatar-mini">🤖</div>
+      <div class="gigai-typing-loader">
+        <span class="gigai-typing-dot"></span>
+        <span class="gigai-typing-dot"></span>
+        <span class="gigai-typing-dot"></span>
+      </div>
+      <span style="font-size: 0.76rem; color: #64748b; font-weight: 600;">${text}</span>
     `
     this.messagesTarget.appendChild(loadingDiv)
     this.scrollToBottom()
@@ -422,5 +475,164 @@ export default class extends Controller {
   scrollToBottom() {
     if (!this.hasMessagesTarget) return
     this.messagesTarget.scrollTop = this.messagesTarget.scrollHeight
+  }
+
+  // --- SÍNTESIS DE VOZ (TEXT-TO-SPEECH WEB SPEECH API) ---
+  initSpeechSynthesis() {
+    if (!("speechSynthesis" in window)) {
+      this.ttsSupported = false
+      if (this.hasVoiceToggleBtnTarget) {
+        this.voiceToggleBtnTarget.style.display = "none"
+      }
+      return
+    }
+
+    this.ttsSupported = true
+    this.selectedVoice = null
+    this.loadVoices()
+
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
+      window.speechSynthesis.onvoiceschanged = () => this.loadVoices()
+    }
+  }
+
+  loadVoices() {
+    if (!("speechSynthesis" in window)) return
+    const voices = window.speechSynthesis.getVoices()
+    if (!voices || voices.length === 0) return
+
+    // Buscar voces en español naturales y modernas
+    const esVoices = voices.filter(v => v.lang && v.lang.toLowerCase().startsWith("es"))
+
+    const preferredNames = [
+      "google español", "paulina", "mónica", "monica", "jorge", "diego", "penélope", 
+      "luciana", "angélica", "carlos", "soledad", "alva", "elena", "paloma"
+    ]
+
+    let bestVoice = esVoices.find(v => 
+      preferredNames.some(p => v.name.toLowerCase().includes(p))
+    )
+
+    if (!bestVoice) {
+      bestVoice = esVoices.find(v => v.lang.includes("es-419") || v.lang.includes("es-MX") || v.lang.includes("es-ES") || v.lang.includes("es-US"))
+    }
+
+    if (!bestVoice && esVoices.length > 0) {
+      bestVoice = esVoices[0]
+    }
+
+    this.selectedVoice = bestVoice
+  }
+
+  speakText(rawText) {
+    if (!this.ttsSupported || !this.voiceOutputEnabled || !rawText) return
+
+    // Cancelar cualquier audio anterior
+    window.speechSynthesis.cancel()
+
+    // Limpiar texto para pronunciación natural y conversacional:
+    let text = rawText
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/`([^`]+)`/g, "$1")
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, "$1")
+      .replace(/[*_~#]/g, "")
+      .replace(/^[•\-\*]\s+/gm, "")
+      .replace(/^\s*\d+\.\s+/gm, "")
+      .replace(/---/g, "")
+
+    // Pronunciar montos de dinero naturalmente: $100.00 USD -> 100 dólares
+    text = text.replace(/\$([0-9,]+(?:\.[0-9]{1,2})?)\s*(?:USD)?/gi, (match, p1) => {
+      const cleanNum = p1.replace(/,/g, "")
+      return `${cleanNum} dólares`
+    })
+
+    // Quitar emojis para pronunciación limpia
+    text = text.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, "")
+
+    // Normalizar pausas y espacios
+    text = text.replace(/\n+/g, ". ").replace(/\s{2,}/g, " ").trim()
+    if (!text) return
+
+    const utterance = new SpeechSynthesisUtterance(text)
+    if (this.selectedVoice) {
+      utterance.voice = this.selectedVoice
+      utterance.lang = this.selectedVoice.lang || "es-ES"
+    } else {
+      utterance.lang = "es-ES"
+    }
+
+    utterance.rate = 1.05
+    utterance.pitch = 1.0
+
+    utterance.onstart = () => {
+      this.isSpeaking = true
+      this.showSpeakingBar()
+    }
+
+    utterance.onend = () => {
+      this.isSpeaking = false
+      this.hideSpeakingBar()
+    }
+
+    utterance.onerror = (e) => {
+      console.warn("[GigAI SpeechSynthesis] Error:", e)
+      this.isSpeaking = false
+      this.hideSpeakingBar()
+    }
+
+    window.speechSynthesis.speak(utterance)
+  }
+
+  stopSpeaking() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel()
+    }
+    this.isSpeaking = false
+    this.hideSpeakingBar()
+  }
+
+  toggleVoiceOutput(event) {
+    if (event) event.preventDefault()
+    this.voiceOutputEnabled = !this.voiceOutputEnabled
+    localStorage.setItem("gigai_voice_output", this.voiceOutputEnabled.toString())
+
+    if (!this.voiceOutputEnabled && this.isSpeaking) {
+      this.stopSpeaking()
+    }
+
+    this.updateVoiceToggleUI()
+  }
+
+  toggleVoiceResponse(event) {
+    this.toggleVoiceOutput(event)
+  }
+
+  updateVoiceToggleUI() {
+    if (!this.hasVoiceToggleBtnTarget) return
+    if (this.voiceOutputEnabled) {
+      this.voiceToggleBtnTarget.title = "Voz de respuesta: Activada (clic para silenciar)"
+      if (this.hasVoiceToggleIconTarget) {
+        this.voiceToggleIconTarget.textContent = "🔊"
+      }
+      this.voiceToggleBtnTarget.classList.remove("muted")
+    } else {
+      this.voiceToggleBtnTarget.title = "Voz de respuesta: Silenciada (clic para activar)"
+      if (this.hasVoiceToggleIconTarget) {
+        this.voiceToggleIconTarget.textContent = "🔇"
+      }
+      this.voiceToggleBtnTarget.classList.add("muted")
+    }
+  }
+
+  showSpeakingBar() {
+    if (this.hasSpeakingBarTarget) {
+      this.speakingBarTarget.style.display = "flex"
+    }
+  }
+
+  hideSpeakingBar() {
+    if (this.hasSpeakingBarTarget) {
+      this.speakingBarTarget.style.display = "none"
+    }
   }
 }
