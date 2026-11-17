@@ -75,9 +75,17 @@ class ApplicationController < ActionController::Base
 
     if current_company.present?
       if current_company.suspended?
-        redirect_to suspended_company_path
+        if request.format.json? || request.xhr?
+          render json: { reply: "⚠️ La cuenta de tu empresa se encuentra temporalmente suspendida.", error: "company_suspended" }, status: :payment_required
+        else
+          redirect_to suspended_company_path
+        end
       elsif !current_company.access_granted?
-        redirect_to subscriptions_path, alert: "Tu período de prueba de 30 días ha finalizado. Activa tu suscripción para continuar."
+        if request.format.json? || request.xhr?
+          render json: { reply: "⚠️ El período de prueba o suscripción de tu empresa ha finalizado. Por favor reactiva tu plan en la sección de Suscripciones.", error: "subscription_inactive" }, status: :payment_required
+        else
+          redirect_to subscriptions_path, alert: "Tu período de prueba de 30 días ha finalizado. Activa tu suscripción para continuar."
+        end
       end
     end
   end

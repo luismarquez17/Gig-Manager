@@ -5,13 +5,13 @@ require 'json'
 require 'uri'
 
 class GeminiService
-  DEFAULT_MODEL = 'gemini-3.5-flash'
+  DEFAULT_MODEL = 'gemini-2.5-flash'
   FALLBACK_MODELS = [
-    'gemini-3.5-flash',
+    'gemini-2.5-flash',
+    'gemini-flash-latest',
+    'gemini-2.5-flash-lite',
     'gemini-flash-lite-latest',
-    'gemini-3.5-flash-lite',
-    'gemini-3.8-flash',
-    'gemini-flash-latest'
+    'gemini-3.5-flash'
   ].freeze
 
   attr_reader :company, :user
@@ -55,10 +55,10 @@ class GeminiService
       execute_conversation(user_message, history)
     rescue StandardError => e
       Rails.logger.error("[GeminiService] Error: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
-      diagnostic = run_diagnostic
+      cash_balance = (calculate_current_cash_balance rescue 0.0)
       {
         reply: "⚠️ Los servidores de Google Gemini están experimentando una saturación temporal de tráfico en este momento.\n\n" \
-               "💰 **Saldo actual en Caja:** $#{sprintf('%.2f', diagnostic[:cash_balance])} USD\n\n" \
+               "💰 **Saldo actual en Caja:** $#{sprintf('%.2f', cash_balance)} USD\n\n" \
                "📌 Puedes reintentar tu mensaje en unos segundos o usar los accesos rápidos de la pantalla.",
         actions_taken: [],
         cards: []
@@ -325,15 +325,23 @@ class GeminiService
                     end
 
     last_error = nil
+    start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
 
     models_to_try.each_with_index do |model_name, index|
+      # Si ya transcurrieron más de 18 segundos acumulados, detener reintentos para no chocar con el timeout de Render (30s)
+      elapsed = Process.clock_gettime(Process::CLOCK_MONOTONIC) - start_time
+      if elapsed > 18.0 && index.positive?
+        Rails.logger.warn("[GeminiService] Se abortan reintentos adicionales por límite de tiempo de Render (#{elapsed.round(1)}s transcurridos)")
+        break
+      end
+
       api_url = "https://generativelanguage.googleapis.com/v1beta/models/#{model_name}:generateContent?key=#{self.class.api_key}"
       uri = URI(api_url)
 
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
-      http.read_timeout = 20
-      http.open_timeout = 10
+      http.read_timeout = 12
+      http.open_timeout = 6
 
       body = {
         systemInstruction: {
@@ -367,7 +375,7 @@ class GeminiService
         # Transient errors (503 high demand, 429 rate limit, 500, 502, 504 server error, or 404 retired model)
         if [503, 429, 500, 502, 504, 404].include?(error_code)
           last_error = "Google Gemini (#{model_name} - HTTP #{error_code}): #{error_msg}"
-          sleep 0.3 if index < models_to_try.length - 1
+          sleep 0.2 if index < models_to_try.length - 1
           next
         else
           # Client/Validation error (e.g. 400 bad request)
@@ -376,7 +384,7 @@ class GeminiService
       rescue Net::ReadTimeout, Net::OpenTimeout, Errno::ECONNRESET => e
         Rails.logger.warn("[GeminiService] Network timeout/reset with #{model_name}: #{e.message}")
         last_error = "Timeout de conexión con #{model_name}"
-        sleep 0.3 if index < models_to_try.length - 1
+        sleep 0.2 if index < models_to_try.length - 1
         next
       end
     end
@@ -1852,12 +1860,13 @@ class GeminiService
 
   def find_or_create_client(name, phone, email)
     clean_name = name.to_s.strip
+    clean_name = "Cliente por Definir" if clean_name.blank?
     client = company.clients.where('LOWER(name) = ?', clean_name.downcase).first
 
     client ||= company.clients.create!(
       name: clean_name,
       phone: phone.presence || "0000000000",
-      email: email.presence || "#{clean_name.parameterize.presence || 'cliente'}@temp.gigmanager.local",
+      email: email.presence || "#{clean_name.parameterize.presence || 'cliente'}-#{SecureRandom.hex(4)}@temp.gigmanager.local",
       priority: 2
     )
     client

@@ -18,6 +18,13 @@ class AiCopilotController < ApplicationController
     result = service.chat(user_prompt, history)
 
     render json: result
+  rescue StandardError => e
+    Rails.logger.error("[AiCopilotController#message] Error inesperado: #{e.class} - #{e.message}\n#{e.backtrace&.first(8)&.join("\n")}")
+    render json: {
+      reply: "⚠️ Ocurrió una interrupción al procesar tu solicitud con el Copiloto. Por favor verifica tu conexión o intenta de nuevo en unos momentos.",
+      actions_taken: [],
+      cards: []
+    }
   end
 
   # GET /ai_copilot/diagnostic

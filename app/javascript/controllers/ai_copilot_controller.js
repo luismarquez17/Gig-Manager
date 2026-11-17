@@ -325,12 +325,37 @@ export default class extends Controller {
         })
       })
 
-      const data = await response.json()
+      const contentType = response.headers.get("content-type") || ""
+      let data = null
+
+      if (contentType.includes("application/json")) {
+        data = await response.json()
+      } else {
+        const textResponse = await response.text()
+        console.warn("[GigAI Copilot] Respuesta no JSON recibida:", response.status, textResponse.slice(0, 200))
+        this.removeLoading(loadingId)
+
+        if (response.status === 401 || textResponse.includes("/users/sign_in")) {
+          this.appendMessage("model", "⚠️ Tu sesión ha expirado por inactividad. Por favor recarga la página para continuar.")
+        } else if (response.status === 504 || response.status === 502) {
+          this.appendMessage("model", "⏳ El servidor tardó más de lo habitual en responder (tiempo límite agotado). Por favor intenta de nuevo con una instrucción más directa.")
+        } else {
+          this.appendMessage("model", "⚠️ Hubo una interrupción en la conexión del servidor. Por favor verifica tu red e intenta de nuevo.")
+        }
+        return
+      }
+
       this.removeLoading(loadingId)
+
+      if (!response.ok) {
+        const errText = data?.reply || data?.error || `Error ${response.status} al procesar la solicitud.`
+        this.appendMessage("model", errText)
+        return
+      }
 
       // Guardar en historial
       this.history.push({ role: "user", content: text })
-      if (data.reply) {
+      if (data && data.reply) {
         this.history.push({ role: "model", content: data.reply })
         const { bubble } = this.appendMessage("model", data.reply, data.cards)
 
@@ -341,7 +366,7 @@ export default class extends Controller {
       }
 
       // Si se autorizó o rechazó un pago y estamos en la vista de notificaciones o pagos, refrescar suavemente
-      if (data.actions_taken && data.actions_taken.some(a => ['approve_payment', 'reject_payment'].includes(a.tool))) {
+      if (data && data.actions_taken && data.actions_taken.some(a => ['approve_payment', 'reject_payment'].includes(a.tool))) {
         const path = window.location.pathname
         if (path.includes("/notifications") || path.includes("/employee_payments") || path.includes("/caja")) {
           setTimeout(() => { window.location.reload() }, 1800)
@@ -349,8 +374,13 @@ export default class extends Controller {
       }
     } catch (error) {
       this.removeLoading(loadingId)
-      this.appendMessage("model", "⚠️ Ocurrió un error al contactar al Copiloto. Por favor verifica tu conexión o configuración de Gemini.")
       console.error("[GigAI Copilot Error]", error)
+
+      if (!navigator.onLine) {
+        this.appendMessage("model", "📶 Parece que tu teléfono perdió la conexión a internet. Verifica tu WiFi o datos móviles y reintenta.")
+      } else {
+        this.appendMessage("model", "⚠️ Error de conexión al contactar al Copiloto. Si la señal de tu teléfono es inestable, por favor espera unos segundos y reintenta.")
+      }
     } finally {
       this.isSending = false
       if (this.hasSendBtnTarget) {
