@@ -9,7 +9,7 @@
 # and maximum; this matches the default thread size of Active Record.
 # En Render free (512 MB RAM) cada thread consume memoria adicional.
 # Usamos 2 threads como máximo; se puede sobreescribir con RAILS_MAX_THREADS.
-max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { 2 }
+max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { 3 }
 min_threads_count = ENV.fetch("RAILS_MIN_THREADS") { 1 }
 threads min_threads_count, max_threads_count
 

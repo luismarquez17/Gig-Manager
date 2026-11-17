@@ -1,4 +1,7 @@
 Rails.application.routes.draw do
+  # Health check nativo de Rails para Render y monitoreo de uptime
+  get "up" => "rails/health#show", as: :rails_health_check
+
   devise_for :users, controllers: { registrations: 'users/registrations' }
   
   authenticated :user do

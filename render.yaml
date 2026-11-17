@@ -2,8 +2,9 @@ services:
   - type: web
     name: gig-manager-web
     env: docker
-    plan: free
-    healthCheckPath: "/"
+    plan: starter
+    healthCheckPath: "/up"
+    preDeployCommand: "./bin/rails db:migrate"
     envVars:
       - key: RAILS_ENV
         value: production
@@ -11,15 +12,22 @@ services:
         value: "1"
       - key: SECRET_KEY_BASE
         generateValue: true
-      # Optimización de memoria para Render free (512 MB RAM):
-      # 1 worker Puma con 2 threads = menor huella de RAM
+      # Optimización de concurrencia y memoria para Render (512 MB RAM):
       - key: WEB_CONCURRENCY
         value: "1"
       - key: RAILS_MAX_THREADS
-        value: "2"
-      # Reduce la fragmentación de memoria en glibc (recomendado para contenedores Ruby)
+        value: "3"
+      # Reduce la fragmentación de memoria en glibc (evita OOM en contenedores Ruby)
       - key: MALLOC_ARENA_MAX
         value: "2"
+      # Ajuste fino de Garbage Collection para mantener el consumo de RAM bajo 250 MB
+      - key: RUBY_GC_HEAP_GROWTH_FACTOR
+        value: "1.1"
+      - key: RUBY_GC_MALLOC_LIMIT
+        value: "16777216"
+      # Acelera el arranque en frío (cold start) a solo ~10s al evitar re-ejecutar db:prepare en cada encendido
+      - key: SKIP_DB_PREPARE_ON_BOOT
+        value: "1"
       # Clave para GigAI Copilot (Google Gemini) - configurar en el panel de Render
       - key: GEMINI_API_KEY
         sync: false
