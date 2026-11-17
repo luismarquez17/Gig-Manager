@@ -5,13 +5,13 @@ require 'json'
 require 'uri'
 
 class GeminiService
-  DEFAULT_MODEL = 'gemini-2.5-flash'
+  DEFAULT_MODEL = 'gemini-3.1-flash-lite'
   FALLBACK_MODELS = [
-    'gemini-2.5-flash',
-    'gemini-flash-latest',
-    'gemini-2.5-flash-lite',
+    'gemini-3.1-flash-lite',
     'gemini-flash-lite-latest',
-    'gemini-3.5-flash'
+    'gemini-3-flash-preview',
+    'gemini-3.5-flash',
+    'gemini-3.5-flash-lite'
   ].freeze
 
   attr_reader :company, :user
@@ -275,7 +275,7 @@ class GeminiService
         parts: function_responses_parts
       }
 
-      second_response = call_gemini_api(contents, include_tools: false)
+      second_response = call_gemini_api(contents, include_tools: false, preferred_model: @last_successful_model)
       final_text = second_response.dig('candidates', 0, 'content', 'parts', 0, 'text') || 
                    "¡Listo! He procesado tu solicitud exitosamente."
 
@@ -363,6 +363,7 @@ class GeminiService
         response = http.request(request)
 
         if response.is_a?(Net::HTTPSuccess)
+          @last_successful_model = model_name
           return JSON.parse(response.body)
         end
 
