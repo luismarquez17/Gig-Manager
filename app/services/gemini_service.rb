@@ -5,13 +5,13 @@ require 'json'
 require 'uri'
 
 class GeminiService
-  DEFAULT_MODEL = 'gemini-3.1-flash-lite'
+  DEFAULT_MODEL = 'gemini-1.5-flash'
   FALLBACK_MODELS = [
-    'gemini-3.1-flash-lite',
-    'gemini-flash-lite-latest',
-    'gemini-3-flash-preview',
-    'gemini-3.5-flash',
-    'gemini-3.5-flash-lite'
+    'gemini-1.5-flash',
+    'gemini-2.0-flash',
+    'gemini-1.5-flash-8b',
+    'gemini-2.0-flash-lite',
+    'gemini-1.5-pro'
   ].freeze
 
   attr_reader :company, :user
@@ -56,10 +56,27 @@ class GeminiService
     rescue StandardError => e
       Rails.logger.error("[GeminiService] Error: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
       cash_balance = (calculate_current_cash_balance rescue 0.0)
+
+      is_auth_error = e.message.include?('401') || e.message.include?('API key not valid') || e.message.include?('UNAUTHENTICATED')
+      is_quota_error = e.message.include?('429') || e.message.include?('quota') || e.message.include?('RESOURCE_EXHAUSTED')
+
+      reply_text = if is_auth_error
+        "🔑 **Error de Clave de API de Google Gemini:**\n\n" \
+        "La clave `GEMINI_API_KEY` configurada en Render no es válida o ha expirado.\n\n" \
+        "👉 Genera una clave gratuita en [Google AI Studio (aistudio.google.com)](https://aistudio.google.com/app/apikey) (debe comenzar con `AIzaSy...`) y actualízala en las variables de entorno de tu servicio en Render."
+      elsif is_quota_error
+        "⏳ **Límite de solicitudes alcanzado en Google Gemini:**\n\n" \
+        "Se ha superado temporalmente la cuota gratuita por minuto de la API.\n\n" \
+        "💰 **Saldo actual en Caja:** $#{sprintf('%.2f', cash_balance)} USD\n\n" \
+        "📌 Espera unos 30 segundos y vuelve a enviar tu mensaje."
+      else
+        "⚠️ Los servidores de Google Gemini están experimentando una saturación temporal de tráfico en este momento.\n\n" \
+        "💰 **Saldo actual en Caja:** $#{sprintf('%.2f', cash_balance)} USD\n\n" \
+        "📌 Puedes reintentar tu mensaje en unos segundos o usar los accesos rápidos de la pantalla."
+      end
+
       {
-        reply: "⚠️ Los servidores de Google Gemini están experimentando una saturación temporal de tráfico en este momento.\n\n" \
-               "💰 **Saldo actual en Caja:** $#{sprintf('%.2f', cash_balance)} USD\n\n" \
-               "📌 Puedes reintentar tu mensaje en unos segundos o usar los accesos rápidos de la pantalla.",
+        reply: reply_text,
         actions_taken: [],
         cards: []
       }
