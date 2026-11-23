@@ -945,6 +945,17 @@ html, body {
 
 @media (max-width: 991px) {
 
+  #mobile-topbar {
+    box-sizing: border-box !important;
+    height: calc(58px + constant(safe-area-inset-top, 0px)) !important;
+    height: calc(58px + env(safe-area-inset-top, 0px)) !important;
+    padding-top: constant(safe-area-inset-top, 0px) !important;
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    padding-bottom: 0 !important;
+    padding-left: max(14px, env(safe-area-inset-left, 14px)) !important;
+    padding-right: max(14px, env(safe-area-inset-right, 14px)) !important;
+  }
+
   .app-sidebar {
     position: fixed !important;
     top: 0 !important;
@@ -964,7 +975,7 @@ html, body {
     touch-action: pan-y !important;
     display: flex !important;
     flex-direction: column !important;
-    padding: 16px 14px max(35px, env(safe-area-inset-bottom, 25px)) 14px !important;
+    padding: max(16px, env(safe-area-inset-top, 16px)) max(14px, env(safe-area-inset-right, 14px)) max(35px, env(safe-area-inset-bottom, 25px)) max(14px, env(safe-area-inset-left, 14px)) !important;
     box-sizing: border-box !important;
     box-shadow: 6px 0 30px rgba(0,0,0,0.5) !important;
   }
@@ -992,10 +1003,11 @@ html, body {
 
   main {
     margin-left: 0 !important;
-    padding-top: 78px !important;
-    padding-left: 14px !important;
-    padding-right: 14px !important;
-    padding-bottom: 35px !important;
+    padding-top: calc(78px + constant(safe-area-inset-top, 0px)) !important;
+    padding-top: calc(78px + env(safe-area-inset-top, 0px)) !important;
+    padding-left: max(14px, env(safe-area-inset-left, 14px)) !important;
+    padding-right: max(14px, env(safe-area-inset-right, 14px)) !important;
+    padding-bottom: max(35px, env(safe-area-inset-bottom, 25px)) !important;
     overflow-x: hidden !important;
     max-width: 100vw !important;
     box-sizing: border-box !important;

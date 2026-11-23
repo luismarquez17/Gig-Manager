@@ -78,17 +78,23 @@
      ====================================================== */
   @media (max-width: 991px) {
 
-    /* Topbar visible */
+    /* Topbar visible con soporte para Safe Area en iPhone (evita solaparse con notch/Dynamic Island, reloj y wifi) */
     #mobile-topbar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       position: fixed;
       top: 0; left: 0; right: 0;
-      height: 58px;
+      box-sizing: border-box;
+      height: calc(58px + constant(safe-area-inset-top, 0px));
+      height: calc(58px + env(safe-area-inset-top, 0px));
+      padding-top: constant(safe-area-inset-top, 0px);
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: 0;
+      padding-left: max(14px, env(safe-area-inset-left, 14px));
+      padding-right: max(14px, env(safe-area-inset-right, 14px));
       background: #0f172a;
       z-index: 1000;
-      padding: 0 14px;
       box-shadow: 0 2px 12px rgba(0,0,0,0.25);
       border-bottom: 1px solid rgba(255,255,255,0.07);
       gap: 8px;
@@ -156,7 +162,7 @@
       touch-action: pan-y !important;
       display: flex !important;
       flex-direction: column !important;
-      padding: 16px 14px max(35px, env(safe-area-inset-bottom, 25px)) 14px !important;
+      padding: max(16px, env(safe-area-inset-top, 16px)) max(14px, env(safe-area-inset-right, 14px)) max(35px, env(safe-area-inset-bottom, 25px)) max(14px, env(safe-area-inset-left, 14px)) !important;
       box-sizing: border-box !important;
       box-shadow: 6px 0 30px rgba(0,0,0,0.5) !important;
     }
@@ -208,12 +214,13 @@
       color: white;
     }
 
-    /* Main: quitar margin-left que aplica inline en desktop y poner top padding para topbar */
+    /* Main: quitar margin-left que aplica inline en desktop y poner top padding para topbar adaptado a safe-area */
     main {
       margin-left: 0 !important;
-      padding-top: calc(58px + 20px) !important;
-      padding-left: 14px !important;
-      padding-right: 14px !important;
+      padding-top: calc(78px + constant(safe-area-inset-top, 0px)) !important;
+      padding-top: calc(78px + env(safe-area-inset-top, 0px)) !important;
+      padding-left: max(14px, env(safe-area-inset-left, 14px)) !important;
+      padding-right: max(14px, env(safe-area-inset-right, 14px)) !important;
       min-width: 0;
       overflow-x: hidden;
     }
