@@ -461,42 +461,50 @@
 
     /* ── 4. Cabecera (App Bar) ── */
     .gigai-app-header {
-      padding-top: max(12px, env(safe-area-inset-top, 12px));
+      padding-top: max(14px, calc(env(safe-area-inset-top, 0px) + 8px));
       padding-bottom: 12px;
-      padding-left: max(12px, env(safe-area-inset-left, 12px));
-      padding-right: max(12px, env(safe-area-inset-right, 12px));
+      padding-left: max(14px, env(safe-area-inset-left, 14px));
+      padding-right: max(14px, env(safe-area-inset-right, 14px));
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       color: #ffffff;
       flex-shrink: 0;
       box-sizing: border-box;
-      box-shadow: 0 4px 16px rgba(15, 23, 42, 0.12);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
       position: relative;
       z-index: 10;
     }
 
     .gigai-header-btn {
-      background: rgba(255, 255, 255, 0.18);
-      border: 1px solid rgba(255, 255, 255, 0.28);
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.22);
       color: #ffffff !important;
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: background 0.15s ease, transform 0.15s ease;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       flex-shrink: 0;
       outline: none;
       -webkit-tap-highlight-color: transparent;
       padding: 0;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
     }
 
     .gigai-header-btn:active {
       transform: scale(0.92);
-      background: rgba(255, 255, 255, 0.32);
+      background: rgba(255, 255, 255, 0.3);
+    }
+
+    @media (max-width: 768px) {
+      .gigai-btn-close {
+        display: none !important;
+      }
     }
 
     .gigai-header-btn svg {
@@ -1096,29 +1104,29 @@
     .gigai-composer-footer {
       background: #ffffff;
       border-top: 1px solid #e2e8f0;
-      padding: 8px 10px max(14px, env(safe-area-inset-bottom, 14px)) 10px;
+      padding: 10px 14px max(12px, env(safe-area-inset-bottom, 12px)) 14px;
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 10px;
       flex-shrink: 0;
       width: 100%;
       box-sizing: border-box;
-      box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.04);
     }
 
     .gigai-composer-mic-btn {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: #f1f5f9;
-      border: 1px solid #cbd5e1;
+      border: 1.5px solid #cbd5e1;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 1.25rem;
       cursor: pointer;
       flex-shrink: 0;
-      transition: all 0.15s ease;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       outline: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -1152,23 +1160,23 @@
       background: #f1f5f9;
       border: 1.5px solid #cbd5e1;
       border-radius: 999px;
-      padding: 10px 16px;
+      padding: 11px 18px;
       font-size: 16px !important; /* Vital para anular auto-zoom en iOS Safari */
       color: #0f172a;
       outline: none;
       transition: all 0.2s ease;
-      min-height: 42px;
+      min-height: 44px;
     }
 
     .gigai-composer-input:focus {
       background: #ffffff;
       border-color: #3b82f6;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18);
     }
 
     .gigai-composer-send-btn {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: <%= theme_gradient %>;
       border: none;
@@ -1178,8 +1186,8 @@
       justify-content: center;
       cursor: pointer;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px <%= theme_shadow %>;
-      transition: all 0.15s ease;
+      box-shadow: 0 4px 14px <%= theme_shadow %>;
+      transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
       outline: none;
       -webkit-tap-highlight-color: transparent;
     }
@@ -1336,112 +1344,281 @@
       touch-action: none;
     }
 
-    /* ── 11. Adaptación a Dark Mode / Gerovip ── */
+    /* ── 11. Adaptación a Dark Mode / Gerovip / Gero Company ── */
     [data-theme="dark"] .gigai-chat-panel,
-    [data-theme="gerovip"] .gigai-chat-panel {
+    [data-theme="gerovip"] .gigai-chat-panel,
+    body.is-gero-company .gigai-chat-panel {
       background: #0b1120;
     }
 
     [data-theme="dark"] .gigai-quick-pills-bar,
-    [data-theme="gerovip"] .gigai-quick-pills-bar {
+    [data-theme="gerovip"] .gigai-quick-pills-bar,
+    body.is-gero-company .gigai-quick-pills-bar {
       background: #0f172a;
       border-color: #1e293b;
     }
 
     [data-theme="dark"] .gigai-pill-btn,
-    [data-theme="gerovip"] .gigai-pill-btn {
+    [data-theme="gerovip"] .gigai-pill-btn,
+    body.is-gero-company .gigai-pill-btn {
       background: #1e293b;
       border-color: #334155;
-      color: #e2e8f0;
+      color: #f1f5f9;
+    }
+    [data-theme="dark"] .gigai-pill-btn:active,
+    [data-theme="gerovip"] .gigai-pill-btn:active,
+    body.is-gero-company .gigai-pill-btn:active {
+      background: #334155;
+    }
+
+    [data-theme="dark"] .gigai-pill-alert,
+    [data-theme="gerovip"] .gigai-pill-alert,
+    body.is-gero-company .gigai-pill-alert {
+      background: rgba(16, 185, 129, 0.15) !important;
+      border-color: rgba(16, 185, 129, 0.35) !important;
+      color: #34d399 !important;
+    }
+
+    [data-theme="dark"] .gigai-pill-action,
+    [data-theme="gerovip"] .gigai-pill-action,
+    body.is-gero-company .gigai-pill-action {
+      background: rgba(99, 102, 241, 0.15) !important;
+      border-color: rgba(99, 102, 241, 0.35) !important;
+      color: #a5b4fc !important;
     }
 
     [data-theme="dark"] .gigai-chat-body,
-    [data-theme="gerovip"] .gigai-chat-body {
+    [data-theme="gerovip"] .gigai-chat-body,
+    body.is-gero-company .gigai-chat-body {
       background: #0b1120;
     }
 
+    [data-theme="dark"] .gigai-date-divider span,
+    [data-theme="gerovip"] .gigai-date-divider span,
+    body.is-gero-company .gigai-date-divider span {
+      background: rgba(255, 255, 255, 0.08) !important;
+      border: 1px solid rgba(255, 255, 255, 0.1) !important;
+      color: #94a3b8 !important;
+    }
+
     [data-theme="dark"] .gigai-welcome-card,
-    [data-theme="gerovip"] .gigai-welcome-card {
+    [data-theme="gerovip"] .gigai-welcome-card,
+    body.is-gero-company .gigai-welcome-card {
       background: #0f172a;
       border-color: #1e293b;
       color: #f1f5f9;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+    }
+
+    [data-theme="dark"] .gigai-welcome-avatar,
+    [data-theme="gerovip"] .gigai-welcome-avatar,
+    body.is-gero-company .gigai-welcome-avatar {
+      background: rgba(37, 99, 235, 0.2) !important;
+      border-color: rgba(37, 99, 235, 0.4) !important;
     }
 
     [data-theme="dark"] .gigai-welcome-name,
-    [data-theme="gerovip"] .gigai-welcome-name {
+    [data-theme="gerovip"] .gigai-welcome-name,
+    body.is-gero-company .gigai-welcome-name {
       color: #ffffff;
     }
 
     [data-theme="dark"] .gigai-welcome-desc,
-    [data-theme="gerovip"] .gigai-welcome-desc {
-      color: #94a3b8;
+    [data-theme="gerovip"] .gigai-welcome-desc,
+    body.is-gero-company .gigai-welcome-desc {
+      color: #cbd5e1;
+    }
+
+    /* ── Fintech & Alert Cards inside Chat in Dark Mode ── */
+    [data-theme="dark"] .gigai-card-warning,
+    [data-theme="gerovip"] .gigai-card-warning,
+    body.is-gero-company .gigai-card-warning {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.14), rgba(217, 119, 6, 0.07)) !important;
+      border: 1px solid rgba(245, 158, 11, 0.35) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    }
+    [data-theme="dark"] .gigai-card-warning .gigai-fintech-subject,
+    [data-theme="gerovip"] .gigai-card-warning .gigai-fintech-subject,
+    body.is-gero-company .gigai-card-warning .gigai-fintech-subject {
+      color: #fef3c7 !important;
+      font-weight: 800 !important;
+    }
+    [data-theme="dark"] .gigai-card-warning .gigai-fintech-meta,
+    [data-theme="gerovip"] .gigai-card-warning .gigai-fintech-meta,
+    body.is-gero-company .gigai-card-warning .gigai-fintech-meta {
+      color: #fde68a !important;
+      font-size: 0.74rem !important;
+    }
+    [data-theme="dark"] .gigai-card-warning .gigai-fintech-notes,
+    [data-theme="gerovip"] .gigai-card-warning .gigai-fintech-notes,
+    body.is-gero-company .gigai-card-warning .gigai-fintech-notes {
+      color: #e2e8f0 !important;
+      font-size: 0.84rem !important;
+      line-height: 1.5 !important;
+    }
+
+    [data-theme="dark"] .gigai-card-worker,
+    [data-theme="gerovip"] .gigai-card-worker,
+    body.is-gero-company .gigai-card-worker {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(5, 150, 105, 0.07)) !important;
+      border: 1px solid rgba(16, 185, 129, 0.35) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    }
+    [data-theme="dark"] .gigai-card-worker .gigai-fintech-subject,
+    [data-theme="gerovip"] .gigai-card-worker .gigai-fintech-subject,
+    body.is-gero-company .gigai-card-worker .gigai-fintech-subject {
+      color: #ecfdf5 !important;
+      font-weight: 800 !important;
+    }
+    [data-theme="dark"] .gigai-card-worker .gigai-fintech-meta,
+    [data-theme="gerovip"] .gigai-card-worker .gigai-fintech-meta,
+    body.is-gero-company .gigai-card-worker .gigai-fintech-meta {
+      color: #a7f3d0 !important;
+      font-size: 0.74rem !important;
+    }
+    [data-theme="dark"] .gigai-card-worker .gigai-fintech-notes,
+    [data-theme="gerovip"] .gigai-card-worker .gigai-fintech-notes,
+    body.is-gero-company .gigai-card-worker .gigai-fintech-notes {
+      color: #e2e8f0 !important;
+      font-size: 0.84rem !important;
+      line-height: 1.5 !important;
+    }
+
+    [data-theme="dark"] .gigai-card-client,
+    [data-theme="gerovip"] .gigai-card-client,
+    body.is-gero-company .gigai-card-client {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.14), rgba(6, 182, 212, 0.07)) !important;
+      border: 1px solid rgba(37, 99, 235, 0.35) !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15) !important;
+    }
+    [data-theme="dark"] .gigai-card-client .gigai-fintech-subject,
+    [data-theme="gerovip"] .gigai-card-client .gigai-fintech-subject,
+    body.is-gero-company .gigai-card-client .gigai-fintech-subject {
+      color: #eff6ff !important;
+      font-weight: 800 !important;
+    }
+    [data-theme="dark"] .gigai-card-client .gigai-fintech-meta,
+    [data-theme="gerovip"] .gigai-card-client .gigai-fintech-meta,
+    body.is-gero-company .gigai-card-client .gigai-fintech-meta {
+      color: #bfdbfe !important;
+      font-size: 0.74rem !important;
+    }
+    [data-theme="dark"] .gigai-card-client .gigai-fintech-notes,
+    [data-theme="gerovip"] .gigai-card-client .gigai-fintech-notes,
+    body.is-gero-company .gigai-card-client .gigai-fintech-notes {
+      color: #e2e8f0 !important;
+      font-size: 0.84rem !important;
+      line-height: 1.5 !important;
+    }
+
+    [data-theme="dark"] .gigai-btn-amber,
+    [data-theme="gerovip"] .gigai-btn-amber,
+    body.is-gero-company .gigai-btn-amber {
+      background: linear-gradient(135deg, #f59e0b, #d97706) !important;
+      color: #ffffff !important;
+      border: none !important;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35) !important;
     }
 
     [data-theme="dark"] .gigai-composer-footer,
-    [data-theme="gerovip"] .gigai-composer-footer {
+    [data-theme="gerovip"] .gigai-composer-footer,
+    body.is-gero-company .gigai-composer-footer {
       background: #0f172a;
       border-color: #1e293b;
     }
 
     [data-theme="dark"] .gigai-composer-input,
-    [data-theme="gerovip"] .gigai-composer-input {
+    [data-theme="gerovip"] .gigai-composer-input,
+    body.is-gero-company .gigai-composer-input {
+      background: #1e293b;
+      border-color: #334155;
+      color: #ffffff;
+    }
+    [data-theme="dark"] .gigai-composer-input:focus,
+    [data-theme="gerovip"] .gigai-composer-input:focus,
+    body.is-gero-company .gigai-composer-input:focus {
+      background: #0f172a;
+      border-color: #38bdf8;
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2);
+    }
+
+    [data-theme="dark"] .gigai-composer-mic-btn,
+    [data-theme="gerovip"] .gigai-composer-mic-btn,
+    body.is-gero-company .gigai-composer-mic-btn {
       background: #1e293b;
       border-color: #334155;
       color: #ffffff;
     }
 
-    [data-theme="dark"] .gigai-composer-mic-btn,
-    [data-theme="gerovip"] .gigai-composer-mic-btn {
-      background: #1e293b;
-      border-color: #334155;
-    }
-
     [data-theme="dark"] .gigai-bubble-model,
-    [data-theme="gerovip"] .gigai-bubble-model {
+    [data-theme="gerovip"] .gigai-bubble-model,
+    body.is-gero-company .gigai-bubble-model {
       background: #0f172a !important;
       border-color: #1e293b !important;
       color: #f1f5f9 !important;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25) !important;
     }
 
     [data-theme="dark"] .gigai-bubble-speaking,
-    [data-theme="gerovip"] .gigai-bubble-speaking {
+    [data-theme="gerovip"] .gigai-bubble-speaking,
+    body.is-gero-company .gigai-bubble-speaking {
       border-color: #818cf8 !important;
       box-shadow: 0 0 0 2px rgba(129, 140, 248, 0.35), 0 4px 14px rgba(129, 140, 248, 0.2) !important;
     }
 
     [data-theme="dark"] .gigai-bubble-avatar-mini,
-    [data-theme="gerovip"] .gigai-bubble-avatar-mini {
+    [data-theme="gerovip"] .gigai-bubble-avatar-mini,
+    body.is-gero-company .gigai-bubble-avatar-mini {
+      background: rgba(37, 99, 235, 0.2) !important;
+      border-color: rgba(37, 99, 235, 0.4) !important;
+    }
+
+    [data-theme="dark"] .gigai-bubble-action-btn,
+    [data-theme="gerovip"] .gigai-bubble-action-btn,
+    body.is-gero-company .gigai-bubble-action-btn {
       background: #1e293b !important;
       border-color: #334155 !important;
+      color: #cbd5e1 !important;
+    }
+    [data-theme="dark"] .gigai-bubble-action-btn:hover,
+    [data-theme="gerovip"] .gigai-bubble-action-btn:hover,
+    body.is-gero-company .gigai-bubble-action-btn:hover {
+      background: #334155 !important;
+      color: #ffffff !important;
     }
 
     [data-theme="dark"] .gigai-typing-loader,
-    [data-theme="gerovip"] .gigai-typing-loader {
+    [data-theme="gerovip"] .gigai-typing-loader,
+    body.is-gero-company .gigai-typing-loader {
       background: #0f172a;
       border-color: #1e293b;
     }
 
     [data-theme="dark"] .gigai-speaking-bar,
-    [data-theme="gerovip"] .gigai-speaking-bar {
+    [data-theme="gerovip"] .gigai-speaking-bar,
+    body.is-gero-company .gigai-speaking-bar {
       background: #064e3b;
       border-color: #059669;
       color: #a7f3d0;
     }
 
     [data-theme="dark"] .gigai-voice-settings-panel,
-    [data-theme="gerovip"] .gigai-voice-settings-panel {
+    [data-theme="gerovip"] .gigai-voice-settings-panel,
+    body.is-gero-company .gigai-voice-settings-panel {
       background: #0f172a;
       border-bottom-color: #1e293b;
       color: #f1f5f9;
     }
 
     [data-theme="dark"] .gigai-voice-settings-header span,
-    [data-theme="gerovip"] .gigai-voice-settings-header span {
+    [data-theme="gerovip"] .gigai-voice-settings-header span,
+    body.is-gero-company .gigai-voice-settings-header span {
       color: #f1f5f9 !important;
     }
 
     [data-theme="dark"] .gigai-voice-select,
-    [data-theme="gerovip"] .gigai-voice-select {
+    [data-theme="gerovip"] .gigai-voice-select,
+    body.is-gero-company .gigai-voice-select {
       background: #1e293b;
       border-color: #334155;
       color: #f1f5f9;
