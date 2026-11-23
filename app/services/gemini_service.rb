@@ -5,13 +5,14 @@ require 'json'
 require 'uri'
 
 class GeminiService
-  DEFAULT_MODEL = 'gemini-1.5-flash'
+  DEFAULT_MODEL = 'gemini-2.5-flash'
   FALLBACK_MODELS = [
-    'gemini-1.5-flash',
-    'gemini-2.0-flash',
-    'gemini-1.5-flash-8b',
-    'gemini-2.0-flash-lite',
-    'gemini-1.5-pro'
+    'gemini-2.5-flash',
+    'gemini-2.5-flash-lite',
+    'gemini-3.1-flash-lite',
+    'gemini-flash-latest',
+    'gemini-2.5-pro',
+    'gemini-3.5-flash'
   ].freeze
 
   attr_reader :company, :user
@@ -57,7 +58,13 @@ class GeminiService
       Rails.logger.error("[GeminiService] Error: #{e.message}\n#{e.backtrace.first(5).join("\n")}")
       cash_balance = (calculate_current_cash_balance rescue 0.0)
 
-      is_auth_error = e.message.include?('401') || e.message.include?('API key not valid') || e.message.include?('UNAUTHENTICATED')
+      is_auth_error = e.message.include?('401') || 
+                      e.message.include?('403') || 
+                      e.message.include?('Auth Error') ||
+                      e.message.include?('API key not valid') || 
+                      e.message.include?('API_KEY_INVALID') ||
+                      e.message.include?('UNAUTHENTICATED') ||
+                      e.message.include?('PERMISSION_DENIED')
       is_quota_error = e.message.include?('429') || e.message.include?('quota') || e.message.include?('RESOURCE_EXHAUSTED')
 
       reply_text = if is_auth_error
@@ -390,10 +397,15 @@ class GeminiService
 
         Rails.logger.warn("[GeminiService] Model #{model_name} returned HTTP #{error_code}: #{error_msg}")
 
+        # Immediate fail on invalid or missing auth keys (no point in looping all models)
+        if [401, 403].include?(error_code) || (error_code == 400 && error_msg =~ /API_KEY|API key|key|unregistered/i)
+          raise "Google Gemini Auth Error (#{response.code}): #{error_msg}"
+        end
+
         # Transient errors (503 high demand, 429 rate limit, 500, 502, 504 server error, or 404 retired model)
         if [503, 429, 500, 502, 504, 404].include?(error_code)
           last_error = "Google Gemini (#{model_name} - HTTP #{error_code}): #{error_msg}"
-          sleep 0.2 if index < models_to_try.length - 1
+          sleep 0.2 if error_code != 404 && index < models_to_try.length - 1
           next
         else
           # Client/Validation error (e.g. 400 bad request)
