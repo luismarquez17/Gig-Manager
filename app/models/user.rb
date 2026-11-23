@@ -13,6 +13,7 @@ class User < ApplicationRecord
   }
   scope :eventual, -> { where(is_eventual: true) }
   scope :registered, -> { where(is_eventual: false) }
+  scope :without_avatar_base64, -> { select(column_names - ["avatar_base64"]) }
 
   def eventual?
     is_eventual == true
@@ -457,16 +458,12 @@ class User < ApplicationRecord
       end
 
       if data.present?
-        content_type = content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        self.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+        self.avatar_base64 = Base64ImageEncoder.encode(data, content_type: content_type, max_dimension: 400, quality: 75)
       end
     elsif avatar_base64.blank? && avatar.attached? && avatar.blob.present?
       data = (avatar.blob.download rescue nil)
       if data.present?
-        content_type = avatar.blob.content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        self.avatar_base64 = "data:#{content_type};base64,#{encoded}"
+        self.avatar_base64 = Base64ImageEncoder.encode(data, content_type: avatar.blob.content_type, max_dimension: 400, quality: 75)
       end
     end
   end
@@ -477,9 +474,8 @@ class User < ApplicationRecord
     if blob_exists?(avatar)
       data = (avatar.blob.download rescue nil)
       if data.present?
-        content_type = avatar.blob.content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        update_column(:avatar_base64, "data:#{content_type};base64,#{encoded}")
+        encoded_url = Base64ImageEncoder.encode(data, content_type: avatar.blob.content_type, max_dimension: 400, quality: 75)
+        update_column(:avatar_base64, encoded_url)
       end
     end
   rescue StandardError => e

@@ -143,16 +143,12 @@ class ReinvestmentGoal < ApplicationRecord
       end
 
       if data.present?
-        content_type = content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        self.image_base64 = "data:#{content_type};base64,#{encoded}"
+        self.image_base64 = Base64ImageEncoder.encode(data, content_type: content_type, max_dimension: 800, quality: 75)
       end
     elsif image_base64.blank? && image.attached? && image.blob.present?
       data = (image.blob.download rescue nil)
       if data.present?
-        content_type = image.blob.content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        self.image_base64 = "data:#{content_type};base64,#{encoded}"
+        self.image_base64 = Base64ImageEncoder.encode(data, content_type: image.blob.content_type, max_dimension: 800, quality: 75)
       end
     end
   end
@@ -163,9 +159,8 @@ class ReinvestmentGoal < ApplicationRecord
     if blob_exists?(image)
       data = (image.blob.download rescue nil)
       if data.present?
-        content_type = image.blob.content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        update_column(:image_base64, "data:#{content_type};base64,#{encoded}")
+        encoded_url = Base64ImageEncoder.encode(data, content_type: image.blob.content_type, max_dimension: 800, quality: 75)
+        update_column(:image_base64, encoded_url)
       end
     end
   rescue StandardError => e

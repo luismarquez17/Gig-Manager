@@ -11,7 +11,7 @@ WORKDIR /rails
 ENV RAILS_ENV="production" \
     BUNDLE_DEPLOYMENT="1" \
     BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+    BUNDLE_WITHOUT="development:test:unused_optional"
 
 
 # Throw-away build stage to reduce size of final image
@@ -40,10 +40,14 @@ RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
 # Final stage for app image
 FROM base
 
-# Install packages needed for deployment
+# Install packages needed for deployment (libjemalloc2 reduces Ruby RAM usage by 30-50%)
 RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl libvips postgresql-client && \
+    apt-get install --no-install-recommends -y curl libjemalloc2 libvips libvips-tools postgresql-client && \
+    JEMALLOC_PATH=$(find /usr/lib -name "libjemalloc.so.2" | head -n 1) && \
+    ln -sf "$JEMALLOC_PATH" /usr/local/lib/libjemalloc.so.2 && \
     rm -rf /var/lib/apt/lists /var/cache/apt/archives
+
+ENV LD_PRELOAD="/usr/local/lib/libjemalloc.so.2"
 
 # Copy built artifacts: gems, application
 COPY --from=build /usr/local/bundle /usr/local/bundle

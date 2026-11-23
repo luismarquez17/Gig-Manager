@@ -10,6 +10,8 @@ class GigPayment < ApplicationRecord
   belongs_to :voided_by, class_name: 'User', optional: true
   has_one_attached :receipt_image
 
+  scope :without_receipt_image, -> { select(column_names - ["receipt_image_base64"]) }
+
   CATEGORIES = %w[reinvest waste other].freeze
 
   PAYMENT_METHODS = {
@@ -260,16 +262,12 @@ class GigPayment < ApplicationRecord
       end
 
       if data.present?
-        content_type = content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        self.receipt_image_base64 = "data:#{content_type};base64,#{encoded}"
+        self.receipt_image_base64 = Base64ImageEncoder.encode(data, content_type: content_type, max_dimension: 1000, quality: 75)
       end
     elsif receipt_image_base64.blank? && receipt_image.attached? && receipt_image.blob.present?
       data = (receipt_image.blob.download rescue nil)
       if data.present?
-        content_type = receipt_image.blob.content_type.presence || 'image/jpeg'
-        encoded = Base64.strict_encode64(data)
-        self.receipt_image_base64 = "data:#{content_type};base64,#{encoded}"
+        self.receipt_image_base64 = Base64ImageEncoder.encode(data, content_type: receipt_image.blob.content_type, max_dimension: 1000, quality: 75)
       end
     end
   rescue StandardError => e

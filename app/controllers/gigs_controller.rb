@@ -30,7 +30,7 @@ class GigsController < ApplicationController
 
   def index
     # 1. Unimos la tabla de clientes para poder buscar y filtrar dentro de la empresa
-    @gigs = current_company.gigs.left_joins(:client).includes(:client, :gig_payments, :staff_assignments)
+    @gigs = current_company.gigs.left_joins(:client).includes(:client, :staff_assignments)
 
     # 2. Buscador inteligente por nombre de cliente, teléfono, correo, ubicación o detalles del toque
     if params[:query].present?
@@ -91,8 +91,18 @@ class GigsController < ApplicationController
     
     # 5. Cálculos para el resumen (basados en la lista ya filtrada)
     # Mostramos dinero REALMENTE COBRADO (gig_payments), no el presupuesto acordado
-    gig_ids = @gigs.pluck(:id)
+    @gigs = @gigs.to_a
+    gig_ids = @gigs.map(&:id)
     @total_usd = GigPayment.where(gig_id: gig_ids).sum(:amount).to_f
+
+    # Precargamos gig_payments excluyendo receipt_image_base64 para evitar picos de RAM en el listado
+    if @gigs.any?
+      ActiveRecord::Associations::Preloader.new(
+        records: @gigs,
+        associations: :gig_payments,
+        scope: GigPayment.without_receipt_image
+      ).call
+    end
   end
 
   def show

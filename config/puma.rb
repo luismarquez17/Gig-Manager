@@ -9,23 +9,16 @@
 # and maximum; this matches the default thread size of Active Record.
 # En Render free (512 MB RAM) cada thread consume memoria adicional.
 # Usamos 2 threads como máximo; se puede sobreescribir con RAILS_MAX_THREADS.
-max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { 3 }
+max_threads_count = ENV.fetch("RAILS_MAX_THREADS") { 2 }
 min_threads_count = ENV.fetch("RAILS_MIN_THREADS") { 1 }
 threads min_threads_count, max_threads_count
 
 rails_env = ENV.fetch("RAILS_ENV") { "development" }
 
 if rails_env == "production"
-  # If you are running more than 1 thread per process, the workers count
-  # should be equal to the number of processors (CPU cores) in production.
-  #
-  # It defaults to 1 because it's impossible to reliably detect how many
-  # CPU cores are available. Make sure to set the `WEB_CONCURRENCY` environment
-  # variable to match the number of processors.
   worker_count = Integer(ENV.fetch("WEB_CONCURRENCY") { 1 })
   if worker_count > 1
     workers worker_count
-  else
     preload_app!
   end
 end

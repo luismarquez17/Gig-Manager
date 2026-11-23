@@ -14,7 +14,7 @@ class WorkerBalanceService
   end
 
   def self.build_metrics_for_company(company)
-    workers = company.users.workers.order(:email)
+    workers = company.users.workers.without_avatar_base64.order(:email)
     worker_ids = workers.pluck(:id)
 
     staff_agreed_sums = StaffAssignment.joins(:gig)
