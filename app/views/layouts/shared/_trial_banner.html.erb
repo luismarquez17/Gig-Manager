@@ -90,7 +90,7 @@
           <span><strong><%= latest_notif.title %>:</strong> <%= latest_notif.message.truncate(95) %></span>
         </div>
         <div style="display: flex; align-items: center; gap: 10px;">
-          <%= link_to (latest_notif.action_url.presence || notifications_path), style: 'background: #4f46e5; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); white-space: nowrap;' do %>
+          <%= link_to (latest_notif.action_url.presence || notifications_path), onclick: "dismissTopBanner(this.closest('.top-auto-dismiss-banner'))", style: 'background: #4f46e5; color: white; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 0.84rem; text-decoration: none; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.25); white-space: nowrap;' do %>
             Ver Detalles ➔
           <% end %>
           <button type="button" class="top-banner-close-btn" onclick="dismissTopBanner(this.closest('.top-auto-dismiss-banner'))" style="background: none; border: none; font-size: 1.2rem; color: #4338ca; opacity: 0.6; cursor: pointer; padding: 4px 8px; line-height: 1; border-radius: 6px; transition: opacity 0.15s;" title="Cerrar notificación">✕</button>

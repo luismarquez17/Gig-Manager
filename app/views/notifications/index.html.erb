@@ -12,7 +12,7 @@
         </h1>
       </div>
       <p style="margin: 0; color: #64748b; font-size: 0.9rem; font-weight: 500;">
-        Centro de avisos y recordatorios para <strong style="color: #334155; font-weight: 700;"><%= current_user.role.to_s.humanize %></strong>.
+        Centro de avisos y recordatorios para <strong style="color: #334155; font-weight: 700;"><%= current_user.leader? ? 'Líder / Administración' : (current_user.musician? ? 'Músicos y Elenco' : (current_user.staff? ? 'Personal Técnico y Staff' : 'Superadmin')) %></strong>.
       </p>
     </div>
 
@@ -160,6 +160,9 @@
     window.addEventListener('gig:notification_permission_changed', updateControlStatus);
     window.addEventListener('gig:sound_setting_changed', updateControlStatus);
     updateControlStatus();
+    if (typeof clearUnreadBadge === 'function') {
+      clearUnreadBadge();
+    }
   </script>
 
   <%# ── PESTAÑAS DE NAVEGACIÓN SEGMENTADA (SCROLLABLE EN MÓVIL) ── %>
@@ -191,16 +194,18 @@
       <% end %>
     <% end %>
 
-    <%= link_to notifications_path(target_area: 'leaders'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_leaders_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
-      Líderes
-    <% end %>
+    <% if current_user.leader? || current_user.superadmin? %>
+      <%= link_to notifications_path(target_area: 'leaders'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_leaders_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+        Líderes
+      <% end %>
 
-    <%= link_to notifications_path(target_area: 'musicians'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_musicians_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
-      Músicos
-    <% end %>
+      <%= link_to notifications_path(target_area: 'musicians'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_musicians_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+        Músicos
+      <% end %>
 
-    <%= link_to notifications_path(target_area: 'staffs'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_staffs_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
-      Staffs
+      <%= link_to notifications_path(target_area: 'staffs'), style: "padding: 9px 16px; border-radius: 11px; font-size: 0.86rem; font-weight: 700; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; #{ is_staffs_active ? 'background: #0f172a; color: #ffffff; box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);' : 'color: #64748b; background: transparent;' }" do %>
+        Staffs
+      <% end %>
     <% end %>
   </div>
 

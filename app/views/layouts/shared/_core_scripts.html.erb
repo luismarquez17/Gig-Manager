@@ -369,6 +369,33 @@
     });
   }
 
+  function clearUnreadBadge() {
+    var badges = [
+      document.getElementById('unread-notifications-badge'),
+      document.getElementById('mobile-topbar-unread-badge')
+    ];
+    badges.forEach(function(badge) {
+      if (!badge) return;
+      badge.setAttribute('data-count', '0');
+      badge.textContent = '0';
+      badge.style.display = 'none';
+    });
+  }
+
+  function markNotifRead(notifId) {
+    if (!notifId) return;
+    var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+    var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+    fetch('/notifications/' + notifId + '/mark_as_read', {
+      method: 'POST',
+      headers: {
+        'X-CSRF-Token': csrfToken || '',
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    }).catch(function(){});
+  }
+
   /* ── Auto-dismiss top notification banners ───────────────── */
   function initTopDismissBanners() {
     var banners = document.querySelectorAll('.top-auto-dismiss-banner');
@@ -543,4 +570,72 @@
     document.addEventListener('DOMContentLoaded', initDrawer);
     document.addEventListener('turbo:load', initDrawer);
   })();
+
+  function syncSuperadminCardCsrf(cardId) {
+    var card = document.getElementById(cardId);
+    var meta = document.querySelector('meta[name="csrf-token"]');
+    if (!card || !meta) return;
+    var token = meta.getAttribute('content') || '';
+    card.querySelectorAll('input[name="authenticity_token"]').forEach(function(inp) {
+      inp.value = token;
+    });
+  }
+
+  <% if user_signed_in? && current_user.superadmin? %>
+  (function() {
+    if (window.__superadminPaymentPollerStarted) return;
+    window.__superadminPaymentPollerStarted = true;
+
+    var STORAGE_KEY = 'gm_superadmin_last_payment_id';
+
+    function checkPendingPaymentsFallback() {
+      fetch('/superadmin/subscription_payments/pending_summary', {
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin'
+      })
+      .then(function(res) { return res.ok ? res.json() : null; })
+      .then(function(data) {
+        if (!data) return;
+
+        var badge = document.getElementById('superadmin-pending-payments-badge');
+        if (badge) {
+          badge.setAttribute('data-count', data.pending_count);
+          badge.textContent = data.pending_count;
+          badge.style.display = data.pending_count > 0 ? '' : 'none';
+        }
+
+        if (data.latest_id) {
+          var prevId = parseInt(sessionStorage.getItem(STORAGE_KEY) || '0', 10);
+          if (prevId === 0) {
+            sessionStorage.setItem(STORAGE_KEY, String(data.latest_id));
+          } else if (data.latest_id > prevId) {
+            sessionStorage.setItem(STORAGE_KEY, String(data.latest_id));
+            var existingToast = document.getElementById('toast-subpay-' + data.latest_id);
+            if (!existingToast) {
+              if (typeof playNotificationSound === 'function') playNotificationSound('payment');
+              if (typeof showToast === 'function') {
+                showToast('💳 ' + (data.latest_company || 'Empresa') + ' reportó $' + data.latest_amount + ' USD (Ref #' + data.latest_reference + ')', 'success');
+              }
+              if (typeof sendDeviceNotification === 'function') {
+                sendDeviceNotification('💳 Nuevo Pago SaaS: ' + (data.latest_company || 'Empresa'), '$' + data.latest_amount + ' USD • Ref: #' + data.latest_reference, { url: '/superadmin/subscription_payments' });
+              }
+            }
+          }
+        }
+      })
+      .catch(function() {});
+    }
+
+    function startPoller() {
+      setTimeout(checkPendingPaymentsFallback, 2500);
+      setInterval(checkPendingPaymentsFallback, 25000);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startPoller);
+    } else {
+      startPoller();
+    }
+  })();
+  <% end %>
 </script>

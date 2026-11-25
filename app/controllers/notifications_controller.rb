@@ -3,14 +3,16 @@ class NotificationsController < ApplicationController
 
   def index
     @all_notifications = current_user.app_notifications
-    @unread_count = current_user.unread_notifications_count
+    unread_scope = @all_notifications.unread_by(current_user)
+    @unread_ids_before_visit = unread_scope.pluck(:id)
+    @unread_count = @unread_ids_before_visit.size
 
     @filter = params[:filter].presence || 'all'
     @type_filter = params[:type].presence
 
     @notifications = case @filter
     when 'unread'
-      @all_notifications.unread_by(current_user)
+      unread_scope
     else
       @all_notifications
     end
@@ -21,6 +23,23 @@ class NotificationsController < ApplicationController
 
     if params[:target_area].present?
       @notifications = @notifications.where(target_area: params[:target_area])
+    end
+
+    # Al ingresar a la sección de notificaciones, se marcan automáticamente como leídas
+    # para que al verlas se quite el estado "no vista" y el badge en rojo de la barra y menú.
+    if @unread_ids_before_visit.any? && @filter != 'unread'
+      now = Time.current
+      records = @unread_ids_before_visit.map do |notif_id|
+        {
+          app_notification_id: notif_id,
+          user_id: current_user.id,
+          read_at: now,
+          created_at: now,
+          updated_at: now
+        }
+      end
+      NotificationRead.insert_all(records)
+      @unread_count = 0
     end
 
     @upcoming_gigs = current_company.gigs.where('date >= ?', Date.today).order(date: :asc) if current_company.present?

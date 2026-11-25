@@ -132,7 +132,7 @@
 
     <div class="btn-action-container" style="display: flex; align-items: center; gap: 8px; flex-shrink: 0; align-self: center;">
       <% if notification.action_url.present? %>
-        <%= link_to notification.action_url, class: "btn-action", style: "#{ is_financial ? 'background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);' : 'background: #0f172a; color: #ffffff; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);' } padding: 9px 18px; border-radius: 11px; font-size: 0.84rem; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;" do %>
+        <%= link_to notification.action_url, class: "btn-action", onclick: "if (typeof markNotifRead === 'function') { markNotifRead(#{notification.id}); }", style: "#{ is_financial ? 'background: linear-gradient(135deg, #10b981, #059669); color: #ffffff; box-shadow: 0 3px 10px rgba(16, 185, 129, 0.35);' : 'background: #0f172a; color: #ffffff; box-shadow: 0 2px 6px rgba(15, 23, 42, 0.12);' } padding: 9px 18px; border-radius: 11px; font-size: 0.84rem; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: all 0.15s;" do %>
           <%= action_label %>
         <% end %>
       <% end %>
