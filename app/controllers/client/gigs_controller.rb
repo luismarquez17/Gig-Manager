@@ -1,5 +1,6 @@
 class Client::GigsController < ApplicationController
   before_action :require_client!
+  before_action -> { require_module!(:gigs) }
   before_action :set_gig, only: [:show, :request_upsell, :report_payment]
 
   def index

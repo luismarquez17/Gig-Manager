@@ -142,11 +142,13 @@
         <% end %>
 
         <%# --- METAS DE REINVERSIÓN & LISTA DE COMPRAS --- %>
-        <% if module_enabled?(:shopping_list) || current_user.leader? || current_user.superadmin? %>
+        <% if module_enabled?(:shopping_list) || module_enabled?(:finances) %>
           <%= link_to reinvestment_goals_path, class: "sidebar-link #{'active' if controller_name == 'reinvestment_goals'}" do %>
             <span class="icon">🎯</span> <span>Simulador &amp; Reinversión</span>
           <% end %>
+        <% end %>
 
+        <% if module_enabled?(:shopping_list) %>
           <%= link_to shopping_items_path, class: "sidebar-link #{'active' if controller_name == 'shopping_items'}" do %>
             <span class="icon">🛒</span> <span>Lista de Compras</span>
           <% end %>
@@ -254,12 +256,16 @@
         <% end %>
       <% elsif current_user.staff? %>
         <div class="nav-header"><%= venue_mode? ? 'Personal / Staff' : 'Agrupación' %></div>
-        <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
-          <span class="icon">🎫</span> <span>Mis eventos</span>
+        <% if module_enabled?(:gigs) %>
+          <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
+            <span class="icon">🎫</span> <span>Mis eventos</span>
+          <% end %>
         <% end %>
 
-        <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
-          <span class="icon">💵</span> <span>Mis Pagos</span>
+        <% if module_enabled?(:payroll) %>
+          <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
+            <span class="icon">💵</span> <span>Mis Pagos</span>
+          <% end %>
         <% end %>
 
         <%= link_to edit_user_path(current_user), class: "sidebar-link #{'active' if controller_path == 'users' && action_name == 'edit'}" do %>
@@ -271,12 +277,16 @@
         <% end %>
       <% elsif current_user.musician? %>
         <div class="nav-header">Músico</div>
-        <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
-          <span class="icon">🎸</span> <span>Mis Shows</span>
+        <% if module_enabled?(:gigs) %>
+          <%= link_to my_gigs_path, class: "sidebar-link #{'active' if controller_name == 'gigs' && action_name == 'my'}" do %>
+            <span class="icon">🎸</span> <span>Mis Shows</span>
+          <% end %>
         <% end %>
 
-        <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
-          <span class="icon">💵</span> <span>Mis Pagos</span>
+        <% if module_enabled?(:payroll) %>
+          <%= link_to my_payments_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'my_payments'}" do %>
+            <span class="icon">💵</span> <span>Mis Pagos</span>
+          <% end %>
         <% end %>
 
         <%= link_to edit_user_path(current_user), class: "sidebar-link #{'active' if controller_path == 'users' && action_name == 'edit'}" do %>
@@ -288,22 +298,26 @@
         <% end %>
       <% elsif current_user.client? %>
         <div class="nav-header">Cliente</div>
-        <%= link_to client_gigs_path, class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'index'}" do %>
-          <span class="icon">🎫</span> <span>Mis Eventos</span>
-        <% end %>
+        <% if module_enabled?(:gigs) %>
+          <%= link_to client_gigs_path, class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'index'}" do %>
+            <span class="icon">🎫</span> <span>Mis Eventos</span>
+          <% end %>
 
-        <%# Acceso rápido al próximo evento %>
-        <%
-          next_gig = current_user.client&.gigs&.where('date >= ?', Date.today)&.order(date: :asc)&.first
-        %>
-        <% if next_gig %>
-          <%= link_to client_gig_path(next_gig), class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'show'}" do %>
-            <span class="icon">⭐</span> <span><%= venue_mode? ? 'Mi Próximo Evento' : 'Mi Próximo Show' %></span>
+          <%# Acceso rápido al próximo evento %>
+          <%
+            next_gig = current_user.client&.gigs&.where('date >= ?', Date.today)&.order(date: :asc)&.first
+          %>
+          <% if next_gig %>
+            <%= link_to client_gig_path(next_gig), class: "sidebar-link #{'active' if controller_path == 'client/gigs' && action_name == 'show'}" do %>
+              <span class="icon">⭐</span> <span><%= venue_mode? ? 'Mi Próximo Evento' : 'Mi Próximo Show' %></span>
+            <% end %>
           <% end %>
         <% end %>
 
-        <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
-          <span class="icon">📋</span> <span><%= venue_mode? ? 'Combos & Paquetes' : 'Presupuestos Base' %></span>
+        <% if module_enabled?(:clients_crm) %>
+          <%= link_to preset_budgets_path, class: "sidebar-link #{'active' if controller_name == 'preset_budgets'}" do %>
+            <span class="icon">📋</span> <span><%= venue_mode? ? 'Combos & Paquetes' : 'Presupuestos Base' %></span>
+          <% end %>
         <% end %>
 
         <%= link_to normativas_path, class: "sidebar-link #{'active' if controller_name == 'pages' && action_name == 'normativas'}" do %>

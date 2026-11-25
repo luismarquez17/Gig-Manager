@@ -2,6 +2,7 @@
 
 class ReinvestmentGoalsController < ApplicationController
   before_action :require_leader!
+  before_action :require_reinvestment_access!
   before_action :set_goal, only: [:show, :edit, :update, :destroy, :deposit, :toggle_status, :quick_purchase_item]
 
   def index
@@ -169,6 +170,13 @@ class ReinvestmentGoalsController < ApplicationController
 
   def set_goal
     @goal = current_company.reinvestment_goals.find(params[:id])
+  end
+
+  def require_reinvestment_access!
+    return if superadmin?
+    unless module_enabled?(:finances) || module_enabled?(:shopping_list)
+      redirect_to root_path, alert: "El simulador de metas de reinversión no está activo en el plan de tu empresa. Contacta a un administrador para habilitarlo."
+    end
   end
 
   def goal_params

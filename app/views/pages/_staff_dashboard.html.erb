@@ -7,104 +7,122 @@
   <div style="display: grid; grid-template-columns: 1fr 360px; gap: 18px;">
     <div>
       <%# Sección: Eventos Asignados (Lista) %>
-      <section data-tour="staff-assigned-gigs" style="margin-bottom: 18px;">
-        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Eventos asignados</h2>
+      <% if module_enabled?(:gigs) %>
+        <section data-tour="staff-assigned-gigs" style="margin-bottom: 18px;">
+          <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Eventos asignados</h2>
 
-        <% if @proximos_gigs.present? %>
-          <div style="display: grid; gap: 12px;">
-            <% @proximos_gigs.each do |gig| %>
-              <div style="background: white; padding: 14px; border-radius: 10px; border: 1px solid #eef2ff; display:flex; justify-content: space-between; align-items: center;">
-                <div>
-                  <div style="font-weight: 700; color: #0f172a;"><%= gig.client&.name || 'Cliente desconocido' %> — <span style="font-weight: 600; color: #64748b;"><%= gig.date&.strftime('%d %b %Y') %></span></div>
-                  <div style="color: #94a3b8; font-size: 0.9em; margin-top: 6px;"><%= truncate(gig.details || '', length: 120) %></div>
-                  <div style="margin-top: 8px; color: #475569; font-size: 0.85em;">
-                    Items: <%= gig.gig_items.map(&:quantity).sum %> • Cargados: <%= gig.gig_items.map(&:loaded_quantity).sum %>
+          <% if @proximos_gigs.present? %>
+            <div style="display: grid; gap: 12px;">
+              <% @proximos_gigs.each do |gig| %>
+                <div style="background: white; padding: 14px; border-radius: 10px; border: 1px solid #eef2ff; display:flex; justify-content: space-between; align-items: center;">
+                  <div>
+                    <div style="font-weight: 700; color: #0f172a;"><%= gig.client&.name || 'Cliente desconocido' %> — <span style="font-weight: 600; color: #64748b;"><%= gig.date&.strftime('%d %b %Y') %></span></div>
+                    <div style="color: #94a3b8; font-size: 0.9em; margin-top: 6px;"><%= truncate(gig.details || '', length: 120) %></div>
+                    <div style="margin-top: 8px; color: #475569; font-size: 0.85em;">
+                      Items: <%= gig.gig_items.map(&:quantity).sum %> • Cargados: <%= gig.gig_items.map(&:loaded_quantity).sum %>
+                    </div>
+                  </div>
+                  <div style="display:flex; gap:8px; align-items: center; flex-wrap: wrap;">
+                    <% if module_enabled?(:payroll) %>
+                      <%= link_to new_worker_report_employee_payments_path(gig_id: gig.id), class: 'button', style: 'background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #065f46; font-weight: 700; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;' do %>
+                        <span>💵</span> Pago
+                      <% end %>
+                    <% end %>
+                    <% if module_enabled?(:inventory) %>
+                      <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 0.85em;' %>
+                    <% end %>
+                    <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background: #2563eb; color: white; padding: 8px 10px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85em;' %>
                   </div>
                 </div>
-                <div style="display:flex; gap:8px; align-items: center; flex-wrap: wrap;">
-                  <%= link_to new_worker_report_employee_payments_path(gig_id: gig.id), class: 'button', style: 'background: #ecfdf5; border: 1px solid #a7f3d0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #065f46; font-weight: 700; font-size: 0.85em; display: inline-flex; align-items: center; gap: 4px;' do %>
-                    <span>💵</span> Pago
-                  <% end %>
-                  <%= link_to 'Checklist', load_in_checklist_gig_path(gig), class: 'button', style: 'background: #f8fafc; border: 1px solid #e2e8f0; padding: 8px 10px; border-radius: 8px; text-decoration: none; color: #0f172a; font-weight: 700; font-size: 0.85em;' %>
-                  <%= link_to 'Ver', gig_path(gig), class: 'button', style: 'background: #2563eb; color: white; padding: 8px 10px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 0.85em;' %>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        <% else %>
-          <div style="background: white; padding: 18px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No tienes eventos asignados por ahora.</div>
-        <% end %>
-      </section>
+              <% end %>
+            </div>
+          <% else %>
+            <div style="background: white; padding: 18px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No tienes eventos asignados por ahora.</div>
+          <% end %>
+        </section>
+      <% end %>
 
       <%# Sección: Pendientes de carga %>
-      <section data-tour="staff-pending-load" style="margin-bottom: 18px;">
-        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Pendientes de carga</h2>
-        <% if @pending_gig_items.present? %>
-          <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff;">
-            <p style="margin: 0 0 8px 0; color: #475569; font-weight: 700;"><%= @items_to_load_count %> unidades por cargar en tus próximos eventos</p>
-            <ul style="margin: 6px 0 0 16px; color: #64748b;">
-              <% @pending_gig_items.limit(6).each do |gi| %>
-                <li><strong><%= gi.item.name %></strong> — <%= gi.quantity %> (Evento: <%= link_to gi.gig.client&.name || 'cliente', gig_path(gi.gig) %>)</li>
-              <% end %>
-            </ul>
-          </div>
-        <% else %>
-          <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No hay ítems pendientes de carga en tus próximos eventos.</div>
-        <% end %>
-      </section>
+      <% if module_enabled?(:inventory) && module_enabled?(:gigs) %>
+        <section data-tour="staff-pending-load" style="margin-bottom: 18px;">
+          <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Pendientes de carga</h2>
+          <% if @pending_gig_items.present? %>
+            <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff;">
+              <p style="margin: 0 0 8px 0; color: #475569; font-weight: 700;"><%= @items_to_load_count %> unidades por cargar en tus próximos eventos</p>
+              <ul style="margin: 6px 0 0 16px; color: #64748b;">
+                <% @pending_gig_items.limit(6).each do |gi| %>
+                  <li><strong><%= gi.item.name %></strong> — <%= gi.quantity %> (Evento: <%= link_to gi.gig.client&.name || 'cliente', gig_path(gi.gig) %>)</li>
+                <% end %>
+              </ul>
+            </div>
+          <% else %>
+            <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff; color: #64748b;">No hay ítems pendientes de carga en tus próximos eventos.</div>
+          <% end %>
+        </section>
+      <% end %>
 
       <%# Sección: Discrepancias %>
-      <section>
-        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Discrepancias</h2>
-        <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #fff1f2; color: #64748b;">
-          <% if @discrepant_count.to_i > 0 %>
-            Tienes <strong><%= @discrepant_count %></strong> líneas con diferencias entre cargado y devuelto. Revisa los checklists.
-          <% else %>
-            No se han detectado discrepancias en los próximos eventos.
-          <% end %>
-        </div>
-      </section>
+      <% if module_enabled?(:inventory) %>
+        <section>
+          <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Discrepancias</h2>
+          <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #fff1f2; color: #64748b;">
+            <% if @discrepant_count.to_i > 0 %>
+              Tienes <strong><%= @discrepant_count %></strong> líneas con diferencias entre cargado y devuelto. Revisa los checklists.
+            <% else %>
+              No se han detectado discrepancias en los próximos eventos.
+            <% end %>
+          </div>
+        </section>
+      <% end %>
 
       <%# Sección: Cuentas y Pagos — Resumen rápido %>
-      <section style="margin-top: 18px;">
-        <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-          <span>💵</span> Cuentas y Pagos por Show
-        </h2>
+      <% if module_enabled?(:payroll) %>
+        <section style="margin-top: 18px;">
+          <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            <span>💵</span> Cuentas y Pagos por Show
+          </h2>
 
-        <div style="background: white; border-radius: 12px; border: 1px solid #eef2ff; padding: 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-          <div style="display: flex; gap: 24px; flex-wrap: wrap;">
-            <div>
-              <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Por Cobrar</div>
-              <div style="font-size: 1.5em; font-weight: 900; color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>;">
-                <%= number_to_currency(@total_owed, unit: '$') %>
+          <div style="background: white; border-radius: 12px; border: 1px solid #eef2ff; padding: 18px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 24px; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Por Cobrar</div>
+                <div style="font-size: 1.5em; font-weight: 900; color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>;">
+                  <%= number_to_currency(@total_owed, unit: '$') %>
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Registros</div>
+                <div style="font-size: 1.5em; font-weight: 900; color: #475569;"><%= @employee_payments.count %></div>
               </div>
             </div>
-            <div>
-              <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">Registros</div>
-              <div style="font-size: 1.5em; font-weight: 900; color: #475569;"><%= @employee_payments.count %></div>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <%= link_to new_worker_report_employee_payments_path, class: "btn-main btn-success-custom", style: "padding: 10px 16px; font-size: 0.85em; box-shadow: 0 4px 10px rgba(16,185,129,0.25);" do %>
+                ➕ Reportar Pago
+              <% end %>
+              <%= link_to my_payments_path, style: "text-decoration: none; background: #4f46e5; color: white; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 0.85em; white-space: nowrap;" do %>
+                Ver detalle →
+              <% end %>
             </div>
           </div>
-          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
-            <%= link_to new_worker_report_employee_payments_path, class: "btn-main btn-success-custom", style: "padding: 10px 16px; font-size: 0.85em; box-shadow: 0 4px 10px rgba(16,185,129,0.25);" do %>
-              ➕ Reportar Pago
-            <% end %>
-            <%= link_to my_payments_path, style: "text-decoration: none; background: #4f46e5; color: white; padding: 10px 18px; border-radius: 10px; font-weight: 700; font-size: 0.85em; white-space: nowrap;" do %>
-              Ver detalle →
-            <% end %>
-          </div>
-        </div>
-      </section>
+        </section>
+      <% end %>
     </div>
 
     <aside>
       <%# Panel derecho: Resumen rápido %>
       <div style="background: white; padding: 18px; border-radius: 12px; border: 1px solid #e6eef8; margin-bottom: 12px;">
         <h3 style="margin: 0 0 8px 0; font-size: 1em; font-weight: 800;">Resumen rápido</h3>
-        <p style="margin: 6px 0; color: #475569;">Próximos eventos: <strong><%= @proximos_gigs.count %></strong></p>
-        <p style="margin: 6px 0; color: #475569;">Unidades por cargar: <strong><%= @items_to_load_count || 0 %></strong></p>
-        <p style="margin: 6px 0; color: #475569;">Discrepancias: <strong><%= @discrepant_count || 0 %></strong></p>
-        <p style="margin: 6px 0; color: #475569;">Por cobrar: <strong style="color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>;"><%= number_to_currency(@total_owed, unit: '$') %></strong></p>
-        <% if @proximos_gigs.first %>
+        <% if module_enabled?(:gigs) %>
+          <p style="margin: 6px 0; color: #475569;">Próximos eventos: <strong><%= @proximos_gigs.count %></strong></p>
+        <% end %>
+        <% if module_enabled?(:inventory) %>
+          <p style="margin: 6px 0; color: #475569;">Unidades por cargar: <strong><%= @items_to_load_count || 0 %></strong></p>
+          <p style="margin: 6px 0; color: #475569;">Discrepancias: <strong><%= @discrepant_count || 0 %></strong></p>
+        <% end %>
+        <% if module_enabled?(:payroll) %>
+          <p style="margin: 6px 0; color: #475569;">Por cobrar: <strong style="color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>;"><%= number_to_currency(@total_owed, unit: '$') %></strong></p>
+        <% end %>
+        <% if module_enabled?(:gigs) && @proximos_gigs.first %>
           <p style="margin: 6px 0; color: #475569;">Siguiente evento: <strong><%= @proximos_gigs.first.date&.strftime('%d %b %Y') %></strong></p>
         <% end %>
       </div>
@@ -113,8 +131,12 @@
       <div style="background: white; padding: 14px; border-radius: 12px; border: 1px solid #e6eef8;">
         <h4 style="margin: 0 0 8px 0; font-size: 0.95em; font-weight: 800;">Acciones rápidas</h4>
         <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 8px;">
-          <%= link_to 'Ver mis eventos', root_path, style: 'text-decoration: none; padding: 8px; background: #f8fafc; border-radius: 8px; color: #0f172a; font-weight:700; text-align:center;' %>
-          <%= link_to 'Checklist próximo', (@proximos_gigs.first ? load_in_checklist_gig_path(@proximos_gigs.first) : '#'), style: 'text-decoration: none; padding: 8px; background: #fff7ed; border-radius: 8px; color: #b45309; font-weight:700; text-align:center;' %>
+          <% if module_enabled?(:gigs) %>
+            <%= link_to 'Ver mis eventos', my_gigs_path, style: 'text-decoration: none; padding: 8px; background: #f8fafc; border-radius: 8px; color: #0f172a; font-weight:700; text-align:center;' %>
+          <% end %>
+          <% if module_enabled?(:inventory) && module_enabled?(:gigs) && @proximos_gigs.first %>
+            <%= link_to 'Checklist próximo', load_in_checklist_gig_path(@proximos_gigs.first), style: 'text-decoration: none; padding: 8px; background: #fff7ed; border-radius: 8px; color: #b45309; font-weight:700; text-align:center;' %>
+          <% end %>
         </div>
       </div>
     </aside>

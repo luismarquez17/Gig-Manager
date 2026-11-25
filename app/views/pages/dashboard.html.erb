@@ -411,7 +411,7 @@
     </header>
 
     <%# --- TUS PRESUPUESTOS Y COTIZACIONES --- %>
-    <% if defined?(@mis_presupuestos) && @mis_presupuestos.present? && @mis_presupuestos.any? %>
+    <% if module_enabled?(:clients_crm) && defined?(@mis_presupuestos) && @mis_presupuestos.present? && @mis_presupuestos.any? %>
       <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
           <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
@@ -451,52 +451,54 @@
     <% end %>
 
     <%# --- PRÓXIMOS EVENTOS --- %>
-    <div data-tour="client-upcoming-gigs" style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
-          🗓️ <%= venue_mode? ? 'Tus Próximos Eventos' : 'Tus Próximos Eventos (Shows Confirmados)' %>
-        </h3>
-        <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: var(--color-primary, #2563eb); font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
-      </div>
-
-      <% if @proximos_gigs.any? %>
-        <table style="width: 100%; border-collapse: collapse;">
-          <thead>
-            <tr style="text-align: left; border-bottom: 2px solid var(--border-subtle, #f8fafc);">
-              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Fecha</th>
-              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Ubicación</th>
-              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700; min-width: 170px;">Monto &amp; Estado de Pago</th>
-              <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700; text-align: right;">Detalles</th>
-            </tr>
-          </thead>
-          <tbody>
-            <% @proximos_gigs.each do |gig| %>
-              <tr style="border-bottom: 1px solid var(--border-subtle, #f8fafc);">
-                <td style="padding: 15px 0; font-weight: 600; color: var(--text-main, #1e293b);"><%= gig.date.strftime("%d/%m/%Y") %></td>
-                <td style="padding: 15px 0; color: var(--text-muted, #475569);"><%= gig.location.presence || "No especificada" %></td>
-                <td style="padding: 15px 0;">
-                  <div style="font-weight: 700; color: var(--text-heading, #0f172a); margin-bottom: 4px;">
-                    <%= number_with_precision(gig.amount, precision: 2) %> <small style="color: var(--text-muted, #64748b);"><%= gig.currency %></small>
-                  </div>
-                  <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: false, show_footer: true %>
-                </td>
-                <td style="padding: 15px 0; text-align: right; vertical-align: middle;">
-                  <%= link_to "Ver Detalles ➔", client_gig_path(gig), style: "background: var(--color-primary-glow, #eff6ff); color: var(--color-primary, #2563eb); padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 700; text-decoration: none;" %>
-                </td>
-              </tr>
-            <% end %>
-          </tbody>
-        </table>
-      <% else %>
-        <div style="text-align: center; padding: 30px; color: var(--text-subtle, #94a3b8);">
-          <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
-          <%= venue_mode? ? 'No tienes eventos confirmados en este momento. Una vez que el salón formalice tu fecha, aparecerá aquí.' : 'No tienes eventos confirmados en este momento. Una vez que la agrupación formalice tu fecha, aparecerá aquí.' %>
+    <% if module_enabled?(:gigs) %>
+      <div data-tour="client-upcoming-gigs" style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
+            🗓️ <%= venue_mode? ? 'Tus Próximos Eventos' : 'Tus Próximos Eventos (Shows Confirmados)' %>
+          </h3>
+          <%= link_to "Ver todos mis eventos", client_gigs_path, style: "color: var(--color-primary, #2563eb); font-size: 0.85em; font-weight: 700; text-decoration: none;" %>
         </div>
-      <% end %>
-    </div>
+
+        <% if @proximos_gigs.any? %>
+          <table style="width: 100%; border-collapse: collapse;">
+            <thead>
+              <tr style="text-align: left; border-bottom: 2px solid var(--border-subtle, #f8fafc);">
+                <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Fecha</th>
+                <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700;">Ubicación</th>
+                <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700; min-width: 170px;">Monto &amp; Estado de Pago</th>
+                <th style="padding: 12px 0; color: var(--text-muted, #64748b); font-size: 0.8em; text-transform: uppercase; font-weight: 700; text-align: right;">Detalles</th>
+              </tr>
+            </thead>
+            <tbody>
+              <% @proximos_gigs.each do |gig| %>
+                <tr style="border-bottom: 1px solid var(--border-subtle, #f8fafc);">
+                  <td style="padding: 15px 0; font-weight: 600; color: var(--text-main, #1e293b);"><%= gig.date.strftime("%d/%m/%Y") %></td>
+                  <td style="padding: 15px 0; color: var(--text-muted, #475569);"><%= gig.location.presence || "No especificada" %></td>
+                  <td style="padding: 15px 0;">
+                    <div style="font-weight: 700; color: var(--text-heading, #0f172a); margin-bottom: 4px;">
+                      <%= number_with_precision(gig.amount, precision: 2) %> <small style="color: var(--text-muted, #64748b);"><%= gig.currency %></small>
+                    </div>
+                    <%= render 'gigs/payment_progress', gig: gig, size: :compact, show_details: false, show_footer: true %>
+                  </td>
+                  <td style="padding: 15px 0; text-align: right; vertical-align: middle;">
+                    <%= link_to "Ver Detalles ➔", client_gig_path(gig), style: "background: var(--color-primary-glow, #eff6ff); color: var(--color-primary, #2563eb); padding: 6px 12px; border-radius: 8px; font-size: 0.8em; font-weight: 700; text-decoration: none;" %>
+                  </td>
+                </tr>
+              <% end %>
+            </tbody>
+          </table>
+        <% else %>
+          <div style="text-align: center; padding: 30px; color: var(--text-subtle, #94a3b8);">
+            <span style="font-size: 2em; display: block; margin-bottom: 10px;">✨</span>
+            <%= venue_mode? ? 'No tienes eventos confirmados en este momento. Una vez que el salón formalice tu fecha, aparecerá aquí.' : 'No tienes eventos confirmados en este momento. Una vez que la agrupación formalice tu fecha, aparecerá aquí.' %>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
 
     <%# --- MÉTODOS DE PAGO DISPONIBLES --- %>
-    <% if defined?(current_company) && current_company&.any_payment_method_enabled? %>
+    <% if (module_enabled?(:clients_crm) || module_enabled?(:finances)) && defined?(current_company) && current_company&.any_payment_method_enabled? %>
       <div data-tour="client-payment-methods" style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 30px;">
         <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-heading, #0f172a); margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
           <span>💳</span> Cuentas Oficiales para Transferencias & Anticipos

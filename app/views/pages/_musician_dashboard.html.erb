@@ -10,14 +10,16 @@
     </div>
     
     <%# --- DEBT BADGE --- %>
-    <div data-tour="worker-balance-badge" style="background: <%= @total_owed > 0 ? '#fffbeb' : '#f0fdf4' %>; border: 1px solid <%= @total_owed > 0 ? '#fde68a' : '#bbf7d0' %>; padding: 12px 20px; border-radius: 16px; text-align: right; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
-      <div style="font-size: 0.85em; font-weight: 700; color: <%= @total_owed > 0 ? '#b45309' : '#15803d' %>; text-transform: uppercase; letter-spacing: 0.05em;">
-        <%= @total_owed > 0 ? "Total por Cobrar" : "Cuentas al Día" %>
+    <% if module_enabled?(:payroll) %>
+      <div data-tour="worker-balance-badge" style="background: <%= @total_owed > 0 ? '#fffbeb' : '#f0fdf4' %>; border: 1px solid <%= @total_owed > 0 ? '#fde68a' : '#bbf7d0' %>; padding: 12px 20px; border-radius: 16px; text-align: right; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);">
+        <div style="font-size: 0.85em; font-weight: 700; color: <%= @total_owed > 0 ? '#b45309' : '#15803d' %>; text-transform: uppercase; letter-spacing: 0.05em;">
+          <%= @total_owed > 0 ? "Total por Cobrar" : "Cuentas al Día" %>
+        </div>
+        <div style="font-size: 1.8em; font-weight: 900; color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>; margin-top: 2px;">
+          <%= number_to_currency(@total_owed, unit: '$') %>
+        </div>
       </div>
-      <div style="font-size: 1.8em; font-weight: 900; color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>; margin-top: 2px;">
-        <%= number_to_currency(@total_owed, unit: '$') %>
-      </div>
-    </div>
+    <% end %>
   </header>
 
   <%# --- MAIN GRID --- %>
@@ -27,13 +29,14 @@
     <div style="display: flex; flex-direction: column; gap: 24px;">
       
       <%# --- SECTION 1: NEXT SHOW --- %>
-      <section data-tour="worker-next-gig" style="background: linear-gradient(135deg, #4f46e5, #3730a3); color: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3); position: relative; overflow: hidden;">
-        <%# Decorative background blur %>
-        <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(30px);"></div>
-        
-        <h2 style="margin: 0 0 15px 0; font-size: 1.25em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #e0e7ff; display: flex; align-items: center; gap: 8px;">
-          <span>⚡</span> <%= venue_mode? ? 'Siguiente Evento' : 'Siguiente Show' %>
-        </h2>
+      <% if module_enabled?(:gigs) %>
+        <section data-tour="worker-next-gig" style="background: linear-gradient(135deg, #4f46e5, #3730a3); color: white; padding: 25px; border-radius: 24px; box-shadow: 0 10px 25px -5px rgba(79, 70, 229, 0.3); position: relative; overflow: hidden;">
+          <%# Decorative background blur %>
+          <div style="position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background: rgba(255, 255, 255, 0.1); border-radius: 50%; filter: blur(30px);"></div>
+          
+          <h2 style="margin: 0 0 15px 0; font-size: 1.25em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: #e0e7ff; display: flex; align-items: center; gap: 8px;">
+            <span>⚡</span> <%= venue_mode? ? 'Siguiente Evento' : 'Siguiente Show' %>
+          </h2>
         
         <% if @next_gig.present? %>
           <div style="display: flex; flex-direction: column; gap: 15px;">
@@ -93,36 +96,39 @@
           </div>
         <% end %>
       </section>
+      <% end %>
 
       <%# --- SECTION 2: PAYMENTS SUMMARY --- %>
-      <section style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 22px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
-        <h2 style="margin: 0 0 15px 0; font-size: 1.25em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 8px;">
-          <span>💵</span> <%= venue_mode? ? 'Cuentas y Pagos por Evento' : 'Cuentas y Pagos por Show' %>
-        </h2>
+      <% if module_enabled?(:payroll) %>
+        <section style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 22px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+          <h2 style="margin: 0 0 15px 0; font-size: 1.25em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            <span>💵</span> <%= venue_mode? ? 'Cuentas y Pagos por Evento' : 'Cuentas y Pagos por Show' %>
+          </h2>
 
-        <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
-          <div style="display: flex; gap: 28px; flex-wrap: wrap;">
-            <div>
-              <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Por Cobrar</div>
-              <div style="font-size: 1.8em; font-weight: 900; color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>;">
-                <%= number_to_currency(@total_owed, unit: '$') %>
+          <div style="display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap;">
+            <div style="display: flex; gap: 28px; flex-wrap: wrap;">
+              <div>
+                <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Por Cobrar</div>
+                <div style="font-size: 1.8em; font-weight: 900; color: <%= @total_owed > 0 ? '#d97706' : '#16a34a' %>;">
+                  <%= number_to_currency(@total_owed, unit: '$') %>
+                </div>
+              </div>
+              <div>
+                <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Registros</div>
+                <div style="font-size: 1.8em; font-weight: 900; color: #475569;"><%= @employee_payments.count %></div>
               </div>
             </div>
-            <div>
-              <div style="font-size: 0.75em; color: #94a3b8; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Registros</div>
-              <div style="font-size: 1.8em; font-weight: 900; color: #475569;"><%= @employee_payments.count %></div>
+            <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+              <%= link_to new_worker_report_employee_payments_path, class: "btn-main btn-success-custom", style: "padding: 10px 18px; font-size: 0.88em; box-shadow: 0 4px 10px rgba(16,185,129,0.25);" do %>
+                ➕ Reportar Pago
+              <% end %>
+              <%= link_to my_payments_path, style: "text-decoration: none; background: linear-gradient(135deg, #4f46e5, #3730a3); color: white; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 0.88em; white-space: nowrap; box-shadow: 0 4px 12px rgba(79,70,229,0.3);" do %>
+                Ver detalle →
+              <% end %>
             </div>
           </div>
-          <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-            <%= link_to new_worker_report_employee_payments_path, class: "btn-main btn-success-custom", style: "padding: 10px 18px; font-size: 0.88em; box-shadow: 0 4px 10px rgba(16,185,129,0.25);" do %>
-              ➕ Reportar Pago
-            <% end %>
-            <%= link_to my_payments_path, style: "text-decoration: none; background: linear-gradient(135deg, #4f46e5, #3730a3); color: white; padding: 10px 20px; border-radius: 12px; font-weight: 700; font-size: 0.88em; white-space: nowrap; box-shadow: 0 4px 12px rgba(79,70,229,0.3);" do %>
-              Ver detalle →
-            <% end %>
-          </div>
-        </div>
-      </section>
+        </section>
+      <% end %>
       
     </div>
 
@@ -130,73 +136,77 @@
     <aside style="display: flex; flex-direction: column; gap: 20px;">
       
       <%# --- ACTIVITY CARD --- %>
-      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
-        <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Resumen General</h3>
-        
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-            <span style="color: #64748b; font-size: 0.9em;"><%= venue_mode? ? 'Total de Eventos:' : 'Total de Shows:' %></span>
-            <strong style="color: #0f172a; font-size: 1.05em;"><%= @assigned_gigs.count %></strong>
-          </div>
+      <% if module_enabled?(:gigs) %>
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+          <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Resumen General</h3>
           
-          <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
-            <span style="color: #64748b; font-size: 0.9em;"><%= venue_mode? ? 'Próximos Eventos:' : 'Próximos Shows:' %></span>
-            <strong style="color: #4f46e5; font-size: 1.05em;"><%= @proximos_gigs.count %></strong>
-          </div>
-          
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #64748b; font-size: 0.9em;">Próxima Fecha:</span>
-            <strong style="color: #0f172a; font-size: 0.95em;">
-              <%= @next_gig.date&.strftime('%d %b %Y') rescue 'Ninguno' %>
-            </strong>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+              <span style="color: #64748b; font-size: 0.9em;"><%= venue_mode? ? 'Total de Eventos:' : 'Total de Shows:' %></span>
+              <strong style="color: #0f172a; font-size: 1.05em;"><%= @assigned_gigs.count %></strong>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f1f5f9; padding-bottom: 8px;">
+              <span style="color: #64748b; font-size: 0.9em;"><%= venue_mode? ? 'Próximos Eventos:' : 'Próximos Shows:' %></span>
+              <strong style="color: #4f46e5; font-size: 1.05em;"><%= @proximos_gigs.count %></strong>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: #64748b; font-size: 0.9em;">Próxima Fecha:</span>
+              <strong style="color: #0f172a; font-size: 0.95em;">
+                <%= @next_gig.date&.strftime('%d %b %Y') rescue 'Ninguno' %>
+              </strong>
+            </div>
           </div>
         </div>
-      </div>
-      
-      <%# --- ASSIGNED GIGS LIST --- %>
-      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
-        <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
-          <span>📋</span> <%= venue_mode? ? 'Eventos Asignados' : 'Shows Asignados' %>
-        </h3>
         
-        <% if @assigned_gigs.present? %>
-          <div style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
-            <% @assigned_gigs.each do |gig| %>
-              <% is_upcoming = gig.date >= Date.today rescue false %>
-              <div style="padding: 10px; border-radius: 12px; border: 1px solid #f1f5f9; background: <%= is_upcoming ? '#f8fafc' : '#ffffff' %>; transition: transform 0.2s;">
-                <div style="display: flex; justify-content: space-between; align-items: start; gap: 4px;">
-                  <span style="font-weight: 700; font-size: 0.9em; color: #0f172a; line-height: 1.2;">
-                    <%= gig.client&.name || (venue_mode? ? 'Evento' : 'Show') %>
-                  </span>
-                  <span style="font-size: 0.75em; padding: 2px 6px; border-radius: 9999px; font-weight: 700; background: <%= is_upcoming ? '#e0e7ff' : '#f1f5f9' %>; color: <%= is_upcoming ? '#4f46e5' : '#64748b' %>;">
-                    <%= is_upcoming ? 'Próximo' : 'Pasado' %>
-                  </span>
-                </div>
-                
-                <div style="font-size: 0.8em; color: #64748b; margin-top: 4px;">
-                  📅 <%= gig.date&.strftime('%d %b %Y') rescue '' %>
-                  <% if gig.start_time.present? %>
-                    • ⏰ <%= gig.start_time.strftime('%I:%M %p') %>
-                  <% end %>
-                </div>
-                
-                <% if gig.location.present? %>
-                  <div style="font-size: 0.8em; color: #94a3b8; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                    📍 <%= gig.location %>
+        <%# --- ASSIGNED GIGS LIST --- %>
+        <div style="background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02);">
+          <h3 style="margin: 0 0 15px 0; font-size: 1.1em; color: #0f172a; font-weight: 800; display: flex; align-items: center; gap: 6px;">
+            <span>📋</span> <%= venue_mode? ? 'Eventos Asignados' : 'Shows Asignados' %>
+          </h3>
+          
+          <% if @assigned_gigs.present? %>
+            <div style="display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 4px;">
+              <% @assigned_gigs.each do |gig| %>
+                <% is_upcoming = gig.date >= Date.today rescue false %>
+                <div style="padding: 10px; border-radius: 12px; border: 1px solid #f1f5f9; background: <%= is_upcoming ? '#f8fafc' : '#ffffff' %>; transition: transform 0.2s;">
+                  <div style="display: flex; justify-content: space-between; align-items: start; gap: 4px;">
+                    <span style="font-weight: 700; font-size: 0.9em; color: #0f172a; line-height: 1.2;">
+                      <%= gig.client&.name || (venue_mode? ? 'Evento' : 'Show') %>
+                    </span>
+                    <span style="font-size: 0.75em; padding: 2px 6px; border-radius: 9999px; font-weight: 700; background: <%= is_upcoming ? '#e0e7ff' : '#f1f5f9' %>; color: <%= is_upcoming ? '#4f46e5' : '#64748b' %>;">
+                      <%= is_upcoming ? 'Próximo' : 'Pasado' %>
+                    </span>
                   </div>
-                <% end %>
-                
-                <div style="margin-top: 6px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
-                  <%= link_to '💵 Reportar Pago', new_worker_report_employee_payments_path(gig_id: gig.id), style: "font-size: 0.8em; color: #059669; font-weight: 700; text-decoration: none;" %>
-                  <%= link_to 'Detalles', gig_path(gig), style: "font-size: 0.8em; color: #4f46e5; font-weight: 700; text-decoration: none;" %>
+                  
+                  <div style="font-size: 0.8em; color: #64748b; margin-top: 4px;">
+                    📅 <%= gig.date&.strftime('%d %b %Y') rescue '' %>
+                    <% if gig.start_time.present? %>
+                      • ⏰ <%= gig.start_time.strftime('%I:%M %p') %>
+                    <% end %>
+                  </div>
+                  
+                  <% if gig.location.present? %>
+                    <div style="font-size: 0.8em; color: #94a3b8; margin-top: 2px; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
+                      📍 <%= gig.location %>
+                    </div>
+                  <% end %>
+                  
+                  <div style="margin-top: 6px; display: flex; justify-content: flex-end; align-items: center; gap: 10px;">
+                    <% if module_enabled?(:payroll) %>
+                      <%= link_to '💵 Reportar Pago', new_worker_report_employee_payments_path(gig_id: gig.id), style: "font-size: 0.8em; color: #059669; font-weight: 700; text-decoration: none;" %>
+                    <% end %>
+                    <%= link_to 'Detalles', gig_path(gig), style: "font-size: 0.8em; color: #4f46e5; font-weight: 700; text-decoration: none;" %>
+                  </div>
                 </div>
-              </div>
-            <% end %>
-          </div>
-        <% else %>
-          <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic; text-align: center;"><%= venue_mode? ? 'No tienes eventos asignados.' : 'No tienes shows asignados.' %></p>
-        <% end %>
-      </div>
+              <% end %>
+            </div>
+          <% else %>
+            <p style="margin: 0; color: #94a3b8; font-size: 0.9em; font-style: italic; text-align: center;"><%= venue_mode? ? 'No tienes eventos asignados.' : 'No tienes shows asignados.' %></p>
+          <% end %>
+        </div>
+      <% end %>
 
     </aside>
     

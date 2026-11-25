@@ -9,6 +9,7 @@ class PagesController < ApplicationController
   before_action :require_leader!, only: [:availability, :financials]
   before_action -> { require_module!(:finances) }, only: [:financials]
   before_action -> { require_module!(:inventory) }, only: [:availability]
+  before_action -> { require_module!(:payroll) }, only: [:my_payments]
 
   def dashboard
     if current_user.leader? || current_user.superadmin?
