@@ -30,12 +30,21 @@
         <%= f.label :amount, "Monto ($) *", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
         <div style="position: relative;">
           <span style="position: absolute; left: 14px; top: 12px; color: #64748b; font-weight: 700;">$</span>
-          <%= f.number_field :amount, step: "0.01", min: "0.01", placeholder: "Ej. 150.00", required: true, style: "width: 100%; padding: 12px 14px 12px 30px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1.05em; font-weight: 700; box-sizing: border-box;" %>
+          <%= f.text_field :amount,
+                value: (@cash_adjustment.amount.present? && @cash_adjustment.amount.to_f > 0 ? sprintf('%.2f', @cash_adjustment.amount) : nil),
+                inputmode: 'decimal',
+                placeholder: '0.00',
+                data: { controller: 'currency', action: 'input->currency#format blur->currency#format' },
+                required: true,
+                style: "width: 100%; padding: 12px 14px 12px 30px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 1.05em; font-weight: 700; box-sizing: border-box; outline: none;" %>
         </div>
       </div>
       <div>
         <%= f.label :currency, "Moneda", style: "display: block; font-weight: 700; color: #1e293b; font-size: 0.9em; margin-bottom: 8px;" %>
-        <%= f.text_field :currency, value: "USD", readonly: true, style: "width: 100%; padding: 12px 14px; border: 1px solid #cbd5e1; border-radius: 10px; font-size: 0.95em; background: #f8fafc; font-weight: 700; text-align: center; box-sizing: border-box;" %>
+        <div style="width: 100%; height: 46px; border-radius: 10px; border: 1px solid #cbd5e1; background: #f8fafc; font-weight: 800; color: #1e293b; display: flex; align-items: center; justify-content: center; box-sizing: border-box; font-size: 0.95em;">
+          USD ($)
+        </div>
+        <%= f.hidden_field :currency, value: "USD" %>
       </div>
     </div>
 

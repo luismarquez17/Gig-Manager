@@ -200,6 +200,10 @@ class CashAdjustmentsController < ApplicationController
   end
 
   def cash_adjustment_params
-    params.require(:cash_adjustment).permit(:amount, :currency, :adjustment_type, :date, :description)
+    p = params.require(:cash_adjustment).permit(:amount, :currency, :adjustment_type, :date, :description)
+    if p[:amount].present? && p[:amount].is_a?(String)
+      p[:amount] = p[:amount].tr(',', '').strip
+    end
+    p
   end
 end
