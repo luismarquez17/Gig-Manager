@@ -25,7 +25,7 @@ class LandingControllerTest < ActionDispatch::IntegrationTest
   test "should get sign up page from landing" do
     get new_user_registration_url(modules: "gigs,inventory,finances")
     assert_response :success
-    assert_select "h2", "Crea tu Agrupación"
+    assert_select "h1", /Activa tus 30 Días Gratis/
     assert_select "input[name='modules'][value='gigs,inventory,finances']"
   end
 
@@ -43,10 +43,11 @@ class LandingControllerTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to root_url
+    assert_redirected_to welcome_onboarding_url
     created_user = User.find_by(email: session_user_email || User.last.email)
     assert_not_nil created_user
     assert_equal "Orquesta Sinfonía Nueva", created_user.company.name
+    assert_not created_user.company.onboarding_completed?
     assert created_user.company.trial_active?
     assert created_user.company.module_enabled?(:gigs)
     assert created_user.company.module_enabled?(:finances)

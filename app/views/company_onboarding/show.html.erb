@@ -1,0 +1,482 @@
+<%
+  initial_company_name = @company.name.to_s.start_with?("Proyecto de ") ? "" : @company.name.to_s
+  pm = @payment_methods || @company.payment_methods
+%>
+
+<style>
+  @keyframes wizardFadeSlide {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .wizard-step-active {
+    display: block !important;
+    animation: wizardFadeSlide 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .wizard-option-card {
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .wizard-option-card:hover {
+    transform: translateY(-2px);
+  }
+  .wizard-option-card.is-selected {
+    border-color: #22d3ee !important;
+    background: rgba(6, 182, 212, 0.12) !important;
+    box-shadow: 0 0 0 1px #22d3ee, 0 10px 25px -8px rgba(6, 182, 212, 0.35);
+  }
+</style>
+
+<div class="relative min-h-[85vh] py-8 sm:py-12 px-4 sm:px-6 lg:px-8 overflow-hidden">
+  <!-- Orbes suaves -->
+  <div class="absolute top-10 left-1/2 -translate-x-1/2 w-[540px] h-[540px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+  <div class="absolute bottom-0 right-1/4 w-[400px] h-[400px] bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -z-10"></div>
+
+  <div class="max-w-3xl mx-auto">
+
+    <!-- Barra Superior de Progreso -->
+    <div class="mb-6 sm:mb-8">
+      <div class="flex items-center justify-between gap-4 mb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-cyan-950/80 border border-cyan-500/30 text-cyan-300 text-xs font-black tracking-wide">
+            <span>⚡</span>
+            <span id="wizard-step-label">Pregunta 1 de 5</span>
+          </span>
+          <span class="hidden sm:inline text-xs text-slate-400 font-medium">⏱️ Configuración automática (~45 seg)</span>
+        </div>
+
+        <%= button_to skip_welcome_onboarding_path, method: :post, data: { turbo: false },
+            class: "text-xs font-bold text-slate-400 hover:text-slate-200 underline underline-offset-4 bg-transparent border-0 cursor-pointer" do %>
+          Omitir e ir al panel →
+        <% end %>
+      </div>
+
+      <!-- Barra de progreso -->
+      <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
+        <div id="wizard-progress-bar" class="h-full bg-gradient-to-r from-cyan-400 via-blue-500 to-indigo-500 transition-all duration-300 ease-out rounded-full" style="width: 20%;"></div>
+      </div>
+
+      <!-- Puntos indicadores -->
+      <div class="grid grid-cols-5 gap-2 mt-2 text-[11px] font-bold text-center">
+        <button type="button" onclick="goToWizardStep(1)" class="wizard-dot text-cyan-400 cursor-pointer bg-transparent border-0 truncate" data-dot="1">1. Tu Rubro</button>
+        <button type="button" onclick="goToWizardStep(2)" class="wizard-dot text-slate-500 cursor-pointer bg-transparent border-0 truncate" data-dot="2">2. Identidad</button>
+        <button type="button" onclick="goToWizardStep(3)" class="wizard-dot text-slate-500 cursor-pointer bg-transparent border-0 truncate" data-dot="3">3. Contacto</button>
+        <button type="button" onclick="goToWizardStep(4)" class="wizard-dot text-slate-500 cursor-pointer bg-transparent border-0 truncate" data-dot="4">4. Cobros</button>
+        <button type="button" onclick="goToWizardStep(5)" class="wizard-dot text-slate-500 cursor-pointer bg-transparent border-0 truncate" data-dot="5">5. Tu Combo</button>
+      </div>
+    </div>
+
+    <% if flash[:alert].present? %>
+      <div class="mb-5 p-4 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs font-semibold flex items-center gap-2.5">
+        <span>⚠️</span>
+        <span><%= flash[:alert] %></span>
+      </div>
+    <% end %>
+
+    <!-- Formulario Multi-Paso -->
+    <%= form_with url: welcome_onboarding_path, method: :patch, local: true, data: { turbo: false }, id: "onboarding-wizard-form" do %>
+
+      <div class="p-6 sm:p-10 rounded-3xl bg-slate-900/85 border border-slate-800 shadow-2xl backdrop-blur-xl">
+
+        <!-- ========================================================= -->
+        <!-- PASO 1: TIPO DE PROYECTO / RUBRO                          -->
+        <!-- ========================================================= -->
+        <div class="wizard-step wizard-step-active" data-step="1">
+          <div class="mb-6">
+            <div class="text-xs font-black uppercase tracking-wider text-cyan-400 mb-1">Paso 1 • Personalización Inteligente</div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">¿Qué tipo de proyecto o empresa manejas?</h1>
+            <p class="text-sm text-slate-400 mt-1.5">Adaptaremos automáticamente el vocabulario, los menús y tus catálogos a tu industria.</p>
+          </div>
+
+          <input type="hidden" name="onboarding[business_type]" id="onboarding_business_type" value="<%= @company.business_type %>">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <% @business_types.each do |key, info| %>
+              <% selected = (@company.business_type.to_s == key.to_s) %>
+              <button type="button"
+                      onclick="selectBusinessType('<%= key %>', this)"
+                      class="wizard-option-card text-left p-4 rounded-2xl bg-slate-950/70 border-2 border-slate-800 hover:border-slate-600 cursor-pointer flex items-start gap-3.5 <%= 'is-selected' if selected %>"
+                      data-bt-key="<%= key %>">
+                <div class="w-12 h-12 rounded-2xl bg-slate-900 border border-slate-800 flex items-center justify-center text-2xl flex-shrink-0">
+                  <%= info[:icon] %>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-center justify-between gap-2">
+                    <span class="text-sm font-black text-white leading-snug"><%= info[:name] %></span>
+                  </div>
+                  <p class="text-xs text-slate-400 mt-1 leading-relaxed"><%= info[:description] %></p>
+                </div>
+              </button>
+            <% end %>
+          </div>
+
+          <div class="mt-8 flex items-center justify-end">
+            <button type="button" onclick="nextWizardStep()" class="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 cursor-pointer transition-all">
+              Continuar →
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PASO 2: IDENTIDAD (NOMBRE DE BANDA / EMPRESA Y LÍDER)     -->
+        <!-- ========================================================= -->
+        <div class="wizard-step hidden" data-step="2">
+          <div class="mb-6">
+            <div class="text-xs font-black uppercase tracking-wider text-cyan-400 mb-1">Paso 2 • Tu Marca</div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">¿Cómo se llama tu proyecto y cómo te presentas?</h1>
+            <p class="text-sm text-slate-400 mt-1.5">Este nombre aparecerá en tus contratos, recibos oficiales, portales de clientes y enlace de equipo.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Nombre de tu Banda, Salón o Empresa <span class="text-cyan-400">*</span>
+              </label>
+              <input type="text"
+                     name="onboarding[company_name]"
+                     id="onboarding_company_name"
+                     value="<%= initial_company_name %>"
+                     placeholder="Ej. Orquesta Los Titanes / Salón Gala VIP"
+                     class="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-base font-bold focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+              <p id="step2-name-error" class="hidden text-xs text-rose-400 font-bold mt-1.5">Por favor ingresa el nombre de tu banda o empresa para personalizar tu portal.</p>
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                Lema o Eslogan Corto <span class="text-slate-500 font-normal normal-case">(opcional)</span>
+              </label>
+              <input type="text"
+                     name="onboarding[tagline]"
+                     value="<%= @company.tagline %>"
+                     placeholder="Ej. Música en vivo y producción de alto impacto para eventos inolvidables"
+                     class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Tu Nombre Completo</label>
+                <input type="text"
+                       name="onboarding[leader_name]"
+                       value="<%= @user.name.presence || @user.display_name %>"
+                       placeholder="Ej. Carlos Mendoza"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">Tu Rol o Especialidad <span class="text-slate-500 font-normal normal-case">(opcional)</span></label>
+                <input type="text"
+                       name="onboarding[leader_specialty]"
+                       value="<%= @user.specialty %>"
+                       placeholder="Ej. Director Musical / Productor"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-center justify-between gap-3">
+            <button type="button" onclick="prevWizardStep()" class="px-5 py-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 font-bold text-sm border border-slate-800 cursor-pointer transition-all">
+              ← Atrás
+            </button>
+            <button type="button" onclick="nextWizardStep()" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 cursor-pointer transition-all">
+              Continuar →
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PASO 3: WHATSAPP Y CONTACTO AUTOMÁTICO                    -->
+        <!-- ========================================================= -->
+        <div class="wizard-step hidden" data-step="3">
+          <div class="mb-6">
+            <div class="text-xs font-black uppercase tracking-wider text-cyan-400 mb-1">Paso 3 • Automatización WhatsApp</div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">¿Dónde te contactan tus clientes?</h1>
+            <p class="text-sm text-slate-400 mt-1.5">Con tu WhatsApp activamos automáticamente el envío de presupuestos, confirmaciones y recibos digitales.</p>
+          </div>
+
+          <div class="space-y-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                WhatsApp Principal de Negocio
+              </label>
+              <input type="text"
+                     name="onboarding[whatsapp_number]"
+                     value="<%= @company.whatsapp_number.presence || @user.phone %>"
+                     placeholder="Ej. 0424-1234567 o +1 305 555 0199"
+                     class="w-full px-4 py-3.5 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+              <p class="text-[11px] text-slate-500 mt-1">También se usará para enviarte comprobantes de tu suscripción si los solicitas.</p>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Instagram <span class="text-slate-500 font-normal normal-case">(opcional)</span>
+                </label>
+                <input type="text"
+                       name="onboarding[instagram_url]"
+                       value="<%= @company.instagram_url %>"
+                       placeholder="@tuagrupacion"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+              </div>
+
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-1.5">
+                  Correo de Atención al Cliente
+                </label>
+                <input type="email"
+                       name="onboarding[contact_email]"
+                       value="<%= @company.contact_email.presence || @user.email %>"
+                       placeholder="contacto@tuempresa.com"
+                       class="w-full px-4 py-3 rounded-xl bg-slate-950 border border-slate-800 text-white placeholder-slate-500 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 transition-all">
+              </div>
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-center justify-between gap-3">
+            <button type="button" onclick="prevWizardStep()" class="px-5 py-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 font-bold text-sm border border-slate-800 cursor-pointer transition-all">
+              ← Atrás
+            </button>
+            <button type="button" onclick="nextWizardStep()" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 cursor-pointer transition-all">
+              Continuar →
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PASO 4: MÉTODOS DE COBRO PARA SUS CLIENTES                -->
+        <!-- ========================================================= -->
+        <div class="wizard-step hidden" data-step="4">
+          <div class="mb-6">
+            <div class="text-xs font-black uppercase tracking-wider text-cyan-400 mb-1">Paso 4 • Tus Cobros Automáticos (Opcional)</div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">¿Dónde recibirás los abonos de tus clientes?</h1>
+            <p class="text-sm text-slate-400 mt-1.5">Tus clientes verán estas cuentas en su portal de eventos para pagarte y subir su captura. Puedes dejar en blanco lo que no uses.</p>
+          </div>
+
+          <div class="space-y-4">
+            <!-- Pago Móvil -->
+            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-black text-cyan-300 uppercase tracking-wider">🇻🇪 Pago Móvil (Opcional)</span>
+                <span class="text-[11px] text-slate-500">Se muestra en Portales</span>
+              </div>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <input type="text" name="onboarding[pago_movil_bank]" value="<%= pm.dig('pago_movil', 'bank') %>" placeholder="Banco (ej. Banesco)"
+                       class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+                <input type="text" name="onboarding[pago_movil_id_number]" value="<%= pm.dig('pago_movil', 'id_number') %>" placeholder="C.I. / RIF (ej. V-12345678)"
+                       class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+                <input type="text" name="onboarding[pago_movil_phone]" value="<%= pm.dig('pago_movil', 'phone') %>" placeholder="Teléfono (ej. 0414-1234567)"
+                       class="px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+              </div>
+            </div>
+
+            <!-- Zelle & Binance -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2.5">
+                <span class="text-xs font-black text-emerald-300 uppercase tracking-wider block">🇺🇸 Zelle (Opcional)</span>
+                <input type="text" name="onboarding[zelle_email]" value="<%= pm.dig('zelle', 'email') %>" placeholder="Correo o teléfono Zelle"
+                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+                <input type="text" name="onboarding[zelle_holder_name]" value="<%= pm.dig('zelle', 'holder_name') %>" placeholder="Nombre del titular"
+                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+              </div>
+
+              <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 space-y-2.5">
+                <span class="text-xs font-black text-amber-300 uppercase tracking-wider block">🔶 Binance Pay (Opcional)</span>
+                <input type="text" name="onboarding[binance_pay_id]" value="<%= pm.dig('binance', 'pay_id') %>" placeholder="Binance Pay ID"
+                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+                <input type="text" name="onboarding[binance_email]" value="<%= pm.dig('binance', 'email') %>" placeholder="Correo Binance (opcional)"
+                       class="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-white placeholder-slate-500 text-xs focus:outline-none focus:border-cyan-500">
+              </div>
+            </div>
+
+            <!-- Tasa de Cambio -->
+            <div class="p-4 rounded-2xl bg-slate-950/70 border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div class="text-xs font-black text-white">💱 Conversión de Moneda en Portales</div>
+                <div class="text-[11px] text-slate-400">¿Mostrar cálculo automático a Bolívares usando Tasa BCV del día?</div>
+              </div>
+              <select name="onboarding[exchange_rate_mode]" class="px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-700 text-white text-xs font-bold focus:outline-none focus:border-cyan-500">
+                <option value="auto_bcv" <%= 'selected' if pm.dig('exchange_rate', 'mode') == 'auto_bcv' %>>🇻🇪 Automática (Tasa BCV del día)</option>
+                <option value="hidden" <%= 'selected' if pm.dig('exchange_rate', 'mode') == 'hidden' %>>🇺🇸 Solo mostrar montos en USD</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mt-8 flex items-center justify-between gap-3">
+            <button type="button" onclick="prevWizardStep()" class="px-5 py-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 font-bold text-sm border border-slate-800 cursor-pointer transition-all">
+              ← Atrás
+            </button>
+            <button type="button" onclick="nextWizardStep()" class="px-8 py-3.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-black text-sm shadow-lg shadow-cyan-500/25 cursor-pointer transition-all">
+              Siguiente (Último Paso) →
+            </button>
+          </div>
+        </div>
+
+        <!-- ========================================================= -->
+        <!-- PASO 5: CONFIRMACIÓN DE COMBO 30 DÍAS + AUTOMATIZACIÓN    -->
+        <!-- ========================================================= -->
+        <div class="wizard-step hidden" data-step="5">
+          <div class="mb-6">
+            <div class="text-xs font-black uppercase tracking-wider text-emerald-400 mb-1">Paso 5 • ¡Casi Listo!</div>
+            <h1 class="text-2xl sm:text-3xl font-black text-white tracking-tight">Confirma tu combo de 30 días gratis</h1>
+            <p class="text-sm text-slate-400 mt-1.5">Todo quedó automatizado. Revisa tu paquete de prueba y entra directo a gestionar tu proyecto.</p>
+          </div>
+
+          <input type="hidden" name="onboarding[plan_tier]" id="onboarding_plan_tier" value="<%= @company.effective_plan_tier %>">
+
+          <!-- Selector rápido de combo -->
+          <div class="grid grid-cols-2 sm:grid-cols-3 gap-2.5 mb-5">
+            <% @packages.each do |pkg| %>
+              <% is_selected = (@company.effective_plan_tier == pkg[:key]) %>
+              <button type="button"
+                      onclick="selectOnboardingPlan('<%= pkg[:key] %>', this)"
+                      class="wizard-option-card text-left p-3.5 rounded-2xl bg-slate-950/75 border-2 border-slate-800 hover:border-slate-600 cursor-pointer <%= 'is-selected' if is_selected %>"
+                      data-plan-key="<%= pkg[:key] %>">
+                <div class="flex items-center justify-between mb-1">
+                  <span class="text-xl"><%= pkg[:icon] %></span>
+                  <span class="text-[11px] font-black text-emerald-400">$<%= sprintf('%.0f', pkg[:price]) %>/mes</span>
+                </div>
+                <div class="text-xs font-black text-white leading-tight"><%= pkg[:name] %></div>
+                <div class="text-[10px] text-slate-400 mt-1">30 días $0 hoy</div>
+              </button>
+            <% end %>
+          </div>
+
+          <!-- Toggle de Auto-carga de catálogo inicial -->
+          <label class="flex items-start gap-3.5 p-4 rounded-2xl bg-emerald-950/25 border border-emerald-500/35 cursor-pointer mb-5">
+            <input type="checkbox" name="onboarding[seed_starter_data]" value="1" checked class="mt-0.5 w-5 h-5 rounded text-emerald-500 bg-slate-900 border-slate-700 accent-emerald-500 cursor-pointer">
+            <div>
+              <div class="text-sm font-extrabold text-white">✨ Pre-cargar paquetes y adicionales sugeridos para mi rubro</div>
+              <div class="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                Crearemos automáticamente ejemplos editables de presupuestos base y servicios adicionales para que no empieces en blanco.
+              </div>
+            </div>
+          </label>
+
+          <!-- Preview automático del enlace de equipo -->
+          <div class="p-4 rounded-2xl bg-slate-950/80 border border-slate-800 mb-6 flex items-center justify-between gap-3 flex-wrap">
+            <div class="min-w-0">
+              <div class="text-[11px] font-bold uppercase tracking-wider text-indigo-400">🔗 Tu enlace automático para invitar equipo / músicos</div>
+              <div class="text-xs font-mono text-slate-300 truncate mt-1" id="wizard-join-url-preview">
+                <%= join_company_url(slug: @company.slug, token: @company.invitation_token) %>
+              </div>
+            </div>
+            <span class="text-[11px] font-bold text-emerald-400 bg-emerald-950/70 border border-emerald-500/30 px-2.5 py-1 rounded-lg">Listo para usar</span>
+          </div>
+
+          <div class="mt-6 flex items-center justify-between gap-3">
+            <button type="button" onclick="prevWizardStep()" class="px-5 py-3.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 font-bold text-sm border border-slate-800 cursor-pointer transition-all">
+              ← Atrás
+            </button>
+            <button type="submit" class="flex-1 sm:flex-none px-8 py-4 rounded-xl bg-gradient-to-r from-emerald-400 via-cyan-400 to-indigo-500 hover:from-emerald-300 hover:to-indigo-400 text-slate-950 font-black text-sm shadow-xl shadow-cyan-500/30 cursor-pointer transition-all">
+              🚀 Finalizar y Entrar a Mi Espacio
+            </button>
+          </div>
+        </div>
+
+      </div>
+    <% end %>
+
+  </div>
+</div>
+
+<script>
+  var currentWizardStep = 1;
+  var totalWizardSteps = 5;
+
+  function renderWizardStep() {
+    var steps = document.querySelectorAll('.wizard-step');
+    steps.forEach(function(el) {
+      var stepNum = parseInt(el.getAttribute('data-step'), 10);
+      if (stepNum === currentWizardStep) {
+        el.classList.remove('hidden');
+        el.classList.add('wizard-step-active');
+      } else {
+        el.classList.add('hidden');
+        el.classList.remove('wizard-step-active');
+      }
+    });
+
+    var pct = (currentWizardStep / totalWizardSteps) * 100;
+    var bar = document.getElementById('wizard-progress-bar');
+    if (bar) bar.style.width = pct + '%';
+
+    var lbl = document.getElementById('wizard-step-label');
+    if (lbl) lbl.textContent = 'Pregunta ' + currentWizardStep + ' de ' + totalWizardSteps;
+
+    document.querySelectorAll('.wizard-dot').forEach(function(dot) {
+      var num = parseInt(dot.getAttribute('data-dot'), 10);
+      if (num === currentWizardStep) {
+        dot.className = 'wizard-dot text-cyan-400 cursor-pointer bg-transparent border-0 truncate';
+      } else if (num < currentWizardStep) {
+        dot.className = 'wizard-dot text-emerald-400 cursor-pointer bg-transparent border-0 truncate';
+      } else {
+        dot.className = 'wizard-dot text-slate-500 cursor-pointer bg-transparent border-0 truncate';
+      }
+    });
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function validateCurrentStep() {
+    if (currentWizardStep === 2) {
+      var nameInput = document.getElementById('onboarding_company_name');
+      var errEl = document.getElementById('step2-name-error');
+      if (nameInput && nameInput.value.trim().length < 2) {
+        if (errEl) errEl.classList.remove('hidden');
+        nameInput.focus();
+        return false;
+      }
+      if (errEl) errEl.classList.add('hidden');
+    }
+    return true;
+  }
+
+  function nextWizardStep() {
+    if (!validateCurrentStep()) return;
+    if (currentWizardStep < totalWizardSteps) {
+      currentWizardStep += 1;
+      renderWizardStep();
+    }
+  }
+
+  function prevWizardStep() {
+    if (currentWizardStep > 1) {
+      currentWizardStep -= 1;
+      renderWizardStep();
+    }
+  }
+
+  function goToWizardStep(step) {
+    if (step > currentWizardStep && !validateCurrentStep()) return;
+    currentWizardStep = Math.max(1, Math.min(totalWizardSteps, step));
+    renderWizardStep();
+  }
+
+  function selectBusinessType(key, btn) {
+    var input = document.getElementById('onboarding_business_type');
+    if (input) input.value = key;
+    document.querySelectorAll('[data-bt-key]').forEach(function(el) {
+      el.classList.remove('is-selected');
+    });
+    if (btn) btn.classList.add('is-selected');
+  }
+
+  function selectOnboardingPlan(key, btn) {
+    var input = document.getElementById('onboarding_plan_tier');
+    if (input) input.value = key;
+    document.querySelectorAll('[data-plan-key]').forEach(function(el) {
+      el.classList.remove('is-selected');
+    });
+    if (btn) btn.classList.add('is-selected');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var form = document.getElementById('onboarding-wizard-form');
+    if (form) {
+      form.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && e.target && e.target.tagName === 'INPUT' && e.target.type !== 'submit') {
+          e.preventDefault();
+          if (currentWizardStep < totalWizardSteps) {
+            nextWizardStep();
+          }
+        }
+      });
+    }
+  });
+</script>

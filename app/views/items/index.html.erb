@@ -6,7 +6,7 @@
       <h1 style="color: #0f172a; margin: 0; font-size: 2.2em; font-weight: 800;">📦 Inventario</h1>
       <p style="color: #64748b; margin: 5px 0 0 0; font-size: 1.1em;">Control de stock y estados de mantenimiento.</p>
     </div>
-    <%= link_to new_item_path, style: "text-decoration: none;" do %>
+    <%= link_to new_item_path, data: { tour: "items-new-btn" }, style: "text-decoration: none;" do %>
       <div style="background: #2563eb; color: white; padding: 12px 24px; border-radius: 12px; font-weight: bold; display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);">
         <span style="font-size: 1.2em;">+</span> Nuevo Equipo
       </div>
@@ -18,7 +18,7 @@
     has_active_item_filters = params[:query].present? || params[:category].present? || params[:status].present?
   %>
 
-  <details style="background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 35px; overflow: hidden;" <%= 'open' if has_active_item_filters %>>
+  <details data-tour="items-filters" style="background: #ffffff; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.03); margin-bottom: 35px; overflow: hidden;" <%= 'open' if has_active_item_filters %>>
     <summary style="cursor: pointer; padding: 14px 24px; font-weight: 700; font-size: 0.95em; color: #0f172a; display: flex; justify-content: space-between; align-items: center; user-select: none; background: #f8fafc;">
       <div style="display: flex; align-items: center; gap: 10px;">
         <span style="font-size: 1.1em;">🔍</span>
@@ -86,7 +86,7 @@
 
   <%# --- CREAR NUEVA CATEGORÍA Y SUB-CATEGORÍA (Líderes) --- %>
   <% if current_user.leader? %>
-    <div style="background: #ffffff; padding: 20px 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
+    <div data-tour="items-categories" style="background: #ffffff; padding: 20px 30px; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px rgba(0,0,0,0.02); margin-bottom: 30px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px;">
       
       <%# 1. Crear Categoría Principal %>
       <div style="display: flex; flex-direction: column; justify-content: space-between; border-right: 1px solid #f1f5f9; padding-right: 15px;">

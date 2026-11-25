@@ -146,6 +146,10 @@ class SubscriptionsController < ApplicationController
       notes: params[:notes]
     )
 
+    if params[:receipt_image].present?
+      @payment.receipt_image.attach(params[:receipt_image])
+    end
+
     if @payment.save
       redirect_to subscriptions_path, notice: "🎉 ¡Pago reportado con éxito! Referencia ##{@payment.reference_number}. Tu suscripción será verificada y activada en breve."
     else

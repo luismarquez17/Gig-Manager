@@ -1,5 +1,5 @@
 <%# --- ESTADO POR TRABAJADOR --- %>
-<div class="custom-card" style="margin-bottom: 20px;">
+<div data-tour="payroll-balances" class="custom-card" style="margin-bottom: 20px;">
   <h3 style="margin-top: 0;"><%= venue_mode? ? 'Estado por personal / staff' : 'Estado por trabajador' %></h3>
   <div style="display: grid; gap: 10px;">
     <% @worker_metrics.each_with_index do |metric, idx| %>

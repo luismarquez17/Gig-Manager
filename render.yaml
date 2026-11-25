@@ -31,3 +31,8 @@ services:
       # Clave para GigAI Copilot (Google Gemini) - configurar en el panel de Render
       - key: GEMINI_API_KEY
         sync: false
+      # Credenciales de Google OAuth2 (Inicio de sesión con Google) - configurar en el panel de Render
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

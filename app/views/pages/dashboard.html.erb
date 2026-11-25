@@ -150,7 +150,7 @@
     <% end %>
 
     <%# --- 1. TARJETAS DE ESTADÍSTICAS (Métricas rápidas) --- %>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px;">
+    <div data-tour="dashboard-metrics" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 40px;">
       <%# Card Inventario %>
       <% if module_enabled?(:inventory) %>
         <div style="background: var(--bg-card, white); padding: 20px; border-radius: var(--radius-card, 20px); border: 1px solid var(--border-color, #e2e8f0); box-shadow: var(--shadow-card);">
@@ -206,7 +206,7 @@
 
     <%# --- WIDGET FLUJO DE CAJA Y FINANZAS --- %>
     <% if module_enabled?(:finances) %>
-      <div style="margin-bottom: 40px;">
+      <div data-tour="dashboard-cashflow" style="margin-bottom: 40px;">
         <div style="display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: 10px; margin-bottom: 18px;">
           <h3 style="color: var(--text-heading); font-size: 1.1em; font-weight: 700; margin: 0; display: flex; align-items: center; gap: 10px;">
             <span style="color: var(--color-primary, #2563eb);">🏦</span> Flujo de Caja Real (<%= company_term(:band_fund, 'Fondo de la Banda') %>)
@@ -287,7 +287,7 @@
     <% end %>
 
     <%# --- 2. ACCIONES RÁPIDAS (Botones adaptativos a los módulos) --- %>
-    <div style="margin-bottom: 45px;">
+    <div data-tour="dashboard-quick-actions" style="margin-bottom: 45px;">
       <h3 style="color: var(--text-heading); font-size: 1.1em; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
         <span style="color: var(--color-primary, #2563eb);">⚡</span> Acceso Directo
       </h3>
@@ -451,7 +451,7 @@
     <% end %>
 
     <%# --- PRÓXIMOS EVENTOS --- %>
-    <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
+    <div data-tour="client-upcoming-gigs" style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 28px;">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
         <h3 style="margin: 0; font-size: 1.2em; color: var(--text-heading, #1e293b); display: flex; align-items: center; gap: 10px; font-weight: 800;">
           🗓️ <%= venue_mode? ? 'Tus Próximos Eventos' : 'Tus Próximos Eventos (Shows Confirmados)' %>
@@ -497,7 +497,7 @@
 
     <%# --- MÉTODOS DE PAGO DISPONIBLES --- %>
     <% if defined?(current_company) && current_company&.any_payment_method_enabled? %>
-      <div style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 30px;">
+      <div data-tour="client-payment-methods" style="background: var(--bg-card, white); border-radius: 24px; border: 1px solid var(--border-color, #e2e8f0); padding: 26px 30px; box-shadow: var(--shadow-card); margin-bottom: 30px;">
         <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--text-heading, #0f172a); margin: 0 0 6px 0; display: flex; align-items: center; gap: 8px;">
           <span>💳</span> Cuentas Oficiales para Transferencias & Anticipos
         </h3>

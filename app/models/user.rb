@@ -2,7 +2,8 @@ class User < ApplicationRecord
   # Include default devise modules. Others available are:
   # :confirmable, :lockable, :timeoutable, :trackable and :omniauthable
   devise :database_authenticatable, :registerable,
-         :recoverable, :rememberable, :validatable
+         :recoverable, :rememberable, :validatable,
+         :omniauthable, omniauth_providers: [:google_oauth2]
 
   enum role: { client: 0, staff: 1, leader: 2, musician: 3, superadmin: 4 }
 
@@ -40,7 +41,7 @@ class User < ApplicationRecord
   belongs_to :company, optional: true
   belongs_to :client, optional: true
 
-  attr_accessor :company_name_input, :selected_modules_input
+  attr_accessor :company_name_input, :selected_modules_input, :selected_plan_input
 
   before_validation :assign_default_company, on: :create
 
@@ -61,6 +62,41 @@ class User < ApplicationRecord
   def unread_notifications_count
     return 0 unless company_id.present?
     app_notifications.unread_by(self).count
+  end
+
+  def normalized_tour_state
+    raw = (has_attribute?(:tour_state) && tour_state.is_a?(Hash)) ? tour_state : {}
+    {
+      "completed_areas" => Array(raw["completed_areas"]).map(&:to_s).reject(&:blank?).uniq,
+      "dismissed_areas" => Array(raw["dismissed_areas"]).map(&:to_s).reject(&:blank?).uniq,
+      "disabled" => raw["disabled"] == true
+    }
+  end
+
+  def record_tour_action!(action_type, area_key = nil)
+    state = normalized_tour_state
+    clean_area = area_key.to_s.strip
+
+    case action_type.to_s
+    when "complete_area"
+      if clean_area.present?
+        state["completed_areas"] = (state["completed_areas"] + [clean_area]).uniq
+        state["dismissed_areas"] = state["dismissed_areas"] - [clean_area]
+      end
+    when "dismiss_area"
+      if clean_area.present?
+        state["dismissed_areas"] = (state["dismissed_areas"] + [clean_area]).uniq
+      end
+    when "disable_all"
+      state["disabled"] = true
+    when "enable_all"
+      state["disabled"] = false
+    when "reset_all"
+      state = { "completed_areas" => [], "dismissed_areas" => [], "disabled" => false }
+    end
+
+    update_column(:tour_state, state) if has_attribute?(:tour_state)
+    state
   end
 
   after_create :associate_and_claim_gigs
@@ -104,6 +140,35 @@ class User < ApplicationRecord
     self.name = new_name.to_s.strip if new_name.present?
     self.is_eventual = false
     save!
+  end
+
+  def self.from_omniauth(auth, plan: nil, modules: nil)
+    return nil if auth.blank?
+
+    # 1. Buscar por provider y uid existente
+    user = find_by(provider: auth.provider, uid: auth.uid)
+    return user if user
+
+    # 2. Buscar por email (para vincular cuentas ya existentes)
+    auth_email = auth.info.email.to_s.downcase.strip
+    user = find_by("LOWER(TRIM(email)) = ?", auth_email)
+    if user
+      user.provider = auth.provider
+      user.uid = auth.uid
+      user.name = auth.info.name if user.name.blank? && auth.info.name.present?
+      user.save(validate: false)
+      return user
+    end
+
+    # 3. Crear nuevo usuario si no existe
+    user_name = auth.info.name.presence || auth_email.split('@').first.capitalize
+    where(provider: auth.provider, uid: auth.uid).first_or_create do |new_user|
+      new_user.email = auth_email
+      new_user.password = Devise.friendly_token[0, 20]
+      new_user.name = user_name
+      new_user.selected_plan_input = plan if plan.present?
+      new_user.selected_modules_input = modules if modules.present?
+    end
   end
 
   def self.create_eventual_worker!(company:, name:, role: 'staff', phone: nil, specialty: nil)
@@ -408,13 +473,18 @@ class User < ApplicationRecord
     # Garantiza aislamiento total: Si un usuario se registra de forma independiente,
     # se le crea su propia empresa única con 30 días de prueba gratuita y se le asigna como Líder.
     user_name = name.presence || email.split('@').first.capitalize
-    company_title = company_name_input.presence || "Agrupación #{user_name}"
+    company_title = company_name_input.presence || "Proyecto de #{user_name}"
+
+    raw_plan = selected_plan_input.to_s.strip
+    valid_plan = Company::VALID_PLAN_TIERS.include?(raw_plan) ? raw_plan : 'banda'
 
     initial_modules = if selected_modules_input.present?
       AppModule.build_modules_hash(selected_modules_input)
     else
-      AppModule.default_hash
+      AppModule.build_modules_hash(AppModule.modules_for_package(valid_plan))
     end
+
+    inferred_business_type = Company.business_type_for_plan(valid_plan)
 
     new_company = Company.create!(
       name: company_title,
@@ -423,8 +493,10 @@ class User < ApplicationRecord
       trial_started_at: Time.current,
       trial_ends_at: Company::DEFAULT_TRIAL_DAYS.days.from_now,
       subscription_status: 'trialing',
-      plan_tier: 'starter',
-      enabled_modules: initial_modules
+      plan_tier: valid_plan,
+      business_type: inferred_business_type,
+      enabled_modules: initial_modules,
+      onboarding_completed: false
     )
     self.company_id = new_company.id
     self.role = :leader if role.blank? || client?

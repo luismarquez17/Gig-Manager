@@ -47,7 +47,7 @@
   </div>
 
   <%# Botones de Acción Rápida Alineados %>
-  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+  <div data-tour="gig-header-actions" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
     <%= link_to stage_mode_gig_path(@gig), target: "_blank", style: "background: linear-gradient(135deg, #090d16 0%, #1e1b4b 100%); color: #a5b4fc; border: 1px solid #4f46e5; padding: 9px 16px; border-radius: 12px; font-weight: 800; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2); transition: transform 0.15s;" do %>
       <span>⚡</span> Modo Escenario
     <% end %>

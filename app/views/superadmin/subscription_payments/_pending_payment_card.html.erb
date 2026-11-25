@@ -1,0 +1,123 @@
+<%
+  has_voucher = payment.voucher_attached?
+  voucher_src = has_voucher ? payment.voucher_url_or_data : ""
+  company_name = payment.company&.name || "Empresa"
+  leader_name = payment.user&.display_name || "Usuario"
+  leader_email = payment.user&.email || "N/A"
+  leader_phone = payment.user&.phone_number.presence || payment.company&.whatsapp_number.presence || "Sin teléfono"
+  plan_label = payment.plan_tier.to_s == 'personalizado' ? 'Personalizado' : payment.plan_tier.to_s.capitalize
+  approve_url = Rails.application.routes.url_helpers.approve_superadmin_subscription_payment_path(payment)
+  reject_url = Rails.application.routes.url_helpers.reject_superadmin_subscription_payment_path(payment)
+%>
+
+<div id="superadmin-pending-payment-<%= payment.id %>"
+     class="sp-mobile-card"
+     style="padding: 22px; border-radius: 20px; background: white; border: 2px solid #3b82f6; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 18px; box-shadow: 0 8px 25px rgba(59,130,246,0.1);">
+
+  <div style="display: flex; align-items: flex-start; gap: 16px; flex: 1; min-width: 260px;">
+    <% if has_voucher %>
+      <button type="button"
+              onclick="openPaymentInspectorModal(this)"
+              data-payment-id="<%= payment.id %>"
+              data-company="<%= ERB::Util.html_escape(company_name) %>"
+              data-leader="<%= ERB::Util.html_escape(leader_name) %>"
+              data-email="<%= ERB::Util.html_escape(leader_email) %>"
+              data-phone="<%= ERB::Util.html_escape(leader_phone) %>"
+              data-plan="<%= ERB::Util.html_escape(plan_label) %>"
+              data-method="<%= ERB::Util.html_escape(payment.payment_method_label) %>"
+              data-reference="<%= ERB::Util.html_escape(payment.reference_number) %>"
+              data-amount="$<%= '%.2f' % payment.amount.to_f %> USD"
+              data-notes="<%= ERB::Util.html_escape(payment.notes.to_s) %>"
+              data-time="<%= payment.created_at.strftime('%d/%m/%Y %I:%M %p') %>"
+              data-voucher="<%= voucher_src %>"
+              data-approve-url="<%= approve_url %>"
+              data-reject-url="<%= reject_url %>"
+              title="Clic para ampliar foto del comprobante"
+              style="padding: 0; width: 78px; height: 78px; border-radius: 12px; overflow: hidden; border: 2px solid #3b82f6; flex-shrink: 0; position: relative; cursor: pointer; background: #f8fafc; box-shadow: 0 4px 10px rgba(59,130,246,0.18);">
+        <img src="<%= voucher_src %>" alt="Comprobante de pago" style="width: 100%; height: 100%; object-fit: cover; display: block;">
+        <span style="position: absolute; bottom: 0; left: 0; right: 0; background: rgba(15,23,42,0.78); color: white; font-size: 10px; font-weight: 800; text-align: center; padding: 2px 0;">VER FOTO 🔍</span>
+      </button>
+    <% else %>
+      <div style="width: 78px; height: 78px; border-radius: 12px; background: #fffbeb; border: 2px dashed #f59e0b; display: flex; flex-direction: column; align-items: center; justify-content: center; flex-shrink: 0; color: #b45309; font-size: 0.7rem; font-weight: 700; text-align: center; padding: 4px; box-sizing: border-box;">
+        <span style="font-size: 1.5rem; line-height: 1;">🧾</span>
+        <span style="margin-top: 3px;">Sin foto</span>
+      </div>
+    <% end %>
+
+    <div style="display: flex; flex-direction: column; gap: 5px; min-width: 0;">
+      <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+        <span style="padding: 3px 10px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
+          PENDIENTE
+        </span>
+        <span style="font-size: 0.84rem; font-weight: 800; color: #4338ca;">Plan <%= plan_label %></span>
+        <% if has_voucher %>
+          <span style="padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;">📸 Con captura</span>
+        <% end %>
+        <span style="font-size: 0.78rem; color: #94a3b8;">hace <%= ActionController::Base.helpers.time_ago_in_words(payment.created_at) %></span>
+      </div>
+
+      <h3 style="font-size: 1.2rem; font-weight: 800; color: #0f172a; margin: 2px 0;"><%= company_name %></h3>
+
+      <div style="font-size: 0.86rem; color: #334155; display: flex; flex-wrap: wrap; gap: 12px;">
+        <span>👤 <strong><%= leader_name %></strong> (<%= leader_email %>)</span>
+        <span>📱 <strong><%= leader_phone %></strong></span>
+        <span>💳 <strong><%= payment.payment_method_label %></strong></span>
+        <span>🔢 Ref #: <strong style="color: #0284c7; font-family: monospace; font-size: 0.96rem;"><%= payment.reference_number %></strong></span>
+        <span>💰 <strong style="color: #059669; font-weight: 800;">$<%= '%.2f' % payment.amount.to_f %> USD</strong></span>
+      </div>
+
+      <% if payment.notes.present? %>
+        <p style="font-size: 0.8rem; color: #64748b; font-style: italic; background: #f8fafc; padding: 6px 12px; border-radius: 8px; margin: 4px 0 0 0; border: 1px solid #f1f5f9;">"<%= payment.notes %>"</p>
+      <% end %>
+    </div>
+  </div>
+
+  <div class="sp-mobile-actions" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+    <button type="button"
+            onclick="openPaymentInspectorModal(this)"
+            data-payment-id="<%= payment.id %>"
+            data-company="<%= ERB::Util.html_escape(company_name) %>"
+            data-leader="<%= ERB::Util.html_escape(leader_name) %>"
+            data-email="<%= ERB::Util.html_escape(leader_email) %>"
+            data-phone="<%= ERB::Util.html_escape(leader_phone) %>"
+            data-plan="<%= ERB::Util.html_escape(plan_label) %>"
+            data-method="<%= ERB::Util.html_escape(payment.payment_method_label) %>"
+            data-reference="<%= ERB::Util.html_escape(payment.reference_number) %>"
+            data-amount="$<%= '%.2f' % payment.amount.to_f %> USD"
+            data-notes="<%= ERB::Util.html_escape(payment.notes.to_s) %>"
+            data-time="<%= payment.created_at.strftime('%d/%m/%Y %I:%M %p') %>"
+            data-voucher="<%= voucher_src %>"
+            data-approve-url="<%= approve_url %>"
+            data-reject-url="<%= reject_url %>"
+            style="padding: 11px 16px; border-radius: 12px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; font-weight: 800; font-size: 0.86rem; cursor: pointer;">
+      🔍 Ver <%= has_voucher ? 'Foto y Datos' : 'Detalles' %>
+    </button>
+
+    <form action="<%= approve_url %>" method="post" data-turbo="false" data-confirm-message="¿Aprobar el pago de <%= ERB::Util.html_escape(company_name) %> ($<%= '%.2f' % payment.amount.to_f %> USD) y activar 30 días?" onsubmit="return syncAndConfirmPaymentForm(this);" style="margin: 0;">
+      <input type="hidden" name="authenticity_token" value="">
+      <button type="submit" style="padding: 11px 18px; border-radius: 12px; background: #059669; color: white; font-weight: 800; font-size: 0.88rem; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(5,150,105,0.28);">
+        ✅ Aprobar 30 Días
+      </button>
+    </form>
+
+    <button type="button"
+            onclick="openPaymentInspectorModal(this, true)"
+            data-payment-id="<%= payment.id %>"
+            data-company="<%= ERB::Util.html_escape(company_name) %>"
+            data-leader="<%= ERB::Util.html_escape(leader_name) %>"
+            data-email="<%= ERB::Util.html_escape(leader_email) %>"
+            data-phone="<%= ERB::Util.html_escape(leader_phone) %>"
+            data-plan="<%= ERB::Util.html_escape(plan_label) %>"
+            data-method="<%= ERB::Util.html_escape(payment.payment_method_label) %>"
+            data-reference="<%= ERB::Util.html_escape(payment.reference_number) %>"
+            data-amount="$<%= '%.2f' % payment.amount.to_f %> USD"
+            data-notes="<%= ERB::Util.html_escape(payment.notes.to_s) %>"
+            data-time="<%= payment.created_at.strftime('%d/%m/%Y %I:%M %p') %>"
+            data-voucher="<%= voucher_src %>"
+            data-approve-url="<%= approve_url %>"
+            data-reject-url="<%= reject_url %>"
+            style="padding: 11px 14px; border-radius: 12px; background: #fff1f2; color: #be123c; border: 1px solid #fca5a5; font-weight: 700; font-size: 0.86rem; cursor: pointer;">
+      ✕ Rechazar
+    </button>
+  </div>
+</div>

@@ -2,12 +2,12 @@
   
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
     <h1 style="color: #2c3e50; margin: 0;"><%= company_term(:gigs_history, (venue_mode? ? '🏛️ Historial de Eventos' : '🎸 Historial de Toques')) %></h1>
-    <%= link_to company_term(:new_gig_btn, (venue_mode? ? '➕ Registrar Nuevo Evento' : '➕ Registrar Nuevo Toque')), new_gig_path, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
+    <%= link_to company_term(:new_gig_btn, (venue_mode? ? '➕ Registrar Nuevo Evento' : '➕ Registrar Nuevo Toque')), new_gig_path, data: { tour: "gigs-new-btn" }, style: "background: #28a745; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 6px rgba(40, 167, 69, 0.2);" %>
   </div>
 
   <%# --- AVISO / BANNER DEL SIGUIENTE SHOW --- %>
   <% if @next_gig.present? %>
-    <div style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; color: white; box-shadow: 0 8px 20px rgba(67, 56, 202, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border: 1px solid rgba(255, 255, 255, 0.12);">
+    <div data-tour="gigs-next-banner" style="background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); border-radius: 14px; padding: 18px 22px; margin-bottom: 22px; color: white; box-shadow: 0 8px 20px rgba(67, 56, 202, 0.2); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; border: 1px solid rgba(255, 255, 255, 0.12);">
       <div style="display: flex; align-items: center; gap: 16px; flex-wrap: wrap;">
         <div style="width: 46px; height: 46px; border-radius: 12px; background: rgba(255, 255, 255, 0.16); display: flex; align-items: center; justify-content: center; font-size: 1.45em; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);">
           🎯
@@ -74,7 +74,7 @@
   <% end %>
 
   <%# --- ACCESOS RÁPIDOS DE FILTRADO (PILLS) --- %>
-  <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
+  <div data-tour="gigs-quick-filters" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 20px;">
     <span style="font-size: 0.82em; font-weight: 700; color: #64748b; margin-right: 4px;">Filtro rápido:</span>
     <%= link_to gigs_path(request.query_parameters.except("date_filter")), 
         style: "text-decoration: none; padding: 6px 14px; border-radius: 99px; font-size: 0.82em; font-weight: 700; transition: all 0.15s; #{params[:date_filter].blank? ? 'background: #0f172a; color: white;' : 'background: #f8fafc; color: #475569; border: 1px solid #e2e8f0;'}" do %>

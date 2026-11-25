@@ -27,6 +27,9 @@
       </div>
     </div>
     <div style="display: flex; align-items: center; gap: 8px; flex-shrink: 0;">
+      <button type="button" id="mobile-tour-trigger-btn" onclick="if (window.GigTour) window.GigTour.startCurrentAreaTour(true)" style="background: rgba(56,189,248,0.14); border: 1px solid rgba(56,189,248,0.3); color: #7dd3fc; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.05rem;" aria-label="Ver Guía de esta Pantalla" title="Ver Guía de esta Pantalla">
+        💡
+      </button>
       <button type="button" onclick="openThemeCustomizer()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.12); color: white; width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.05rem;" aria-label="Personalizar Tema" title="Personalizar Tema">
         🎨
       </button>
@@ -50,4 +53,7 @@
   <%= turbo_stream_from current_company, "notifications_musicians" if current_user.musician? %>
   <%= turbo_stream_from current_company, "notifications_staffs" if current_user.staff? %>
   <%= turbo_stream_from current_company, "notifications_user_#{current_user.id}" %>
+<% end %>
+<% if user_signed_in? && current_user.superadmin? %>
+  <%= turbo_stream_from "superadmin_notifications" %>
 <% end %>

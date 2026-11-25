@@ -248,10 +248,33 @@ class Company < ApplicationRecord
     bank_transfer_info["enabled"].to_s == "true" || bank_transfer_info["enabled"] == true
   end
 
+  def onboarding_pending?
+    has_attribute?(:onboarding_completed) && !onboarding_completed?
+  end
+
+  def unique_slug_for(source_name)
+    base_slug = source_name.to_s.parameterize.presence || SecureRandom.hex(4)
+    candidate = base_slug
+    counter = 1
+    while Company.where.not(id: id).exists?(slug: candidate)
+      candidate = "#{base_slug}-#{SecureRandom.hex(2)}"
+      counter += 1
+      break if counter > 6
+    end
+    candidate
+  end
+
+  def refresh_slug_from_name!(new_name = name)
+    return if new_name.blank?
+    update!(slug: unique_slug_for(new_name))
+  end
+
   private
 
   def generate_slug_and_token
-    self.slug ||= name.to_s.parameterize.presence || SecureRandom.hex(4)
+    if self.slug.blank?
+      self.slug = unique_slug_for(name)
+    end
     self.invitation_token ||= SecureRandom.hex(12)
   end
 end

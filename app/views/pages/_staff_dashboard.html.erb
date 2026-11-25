@@ -7,7 +7,7 @@
   <div style="display: grid; grid-template-columns: 1fr 360px; gap: 18px;">
     <div>
       <%# Sección: Eventos Asignados (Lista) %>
-      <section style="margin-bottom: 18px;">
+      <section data-tour="staff-assigned-gigs" style="margin-bottom: 18px;">
         <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Eventos asignados</h2>
 
         <% if @proximos_gigs.present? %>
@@ -37,7 +37,7 @@
       </section>
 
       <%# Sección: Pendientes de carga %>
-      <section style="margin-bottom: 18px;">
+      <section data-tour="staff-pending-load" style="margin-bottom: 18px;">
         <h2 style="margin: 0 0 10px 0; font-size: 1.1em; color: #0f172a; font-weight: 800;">Pendientes de carga</h2>
         <% if @pending_gig_items.present? %>
           <div style="background: white; padding: 12px; border-radius: 10px; border: 1px solid #eef2ff;">

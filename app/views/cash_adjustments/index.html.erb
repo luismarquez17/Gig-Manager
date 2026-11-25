@@ -12,7 +12,7 @@
         </p>
       </div>
 
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div data-tour="cash-actions" style="display: flex; gap: 10px; flex-wrap: wrap;">
         <%= link_to new_cash_adjustment_path(adjustment_type: :deposit), style: "background: #10b981; color: white; padding: 10px 18px; border-radius: 12px; font-weight: 800; text-decoration: none; font-size: 0.9em; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);" do %>
           <span>➕</span> Ingresar Dinero a Caja
         <% end %>
@@ -25,7 +25,7 @@
   </header>
 
   <%# --- ASISTENTE GIGAI: FONDO GENERAL ÚNICO (GOOGLE GEMINI) --- %>
-  <div style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(6, 182, 212, 0.08)); border: 1.5px solid #818cf8; border-radius: 18px; padding: 18px 22px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+  <div data-tour="cash-copilot" style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.08), rgba(6, 182, 212, 0.08)); border: 1.5px solid #818cf8; border-radius: 18px; padding: 18px 22px; margin-bottom: 25px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
     <div style="display: flex; align-items: center; gap: 14px; max-width: 780px;">
       <div style="background: #4f46e5; color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.3rem; flex-shrink: 0; box-shadow: 0 4px 10px rgba(79, 70, 229, 0.3);">
         ✨
@@ -51,7 +51,7 @@
   </div>
 
   <%# --- GRAN TARJETA DE SALDO TOTAL EN CAJA --- %>
-  <div style="background: <%= @current_cash_balance >= 0 ? 'linear-gradient(135deg, #064e3b 0%, #047857 100%)' : 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%)' %>; color: white; border-radius: 24px; padding: 32px 36px; margin-bottom: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.12);">
+  <div data-tour="cash-balance-card" style="background: <%= @current_cash_balance >= 0 ? 'linear-gradient(135deg, #064e3b 0%, #047857 100%)' : 'linear-gradient(135deg, #7f1d1d 0%, #b91c1c 100%)' %>; color: white; border-radius: 24px; padding: 32px 36px; margin-bottom: 35px; box-shadow: 0 10px 25px rgba(0,0,0,0.12);">
     <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 20px;">
       <div>
         <span style="font-size: 0.8em; text-transform: uppercase; font-weight: 800; letter-spacing: 1px; opacity: 0.85; display: block; margin-bottom: 6px;">

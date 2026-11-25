@@ -59,4 +59,38 @@ class Base64ImageEncoder
     input_file&.close!
     output_file&.unlink if output_file && File.exist?(output_file.path)
   end
+
+  def self.encode_from_attachment(change, attachment = nil, max_dimension: 1000, quality: 75)
+    data = nil
+    content_type = nil
+
+    if change.present?
+      attachable = change.attachable
+      if attachable.is_a?(Hash) && attachable[:io].respond_to?(:read)
+        io = attachable[:io]
+        data = io.read
+        io.rewind if io.respond_to?(:rewind)
+        content_type = attachable[:content_type]
+      elsif attachable.respond_to?(:read)
+        data = attachable.read
+        attachable.rewind if attachable.respond_to?(:rewind)
+        content_type = attachable.content_type if attachable.respond_to?(:content_type)
+      elsif change.blob.present?
+        data = (change.blob.download rescue nil)
+        content_type = change.blob.content_type
+      end
+    elsif attachment&.attached? && attachment.blob.present?
+      if attachment.blob.service.exist?(attachment.blob.key)
+        data = (attachment.blob.download rescue nil)
+        content_type = attachment.blob.content_type
+      end
+    end
+
+    return nil if data.blank?
+
+    encode(data, content_type: content_type, max_dimension: max_dimension, quality: quality)
+  rescue StandardError => e
+    Rails.logger.warn("[Base64ImageEncoder.encode_from_attachment] #{e.message}") if defined?(Rails)
+    nil
+  end
 end

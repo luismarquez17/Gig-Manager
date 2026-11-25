@@ -4,6 +4,7 @@ class ApplicationController < ActionController::Base
   before_action :authenticate_user!
   before_action :set_current_tenant
   before_action :check_company_subscription!
+  before_action :ensure_company_onboarding!
 
   helper_method :current_company, :superadmin?, :module_enabled?
 
@@ -35,7 +36,11 @@ class ApplicationController < ActionController::Base
   end
 
   def after_sign_in_path_for(resource_or_scope)
-    authenticated_root_path
+    if resource_or_scope.is_a?(User) && resource_or_scope.leader? && !resource_or_scope.superadmin? && resource_or_scope.company&.onboarding_pending?
+      welcome_onboarding_path
+    else
+      authenticated_root_path
+    end
   end
 
   def set_request_context
@@ -66,7 +71,7 @@ class ApplicationController < ActionController::Base
     return unless user_signed_in?
     return if current_user.superadmin?
     return if controller_name == 'pages' && action_name == 'suspended'
-    return if controller_name == 'subscriptions' || controller_name == 'stripe_webhooks'
+    return if controller_name == 'subscriptions' || controller_name == 'stripe_webhooks' || controller_name == 'company_onboarding'
     return if devise_controller?
 
     # Solo los líderes de la empresa son evaluados por la suscripción SaaS.
@@ -87,6 +92,20 @@ class ApplicationController < ActionController::Base
           redirect_to subscriptions_path, alert: "Tu período de prueba de 30 días ha finalizado. Activa tu suscripción para continuar."
         end
       end
+    end
+  end
+
+  def ensure_company_onboarding!
+    return unless user_signed_in?
+    return if current_user.superadmin?
+    return unless current_user.leader?
+    return if devise_controller?
+    return if controller_name.in?(%w[company_onboarding subscriptions stripe_webhooks])
+    return if controller_name == 'pages' && action_name == 'suspended'
+    return if request.format.json? || request.xhr?
+
+    if current_company&.onboarding_pending?
+      redirect_to welcome_onboarding_path
     end
   end
 

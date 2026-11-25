@@ -5,10 +5,10 @@
   <%= render 'gigs/partials/client_portal_and_vouchers' %>
   <%= render 'gigs/partials/upsells_section' %>
   <%= render 'gigs/partials/profit_summary' %>
-  <%= render 'gigs/partials/staff_assignments' %>
+  <div data-tour="gig-staff-area"><%= render 'gigs/partials/staff_assignments' %></div>
   <%= render 'gigs/partials/repertoire_section' %>
-  <%= render 'gigs/partials/timeline_section' %>
-  <%= render 'gigs/partials/inventory_checklist' %>
+  <div data-tour="gig-timeline-area"><%= render 'gigs/partials/timeline_section' %></div>
+  <div data-tour="gig-inventory-area"><%= render 'gigs/partials/inventory_checklist' %></div>
 </div>
 
 <%= render 'gigs/partials/modals' %>

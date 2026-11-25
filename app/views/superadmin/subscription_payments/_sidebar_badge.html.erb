@@ -1,0 +1,4 @@
+<% count = local_assigns[:count].to_i %>
+<span id="superadmin-pending-payments-badge" data-count="<%= count %>" style="<%= count > 0 ? '' : 'display: none;' %> background: #ec4899; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+  <%= count %>
+</span>

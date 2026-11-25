@@ -11,7 +11,7 @@
       </p>
     </div>
 
-    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+    <div data-tour="quotes-quick-btn" style="display: flex; gap: 10px; flex-wrap: wrap;">
       <%= form_with(url: client_quotes_path, method: :post, local: true) do |f| %>
         <input type="hidden" name="client_quote[currency]" value="<%= current_company.currency.presence || 'USD' %>">
         <input type="hidden" name="client_quote[amount]" value="0.0">
@@ -28,7 +28,7 @@
 
   <%# --- ACCESO RÁPIDO CON PRESUPUESTOS BASE --- %>
   <% if @preset_budgets.present? && @preset_budgets.any? %>
-    <div style="margin-bottom: 24px; background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 20px;">
+    <div data-tour="quotes-presets" style="margin-bottom: 24px; background: var(--bg-card-subtle); border: 1px solid var(--border-color); border-radius: 16px; padding: 16px 20px;">
       <div style="font-size: 0.82rem; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 10px; display: flex; align-items: center; gap: 6px;">
         <span>🎯</span> Enlace rápido con Presupuesto Base preseleccionado:
       </div>

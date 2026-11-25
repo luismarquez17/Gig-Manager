@@ -206,6 +206,79 @@ module Companies
         { key: "humo_chispas", title: "Chispas Frías & Humo Bajo", emoji: "🎆", price: 70.00, description: "Efectos especiales de chispas frías (sin humo tóxico) para el vals, brindis o salida de pasarela." },
         { key: "staff_modelos", title: "Staff de Modelos de Protocolo", emoji: "👠", price: 80.00, description: "2 Modelos profesionales de la academia para bienvenida, entrega de reconocimientos y atención protocolar." }
       ].freeze
+
+      PLAN_TO_BUSINESS_TYPE = {
+        'banda' => 'music_band',
+        'productora' => 'production_company',
+        'salon' => 'venue_academy',
+        'negocio' => 'general_business',
+        'personalizado' => 'music_band',
+        'full' => 'music_band'
+      }.freeze
+
+      DEFAULT_BAND_COMBOS = [
+        {
+          title: "Formato Acústico / Cóctel",
+          badge_text: "Íntimo",
+          featured: false,
+          price: 350.00,
+          description: "Presentación musical en formato reducido (2 a 3 músicos) ideal para recepciones, cenas, brindis y eventos íntimos de hasta 2 horas."
+        },
+        {
+          title: "Show Banda Completa (Evento Social)",
+          badge_text: "Más Solicitado",
+          featured: true,
+          price: 750.00,
+          description: "Agrupación completa en vivo con repertorio bailable variado, animación de momentos clave (entrada, vals, hora loca) y sonido básico."
+        },
+        {
+          title: "Gala VIP / Gran Orquesta + Producción",
+          badge_text: "Premium",
+          featured: false,
+          price: 1200.00,
+          description: "Formato extendido con sección completa de músicos, sonido de alta potencia, iluminación escénica y cobertura musical de toda la noche."
+        }
+      ].freeze
+
+      DEFAULT_PRODUCTION_COMBOS = [
+        {
+          title: "Paquete Audio & DJ Básico",
+          badge_text: "Ideal Fiestas",
+          featured: false,
+          price: 380.00,
+          description: "Sistema de sonido profesional (2 cabinas + subwoofer), consola, micrófonos inalámbricos, luces rítmicas y técnico operador."
+        },
+        {
+          title: "Producción Pro: Sonido, Luces & Tarima",
+          badge_text: "Más Solicitado",
+          featured: true,
+          price: 850.00,
+          description: "Montaje completo con audio Line Array / Subwoofers, cabezas móviles DMX, estructura truss iluminada y staff técnico durante todo el evento."
+        }
+      ].freeze
+
+      DEFAULT_BUSINESS_COMBOS = [
+        {
+          title: "Servicio Estándar / Plan Base",
+          badge_text: "Inicial",
+          featured: false,
+          price: 150.00,
+          description: "Prestación de servicio profesional estándar con seguimiento directo desde el portal de cliente y comprobantes digitales."
+        },
+        {
+          title: "Paquete Integral / Corporativo",
+          badge_text: "Recomendado",
+          featured: true,
+          price: 450.00,
+          description: "Cobertura completa del proyecto con equipo asignado, cronograma de entregas y facturación/abonos en línea."
+        }
+      ].freeze
+    end
+
+    class_methods do
+      def business_type_for_plan(plan_tier)
+        PLAN_TO_BUSINESS_TYPE[plan_tier.to_s] || 'music_band'
+      end
     end
 
     def business_type_info
@@ -260,9 +333,27 @@ module Companies
       seed_venue_upsells!
     end
 
-    def seed_venue_combos!
+    def seed_starter_catalog!
       ActsAsTenant.with_tenant(self) do
-        DEFAULT_VENUE_COMBOS.each_with_index do |combo, idx|
+        case business_type.to_s
+        when 'venue_academy', 'party_hall'
+          seed_venue_combos! if preset_budgets.empty?
+          seed_venue_upsells! if standard_upsells.empty?
+        when 'production_company'
+          seed_preset_combos!(DEFAULT_PRODUCTION_COMBOS) if preset_budgets.empty?
+          StandardUpsell.seed_defaults! if standard_upsells.empty?
+        when 'general_business'
+          seed_preset_combos!(DEFAULT_BUSINESS_COMBOS) if preset_budgets.empty?
+        else
+          seed_preset_combos!(DEFAULT_BAND_COMBOS) if preset_budgets.empty?
+          StandardUpsell.seed_defaults! if standard_upsells.empty?
+        end
+      end
+    end
+
+    def seed_preset_combos!(combos_list)
+      ActsAsTenant.with_tenant(self) do
+        combos_list.each_with_index do |combo, idx|
           preset_budgets.find_or_create_by!(title: combo[:title]) do |pb|
             pb.description = combo[:description]
             pb.price = combo[:price]
@@ -274,6 +365,10 @@ module Companies
           end
         end
       end
+    end
+
+    def seed_venue_combos!
+      seed_preset_combos!(DEFAULT_VENUE_COMBOS)
     end
 
     def seed_venue_upsells!

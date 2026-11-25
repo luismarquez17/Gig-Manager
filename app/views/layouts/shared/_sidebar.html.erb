@@ -57,7 +57,7 @@
     </div>
 
     <%# Navegación %>
-    <nav class="sidebar-nav">
+    <nav class="sidebar-nav" data-tour="sidebar-nav">
       <% if current_user.superadmin? %>
         <div style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3); border-radius: 12px; padding: 10px; margin-bottom: 12px;">
           <div style="font-size: 0.75rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px;">👑 Superadmin</div>
@@ -72,14 +72,8 @@
           <% end %>
           <%= link_to superadmin_subscription_payments_path, class: "sidebar-link #{'active' if controller_name == 'subscription_payments' && controller_path.start_with?('superadmin')}" do %>
             <span class="icon">💳</span> <span>Pagos Manuales</span>
-            <% 
-              pending_sub_count = SubscriptionPayment.pending.count rescue 0
-            %>
-            <% if pending_sub_count > 0 %>
-              <span style="background: #ec4899; color: white; border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
-                <%= pending_sub_count %>
-              </span>
-            <% end %>
+            <% pending_sub_count = SubscriptionPayment.pending.count rescue 0 %>
+            <%= render partial: "superadmin/subscription_payments/sidebar_badge", locals: { count: pending_sub_count } %>
           <% end %>
         </div>
       <% end %>
@@ -89,9 +83,10 @@
       <% end %>
 
       <% if current_user.leader? || current_user.superadmin? %>
-        <button type="button" 
+        <button type="button"
+                data-tour="copilot-btn"
                 onclick="document.querySelector('[data-action*=\'ai-copilot#togglePanel\']')?.click()"
-                class="sidebar-link" 
+                class="sidebar-link"
                 style="background: linear-gradient(135deg, rgba(79, 70, 229, 0.18), rgba(6, 182, 212, 0.18)); border: 1px solid rgba(79, 70, 229, 0.4); color: #a5b4fc; width: 100%; text-align: left; cursor: pointer; margin-bottom: 6px; border-radius: 12px; display: flex; align-items: center;">
           <span class="icon">✨</span> 
           <span style="font-weight: 800;">Copiloto Gig IA</span>
@@ -229,7 +224,7 @@
 
         <% if current_company.present? %>
           <%# Botón Destacado: Añadir Funciones & Opciones %>
-          <div style="margin: 12px 10px 14px 10px; padding: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px;">
+          <div data-tour="sidebar-modules-card" style="margin: 12px 10px 14px 10px; padding: 12px; background: linear-gradient(135deg, rgba(99, 102, 241, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: 14px;">
             <div style="font-size: 0.72rem; font-weight: 800; color: #a5b4fc; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
               <span>⚡ Planes & Módulos</span>
               <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: 6px; background: rgba(99, 102, 241, 0.3); color: #e0e7ff;">
@@ -324,8 +319,12 @@
         <% end %>
       <% end %>
 
-      <%# --- BOTÓN PERSONALIZACIÓN DE TEMA --- %>
+      <%# --- BOTÓN GUÍA INTERACTIVA & PERSONALIZACIÓN DE TEMA --- %>
       <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--sidebar-border, rgba(255,255,255,0.08));">
+        <button type="button" id="sidebar-tour-trigger-btn" onclick="if (window.GigTour) window.GigTour.startCurrentAreaTour(true)" class="sidebar-link" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; color: #7dd3fc; display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
+          <span class="icon">💡</span> <span>Guía de esta pantalla</span>
+          <span id="sidebar-tour-new-dot" style="display: none; width: 8px; height: 8px; border-radius: 50%; background: #22d3ee; margin-left: auto; box-shadow: 0 0 8px #22d3ee;"></span>
+        </button>
         <button type="button" onclick="openThemeCustomizer()" class="sidebar-link" style="width: 100%; border: none; background: transparent; text-align: left; cursor: pointer; color: #cbd5e1; display: flex; align-items: center; gap: 12px; padding: 12px 16px;">
           <span class="icon">🎨</span> <span>Personalizar Tema</span>
           <% if is_gero_company %>

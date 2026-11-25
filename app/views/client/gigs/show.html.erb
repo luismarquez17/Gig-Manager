@@ -398,7 +398,7 @@
   </header>
 
   <%# === CUENTA REGRESIVA === %>
-  <section class="p-glass-card">
+  <section data-tour="client-gig-countdown" class="p-glass-card">
     <h2 class="p-countdown-title" id="pcd-label">Tiempo Restante para el <%= current_company.term_for(:event_singular, 'Evento') %></h2>
     <div class="p-countdown-container">
       <div class="p-countdown-box">
@@ -421,7 +421,7 @@
   </section>
 
   <%# === CONTRATO Y FIRMA DIGITAL === %>
-  <section class="p-glass-card">
+  <section data-tour="client-gig-contract" class="p-glass-card">
     <h2 class="p-section-title">
       <span class="picon">📜</span>
       Resumen de Contrato y Condiciones
@@ -507,7 +507,7 @@
 
   <%# === ESTADO DE CUENTA === %>
   <% if current_company.module_enabled?(:finances) %>
-    <section class="p-glass-card">
+    <section data-tour="client-gig-payments" class="p-glass-card">
       <h2 class="p-section-title">
         <span class="picon">💳</span>
         Estado de Cuenta y Pagos
@@ -811,7 +811,7 @@
   <%# --- SECCIÓN DE ADICIONALES RECOMENDADOS (UPSELL HORIZONTAL) --- %>
   <% available_upsells = @gig.available_upsells %>
   <% if current_company.module_enabled?(:clients_crm) && available_upsells.any? %>
-    <section class="p-glass-card" style="border-color: rgba(139, 92, 246, 0.25); box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.10); margin-bottom: 30px;">
+    <section data-tour="client-gig-upsells" class="p-glass-card" style="border-color: rgba(139, 92, 246, 0.25); box-shadow: 0 8px 32px 0 rgba(139, 92, 246, 0.10); margin-bottom: 30px;">
       <h2 class="p-section-title" style="color: #a78bfa; margin-bottom: 5px;">
         <span class="picon" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;">🚀</span>
         ¿Quieres potenciar tu evento?

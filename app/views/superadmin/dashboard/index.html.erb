@@ -19,6 +19,27 @@
     </div>
   </div>
 
+  <% if @pending_subscription_payments.present? && @pending_subscription_payments.any? %>
+    <% latest_sp = @pending_subscription_payments.first %>
+    <div style="background: linear-gradient(135deg, #fefce8 0%, #fef3c7 100%); border: 2px solid #f59e0b; border-radius: 20px; padding: 20px 24px; margin-bottom: 28px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; box-shadow: 0 8px 24px rgba(245,158,11,0.16);">
+      <div style="display: flex; align-items: center; gap: 14px;">
+        <div style="width: 48px; height: 48px; border-radius: 14px; background: #d97706; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; flex-shrink: 0; box-shadow: 0 4px 12px rgba(217,119,6,0.3);">💳</div>
+        <div>
+          <div style="font-size: 1.1rem; font-weight: 800; color: #78350f;">
+            Tienes <%= @pending_subscription_payments.count %> pago<%= 's' if @pending_subscription_payments.count > 1 %> reportado<%= 's' if @pending_subscription_payments.count > 1 %> esperando verificación
+          </div>
+          <div style="font-size: 0.86rem; color: #92400e; margin-top: 2px;">
+            Último: <strong><%= latest_sp.company&.name || 'Empresa' %></strong> ($<%= '%.2f' % latest_sp.amount.to_f %> USD vía <%= latest_sp.payment_method_label %>)
+            <%= latest_sp.voucher_attached? ? '• 📸 Con foto del comprobante' : '' %>
+          </div>
+        </div>
+      </div>
+      <%= link_to superadmin_subscription_payments_path, style: "display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 12px; background: #059669; color: white; font-weight: 800; font-size: 0.9rem; text-decoration: none; box-shadow: 0 4px 12px rgba(5,150,105,0.28); white-space: nowrap;" do %>
+        <span>🔍 Revisar Foto y Aprobar ➔</span>
+      <% end %>
+    </div>
+  <% end %>
+
   <%# Tarjetas de Métricas del Universo %>
   <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
     

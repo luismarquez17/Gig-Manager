@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_11_24_234000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
   enable_extension "unaccent"
@@ -122,11 +122,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
   create_table "clients", force: :cascade do |t|
     t.string "name"
     t.string "phone"
-    t.string "notes"
+    t.string "email"
     t.integer "priority"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.string "email"
+    t.string "notes"
     t.bigint "company_id"
     t.index ["company_id"], name: "index_clients_on_company_id"
   end
@@ -188,6 +188,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
     t.string "scheduled_plan_tier"
     t.jsonb "scheduled_modules"
     t.datetime "scheduled_change_at"
+    t.boolean "onboarding_completed", default: true, null: false
     t.index ["invitation_token"], name: "index_companies_on_invitation_token", unique: true
     t.index ["scheduled_change_at"], name: "index_companies_on_scheduled_change_at"
     t.index ["slug"], name: "index_companies_on_slug", unique: true
@@ -313,8 +314,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
   create_table "gig_items", force: :cascade do |t|
     t.bigint "gig_id", null: false
     t.bigint "item_id", null: false
-    t.integer "quantity", default: 1
-    t.boolean "checked", default: false
+    t.integer "quantity"
+    t.boolean "checked"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "loaded_quantity", default: 0, null: false
@@ -442,17 +443,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
     t.index ["gig_id"], name: "index_goal_savings_contributions_on_gig_id"
     t.index ["reinvestment_goal_id"], name: "index_goal_savings_contributions_on_reinvestment_goal_id"
     t.index ["user_id"], name: "index_goal_savings_contributions_on_user_id"
-  end
-
-  create_table "inquiries", force: :cascade do |t|
-    t.string "name"
-    t.string "email"
-    t.string "phone"
-    t.text "message"
-    t.bigint "preset_budget_id"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-    t.index ["preset_budget_id"], name: "index_inquiries_on_preset_budget_id"
   end
 
   create_table "inventory_items", force: :cascade do |t|
@@ -657,6 +647,11 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
     t.datetime "approved_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.text "receipt_image_base64"
+    t.string "rejection_reason"
+    t.datetime "rejected_at"
+    t.bigint "approved_by_id"
+    t.index ["approved_by_id"], name: "index_subscription_payments_on_approved_by_id"
     t.index ["company_id"], name: "index_subscription_payments_on_company_id"
     t.index ["status"], name: "index_subscription_payments_on_status"
     t.index ["user_id"], name: "index_subscription_payments_on_user_id"
@@ -681,10 +676,14 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
     t.integer "landing_position", default: 0
     t.boolean "is_eventual", default: false, null: false
     t.string "phone"
+    t.string "provider"
+    t.string "uid"
+    t.jsonb "tour_state", default: {}, null: false
     t.index ["client_id"], name: "index_users_on_client_id"
     t.index ["company_id"], name: "index_users_on_company_id"
     t.index ["email"], name: "index_users_on_email", unique: true
     t.index ["is_eventual"], name: "index_users_on_is_eventual"
+    t.index ["provider", "uid"], name: "index_users_on_provider_and_uid", unique: true
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
@@ -728,7 +727,6 @@ ActiveRecord::Schema[7.1].define(version: 2026_10_23_000000) do
   add_foreign_key "goal_savings_contributions", "gigs"
   add_foreign_key "goal_savings_contributions", "reinvestment_goals"
   add_foreign_key "goal_savings_contributions", "users"
-  add_foreign_key "inquiries", "preset_budgets"
   add_foreign_key "inventory_items", "items"
   add_foreign_key "investments", "companies"
   add_foreign_key "items", "companies"

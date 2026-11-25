@@ -95,7 +95,7 @@
   <% end %>
 
   <!-- 1. Banner de Estado de la Prueba / Suscripción -->
-  <div style="margin-bottom: 25px;">
+  <div data-tour="sub-status-banner" style="margin-bottom: 25px;">
     <% if @company.subscription_paid_and_active? %>
       <div class="sub-mobile-card sub-mobile-flex" style="padding: 20px 24px; border-radius: 18px; background: #ecfdf5; border: 1.5px solid #6ee7b7; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px;">
         <div style="display: flex; align-items: center; gap: 16px;">
@@ -163,7 +163,13 @@
             <span style="padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: #fef3c7; color: #92400e; border: 1px solid #fde68a;">
               PAGO PENDIENTE / VENCIDO
             </span>
-            <h3 style="font-size: 1.15rem; font-weight: 800; color: #78350f; margin: 3px 0 0 0;">Tu ciclo venció el <%= l(@company.trial_ends_at.to_date, format: :long) rescue @company.trial_ends_at.strftime('%d/%m/%Y') %></h3>
+            <h3 style="font-size: 1.15rem; font-weight: 800; color: #78350f; margin: 3px 0 0 0;">
+              <% if @company.trial_ends_at.present? %>
+                Tu ciclo venció el <%= l(@company.trial_ends_at.to_date, format: :long) rescue @company.trial_ends_at.strftime('%d/%m/%Y') %>
+              <% else %>
+                Activa tu suscripción mensual
+              <% end %>
+            </h3>
             <p style="color: #92400e; font-size: 0.86rem; margin: 2px 0 0 0;">Reporta tu pago mensual completo para reactivar el acceso completo para todos los integrantes.</p>
           </div>
         </div>
@@ -223,7 +229,14 @@
           <% @pending_payments.each do |p| %>
             <% pkg_info = AppModule.package_info(p.plan_tier) %>
             <div style="font-size: 0.82rem; color: #1e293b; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; background: white; padding: 10px 14px; border-radius: 10px; border: 1px solid #fef3c7;">
-              <span><%= pkg_info ? pkg_info[:icon] : '💎' %> <strong><%= pkg_info ? pkg_info[:name] : p.plan_tier.to_s.titleize %></strong> ($<%= '%.2f' % p.amount %> USD) via <%= p.payment_method_label %></span>
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <% if p.voucher_attached? %>
+                  <a href="<%= p.voucher_url_or_data %>" target="_blank" title="Ver captura adjunta" style="display: block; width: 38px; height: 38px; border-radius: 8px; overflow: hidden; border: 1.5px solid #f59e0b; flex-shrink: 0;">
+                    <img src="<%= p.voucher_url_or_data %>" alt="Captura" style="width: 100%; height: 100%; object-fit: cover;">
+                  </a>
+                <% end %>
+                <span><%= pkg_info ? pkg_info[:icon] : '💎' %> <strong><%= pkg_info ? pkg_info[:name] : p.plan_tier.to_s.titleize %></strong> ($<%= '%.2f' % p.amount %> USD) via <%= p.payment_method_label %></span>
+              </div>
               <span style="font-family: monospace; color: #0284c7; font-weight: 700;">Ref: #<%= p.reference_number %></span>
               <span style="padding: 3px 8px; border-radius: 6px; background: #fef3c7; color: #92400e; font-size: 0.72rem; font-weight: 800;">EN REVISIÓN</span>
             </div>
@@ -238,7 +251,7 @@
         <h3 style="font-size: 1.05rem; font-weight: 800; color: #0f172a; margin: 0;">Formulario de Reporte de Pago</h3>
         <span style="font-size: 0.75rem; color: #64748b;">💡 Se pre-rellena automáticamente desde la calculadora</span>
       </div>
-      <%= form_with url: report_payment_subscriptions_path, method: :post, local: true, style: "display: flex; flex-direction: column; gap: 15px;" do |f| %>
+      <%= form_with url: report_payment_subscriptions_path, method: :post, local: true, multipart: true, id: "subscription-report-payment-form", style: "display: flex; flex-direction: column; gap: 15px;" do |f| %>
         <div class="sub-mobile-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Plan / Paquete</label>
@@ -263,6 +276,28 @@
             <%= text_field_tag :reference_number, nil, required: true, placeholder: "Ej. 09841235", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
         </div>
+
+        <!-- Subida de Foto del Comprobante con Vista Previa -->
+        <div id="subReceiptDropzone" style="background: white; border: 2px dashed #93c5fd; border-radius: 14px; padding: 18px; text-align: center; transition: border-color 0.2s, background 0.2s;">
+          <label for="subReceiptInput" style="display: block; font-size: 0.88rem; font-weight: 800; color: #1d4ed8; margin-bottom: 4px; cursor: pointer;">
+            📸 Foto o Captura del Comprobante de Pago <span style="color: #dc2626;">*</span>
+          </label>
+          <p style="font-size: 0.78rem; color: #64748b; margin: 0 0 12px 0;">
+            Sube la captura de tu Pago Móvil, Zelle o Binance para que verifiquemos y activemos tu cuenta al instante.
+          </p>
+          <input type="file" name="receipt_image" id="subReceiptInput" accept="image/*" onchange="previewSubscriptionReceipt(this)" style="display: none;">
+          <button type="button" id="subSelectReceiptBtn" onclick="document.getElementById('subReceiptInput').click()" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 9px 18px; border-radius: 10px; font-weight: 800; font-size: 0.84rem; cursor: pointer;">
+            📁 Seleccionar Foto / Captura
+          </button>
+          <div id="subReceiptErrorMsg" style="display: none; margin-top: 10px; font-size: 0.8rem; font-weight: 700; color: #dc2626;">
+            ⚠️ Por favor adjunta la captura o foto del comprobante antes de enviar el reporte.
+          </div>
+          <div id="subReceiptPreviewBox" style="display: none; margin-top: 14px;">
+            <img id="subReceiptPreviewImg" src="" alt="Vista previa del comprobante" style="max-height: 210px; max-width: 100%; border-radius: 10px; border: 1.5px solid #cbd5e1; box-shadow: 0 4px 12px rgba(0,0,0,0.08);">
+            <div id="subReceiptPreviewFilename" style="font-size: 0.78rem; color: #059669; margin-top: 6px; font-weight: 700;"></div>
+          </div>
+        </div>
+
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Notas adicionales (opcional)</label>
           <%= text_field_tag :notes, nil, placeholder: "Titular de la cuenta, banco emisor, detalle de módulos, etc.", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
@@ -273,6 +308,54 @@
       <% end %>
     </div>
   </div>
+
+  <script>
+    function previewSubscriptionReceipt(input) {
+      var previewBox = document.getElementById('subReceiptPreviewBox');
+      var previewImg = document.getElementById('subReceiptPreviewImg');
+      var previewName = document.getElementById('subReceiptPreviewFilename');
+      var errorMsg = document.getElementById('subReceiptErrorMsg');
+      var dropzone = document.getElementById('subReceiptDropzone');
+      var btn = document.getElementById('subSelectReceiptBtn');
+
+      if (input.files && input.files[0]) {
+        var file = input.files[0];
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          if (previewImg) previewImg.src = e.target.result;
+          if (previewName) previewName.textContent = '✅ Captura lista: ' + file.name;
+          if (previewBox) previewBox.style.display = 'block';
+          if (errorMsg) errorMsg.style.display = 'none';
+          if (dropzone) {
+            dropzone.style.borderColor = '#34d399';
+            dropzone.style.background = '#f0fdf4';
+          }
+          if (btn) btn.textContent = '🔄 Cambiar Foto / Captura';
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      var form = document.getElementById('subscription-report-payment-form');
+      if (form) {
+        form.addEventListener('submit', function(e) {
+          var fileInput = document.getElementById('subReceiptInput');
+          var errorMsg = document.getElementById('subReceiptErrorMsg');
+          var dropzone = document.getElementById('subReceiptDropzone');
+          if (fileInput && (!fileInput.files || fileInput.files.length === 0)) {
+            e.preventDefault();
+            if (errorMsg) errorMsg.style.display = 'block';
+            if (dropzone) {
+              dropzone.style.borderColor = '#ef4444';
+              dropzone.style.background = '#fff1f2';
+              dropzone.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          }
+        });
+      }
+    });
+  </script>
 
   <!-- 3. SECCIÓN UNIFICADA: PLANES BASE & CONFIGURACIÓN DE MÓDULOS -->
   <div id="gigmanager-modules-section">

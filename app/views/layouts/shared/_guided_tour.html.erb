@@ -1,0 +1,858 @@
+<% if user_signed_in? && controller_name != 'company_onboarding' %>
+  <%
+    is_venue = venue_mode?
+    event_word = is_venue ? 'evento' : 'show'
+    events_word = is_venue ? 'eventos' : 'shows'
+    team_word = is_venue ? 'personal / staff' : 'músicos y staff'
+    route_signature = "#{controller_path}##{action_name}"
+    user_role_str = current_user.superadmin? ? 'leader' : current_user.role.to_s
+    tour_state_json = current_user.normalized_tour_state.to_json
+  %>
+
+  <style>
+    @keyframes gmSpotlightPulse {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.25), 0 0 28px rgba(56, 189, 248, 0.55); }
+      50% { box-shadow: 0 0 0 7px rgba(56, 189, 248, 0.35), 0 0 38px rgba(56, 189, 248, 0.8); }
+    }
+    @keyframes gmPromptIn {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .gm-tour-blur-pane {
+      position: fixed;
+      background: rgba(2, 6, 23, 0.62);
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      pointer-events: auto;
+      transition: top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #gm-tour-spotlight-ring {
+      position: fixed;
+      pointer-events: none;
+      border-radius: 16px;
+      border: 2.5px solid #38bdf8;
+      animation: gmSpotlightPulse 2s ease-in-out infinite;
+      transition: top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  height 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+    #gm-tour-tooltip {
+      position: fixed;
+      z-index: 99996;
+      pointer-events: auto;
+      width: min(350px, calc(100vw - 24px));
+      background: linear-gradient(155deg, #0f172a 0%, #1e1b4b 100%);
+      color: #f8fafc;
+      border: 1.5px solid rgba(56, 189, 248, 0.55);
+      border-radius: 20px;
+      padding: 18px 20px;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      box-shadow: 0 24px 55px rgba(0, 0, 0, 0.55);
+      transition: top 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  left 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+                  opacity 0.2s ease;
+    }
+    #gm-tour-arrow {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      background: #131836;
+      border-top: 1.5px solid rgba(56, 189, 248, 0.55);
+      border-left: 1.5px solid rgba(56, 189, 248, 0.55);
+      transform: rotate(45deg);
+      pointer-events: none;
+    }
+    #gm-tour-prompt {
+      display: none;
+      position: fixed;
+      bottom: 22px;
+      right: 22px;
+      z-index: 99988;
+      width: min(365px, calc(100vw - 28px));
+      background: linear-gradient(155deg, #0f172a 0%, #1e1b4b 100%);
+      color: #f8fafc;
+      border: 1.5px solid rgba(56, 189, 248, 0.45);
+      border-radius: 22px;
+      padding: 18px 20px;
+      box-sizing: border-box;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45);
+      animation: gmPromptIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @media (max-width: 640px) {
+      #gm-tour-prompt {
+        left: 14px;
+        right: 14px;
+        bottom: 16px;
+        width: auto;
+      }
+    }
+  </style>
+
+  <!-- OVERLAY CON FONDO DESENFOCADO Y RECORTE LUMINOSO -->
+  <div id="gm-tour-overlay" style="display: none; position: fixed; inset: 0; z-index: 99990; pointer-events: none;" aria-live="polite">
+    <div id="gm-tour-blur-top" class="gm-tour-blur-pane" onclick="window.GigTour && window.GigTour.nudgeTooltip()"></div>
+    <div id="gm-tour-blur-bottom" class="gm-tour-blur-pane" onclick="window.GigTour && window.GigTour.nudgeTooltip()"></div>
+    <div id="gm-tour-blur-left" class="gm-tour-blur-pane" onclick="window.GigTour && window.GigTour.nudgeTooltip()"></div>
+    <div id="gm-tour-blur-right" class="gm-tour-blur-pane" onclick="window.GigTour && window.GigTour.nudgeTooltip()"></div>
+    <div id="gm-tour-spotlight-ring"></div>
+
+    <!-- TOOLTIP CON FLECHA APUNTANDO AL ELEMENTO -->
+    <div id="gm-tour-tooltip" role="dialog" aria-modal="true">
+      <div id="gm-tour-arrow"></div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px;">
+        <span id="gm-tour-step-badge" style="display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px; border-radius: 99px; background: rgba(56, 189, 248, 0.16); border: 1px solid rgba(56, 189, 248, 0.35); color: #7dd3fc; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.3px;">
+          ✨ Paso 1 de 3
+        </span>
+        <button type="button" onclick="window.GigTour && window.GigTour.dismissCurrentTour()" title="Cerrar guía" style="background: rgba(255,255,255,0.08); border: none; color: #94a3b8; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 0.85rem; display: flex; align-items: center; justify-content: center;">
+          ✕
+        </button>
+      </div>
+
+      <h4 id="gm-tour-title" style="margin: 0 0 6px 0; font-size: 1.05rem; font-weight: 800; color: #ffffff; line-height: 1.3;">
+        Título del paso
+      </h4>
+      <p id="gm-tour-body" style="margin: 0 0 14px 0; font-size: 0.86rem; line-height: 1.5; color: #cbd5e1;">
+        Descripción clara de la función.
+      </p>
+
+      <!-- Puntos de progreso -->
+      <div id="gm-tour-dots" style="display: flex; align-items: center; gap: 5px; margin-bottom: 14px;"></div>
+
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <button type="button" id="gm-tour-prev-btn" onclick="window.GigTour && window.GigTour.prevStep()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #e2e8f0; padding: 8px 12px; border-radius: 10px; font-size: 0.8rem; font-weight: 700; cursor: pointer;">
+            ← Atrás
+          </button>
+          <button type="button" onclick="window.GigTour && window.GigTour.dismissCurrentTour()" style="background: transparent; border: none; color: #94a3b8; padding: 8px 6px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+            Omitir
+          </button>
+        </div>
+        <button type="button" id="gm-tour-next-btn" onclick="window.GigTour && window.GigTour.nextStep()" style="background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%); color: #0f172a; border: none; padding: 9px 16px; border-radius: 11px; font-size: 0.84rem; font-weight: 900; cursor: pointer; box-shadow: 0 4px 14px rgba(34, 211, 238, 0.35);">
+          Siguiente →
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INVITACIÓN SUAVE PARA ÁREAS NUEVAS NO VISITADAS -->
+  <div id="gm-tour-prompt" role="dialog" aria-label="Guía disponible">
+    <div style="display: flex; align-items: flex-start; gap: 12px;">
+      <div style="width: 42px; height: 42px; border-radius: 13px; background: linear-gradient(135deg, rgba(56,189,248,0.22), rgba(99,102,241,0.28)); border: 1px solid rgba(56,189,248,0.4); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0;">
+        🧭
+      </div>
+      <div style="flex: 1; min-width: 0;">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
+          <span style="font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.6px; color: #38bdf8;">
+            ✨ Primera vez en esta área
+          </span>
+          <button type="button" onclick="window.GigTour && window.GigTour.declineAreaPrompt()" style="background: transparent; border: none; color: #94a3b8; cursor: pointer; font-size: 0.9rem; padding: 0 4px;" title="Cerrar">✕</button>
+        </div>
+        <h4 id="gm-prompt-title" style="margin: 4px 0 4px 0; font-size: 0.98rem; font-weight: 800; color: #ffffff;">
+          ¿Te muestro esta sección?
+        </h4>
+        <p style="margin: 0 0 12px 0; font-size: 0.8rem; color: #cbd5e1; line-height: 1.45;">
+          En 15 segundos te señalamos con flechitas para qué sirve cada opción aquí.
+        </p>
+        <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <button type="button" onclick="window.GigTour && window.GigTour.acceptPrompt()" style="background: linear-gradient(135deg, #22d3ee 0%, #3b82f6 100%); color: #0f172a; border: none; padding: 8px 14px; border-radius: 10px; font-size: 0.8rem; font-weight: 900; cursor: pointer; box-shadow: 0 4px 12px rgba(34,211,238,0.3);">
+            ✨ Sí, mostrar guía
+          </button>
+          <button type="button" onclick="window.GigTour && window.GigTour.declineAreaPrompt()" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.14); color: #e2e8f0; padding: 8px 12px; border-radius: 10px; font-size: 0.78rem; font-weight: 700; cursor: pointer;">
+            Ahora no
+          </button>
+        </div>
+        <button type="button" onclick="window.GigTour && window.GigTour.disableAllTours()" style="margin-top: 8px; background: transparent; border: none; padding: 0; color: #64748b; font-size: 0.72rem; font-weight: 600; cursor: pointer; text-decoration: underline;">
+          No volver a preguntar en áreas nuevas
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      var INITIAL_STATE = <%= tour_state_json.html_safe %>;
+      var CURRENT_USER_ID = <%= current_user.id %>;
+      if (!window.__gmTourState || window.__gmTourUserId !== CURRENT_USER_ID) {
+        window.__gmTourState = INITIAL_STATE;
+        window.__gmTourUserId = CURRENT_USER_ID;
+      }
+
+      var USER_ROLE = <%= user_role_str.to_json.html_safe %>;
+      var IS_SUPERADMIN = <%= current_user.superadmin?.to_json %>;
+
+      // Definición de tours por área (se filtran automáticamente según el rol y módulos activos en pantalla)
+      var TOURS = {
+        dashboard: {
+          areaTitle: "Inicio (Panel Principal)",
+          stepsByRole: {
+            leader: [
+              {
+                selector: '[data-tour="sidebar-nav"]',
+                mobileSelector: '#hamburger-btn',
+                title: "Tu Menú Adaptado a tu Plan",
+                body: "Aquí tienes únicamente las secciones activas para tu negocio. Todo está ordenado para que no te pierdas."
+              },
+              {
+                selector: '[data-tour="dashboard-metrics"]',
+                title: "Resumen en Tiempo Real",
+                body: "Mira de un vistazo tus <%= events_word %> próximos, el historial total y el estado de tu inventario."
+              },
+              {
+                selector: '[data-tour="dashboard-cashflow"]',
+                title: "Tu Caja Real al Instante",
+                body: "Aquí ves exactamente cuánto dinero ha entrado, cuánto pagaste en nómina/gastos y tu saldo libre en caja."
+              },
+              {
+                selector: '[data-tour="dashboard-quick-actions"]',
+                title: "Atajos Rápidos de 1 Clic",
+                body: "Agenda un nuevo <%= event_word %>, registra un cliente o anota un movimiento de caja directamente desde aquí."
+              },
+              {
+                selector: '[data-tour="copilot-btn"]',
+                mobileSelector: '#hamburger-btn',
+                title: "Tu Copiloto Gig IA",
+                body: "Escríbele o háblale como en WhatsApp para anotar gastos, consultar deudas o resolver dudas en segundos."
+              },
+              {
+                selector: '[data-tour="sidebar-modules-card"]',
+                mobileSelector: '#mobile-tour-trigger-btn',
+                title: "Personaliza tus Módulos",
+                body: "Puedes encender o apagar herramientas y gestionar tu suscripción cuando quieras. Y con el botón 💡 verás la guía de cualquier pantalla."
+              }
+            ],
+            musician: [
+              {
+                selector: '[data-tour="worker-balance-badge"]',
+                title: "Tu Saldo Por Cobrar",
+                body: "Aquí ves en tiempo real cuánto tienes pendiente por cobrar o si todas tus cuentas están al día."
+              },
+              {
+                selector: '[data-tour="worker-next-gig"]',
+                title: "Tu Próximo <%= event_word.capitalize %>",
+                body: "Consulta fecha, ubicación, hora de llegada y detalles asignados para tu próxima presentación."
+              }
+            ],
+            staff: [
+              {
+                selector: '[data-tour="staff-assigned-gigs"]',
+                title: "Tus <%= events_word.capitalize %> Asignados",
+                body: "Accede al checklist de carga, detalles del montaje o reporta tus pagos directamente desde cada tarjeta."
+              },
+              {
+                selector: '[data-tour="staff-pending-load"]',
+                title: "Equipos Pendientes de Carga",
+                body: "Revisa aquí las unidades que faltan por preparar antes de salir al montaje."
+              }
+            ],
+            client: [
+              {
+                selector: '[data-tour="client-upcoming-gigs"]',
+                title: "Tus <%= events_word.capitalize %> Confirmados",
+                body: "Consulta fechas, ubicación, avance de tus abonos y entra a tu portal completo desde 'Ver Detalles'."
+              },
+              {
+                selector: '[data-tour="client-payment-methods"]',
+                title: "Cuentas Oficiales de Pago",
+                body: "Copia los datos bancarios oficiales cuando vayas a realizar un abono o anticipo."
+              }
+            ]
+          }
+        },
+        gigs_index: {
+          areaTitle: "<%= events_word.capitalize %>",
+          steps: [
+            {
+              selector: '[data-tour="gigs-new-btn"]',
+              title: "Registrar Nuevo <%= event_word.capitalize %>",
+              body: "Crea un nuevo <%= event_word %> desde cero o jala automáticamente los datos desde un presupuesto aprobado."
+            },
+            {
+              selector: '[data-tour="gigs-next-banner"]',
+              title: "Tu Próximo Compromiso",
+              body: "Acceso directo al <%= event_word %> más cercano en tu calendario con cuenta regresiva."
+            },
+            {
+              selector: '[data-tour="gigs-quick-filters"]',
+              title: "Filtros Rápidos",
+              body: "Cambia con 1 toque entre el siguiente <%= event_word %>, próximos, pasados o busca por cliente."
+            }
+          ]
+        },
+        gig_show: {
+          areaTitle: "Panel del <%= event_word.capitalize %>",
+          steps: [
+            {
+              selector: '[data-tour="gig-header-actions"]',
+              title: "Modo Escenario y WhatsApp",
+              body: "Abre el Modo Escenario para el día del <%= event_word %>, genera fichas visuales o envía el enlace del portal por WhatsApp."
+            },
+            {
+              selector: '[data-tour="gig-payments-area"]',
+              title: "Abonos, Recibos y Estado de Cuenta",
+              body: "Registra abonos, emite recibos digitales oficiales y envía el estado de cuenta al cliente en 1 clic."
+            },
+            {
+              selector: '[data-tour="gig-staff-area"]',
+              title: "Asignación de <%= team_word.capitalize %>",
+              body: "Asigna a los integrantes que participarán en este <%= event_word %> y define el honorario de cada uno."
+            },
+            {
+              selector: '[data-tour="gig-timeline-area"]',
+              title: "Cronograma en Tiempo Real",
+              body: "Define los horarios clave del <%= event_word %> para que tu equipo y tu cliente estén sincronizados."
+            }
+          ]
+        },
+        items_index: {
+          areaTitle: "Inventario & Equipos",
+          steps: [
+            {
+              selector: '[data-tour="items-new-btn"]',
+              title: "Agregar Nuevo Equipo",
+              body: "Registra instrumentos, sonido, luces o mobiliario con seriales, cantidades y códigos QR."
+            },
+            {
+              selector: '[data-tour="items-filters"]',
+              title: "Buscador por Estado",
+              body: "Filtra al instante qué está Excelente, Operativo o Dañado para evitar sorpresas antes de un <%= event_word %>."
+            },
+            {
+              selector: '[data-tour="items-categories"]',
+              title: "Categorías Personalizadas",
+              body: "Crea categorías y sub-categorías para mantener ordenado todo tu inventario."
+            }
+          ]
+        },
+        clients_index: {
+          areaTitle: "Directorio de Clientes",
+          steps: [
+            {
+              selector: '[data-tour="clients-debtors-btn"]',
+              title: "Apartado de Cuentas por Cobrar",
+              body: "Entra aquí para ver exactamente qué clientes tienen saldo pendiente y registrar cobros globales."
+            },
+            {
+              selector: '[data-tour="clients-new-btn"]',
+              title: "Registrar Nuevo Cliente",
+              body: "Guarda sus datos de contacto para vincular sus <%= events_word %>, cotizaciones y portal privado."
+            }
+          ]
+        },
+        client_quotes_index: {
+          areaTitle: "Presupuestos & Cotizador Web",
+          steps: [
+            {
+              selector: '[data-tour="quotes-quick-btn"]',
+              title: "Generar Enlace de Cotización",
+              body: "Crea un enlace único en 1 segundo para enviarlo por WhatsApp; tu cliente podrá elegir paquete y aprobarlo."
+            },
+            {
+              selector: '[data-tour="quotes-presets"]',
+              title: "Atajos con Tus Paquetes Base",
+              body: "Haz clic en cualquiera de tus combos guardados para generar una propuesta pre-llenada al instante."
+            }
+          ]
+        },
+        cash_adjustments_index: {
+          areaTitle: "Caja General (Fondo)",
+          steps: [
+            {
+              selector: '[data-tour="cash-actions"]',
+              title: "Ingresos y Retiros Manuales",
+              body: "Registra aportes de capital, compras en efectivo o retiros para que tu saldo siempre cuadre."
+            },
+            {
+              selector: '[data-tour="cash-copilot"]',
+              title: "Anota Gastos con Gig IA",
+              body: "Si pagaste transporte, bebidas o un cable en efectivo, díselo al Copiloto y él descuenta el monto al instante."
+            },
+            {
+              selector: '[data-tour="cash-balance-card"]',
+              title: "Saldo Neto Disponible Real",
+              body: "Aquí ves el balance real unificado de todo lo cobrado menos nómina, taller y gastos."
+            }
+          ]
+        },
+        employee_payments_index: {
+          areaTitle: "Nómina y Pagos",
+          steps: [
+            {
+              selector: '[data-tour="payroll-actions"]',
+              title: "Registrar Nuevo Pago",
+              body: "Liquida honorarios pendientes a tus <%= team_word %> o consulta tu propio historial de pagos."
+            },
+            {
+              selector: '[data-tour="payroll-balances"]',
+              title: "Balance Pendiente por Persona",
+              body: "Mira cuánto se le debe a cada integrante por <%= events_word %> realizados y registra abonos en 1 clic."
+            }
+          ]
+        },
+        reinvestment_goals_index: {
+          areaTitle: "Simulador Financiero",
+          steps: [
+            {
+              selector: '[data-tour="goals-sandbox-banner"]',
+              title: "Simulador 100% Seguro",
+              body: "Prueba escenarios de compra o pagos aquí sin alterar un solo centavo de tu contabilidad real."
+            },
+            {
+              selector: '[data-tour="goals-actions"]',
+              title: "Lista de Compras & Reinicio",
+              body: "Pasa directo a tu lista de suministros o reinicia la calculadora cuando quieras probar otro escenario."
+            }
+          ]
+        },
+        subscriptions_index: {
+          areaTitle: "Suscripción & Módulos",
+          steps: [
+            {
+              selector: '[data-tour="sub-status-banner"]',
+              title: "Estado de tu Prueba o Plan",
+              body: "Revisa aquí cuántos días te quedan en tu ciclo actual y tu tarifa mensual calculada."
+            },
+            {
+              selector: '#reportar-pago',
+              title: "Reporta tu Pago con Foto",
+              body: "Cuando decidas activar o renovar tu mes, llena tus datos y adjunta la captura de tu comprobante aquí."
+            },
+            {
+              selector: '#gigmanager-modules-section',
+              title: "Calculadora Modular",
+              body: "Activa, desactiva o cambia entre combos cuando tu empresa crezca."
+            }
+          ]
+        },
+        client_gig_show: {
+          areaTitle: "Portal de Tu Evento",
+          steps: [
+            {
+              selector: '[data-tour="client-gig-countdown"]',
+              title: "Cuenta Regresiva en Vivo",
+              body: "Sigue día a día cuánto falta para tu gran momento."
+            },
+            {
+              selector: '[data-tour="client-gig-contract"]',
+              title: "Tu Contrato Digital",
+              body: "Consulta las condiciones acordadas y firma digitalmente con total seguridad."
+            },
+            {
+              selector: '[data-tour="client-gig-payments"]',
+              title: "Tus Abonos y Comprobantes",
+              body: "Verifica tu saldo pendiente, descarga tus recibos oficiales y envía capturas de nuevos abonos."
+            },
+            {
+              selector: '[data-tour="client-gig-upsells"]',
+              title: "Adicionales en 1 Clic",
+              body: "Puedes solicitar mejoras para tu <%= event_word %> directamente desde aquí."
+            }
+          ]
+        }
+      };
+
+      var ROUTE_TO_AREA = {
+        "pages#dashboard": "dashboard",
+        "gigs#index": "gigs_index",
+        "gigs#show": "gig_show",
+        "items#index": "items_index",
+        "clients#index": "clients_index",
+        "client_quotes#index": "client_quotes_index",
+        "cash_adjustments#index": "cash_adjustments_index",
+        "employee_payments#index": "employee_payments_index",
+        "reinvestment_goals#index": "reinvestment_goals_index",
+        "subscriptions#index": "subscriptions_index",
+        "client/gigs#show": "client_gig_show"
+      };
+
+      var currentAreaKey = null;
+      var activeSteps = [];
+      var currentStepIdx = 0;
+      var tourActive = false;
+
+      function isMobileViewport() {
+        return window.innerWidth <= 991;
+      }
+
+      function resolveTargetElement(step) {
+        if (!step) return null;
+        var sel = (isMobileViewport() && step.mobileSelector) ? step.mobileSelector : step.selector;
+        var el = document.querySelector(sel);
+        if (!el && step.mobileSelector) {
+          el = document.querySelector(step.selector);
+        }
+        if (!el) return null;
+        var style = window.getComputedStyle(el);
+        if (style.display === 'none' || style.visibility === 'hidden') return null;
+        var rect = el.getBoundingClientRect();
+        if (rect.width === 0 && rect.height === 0) return null;
+        return el;
+      }
+
+      function getStepsForArea(areaKey) {
+        var def = TOURS[areaKey];
+        if (!def) return [];
+        var rawSteps = def.stepsByRole ? (def.stepsByRole[USER_ROLE] || def.stepsByRole.leader || []) : (def.steps || []);
+        return rawSteps.filter(function(step) {
+          return resolveTargetElement(step) !== null;
+        });
+      }
+
+      function persistTourAction(actionType, areaKey) {
+        var state = window.__gmTourState;
+        if (actionType === 'complete_area' && areaKey) {
+          if (state.completed_areas.indexOf(areaKey) === -1) state.completed_areas.push(areaKey);
+          state.dismissed_areas = state.dismissed_areas.filter(function(a) { return a !== areaKey; });
+        } else if (actionType === 'dismiss_area' && areaKey) {
+          if (state.dismissed_areas.indexOf(areaKey) === -1) state.dismissed_areas.push(areaKey);
+        } else if (actionType === 'disable_all') {
+          state.disabled = true;
+        }
+        updateSidebarDot();
+
+        var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+        var token = csrfMeta ? csrfMeta.getAttribute('content') : '';
+        fetch('<%= tour_progress_path %>', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'X-CSRF-Token': token || ''
+          },
+          credentials: 'same-origin',
+          body: JSON.stringify({ action_type: actionType, area_key: areaKey || '' })
+        }).catch(function() {});
+      }
+
+      function updateSidebarDot() {
+        var dot = document.getElementById('sidebar-tour-new-dot');
+        var btn = document.getElementById('sidebar-tour-trigger-btn');
+        var mobileBtn = document.getElementById('mobile-tour-trigger-btn');
+        var hasTour = currentAreaKey && getStepsForArea(currentAreaKey).length > 0;
+        var seen = hasTour && window.__gmTourState.completed_areas.indexOf(currentAreaKey) !== -1;
+
+        if (dot) dot.style.display = (hasTour && !seen) ? 'inline-block' : 'none';
+        if (btn) btn.style.display = hasTour ? 'flex' : 'none';
+        if (mobileBtn) mobileBtn.style.display = hasTour ? 'flex' : 'none';
+      }
+
+      function positionSpotlightAndTooltip() {
+        if (!tourActive || !activeSteps[currentStepIdx]) return;
+        var step = activeSteps[currentStepIdx];
+        var el = resolveTargetElement(step);
+        if (!el) return;
+
+        var pad = 8;
+        var rect = el.getBoundingClientRect();
+        var vw = window.innerWidth;
+        var vh = window.innerHeight;
+
+        var top = Math.max(0, rect.top - pad);
+        var left = Math.max(0, rect.left - pad);
+        var right = Math.min(vw, rect.right + pad);
+        var bottom = Math.min(vh, rect.bottom + pad);
+        var width = Math.max(20, right - left);
+        var height = Math.max(20, bottom - top);
+
+        // Posicionar los 4 paneles de desenfoque alrededor del recorte
+        var blurTop = document.getElementById('gm-tour-blur-top');
+        var blurBottom = document.getElementById('gm-tour-blur-bottom');
+        var blurLeft = document.getElementById('gm-tour-blur-left');
+        var blurRight = document.getElementById('gm-tour-blur-right');
+        var ring = document.getElementById('gm-tour-spotlight-ring');
+
+        blurTop.style.top = '0px';
+        blurTop.style.left = '0px';
+        blurTop.style.width = vw + 'px';
+        blurTop.style.height = top + 'px';
+
+        blurBottom.style.top = (top + height) + 'px';
+        blurBottom.style.left = '0px';
+        blurBottom.style.width = vw + 'px';
+        blurBottom.style.height = Math.max(0, vh - (top + height)) + 'px';
+
+        blurLeft.style.top = top + 'px';
+        blurLeft.style.left = '0px';
+        blurLeft.style.width = left + 'px';
+        blurLeft.style.height = height + 'px';
+
+        blurRight.style.top = top + 'px';
+        blurRight.style.left = (left + width) + 'px';
+        blurRight.style.width = Math.max(0, vw - (left + width)) + 'px';
+        blurRight.style.height = height + 'px';
+
+        ring.style.top = top + 'px';
+        ring.style.left = left + 'px';
+        ring.style.width = width + 'px';
+        ring.style.height = height + 'px';
+
+        // Posicionar tooltip y flechita apuntando al elemento
+        var tooltip = document.getElementById('gm-tour-tooltip');
+        var arrow = document.getElementById('gm-tour-arrow');
+        var ttRect = tooltip.getBoundingClientRect();
+        var ttW = ttRect.width || 330;
+        var ttH = ttRect.height || 210;
+        var gap = 14;
+
+        var targetCenterX = left + width / 2;
+        var targetCenterY = top + height / 2;
+        var spaceBelow = vh - (top + height);
+        var spaceAbove = top;
+        var spaceRight = vw - (left + width);
+
+        var ttTop, ttLeft, arrowSide;
+
+        if (rect.right <= 320 && spaceRight >= ttW + gap + 12 && vw > 991) {
+          ttLeft = left + width + gap;
+          ttTop = Math.min(Math.max(12, targetCenterY - ttH / 2), vh - ttH - 12);
+          arrowSide = 'left';
+        } else if (spaceBelow >= ttH + gap + 12) {
+          ttTop = top + height + gap;
+          ttLeft = Math.min(Math.max(12, targetCenterX - ttW / 2), vw - ttW - 12);
+          arrowSide = 'top';
+        } else if (spaceAbove >= ttH + gap + 12) {
+          ttTop = top - ttH - gap;
+          ttLeft = Math.min(Math.max(12, targetCenterX - ttW / 2), vw - ttW - 12);
+          arrowSide = 'bottom';
+        } else if (spaceRight >= ttW + gap + 12 && vw > 768) {
+          ttLeft = left + width + gap;
+          ttTop = Math.min(Math.max(12, targetCenterY - ttH / 2), vh - ttH - 12);
+          arrowSide = 'left';
+        } else {
+          // Fallback limpio dentro de viewport
+          ttTop = Math.min(Math.max(12, top + height + gap), vh - ttH - 12);
+          ttLeft = Math.min(Math.max(12, targetCenterX - ttW / 2), vw - ttW - 12);
+          arrowSide = (ttTop >= top + height) ? 'top' : 'bottom';
+        }
+
+        tooltip.style.top = ttTop + 'px';
+        tooltip.style.left = ttLeft + 'px';
+
+        // Colocar la flecha apuntando exactamente al centro del elemento
+        arrow.style.top = '';
+        arrow.style.bottom = '';
+        arrow.style.left = '';
+        arrow.style.right = '';
+        arrow.style.borderTop = 'none';
+        arrow.style.borderBottom = 'none';
+        arrow.style.borderLeft = 'none';
+        arrow.style.borderRight = 'none';
+
+        if (arrowSide === 'top') {
+          arrow.style.top = '-8px';
+          arrow.style.left = Math.min(Math.max(18, targetCenterX - ttLeft - 7), ttW - 32) + 'px';
+          arrow.style.borderTop = '1.5px solid rgba(56, 189, 248, 0.55)';
+          arrow.style.borderLeft = '1.5px solid rgba(56, 189, 248, 0.55)';
+        } else if (arrowSide === 'bottom') {
+          arrow.style.bottom = '-8px';
+          arrow.style.left = Math.min(Math.max(18, targetCenterX - ttLeft - 7), ttW - 32) + 'px';
+          arrow.style.borderBottom = '1.5px solid rgba(56, 189, 248, 0.55)';
+          arrow.style.borderRight = '1.5px solid rgba(56, 189, 248, 0.55)';
+        } else if (arrowSide === 'left') {
+          arrow.style.left = '-8px';
+          arrow.style.top = Math.min(Math.max(18, targetCenterY - ttTop - 7), ttH - 32) + 'px';
+          arrow.style.borderBottom = '1.5px solid rgba(56, 189, 248, 0.55)';
+          arrow.style.borderLeft = '1.5px solid rgba(56, 189, 248, 0.55)';
+        }
+      }
+
+      function renderStep() {
+        var step = activeSteps[currentStepIdx];
+        if (!step) {
+          finishTour();
+          return;
+        }
+
+        var def = TOURS[currentAreaKey];
+        var total = activeSteps.length;
+        var el = resolveTargetElement(step);
+        if (!el) {
+          nextStep();
+          return;
+        }
+
+        // Scroll suave si está fuera de pantalla
+        var rect = el.getBoundingClientRect();
+        var needsScroll = (rect.top < 72 || rect.bottom > window.innerHeight - 130);
+        if (needsScroll) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        document.getElementById('gm-tour-step-badge').textContent = '✨ Paso ' + (currentStepIdx + 1) + ' de ' + total + ' • ' + (def ? def.areaTitle : 'Guía');
+        document.getElementById('gm-tour-title').textContent = step.title;
+        document.getElementById('gm-tour-body').textContent = step.body;
+
+        var dotsEl = document.getElementById('gm-tour-dots');
+        dotsEl.innerHTML = '';
+        for (var i = 0; i < total; i++) {
+          var d = document.createElement('span');
+          d.style.cssText = 'height: 6px; border-radius: 99px; transition: all 0.2s; ' +
+            (i === currentStepIdx ? 'width: 20px; background: #22d3ee;' : (i < currentStepIdx ? 'width: 6px; background: #34d399;' : 'width: 6px; background: rgba(255,255,255,0.22);'));
+          dotsEl.appendChild(d);
+        }
+
+        var prevBtn = document.getElementById('gm-tour-prev-btn');
+        var nextBtn = document.getElementById('gm-tour-next-btn');
+        prevBtn.style.display = currentStepIdx > 0 ? 'inline-block' : 'none';
+        nextBtn.textContent = (currentStepIdx === total - 1) ? '¡Entendido! ✓' : 'Siguiente →';
+
+        document.getElementById('gm-tour-overlay').style.display = 'block';
+        positionSpotlightAndTooltip();
+
+        if (needsScroll) {
+          setTimeout(positionSpotlightAndTooltip, 320);
+          setTimeout(positionSpotlightAndTooltip, 550);
+        }
+      }
+
+      function closeOverlay() {
+        tourActive = false;
+        var overlay = document.getElementById('gm-tour-overlay');
+        if (overlay) overlay.style.display = 'none';
+      }
+
+      function hidePrompt() {
+        var promptEl = document.getElementById('gm-tour-prompt');
+        if (promptEl) promptEl.style.display = 'none';
+      }
+
+      function finishTour() {
+        closeOverlay();
+        if (currentAreaKey) {
+          persistTourAction('complete_area', currentAreaKey);
+        }
+      }
+
+      function startTour(areaKey) {
+        hidePrompt();
+        var sb = document.getElementById('app-sidebar');
+        var bd = document.getElementById('mobile-backdrop');
+        if (sb && sb.classList.contains('sidebar-open')) {
+          sb.classList.remove('sidebar-open');
+          if (bd) bd.classList.remove('open');
+          document.body.style.overflow = '';
+        }
+        activeSteps = getStepsForArea(areaKey);
+        if (activeSteps.length === 0) return;
+        currentStepIdx = 0;
+        tourActive = true;
+        renderStep();
+      }
+
+      window.GigTour = {
+        startCurrentAreaTour: function(force) {
+          if (!currentAreaKey) return;
+          if (force) {
+            startTour(currentAreaKey);
+          }
+        },
+        nextStep: function() {
+          if (currentStepIdx < activeSteps.length - 1) {
+            currentStepIdx += 1;
+            renderStep();
+          } else {
+            finishTour();
+          }
+        },
+        prevStep: function() {
+          if (currentStepIdx > 0) {
+            currentStepIdx -= 1;
+            renderStep();
+          }
+        },
+        dismissCurrentTour: function() {
+          closeOverlay();
+          if (currentAreaKey) {
+            persistTourAction('dismiss_area', currentAreaKey);
+          }
+        },
+        acceptPrompt: function() {
+          if (currentAreaKey) startTour(currentAreaKey);
+        },
+        declineAreaPrompt: function() {
+          hidePrompt();
+          if (currentAreaKey) {
+            persistTourAction('dismiss_area', currentAreaKey);
+          }
+        },
+        disableAllTours: function() {
+          hidePrompt();
+          closeOverlay();
+          persistTourAction('disable_all', currentAreaKey);
+        },
+        nudgeTooltip: function() {
+          var tt = document.getElementById('gm-tour-tooltip');
+          if (!tt) return;
+          tt.style.transform = 'scale(1.03)';
+          setTimeout(function() { tt.style.transform = 'scale(1)'; }, 160);
+        }
+      };
+
+      var pendingTourTimer = null;
+
+      function evaluateCurrentPageTour(routeSig) {
+        if (pendingTourTimer) {
+          clearTimeout(pendingTourTimer);
+          pendingTourTimer = null;
+        }
+        closeOverlay();
+        hidePrompt();
+
+        currentAreaKey = ROUTE_TO_AREA[routeSig] || null;
+        updateSidebarDot();
+
+        if (!currentAreaKey || IS_SUPERADMIN) return;
+        var steps = getStepsForArea(currentAreaKey);
+        if (steps.length === 0) return;
+
+        var state = window.__gmTourState;
+        if (state.disabled) return;
+
+        var alreadyCompleted = state.completed_areas.indexOf(currentAreaKey) !== -1;
+        var alreadyDismissed = state.dismissed_areas.indexOf(currentAreaKey) !== -1;
+        if (alreadyCompleted || alreadyDismissed) return;
+
+        var isVeryFirstEver = (state.completed_areas.length === 0 && state.dismissed_areas.length === 0 && currentAreaKey === 'dashboard');
+        var targetArea = currentAreaKey;
+
+        pendingTourTimer = setTimeout(function() {
+          pendingTourTimer = null;
+          if (currentAreaKey !== targetArea) return;
+          if (isVeryFirstEver) {
+            startTour(targetArea);
+          } else {
+            var def = TOURS[targetArea];
+            var titleEl = document.getElementById('gm-prompt-title');
+            if (titleEl && def) titleEl.textContent = '¿Te guiamos por ' + def.areaTitle + '?';
+            var promptEl = document.getElementById('gm-tour-prompt');
+            if (promptEl) promptEl.style.display = 'block';
+          }
+        }, 550);
+      }
+
+      if (!window.__gmTourListenersBound) {
+        window.__gmTourListenersBound = true;
+        window.addEventListener('resize', function() {
+          if (tourActive) positionSpotlightAndTooltip();
+        });
+        window.addEventListener('scroll', function() {
+          if (tourActive) positionSpotlightAndTooltip();
+        }, { passive: true });
+        document.addEventListener('keydown', function(e) {
+          if (!tourActive) return;
+          if (e.key === 'Escape') window.GigTour.dismissCurrentTour();
+          if (e.key === 'ArrowRight') window.GigTour.nextStep();
+          if (e.key === 'ArrowLeft') window.GigTour.prevStep();
+        });
+      }
+
+      evaluateCurrentPageTour(<%= route_signature.to_json.html_safe %>);
+    })();
+  </script>
+<% end %>

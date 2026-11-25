@@ -3,10 +3,10 @@
   <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px;">
     <h1 style="color: var(--text-heading); font-size: 1.85em; font-weight: 800; margin: 0; letter-spacing: -0.5px;">👥 Directorio de Clientes</h1>
     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-      <%= link_to debts_clients_path, style: "background: #{@total_debt_global.to_f > 0 ? '#dc2626' : 'var(--bg-card-subtle)'}; color: #{@total_debt_global.to_f > 0 ? 'white' : 'var(--text-main)'}; border: 1px solid #{@total_debt_global.to_f > 0 ? 'transparent' : 'var(--border-color)'}; padding: 12px 20px; text-decoration: none; border-radius: 10px; font-weight: 700; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08); display: inline-flex; align-items: center; gap: 8px;" do %>
+      <%= link_to debts_clients_path, data: { tour: "clients-debtors-btn" }, style: "background: #{@total_debt_global.to_f > 0 ? '#dc2626' : 'var(--bg-card-subtle)'}; color: #{@total_debt_global.to_f > 0 ? 'white' : 'var(--text-main)'}; border: 1px solid #{@total_debt_global.to_f > 0 ? 'transparent' : 'var(--border-color)'}; padding: 12px 20px; text-decoration: none; border-radius: 10px; font-weight: 700; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.08); display: inline-flex; align-items: center; gap: 8px;" do %>
         💳 Apartado de Deudores <% if @total_debt_global.to_f > 0 %><span style="background: rgba(255,255,255,0.25); padding: 2px 8px; border-radius: 12px; font-size: 0.85em;">$ <%= number_with_precision(@total_debt_global, precision: 2) %></span><% end %>
       <% end %>
-      <%= link_to '➕ Añadir Nuevo Cliente', new_client_path, class: "btn-main btn-success-custom", style: "padding: 12px 20px; text-decoration: none; border-radius: 10px; font-weight: 700;" %>
+      <%= link_to '➕ Añadir Nuevo Cliente', new_client_path, data: { tour: "clients-new-btn" }, class: "btn-main btn-success-custom", style: "padding: 12px 20px; text-decoration: none; border-radius: 10px; font-weight: 700;" %>
     </div>
   </div>
 

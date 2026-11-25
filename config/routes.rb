@@ -2,7 +2,10 @@ Rails.application.routes.draw do
   # Health check nativo de Rails para Render y monitoreo de uptime
   get "up" => "rails/health#show", as: :rails_health_check
 
-  devise_for :users, controllers: { registrations: 'users/registrations' }
+  devise_for :users, controllers: {
+    registrations: 'users/registrations',
+    omniauth_callbacks: 'users/omniauth_callbacks'
+  }
   
   authenticated :user do
     root "pages#dashboard", as: :authenticated_root
@@ -25,6 +28,9 @@ Rails.application.routes.draw do
       end
     end
     resources :subscription_payments, only: [:index] do
+      collection do
+        get :pending_summary
+      end
       member do
         post :approve
         post :reject
@@ -34,9 +40,14 @@ Rails.application.routes.draw do
     post '/switch_tenant', to: 'companies#switch_tenant', as: :switch_tenant_global
   end
 
-  # Link de unión / onboarding de empresas
+  # Link de unión / onboarding de empresas (equipo) y wizard de bienvenida (líderes)
   get '/join/:slug', to: 'onboarding#show', as: :join_company
   post '/join/:slug', to: 'onboarding#process_join', as: :process_join_company
+
+  get '/welcome', to: 'company_onboarding#show', as: :welcome_onboarding
+  patch '/welcome', to: 'company_onboarding#update'
+  post '/welcome/skip', to: 'company_onboarding#skip', as: :skip_welcome_onboarding
+  patch '/tour_progress', to: 'tour_progress#update', as: :tour_progress
 
 
   resources :shopping_items do

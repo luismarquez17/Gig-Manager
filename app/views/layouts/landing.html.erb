@@ -82,63 +82,75 @@
   </head>
 
   <body class="landing-page bg-slate-950 text-slate-100 min-h-screen flex flex-col selection:bg-cyan-500 selection:text-black antialiased">
+    <% is_onboarding_wizard = (controller_name == 'company_onboarding') %>
     <!-- Navbar Público -->
     <header class="sticky top-0 z-50 backdrop-blur-xl bg-slate-950/85 border-b border-slate-800/80 transition-all">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-20">
           
           <!-- Logo & Brand -->
-          <a href="<%= public_landing_path %>" class="flex items-center gap-3 group">
+          <a href="<%= is_onboarding_wizard ? welcome_onboarding_path : public_landing_path %>" class="flex items-center gap-3 group">
             <img src="/icons/logo.svg" alt="GigManager Logo" class="w-10 h-10 rounded-xl shadow-lg shadow-blue-500/30 group-hover:scale-105 transition-transform" />
             <div class="flex flex-col">
               <span class="text-xl font-black tracking-tight text-white flex items-center gap-1">
                 Gig<span class="gradient-text-cyan">Manager</span>
               </span>
-              <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase -mt-1">Music Ops Platform</span>
+              <span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase -mt-1">Music &amp; Events Ops</span>
             </div>
           </a>
 
-          <!-- Navigation Links Desktop -->
-          <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
-            <a href="#modulos" class="hover:text-cyan-400 transition-colors">Módulos</a>
-            <a href="#como-funciona" class="hover:text-cyan-400 transition-colors">Cómo Funciona</a>
-            <a href="#calculadora" class="hover:text-cyan-400 transition-colors">Calculadora & Precios</a>
-            <a href="#faq" class="hover:text-cyan-400 transition-colors">Preguntas</a>
-          </nav>
+          <% if is_onboarding_wizard %>
+            <div class="flex items-center gap-3">
+              <span class="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 text-xs font-bold">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>30 Días Gratis Activos</span>
+              </span>
+              <%= button_to destroy_user_session_path, method: :delete, data: { turbo: false }, class: "px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white text-xs font-bold border border-slate-800 cursor-pointer transition-all" do %>
+                Cerrar Sesión
+              <% end %>
+            </div>
+          <% else %>
+            <!-- Navigation Links Desktop -->
+            <nav class="hidden md:flex items-center gap-8 text-sm font-semibold text-slate-300">
+              <a href="<%= public_landing_path(anchor: 'modulos') %>" class="hover:text-cyan-400 transition-colors">Módulos</a>
+              <a href="<%= public_landing_path(anchor: 'calculadora') %>" class="hover:text-cyan-400 transition-colors">Calculadora &amp; Precios</a>
+              <a href="<%= public_landing_path(anchor: 'faq') %>" class="hover:text-cyan-400 transition-colors">Preguntas</a>
+            </nav>
 
-          <!-- Action Buttons Desktop -->
-          <div class="hidden sm:flex items-center gap-4">
-            <% if user_signed_in? %>
-              <a href="<%= authenticated_root_path %>" data-turbo="false" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-cyan-500/25 transition-all">
-                <span>Ir al Dashboard</span>
-                <span>→</span>
-              </a>
-            <% else %>
-              <a href="<%= new_user_session_path %>" data-turbo="false" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
-                Iniciar Sesión
-              </a>
-              <a href="<%= new_user_registration_path %>" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-0.5 transition-all">
-                <span>Prueba 30 Días Gratis</span>
-                <span class="text-cyan-200">⚡</span>
-              </a>
-            <% end %>
-          </div>
+            <!-- Action Buttons Desktop -->
+            <div class="hidden sm:flex items-center gap-4">
+              <% if user_signed_in? %>
+                <a href="<%= authenticated_root_path %>" data-turbo="false" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-cyan-500/25 transition-all">
+                  <span>Ir al Dashboard</span>
+                  <span>→</span>
+                </a>
+              <% else %>
+                <a href="<%= new_user_session_path %>" data-turbo="false" class="px-4 py-2 rounded-xl text-sm font-bold text-slate-300 hover:text-white hover:bg-slate-900 border border-transparent hover:border-slate-800 transition-all">
+                  Iniciar Sesión
+                </a>
+                <a href="<%= new_user_registration_path %>" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-white text-sm font-extrabold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:-translate-y-0.5 transition-all">
+                  <span>Prueba 30 Días Gratis</span>
+                  <span class="text-cyan-200">⚡</span>
+                </a>
+              <% end %>
+            </div>
 
-          <!-- Mobile Menu Button -->
-          <div class="flex sm:hidden items-center gap-2">
-            <% if user_signed_in? %>
-              <a href="<%= authenticated_root_path %>" data-turbo="false" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-black text-xs">
-                Dashboard
-              </a>
-            <% else %>
-              <a href="<%= new_user_session_path %>" data-turbo="false" class="px-3 py-1.5 rounded-lg bg-slate-900 text-slate-200 font-bold text-xs border border-slate-800">
-                Entrar
-              </a>
-              <a href="<%= new_user_registration_path %>" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-black text-xs">
-                Prueba Gratis
-              </a>
-            <% end %>
-          </div>
+            <!-- Mobile Menu Button -->
+            <div class="flex sm:hidden items-center gap-2">
+              <% if user_signed_in? %>
+                <a href="<%= authenticated_root_path %>" data-turbo="false" class="px-3 py-1.5 rounded-lg bg-cyan-500 text-slate-950 font-black text-xs">
+                  Dashboard
+                </a>
+              <% else %>
+                <a href="<%= new_user_session_path %>" data-turbo="false" class="px-3 py-1.5 rounded-lg bg-slate-900 text-slate-200 font-bold text-xs border border-slate-800">
+                  Entrar
+                </a>
+                <a href="<%= new_user_registration_path %>" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 text-white font-black text-xs">
+                  Prueba Gratis
+                </a>
+              <% end %>
+            </div>
+          <% end %>
 
         </div>
       </div>
@@ -169,6 +181,7 @@
       <%= yield %>
     </main>
 
+    <% unless is_onboarding_wizard %>
     <!-- Footer Público -->
     <footer class="border-t border-slate-900 bg-slate-950/90 pt-16 pb-12 mt-20">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -234,6 +247,7 @@
         </div>
       </div>
     </footer>
+    <% end %>
 
     <!-- Botón Flotante de WhatsApp para Atención Directa -->
     <a href="https://wa.me/584246208725?text=<%= ERB::Util.url_encode('¡Hola! Tengo interés en GigManager y quisiera consultar sobre los planes y módulos.') %>" 

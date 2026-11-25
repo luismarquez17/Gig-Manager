@@ -18,6 +18,7 @@ module Superadmin
       @companies = Company.order(created_at: :desc)
       @client_counts_by_company = Client.group(:company_id).count
       @client_users_count_by_company = Client.joins("INNER JOIN users ON users.client_id = clients.id AND users.role = #{User.roles[:client]}").group("clients.company_id").count
+      @pending_subscription_payments = SubscriptionPayment.includes(:company, :user).pending.order(created_at: :desc)
     end
   end
 end
