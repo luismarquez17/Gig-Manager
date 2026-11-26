@@ -153,6 +153,54 @@
         </div>
       </div>
 
+    <% elsif @company.in_grace_period? %>
+      <div class="sub-mobile-card sub-mobile-flex" style="padding: 22px 26px; border-radius: 18px; background: linear-gradient(135deg, #451a03 0%, #1c1917 100%); border: 1.5px solid #f59e0b; color: white; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; box-shadow: 0 10px 30px rgba(245, 158, 11, 0.2);">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="min-width: 50px; height: 50px; border-radius: 14px; background: rgba(245, 158, 11, 0.25); border: 1px solid rgba(245, 158, 11, 0.5); color: #fde68a; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; flex-shrink: 0;">
+            ⏳
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap;">
+              <span style="padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: rgba(245, 158, 11, 0.3); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.5);">PERÍODO DE GRACIA ACTIVO</span>
+              <span style="font-size: 0.78rem; color: #fcd34d;">Vence gracia en <%= @company.grace_days_left %> <%= @company.grace_days_left == 1 ? 'día' : 'días' %></span>
+            </div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: white; margin: 0;">Te quedan <span style="color: #fbbf24;"><%= @company.grace_days_left %> <%= @company.grace_days_left == 1 ? 'día' : 'días' %> de gracia</span> para pagar</h3>
+            <p style="color: #cbd5e1; font-size: 0.86rem; margin: 3px 0 0 0;">
+              Tu ciclo de 30 días finalizó. Puedes registrar tu pago ahora antes de que el servicio sea pausado. <strong>Todos tus datos están 100% seguros y nunca se borrarán.</strong>
+            </p>
+          </div>
+        </div>
+        <div>
+          <a href="#reportar-pago" class="sub-mobile-btn" style="text-decoration: none; padding: 11px 20px; border-radius: 11px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; font-weight: 800; font-size: 0.86rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);">
+            <span>💳</span> Reportar Renovación
+          </a>
+        </div>
+      </div>
+
+    <% elsif @company.suspended? %>
+      <div class="sub-mobile-card sub-mobile-flex" style="padding: 22px 26px; border-radius: 18px; background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1.5px solid #f43f5e; color: white; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 18px; box-shadow: 0 10px 30px rgba(244, 63, 94, 0.2);">
+        <div style="display: flex; align-items: center; gap: 16px;">
+          <div style="min-width: 50px; height: 50px; border-radius: 14px; background: rgba(244, 63, 94, 0.25); border: 1px solid rgba(244, 63, 94, 0.5); color: #fb7185; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; flex-shrink: 0;">
+            🚫
+          </div>
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 3px; flex-wrap: wrap;">
+              <span style="padding: 2px 8px; border-radius: 6px; font-size: 0.72rem; font-weight: 800; background: rgba(244, 63, 94, 0.3); color: #fca5a5; border: 1px solid rgba(244, 63, 94, 0.5);">SERVICIO SUSPENDIDO</span>
+              <span style="font-size: 0.78rem; color: #34d399; font-weight: 700;">🛡️ Datos 100% Protegidos</span>
+            </div>
+            <h3 style="font-size: 1.2rem; font-weight: 800; color: white; margin: 0;">Cuenta pausada por pago pendiente</h3>
+            <p style="color: #cbd5e1; font-size: 0.86rem; margin: 3px 0 0 0;">
+              El plazo de gracia ha expirado. <strong>Absolutamente ningún dato ha sido eliminado:</strong> tus eventos, clientes, repertorios y finanzas están intactos. Reporta tu pago abajo para reactivar el servicio de inmediato.
+            </p>
+          </div>
+        </div>
+        <div>
+          <a href="#reportar-pago" class="sub-mobile-btn" style="text-decoration: none; padding: 11px 20px; border-radius: 11px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; font-weight: 800; font-size: 0.86rem; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);">
+            <span>⚡</span> Reactivar y Reportar Pago
+          </a>
+        </div>
+      </div>
+
     <% else %>
       <div class="sub-mobile-card sub-mobile-flex" style="padding: 20px 24px; border-radius: 18px; background: #fffbebfb; border: 1.5px solid #fcd34d; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 15px;">
         <div style="display: flex; align-items: center; gap: 16px;">
@@ -170,7 +218,7 @@
                 Activa tu suscripción mensual
               <% end %>
             </h3>
-            <p style="color: #92400e; font-size: 0.86rem; margin: 2px 0 0 0;">Reporta tu pago mensual completo para reactivar el acceso completo para todos los integrantes.</p>
+            <p style="color: #92400e; font-size: 0.86rem; margin: 2px 0 0 0;">Reporta tu pago mensual completo para reactivar el acceso completo para todos los integrantes. Tus datos están completamente a salvo.</p>
           </div>
         </div>
         <div>

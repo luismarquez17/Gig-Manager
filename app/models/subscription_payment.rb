@@ -70,6 +70,7 @@ class SubscriptionPayment < ApplicationRecord
                   end
 
       updates = {
+        status: :active,
         subscription_status: 'active',
         plan_tier: plan_tier,
         trial_ends_at: base_date + 30.days

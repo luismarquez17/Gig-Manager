@@ -243,7 +243,15 @@
 
           <%= link_to subscriptions_path, class: "sidebar-link #{'active' if controller_name == 'subscriptions'}" do %>
             <span class="icon">💳</span> <span>Suscripción SaaS</span>
-            <% if current_company.trial_active? %>
+            <% if current_company.suspended? %>
+              <span style="background: rgba(239, 68, 68, 0.3); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.4); border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                Pausada
+              </span>
+            <% elsif current_company.in_grace_period? %>
+              <span style="background: rgba(245, 158, 11, 0.3); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.5); border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
+                Gracia <%= current_company.grace_days_left %>d
+              </span>
+            <% elsif current_company.trial_active? %>
               <span style="background: rgba(139, 92, 246, 0.3); color: #c084fc; border: 1px solid rgba(139, 92, 246, 0.4); border-radius: 99px; font-size: 0.72em; padding: 2px 7px; font-weight: 800; margin-left: auto;">
                 Trial <%= current_company.days_left_in_trial %>d
               </span>

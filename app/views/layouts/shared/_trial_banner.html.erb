@@ -1,5 +1,57 @@
-<%# --- BANNER DE FREE TRIAL (PRUEBA GRATUITA) --- %>
-<% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && current_company&.trial_active? && controller_name != 'subscriptions' %>
+<%# --- BANNER DE SUSCRIPCIÓN: PERÍODO DE GRACIA (3 DÍAS) --- %>
+<% if user_signed_in? && (current_user.leader? || current_user.superadmin?) && current_company&.in_grace_period? && controller_name != 'subscriptions' %>
+  <div style="background: linear-gradient(135deg, #451a03 0%, #1c1917 100%); border: 1.5px solid #f59e0b; border-radius: 16px; padding: 14px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(245, 158, 11, 0.25);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.25rem; flex-shrink: 0; box-shadow: 0 0 14px rgba(245, 158, 11, 0.5);">
+        ⏳
+      </div>
+      <div>
+        <div style="color: white; font-size: 0.94rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span>Período de Gracia Activo:</span>
+          <span style="color: #fde68a; font-weight: 800;">Te quedan <%= current_company.grace_days_left %> <%= current_company.grace_days_left == 1 ? 'día' : 'días' %> de gracia</span>
+          <span style="font-size: 0.75rem; background: rgba(245, 158, 11, 0.3); color: #fde68a; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(245, 158, 11, 0.5);">Datos 100% Seguros</span>
+        </div>
+        <div style="color: #cbd5e1; font-size: 0.84rem; margin-top: 3px;">
+          Tu ciclo de 30 días ha concluido. Cuentas con 3 días de gracia para renovar tu suscripción antes de pausar el acceso. Tranquilo: ¡todos tus datos están a salvo!
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <%= link_to subscriptions_path, style: "background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); color: white; padding: 9px 18px; border-radius: 10px; font-weight: 800; font-size: 0.86rem; text-decoration: none; box-shadow: 0 2px 12px rgba(245, 158, 11, 0.4); white-space: nowrap;" do %>
+        💳 Renovar Suscripción ➔
+      <% end %>
+    </div>
+  </div>
+
+<%# --- BANNER DE SUSCRIPCIÓN: RECORDATORIO CARIÑOSO (FALTAN 2 DÍAS O MENOS) --- %>
+<% elsif user_signed_in? && (current_user.leader? || current_user.superadmin?) && current_company&.days_left_in_subscription.to_i.in?(1..2) && controller_name != 'subscriptions' %>
+  <div style="background: linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%); border: 1.5px solid #818cf8; border-radius: 16px; padding: 14px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(99, 102, 241, 0.2);">
+    <div style="display: flex; align-items: center; gap: 14px;">
+      <div style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: white; width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.25rem; flex-shrink: 0; box-shadow: 0 0 14px rgba(99, 102, 241, 0.5);">
+        💌
+      </div>
+      <div>
+        <div style="color: white; font-size: 0.94rem; font-weight: 700; display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+          <span>Recordatorio Amigable:</span>
+          <span style="color: #c7d2fe; font-weight: 800;">Faltan <%= current_company.days_left_in_subscription %> <%= current_company.days_left_in_subscription == 1 ? 'día' : 'días' %> para cumplir los 30 días</span>
+          <span style="font-size: 0.75rem; background: rgba(99, 102, 241, 0.3); color: #e0e7ff; padding: 2px 8px; border-radius: 6px; border: 1px solid rgba(165, 180, 252, 0.4);">Ciclo por Finalizar</span>
+        </div>
+        <div style="color: #cbd5e1; font-size: 0.84rem; margin-top: 3px;">
+          Te avisamos con anticipación para que puedas renovar a tiempo y tu equipo continúe sin interrupciones. Recuerda que todos tus datos están 100% seguros y respaldados.
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+      <%= link_to subscriptions_path, style: "background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 9px 18px; border-radius: 10px; font-weight: 800; font-size: 0.86rem; text-decoration: none; box-shadow: 0 2px 12px rgba(99, 102, 241, 0.4); white-space: nowrap;" do %>
+        Renovar Plan ➔
+      <% end %>
+    </div>
+  </div>
+
+<%# --- BANNER DE FREE TRIAL ACTIVO (MÁS DE 2 DÍAS RESTANTES) --- %>
+<% elsif user_signed_in? && (current_user.leader? || current_user.superadmin?) && current_company&.trial_active? && controller_name != 'subscriptions' %>
   <div style="background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%); border: 1px solid rgba(139, 92, 246, 0.45); border-radius: 16px; padding: 14px 22px; margin-bottom: 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 14px; box-shadow: 0 4px 20px rgba(139, 92, 246, 0.15);">
     <div style="display: flex; align-items: center; gap: 14px;">
       <div style="background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 100%); color: white; width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.15rem; flex-shrink: 0; box-shadow: 0 0 14px rgba(139, 92, 246, 0.5);">

@@ -4,91 +4,182 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Acceso Suspendido - Gig Manager</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     body {
       margin: 0;
-      padding: 0;
-      font-family: 'Inter', sans-serif;
-      background: #0f172a;
+      padding: 20px;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: radial-gradient(circle at 50% 20%, #1e1b4b 0%, #0f172a 100%);
       color: white;
       min-height: 100vh;
       display: flex;
       align-items: center;
       justify-content: center;
+      box-sizing: border-box;
     }
     .card {
-      max-width: 520px;
-      width: 90%;
-      background: rgba(30, 41, 59, 0.9);
-      border: 1px solid rgba(244, 63, 94, 0.3);
-      border-radius: 24px;
-      padding: 40px;
+      max-width: 580px;
+      width: 100%;
+      background: rgba(30, 41, 59, 0.92);
+      border: 1px solid rgba(244, 63, 94, 0.35);
+      border-radius: 28px;
+      padding: 38px 32px;
       text-align: center;
-      box-shadow: 0 25px 50px -12px rgba(244, 63, 94, 0.25);
-      backdrop-filter: blur(10px);
+      box-shadow: 0 25px 50px -12px rgba(244, 63, 94, 0.25), 0 0 40px rgba(15, 23, 42, 0.8);
+      backdrop-filter: blur(16px);
+      box-sizing: border-box;
     }
     .icon-box {
-      width: 72px;
-      height: 72px;
+      width: 76px;
+      height: 76px;
       background: rgba(244, 63, 94, 0.15);
-      border: 1px solid rgba(244, 63, 94, 0.3);
+      border: 1.5px solid rgba(244, 63, 94, 0.4);
       color: #f43f5e;
-      border-radius: 20px;
+      border-radius: 22px;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.2rem;
-      margin-bottom: 20px;
+      font-size: 2.4rem;
+      margin-bottom: 18px;
+      box-shadow: 0 0 25px rgba(244, 63, 94, 0.2);
     }
     h1 {
-      margin: 0 0 12px 0;
-      font-size: 1.8rem;
-      font-weight: 800;
+      margin: 0 0 10px 0;
+      font-size: 1.75rem;
+      font-weight: 900;
       color: white;
-    }
-    p {
-      color: #94a3b8;
-      font-size: 1rem;
-      line-height: 1.6;
-      margin: 0 0 24px 0;
+      letter-spacing: -0.5px;
     }
     .badge {
       display: inline-block;
       background: rgba(244, 63, 94, 0.2);
       color: #fb7185;
+      font-weight: 800;
+      font-size: 0.78rem;
+      padding: 5px 14px;
+      border-radius: 99px;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border: 1px solid rgba(244, 63, 94, 0.35);
+    }
+    p {
+      color: #cbd5e1;
+      font-size: 0.96rem;
+      line-height: 1.6;
+      margin: 0 0 18px 0;
+    }
+    .guarantee-box {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%);
+      border: 1.5px solid rgba(16, 185, 129, 0.4);
+      border-radius: 18px;
+      padding: 18px 20px;
+      text-align: left;
+      margin: 22px 0;
+      box-shadow: 0 4px 15px rgba(16, 185, 129, 0.1);
+    }
+    .guarantee-title {
+      font-size: 0.92rem;
+      font-weight: 800;
+      color: #34d399;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .guarantee-desc {
+      font-size: 0.86rem;
+      color: #e2e8f0;
+      line-height: 1.5;
+      margin: 0;
+    }
+    .actions-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .btn-reactivate {
+      background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+      color: white;
+      padding: 14px 22px;
+      border-radius: 14px;
+      font-weight: 800;
+      font-size: 0.98rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+      transition: transform 0.15s ease;
+      border: none;
+    }
+    .btn-reactivate:hover {
+      transform: translateY(-2px);
+    }
+    .btn-whatsapp {
+      background: rgba(37, 211, 102, 0.15);
+      border: 1px solid rgba(37, 211, 102, 0.35);
+      color: #4ade80;
+      padding: 12px 20px;
+      border-radius: 14px;
       font-weight: 700;
-      font-size: 0.85rem;
-      padding: 6px 16px;
-      border-radius: 20px;
-      margin-bottom: 20px;
+      font-size: 0.92rem;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease;
+    }
+    .btn-whatsapp:hover {
+      background: rgba(37, 211, 102, 0.25);
     }
     .btn-logout {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white;
-      padding: 12px 24px;
-      border-radius: 12px;
-      font-weight: 700;
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      padding: 10px;
+      font-weight: 600;
       cursor: pointer;
-      font-size: 0.95rem;
-      text-decoration: none;
+      font-size: 0.86rem;
+      text-decoration: underline;
+      margin-top: 6px;
     }
   </style>
 </head>
 <body>
   <div class="card">
     <div class="icon-box">🚫</div>
-    <div class="badge">Suministro / Acceso Suspendido</div>
-    <h1>Servicio Temporalmente Interrumpido</h1>
+    <div class="badge">Acceso Temporalmente Suspendido</div>
+    <h1>Servicio Pausado por Pago Pendiente</h1>
+    
     <p>
-      El acceso para la empresa <strong><%= current_company&.name %></strong> ha sido suspendido por concepto de mensualidad o mantenimiento de cuenta pendiente.
-    </p>
-    <p style="font-size: 0.88rem; color: #cbd5e1; background: rgba(0,0,0,0.2); padding: 14px; border-radius: 12px;">
-      Por favor regulariza tu pago con el Superadmin para reactivar tu suministro e ingresar inmediatamente a tus eventos e inventarios.
+      El acceso para la empresa <strong><%= current_company&.name %></strong> ha sido suspendido tras haberse cumplido el ciclo de 30 días y los 3 días de período de gracia sin registrar la renovación correspondiente.
     </p>
 
-    <div style="margin-top: 28px;">
+    <%# --- CAJA DE GARANTÍA DE DATOS INTACTOS --- %>
+    <div class="guarantee-box">
+      <div class="guarantee-title">
+        <span>🛡️</span> <span>Tus datos permanecen 100% seguros e intactos</span>
+      </div>
+      <p class="guarantee-desc">
+        Por más que tu servicio esté pausado, <strong>absolutamente ningún dato ha sido eliminado ni modificado</strong>. Tus eventos, clientes, repertorio, inventario, nóminas y finanzas siguen perfectamente guardados. En cuanto reactives tu suscripción con tu pago, <strong>encontrarás todo exactamente tal y como lo dejaste</strong>.
+      </p>
+    </div>
+
+    <%# --- BOTONES DE ACCIÓN --- %>
+    <div class="actions-grid">
+      <%= link_to subscriptions_path, class: "btn-reactivate" do %>
+        <span>💳</span> <span>Reactivar Servicio y Reportar Pago</span>
+      <% end %>
+
+      <a href="https://wa.me/584246208725?text=<%= CGI.escape("¡Hola! Mi empresa #{current_company&.name} se encuentra suspendida en Gig Manager y deseo reactivar mi servicio de inmediato.") %>" target="_blank" rel="noopener noreferrer" class="btn-whatsapp">
+        <span>💬</span> <span>Reactivar por WhatsApp con Soporte</span>
+      </a>
+
       <%= button_to "Cerrar Sesión", destroy_user_session_path, method: :delete, class: "btn-logout" %>
     </div>
   </div>

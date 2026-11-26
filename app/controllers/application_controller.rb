@@ -79,17 +79,14 @@ class ApplicationController < ActionController::Base
     return unless current_user.leader?
 
     if current_company.present?
-      if current_company.suspended?
+      # Evaluar el ciclo de vida (recordatorio a los 28 días, período de gracia a los 30 días, suspensión a los 33 días)
+      current_company.check_subscription_lifecycle!
+
+      if current_company.suspended? || !current_company.access_granted?
         if request.format.json? || request.xhr?
-          render json: { reply: "⚠️ La cuenta de tu empresa se encuentra temporalmente suspendida.", error: "company_suspended" }, status: :payment_required
+          render json: { reply: "⚠️ La cuenta de tu empresa se encuentra temporalmente suspendida por pago pendiente. Tus datos están 100% a salvo.", error: "company_suspended" }, status: :payment_required
         else
           redirect_to suspended_company_path
-        end
-      elsif !current_company.access_granted?
-        if request.format.json? || request.xhr?
-          render json: { reply: "⚠️ El período de prueba o suscripción de tu empresa ha finalizado. Por favor reactiva tu plan en la sección de Suscripciones.", error: "subscription_inactive" }, status: :payment_required
-        else
-          redirect_to subscriptions_path, alert: "Tu período de prueba de 30 días ha finalizado. Activa tu suscripción para continuar."
         end
       end
     end

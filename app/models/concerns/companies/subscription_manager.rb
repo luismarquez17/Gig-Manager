@@ -6,6 +6,8 @@ module Companies
 
     included do
       DEFAULT_TRIAL_DAYS = 30
+      GRACE_PERIOD_DAYS = 3
+      REMINDER_DAYS_BEFORE = 2
       VALID_PLAN_TIERS = ['banda', 'productora', 'salon', 'negocio', 'personalizado', 'full'].freeze
 
       before_create :set_default_trial_period
@@ -142,7 +144,7 @@ module Companies
     end
 
     # ==========================================
-    # ESTADOS DE SUSCRIPCIÓN & FREE TRIAL
+    # ESTADOS DE SUSCRIPCIÓN, GRACIA & FREE TRIAL
     # ==========================================
 
     def in_trial?
@@ -179,10 +181,126 @@ module Companies
       trial_ends_at
     end
 
+    def in_grace_period?
+      return false if suspended?
+      return false unless trial_ends_at.present?
+
+      trial_ends_at <= Time.current && Time.current <= (trial_ends_at + GRACE_PERIOD_DAYS.days)
+    end
+
+    def grace_period_expired?
+      return true if suspended?
+      return false unless trial_ends_at.present?
+
+      Time.current > (trial_ends_at + GRACE_PERIOD_DAYS.days)
+    end
+
+    def grace_days_left
+      return 0 unless in_grace_period?
+
+      deadline = trial_ends_at + GRACE_PERIOD_DAYS.days
+      [((deadline - Time.current) / 1.day).ceil, 1].max
+    end
+
     def access_granted?
       return false if suspended?
-      return true if active_subscription? || trial_active?
+      return true if in_grace_period?
+      return true if trial_active? || subscription_paid_and_active?
       false
+    end
+
+    def should_send_upcoming_reminder?
+      return false if suspended? || in_grace_period? || grace_period_expired?
+      return false unless trial_ends_at.present?
+
+      left = days_left_in_subscription
+      left.positive? && left <= REMINDER_DAYS_BEFORE && !upcoming_reminder_sent?
+    end
+
+    def upcoming_reminder_sent?
+      return false unless trial_ends_at.present?
+
+      cycle_start = trial_ends_at - DEFAULT_TRIAL_DAYS.days
+      window_start = [cycle_start, 4.days.ago].max
+
+      AppNotification.where(company_id: id)
+                     .where("action_url = ? AND created_at >= ?", "/subscriptions", window_start)
+                     .where("title LIKE ?", "%Recordatorio de tu suscripción%")
+                     .exists?
+    end
+
+    def grace_notification_sent?
+      return false unless trial_ends_at.present?
+
+      AppNotification.where(company_id: id)
+                     .where("action_url = ? AND created_at >= ?", "/subscriptions", trial_ends_at)
+                     .where("title LIKE ?", "%Período de Gracia%")
+                     .exists?
+    end
+
+    def check_subscription_lifecycle!
+      # 1. Enviar recordatorio cariñoso cuando falten 2 días o menos para cumplir los 30 días
+      send_upcoming_expiration_reminder! if should_send_upcoming_reminder?
+
+      # 2. Notificar inicio de los 3 días de gracia si el ciclo de 30 días acaba de vencer
+      send_grace_period_notification! if in_grace_period? && !grace_notification_sent?
+
+      # 3. Suspender el servicio si se agotaron los 3 días de gracia y no ha pagado
+      suspend_for_non_payment! if grace_period_expired? && !suspended?
+    end
+
+    def send_upcoming_expiration_reminder!
+      days_left = days_left_in_subscription
+      days_str = days_left == 1 ? "1 día" : "#{days_left} días"
+      exp_date = (I18n.l(trial_ends_at.to_date, format: :long) rescue trial_ends_at.strftime('%d/%m/%Y'))
+
+      msg = "¡Hola! Te recordamos con mucho cariño que a tu ciclo de 30 días en Gig Manager le quedan #{days_str} (finaliza el #{exp_date}). Puedes renovar tu plan con total tranquilidad para que tu equipo continúe sin interrupciones. Recuerda que todos los datos, eventos y balances de tu empresa están y seguirán estando 100% seguros y respaldados con nosotros. ✨"
+
+      notif = AppNotification.create!(
+        company_id: id,
+        target_area: :leaders,
+        notification_type: :general,
+        title: "💌 Recordatorio de tu suscripción Gig Manager",
+        message: msg,
+        action_url: "/subscriptions"
+      )
+      notif.broadcast_notification rescue nil
+
+      leaders.each do |leader|
+        UserMailer.trial_expiring_reminder(leader).deliver_later rescue nil
+      end
+    end
+
+    def send_grace_period_notification!
+      grace_deadline = (I18n.l((trial_ends_at + GRACE_PERIOD_DAYS.days).to_date, format: :long) rescue (trial_ends_at + GRACE_PERIOD_DAYS.days).strftime('%d/%m/%Y'))
+
+      msg = "Tu ciclo de 30 días ha concluido, pero no te preocupes: cuentas con 3 días de gracia (hasta el #{grace_deadline}) para registrar tu pago con calma antes de suspender el servicio. Queremos darte la total tranquilidad de que todos tus datos, eventos y personal están completamente a salvo y seguirán aquí tal como los dejaste."
+
+      notif = AppNotification.create!(
+        company_id: id,
+        target_area: :leaders,
+        notification_type: :urgent,
+        title: "⏳ Período de Gracia: 3 días para renovar tu suscripción",
+        message: msg,
+        action_url: "/subscriptions"
+      )
+      notif.broadcast_notification rescue nil
+    end
+
+    def suspend_for_non_payment!
+      update_columns(status: Company.statuses[:suspended], subscription_status: 'suspended')
+
+      msg = "El período de gracia de 3 días ha vencido y el acceso al servicio ha sido temporalmente suspendido por pago pendiente. ¡Ojo! Todos tus datos siguen 100% seguros e intactos en la plataforma. En cuanto reactives tu suscripción con tu pago, encontrarás todo exactamente donde lo dejaste."
+
+      notif = AppNotification.create!(
+        company_id: id,
+        target_area: :leaders,
+        notification_type: :urgent,
+        title: "🚫 Servicio suspendido temporalmente por pago pendiente",
+        message: msg,
+        action_url: "/subscriptions"
+      )
+      notif.broadcast_notification rescue nil
     end
 
     def plan_tier_name
@@ -195,8 +313,10 @@ module Companies
 
     def subscription_label
       if suspended?
-        "Suspendida"
-      elsif active_subscription?
+        "Suspendida (Datos Protegidos)"
+      elsif in_grace_period?
+        "Período de Gracia (#{grace_days_left} #{grace_days_left == 1 ? 'día' : 'días'} restantes)"
+      elsif subscription_paid_and_active?
         "Suscripción Activa (#{plan_tier_name})"
       elsif trial_active?
         "Prueba Gratuita (#{days_left_in_trial} días restantes)"
