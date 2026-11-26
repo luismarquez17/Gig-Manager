@@ -308,12 +308,12 @@
                 pkg[:key] == 'personalizado' ? "#{pkg[:icon]} #{pkg[:name]} (A Tu Medida - Con Descuentos)" : "#{pkg[:icon]} #{pkg[:name]} ($#{'%.0f' % pkg[:price]} USD)",
                 pkg[:key]
               ] },
-              (@has_scheduled_change ? @company.scheduled_plan_tier : @company.effective_plan_tier)
+              (params[:plan_tier].presence || (@has_scheduled_change ? @company.scheduled_plan_tier : @company.effective_plan_tier))
             ), id: "subscription_plan_tier_select", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Monto a Pagar ($ USD)</label>
-            <%= number_field_tag :amount, (@has_scheduled_change ? @company.scheduled_monthly_fee : @pricing_breakdown[:total_price]), step: "0.01", id: "subscription_amount_input", placeholder: "15.00", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+            <%= number_field_tag :amount, (params[:amount].present? ? params[:amount].to_f : (@has_scheduled_change ? @company.scheduled_monthly_fee : @pricing_breakdown[:total_price])), step: "0.01", id: "subscription_amount_input", placeholder: "15.00", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
           </div>
           <div>
             <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Método de Pago</label>
@@ -348,7 +348,7 @@
 
         <div>
           <label style="display: block; font-size: 0.8rem; font-weight: 700; color: #475569; margin-bottom: 5px;">Notas adicionales (opcional)</label>
-          <%= text_field_tag :notes, nil, placeholder: "Titular de la cuenta, banco emisor, detalle de módulos, etc.", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
+          <%= text_field_tag :notes, params[:notes], placeholder: "Titular de la cuenta, banco emisor, detalle de módulos, etc.", style: "width: 100%; border-radius: 10px; background: white; border: 1px solid #cbd5e1; color: #0f172a; padding: 10px 12px; font-size: 0.88rem; outline: none;" %>
         </div>
         <div style="padding-top: 5px;">
           <%= f.submit "Reportar Pago para Verificación 🚀", class: "sub-mobile-btn", style: "width: 100%; padding: 14px; border-radius: 12px; background: #2563eb; color: white; font-weight: 800; font-size: 0.95rem; border: none; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.3);" %>

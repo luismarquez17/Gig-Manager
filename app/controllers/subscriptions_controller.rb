@@ -59,12 +59,13 @@ class SubscriptionsController < ApplicationController
 
       if timing == 'immediate' && params[:pay_difference] == '1'
         diff_amount = params[:difference_amount].to_f
+        @company.schedule_plan_change!(clean_tier, modules_hash, effective_date)
         redirect_to subscriptions_path(
           anchor: 'reportar-pago',
           plan_tier: clean_tier,
           amount: diff_amount,
           notes: "Pago de diferencia para activación inmediata de #{AppModule.package_info(clean_tier)&.dig(:name) || clean_tier}"
-        ), notice: "Reporta el pago de la diferencia ($#{'%.2f' % diff_amount} USD) para activar tu mejora de plan de inmediato."
+        ), notice: "Reporta el pago de la diferencia ($#{'%.2f' % diff_amount} USD) para activar tu mejora de plan de inmediato al ser aprobado."
         return
       end
 

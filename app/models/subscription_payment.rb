@@ -63,17 +63,21 @@ class SubscriptionPayment < ApplicationRecord
         rejection_reason: nil
       )
 
-      base_date = if company&.trial_ends_at.present? && company.trial_ends_at > Time.current
-                    company.trial_ends_at
-                  else
-                    Time.current
-                  end
+      is_difference_upgrade = notes.to_s.downcase.include?("diferencia") || notes.to_s.downcase.include?("activación inmediata")
+
+      next_expiration = if is_difference_upgrade && company&.trial_ends_at.present? && company.trial_ends_at > Time.current
+                          company.trial_ends_at
+                        elsif company&.trial_ends_at.present? && company.trial_ends_at > Time.current
+                          company.trial_ends_at + 30.days
+                        else
+                          Time.current + 30.days
+                        end
 
       updates = {
         status: :active,
         subscription_status: 'active',
         plan_tier: plan_tier,
-        trial_ends_at: base_date + 30.days
+        trial_ends_at: next_expiration
       }
 
       if company&.has_scheduled_plan_change?
@@ -87,7 +91,7 @@ class SubscriptionPayment < ApplicationRecord
         updates[:scheduled_plan_tier] = nil
         updates[:scheduled_modules] = nil
         updates[:scheduled_change_at] = nil
-      else
+      elsif company.present? && plan_tier != company.plan_tier
         package_modules = AppModule.modules_for_package(plan_tier)
         if package_modules.present?
           updates[:enabled_modules] = AppModule.build_modules_hash(package_modules)
@@ -101,9 +105,10 @@ class SubscriptionPayment < ApplicationRecord
       end
     end
 
+    plan_label = company&.reload&.plan_tier_name || plan_tier.to_s.titleize
     notify_company_leader!(
-      title: "✅ ¡Pago de Suscripción Aprobado!",
-      message: "Tu pago ##{reference_number} ($#{'%.2f' % amount.to_f} USD) fue verificado. Tu plan ya está activo por 30 días.",
+      title: "✅ ¡Pago Aprobado y Plan Activado!",
+      message: "Tu pago ##{reference_number} ($#{'%.2f' % amount.to_f} USD) fue verificado. Ya tienes acceso automático e inmediato a tu #{plan_label} y todos sus módulos.",
       notification_type: 'payment_alert'
     )
     broadcast_superadmin_badge_update
